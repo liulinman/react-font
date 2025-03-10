@@ -10,7 +10,11 @@ const Home: React.FC = () => {
     await request(wordFindList());
   };
 
-  return <div>首页</div>;
+  return (
+    <div>
+      首页<span>自动化部署</span>
+    </div>
+  );
 };
 
 export default Home;
