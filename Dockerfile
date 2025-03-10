@@ -8,7 +8,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # 安装依赖
-RUN pnpm install
+RUN npm install
 
 # 复制其他项目文件
 COPY . .
