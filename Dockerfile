@@ -1,14 +1,20 @@
-# 使用一个轻量级的 Node 镜像作为基础镜像
-FROM nginx:alpine
+# 使用官方 Node.js 镜像作为基础镜像
+FROM node:14
 
-# 创建目录（如果需要）
-COPY dist/ /usr/share/nginx/html/
+# 设置工作目录
+WORKDIR /app
 
-# 将 React 构建后的文件复制到 react 的默认静态文件路径
-COPY dist/ /usr/share/nginx/html/
+# 复制项目的 package.json 和 package-lock.json
+COPY package*.json ./
 
-# 暴露端口
+# 安装依赖
+RUN pnpm install
+
+# 复制其他项目文件
+COPY . .
+
+# 暴露应用监听的端口
 EXPOSE 80
 
-# 启动 Nginx 服务
-CMD ["nginx", "-g", "daemon off;"]
+# 启动应用
+CMD ["npm", "start"]
