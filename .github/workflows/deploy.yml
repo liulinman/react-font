@@ -38,6 +38,6 @@ jobs:
             docker rm upbeat_meninsky || true
 
             # 拉取最新的 Docker 镜像并运行
-            docker pull react || true
+            docker pull react:latest || true
             docker run -d --name upbeat_meninsky -p 8080:80 react
           EOF
