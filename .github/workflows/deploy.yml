@@ -27,17 +27,17 @@ jobs:
       # 构建 Docker 镜像
       - name: Build Docker Image
         run: |
-          docker build -t myapp:latest .
+          docker build -t react .
 
       # 连接到服务器并部署 Docker 镜像
       - name: Deploy Docker Image to Server
         run: |
           ssh -o StrictHostKeyChecking=no root@47.108.140.63 << 'EOF'
             # 停止并删除当前正在运行的容器
-            docker stop react || true
-            docker rm react || true
+            docker stop upbeat_meninsky || true
+            docker rm upbeat_meninsky || true
 
             # 拉取最新的 Docker 镜像并运行
-            docker pull react:latest || true
-            docker run -d --name react -p 8080:80 react:latest
+            docker pull react || true
+            docker run -d --name upbeat_meninsky -p 8080:80 react
           EOF
