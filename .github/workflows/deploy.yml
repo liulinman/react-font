@@ -1,0 +1,43 @@
+name: Deploy Docker to Server
+
+on:
+  push:
+    branches:
+      - main # 只有在main分支有push时触发
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout 代码
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # 设置Docker构建环境
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      # 设置SSH密钥，用于SSH连接到服务器
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.SERVER }}
+
+      # 构建 Docker 镜像
+      - name: Build Docker Image
+        run: |
+          docker build -t myapp:latest .
+
+      # 连接到服务器并部署 Docker 镜像
+      - name: Deploy Docker Image to Server
+        run: |
+          ssh -o StrictHostKeyChecking=no user@47.108.140.63 << 'EOF'
+            # 停止并删除当前正在运行的容器
+            docker stop react || true
+            docker rm react || true
+
+            # 拉取最新的 Docker 镜像并运行
+            docker pull react:latest || true
+            docker run -d --name react -p 8080:80 react:latest
+          EOF
