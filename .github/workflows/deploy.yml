@@ -24,11 +24,6 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SERVER }}
 
-      # 构建 Docker 镜像
-      - name: Build Docker Image
-        run: |
-          docker build -t react .
-
       # 连接到服务器并部署 Docker 镜像
       - name: Deploy Docker Image to Server
         run: |
@@ -36,6 +31,8 @@ jobs:
             # 停止并删除当前正在运行的容器
             docker stop upbeat_meninsky || true
             docker rm upbeat_meninsky || true
+            docker rmi react || true
+              docker build -t react . || true
 
             # 拉取最新的 Docker 镜像并运行
             docker pull react || true
