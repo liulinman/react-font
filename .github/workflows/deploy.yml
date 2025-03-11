@@ -3,7 +3,7 @@ name: Deploy Docker to Server
 on:
   push:
     branches:
-      - main # 只有在main分支有push时触发
+      - main
 
 jobs:
   build_and_deploy:
@@ -14,29 +14,42 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      # 设置Docker构建环境
+      # 设置 Docker 构建环境
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
-
-      # 设置SSH密钥，用于SSH连接到服务器
-      - name: Set up SSH
-        uses: webfactory/ssh-agent@v0.5.3
-        with:
-          ssh-private-key: ${{ secrets.SERVER }}
 
       # 构建 Docker 镜像
       - name: Build Docker Image
         run: |
           docker build -t react:latest .
 
+      # 将镜像保存为文件
+      - name: Save Docker Image
+        run: |
+          docker save -o react.tar react:latest
+
+      # 设置 SSH 密钥，用于 SSH 连接到服务器
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.SERVER }}
+
+      # 将镜像文件传输到远程服务器
+      - name: Transfer Docker Image to Server
+        run: |
+          scp -o StrictHostKeyChecking=no react.tar root@47.108.140.63:/root/react.tar
+
       # 连接到服务器并部署 Docker 镜像
       - name: Deploy Docker Image to Server
         run: |
           ssh -o StrictHostKeyChecking=no root@47.108.140.63 << 'EOF'
             # 停止并删除当前正在运行的容器
-               docker stop react || echo "没有找到名为 react 的容器"
-               docker rm react || echo "没有找到名为 react 的容器"
+            docker stop react || true
+            docker rm react || true
 
-            # 运行
+            # 加载传输的 Docker 镜像
+            docker load -i /root/react.tar
+
+            # 运行新的容器
             docker run -d --name react -p 8080:80 react:latest
           EOF
