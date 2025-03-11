@@ -17,4 +17,4 @@ COPY . .
 EXPOSE 80
 
 # 启动应用
-CMD ["npm", "start"]
+CMD ["npm", "run", "preview"]
