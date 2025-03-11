@@ -12,7 +12,7 @@ const Home: React.FC = () => {
 
   return (
     <div>
-      首页<span>自动化部署1.0</span>
+      首页<span>自动化部署1.1</span>
     </div>
   );
 };
