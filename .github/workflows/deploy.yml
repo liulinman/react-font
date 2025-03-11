@@ -34,10 +34,9 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no root@47.108.140.63 << 'EOF'
             # 停止并删除当前正在运行的容器
-            docker stop react || true
-            docker rm react || true
+               docker stop react || echo "没有找到名为 react 的容器"
+               docker rm react || echo "没有找到名为 react 的容器"
 
-            # 拉取最新的 Docker 镜像并运行
-            docker pull react:latest || true
+            # 运行
             docker run -d --name react -p 8080:80 react:latest
           EOF
