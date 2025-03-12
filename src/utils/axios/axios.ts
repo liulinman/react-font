@@ -1,7 +1,7 @@
 import axios, { AxiosRequestConfig } from "axios";
 
 // 定义 YTRequest 类型
-export interface YTRequest<T> {
+export interface YTRequest {
   url: string;
   data?: any;
   config?: AxiosRequestConfig;
@@ -18,7 +18,7 @@ const api = axios.create({
 });
 
 // 封装请求执行函数
-const request = async <T>(ytRequest: YTRequest<T>): Promise<T> => {
+const request = async <T>(ytRequest: YTRequest): Promise<T> => {
   const { url, data, method, config } = ytRequest;
   try {
     let response;
