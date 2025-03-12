@@ -13,6 +13,9 @@ RUN npm install
 # 复制其他项目文件
 COPY . .
 
+# 运行构建命令
+RUN npm run build
+
 # 暴露应用监听的端口
 EXPOSE 80
 
