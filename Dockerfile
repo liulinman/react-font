@@ -1,5 +1,5 @@
-# 使用官方 Node.js 镜像作为基础镜像
-FROM node:23.3.0
+# 第一阶段：使用官方 Node.js 镜像作为基础镜像
+FROM node:23.3.0 AS build
 
 # 设置工作目录
 WORKDIR /app
@@ -19,8 +19,10 @@ RUN npm run build
 
 # 第二阶段：使用 Nginx 托管静态资源
 FROM nginx:alpine
+
 # 将构建好的静态文件复制到 Nginx 的默认静态文件目录
 COPY --from=build /app/dist /usr/share/nginx/html
+
 # 暴露应用监听的端口
 EXPOSE 80
 
