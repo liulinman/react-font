@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import request from "../../utils/axios/axios";
 import { wordFindList } from "../../server/word/word";
+import { Button } from "antd";
 
 const Home: React.FC = () => {
   useEffect(() => {
@@ -12,7 +13,8 @@ const Home: React.FC = () => {
 
   return (
     <div>
-      首页<span>自动化部署1.3</span>
+      首页<span>自动化部署1.4</span>
+      <Button type="primary">Primary Button</Button>
     </div>
   );
 };
