@@ -20,11 +20,12 @@ RUN npm run build
 # 第二阶段：使用 Nginx 托管静态资源
 FROM nginx:alpine
 
+# 复制自定义的 nginx.conf 配置文件到容器中
+COPY nginx.conf /etc/nginx/nginx.conf
+
 # 将构建好的静态文件复制到 Nginx 的默认静态文件目录
 COPY --from=build /app/dist /usr/share/nginx/html
 
-# 复制自定义的 nginx 配置文件到容器中
-COPY nginx.conf /etc/nginx/nginx.conf
 
 
 # 暴露应用监听的端口
