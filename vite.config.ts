@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import { resolve } from "path";
+// import { resolve } from "path";
+import * as path from "path"; // 正确导入 path 模块
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -8,7 +9,8 @@ export default defineConfig({
 
   resolve: {
     alias: {
-      "@": resolve(__dirname, "./src"),
+      // "@": resolve(__dirname, "./src"),
+      "@": path.resolve(__dirname, "./src"), // 使用 path.resolve 来解决路径
     },
   },
 
