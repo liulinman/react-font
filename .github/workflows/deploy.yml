@@ -3,7 +3,7 @@ name: Deploy Docker to Server
 on:
   push:
     branches:
-      - docker-compose
+      - yifeng/docker-compose
 
 jobs:
   build_and_deploy:
