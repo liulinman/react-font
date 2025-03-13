@@ -33,6 +33,7 @@ jobs:
       # 将镜像保存为文件
       - name: Save Docker Image
         run: |
+          docker tag frontend frontend:latest
           docker save -o frontend.tar frontend:latest
 
       # 设置 SSH 密钥，用于 SSH 连接到服务器
@@ -44,12 +45,12 @@ jobs:
       # 将镜像文件传输到远程服务器
       - name: Transfer Docker Image to Server
         run: |
-          ssh -o StrictHostKeyChecking=no root@47.108.140.63 "docker-compose --version"
+          scp frontend.tar root@47.108.140.63:/root
 
       # 连接到服务器并部署 Docker 镜像
       - name: Deploy Docker Image to Server
         run: |
-          ssh -o StrictHostKeyChecking=no root@47.108.140.63 << 'EOF'
+          ssh -T -o StrictHostKeyChecking=no root@47.108.140.63 << 'EOF'
             # 停止并删除当前正在运行的容器
             docker stop frontend || true
             docker rm frontend || true
