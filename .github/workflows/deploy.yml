@@ -45,7 +45,7 @@ jobs:
       # 将镜像文件传输到远程服务器
       - name: Transfer Docker Image to Server
         run: |
-          scp frontend.tar root@47.108.140.63:/root
+          scp -o StrictHostKeyChecking=no frontend.tar root@47.108.140.63:/root
 
       # 连接到服务器并部署 Docker 镜像
       - name: Deploy Docker Image to Server
