@@ -31,7 +31,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      container_name: frontend
       image: frontend:latest # 确保设置了正确的镜像标签
     # ports:
     #   - "8080:80"
