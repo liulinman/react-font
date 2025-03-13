@@ -32,10 +32,8 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: frontend
-    ports:
-      - "8080:80"
-    depends_on:
-      - nginx
+    # ports:
+    #   - "8080:80"
 
   nginx:
     image: nginx:alpine
