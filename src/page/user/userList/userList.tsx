@@ -8,7 +8,7 @@
  */
 import React, { useEffect, useState } from "react";
 
-import { Button, Table } from "antd";
+import { Table } from "antd";
 import request from "../../../utils/axios/axios";
 import { userFindList } from "../../../server/user/user";
 
