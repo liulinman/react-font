@@ -13,7 +13,7 @@ export const userFindList = () => {
   };
 };
 
-export const userAdd = (data) => {
+export const userAdd = (data: any) => {
   return {
     url: "/user/createUser",
     method: "POST",
