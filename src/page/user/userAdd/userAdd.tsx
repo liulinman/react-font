@@ -1,8 +1,5 @@
 import React from "react";
 import { Button, Form, Input, InputNumber } from "antd";
-import { log } from "console";
-import request from "../../../utils/axios/axios";
-import { userAdd } from "../../../server/user/user";
 
 const layout = {
   labelCol: { span: 8 },
@@ -25,7 +22,6 @@ const onFinish = async (values: any) => {
 
   console.log(values);
 
-  const res = await request(userAdd(values));
   const channel = new BroadcastChannel("ADD");
   channel.postMessage("UPDATE");
 };
