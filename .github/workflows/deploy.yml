@@ -47,7 +47,7 @@ jobs:
         run: |
           scp -o StrictHostKeyChecking=no frontend.tar root@47.108.140.63:/root
           scp -o StrictHostKeyChecking=no docker-compose.yml root@47.108.140.63:/root
-          scp ./nginx.conf root@47.108.140.63:/root/nginx.conf
+          scp -o StrictHostKeyChecking=no nginx.conf root@47.108.140.63:/root/nginx.conf
 
       # 连接到服务器并部署 Docker 镜像
       - name: Deploy Docker Image to Server
