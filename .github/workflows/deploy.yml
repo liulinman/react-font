@@ -58,6 +58,6 @@ jobs:
             # 加载传输的 Docker 镜像
             docker load -i /root/frontend.tar
 
-            # 运行新的容器
-            docker run -d --name frontend -p 8081:80 frontend:latest
+            # 使用 Docker Compose 启动服务
+            docker-compose -f docker-compose.yml up -d
           EOF
