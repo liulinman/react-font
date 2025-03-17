@@ -7,14 +7,5 @@ services:
       dockerfile: Dockerfile
     container_name: frontend
     image: frontend:latest # 确保设置了正确的镜像标签
-    depends_on:
-      - nginx
     ports:
       - "8081:80"
-
-  nginx:
-    image: nginx:alpine
-    container_name: nginx
-    volumes:
-      - /root/nginx.conf
-      - ./dist:/usr/share/nginx/html
