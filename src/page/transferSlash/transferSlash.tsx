@@ -51,7 +51,24 @@ const TransferSlash: React.FC = () => {
         });
     } else {
       // 提示用户手动复制
-      message.error("当前浏览器不支持自动复制，请手动复制内容");
+      // 旧浏览器回退方案
+      let textArea = document.createElement("textarea");
+      textArea.value = text;
+      textArea.style.top = "0";
+      textArea.style.left = "0";
+      textArea.style.position = "fixed";
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      try {
+        let successful = document.execCommand("copy");
+        let msg = successful ? "successful" : "unsuccessful";
+        console.log("Fallback: Copying text command was " + msg);
+      } catch (err) {
+        console.error("Fallback: Oops, unable to copy", err);
+      }
+      document.body.removeChild(textArea);
+      message.success("复制成功");
     }
   };
 
@@ -65,19 +82,16 @@ const TransferSlash: React.FC = () => {
       <Form
         form={form}
         name="basic"
-        // labelCol={{ span: 8 }}
-        // wrapperCol={{ span: 16 }}
-        // style={{ maxWidth: 600 }}
         initialValues={{ remember: true }}
         autoComplete="off"
         className={styles.transferSlash}
       >
         <Form.Item<FieldType> label="接口路径" name="interfaceUrl">
-          <Input width={400} />
+          <Input style={{ width: "400px" }} />
         </Form.Item>
 
         <Form.Item<FieldType> label="转换格式" name="transferInterfaceUrl">
-          <Input width={400} />
+          <Input style={{ width: "400px" }} />
         </Form.Item>
 
         <Form.Item label={null}>
