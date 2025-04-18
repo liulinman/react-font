@@ -10,7 +10,11 @@ const Home: React.FC = () => {
     await request(wordFindList());
   };
 
-  return <div>工具导航</div>;
+  return (
+    <div>
+      <div>当前版本号：{process.env.APP_VERSION}</div>
+    </div>
+  );
 };
 
 export default Home;

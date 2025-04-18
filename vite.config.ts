@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import * as path from "path"; // 正确导入 path 模块
+import { version } from "./package.json"; // 导入版本号
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -10,6 +11,9 @@ export default defineConfig({
     alias: {
       "@": path.resolve(__dirname, "src"), // 使用 path.resolve 来解决路径
     },
+  },
+  define: {
+    __APP_VERSION__: JSON.stringify(version), // 注入版本号
   },
 
   server: {
