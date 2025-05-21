@@ -12,7 +12,7 @@ const Home: React.FC = () => {
 
   return (
     <div>
-      <div>当前版本号：{process.env.APP_VERSION}</div>
+      <div>当前版本号：{1.0}</div>
     </div>
   );
 };
