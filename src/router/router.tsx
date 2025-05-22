@@ -3,6 +3,7 @@ import Home from "@/page/home/home";
 import TransferSlash from "@/page/transferSlash/transferSlash";
 import UserList from "@/page/user/userList/userList";
 import UserAdd from "@/page/user/userAdd/userAdd";
+import EnglishWorld from "@/page/englishWorld/EnglishWorld";
 
 export const router = createBrowserRouter([
   {
@@ -21,5 +22,9 @@ export const router = createBrowserRouter([
   {
     path: "/userAdd",
     element: <UserAdd />,
+  },
+  {
+    path: "/englishWorld",
+    element: <EnglishWorld />,
   },
 ]);
