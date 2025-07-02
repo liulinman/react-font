@@ -1,6 +1,6 @@
 import React from "react";
 
-import { Space, Table, Tag } from "antd";
+import { Space, Table } from "antd";
 import type { TableProps } from "antd";
 
 interface DataType {
@@ -16,50 +16,55 @@ interface DataType {
  * 2 单词名
  * 3 音标
  * 4 中文
- * 5 引用
+ * 5 笔记
+ * 6 掌握程度（不会、一般、熟练、精通）
+ * 7 引用
+ * 8 操作：删除、编辑
  *
+ * 把这些数据发给
  *
  */
 
 const columns: TableProps<DataType>["columns"] = [
   {
-    title: "Name",
+    title: "序号",
     dataIndex: "name",
     key: "name",
     render: (text) => <a>{text}</a>,
   },
   {
-    title: "Age",
+    title: "单词名",
     dataIndex: "age",
     key: "age",
   },
   {
-    title: "Address",
+    title: "音标",
     dataIndex: "address",
     key: "address",
   },
   {
-    title: "Tags",
-    key: "tags",
-    dataIndex: "tags",
-    render: (_, { tags }) => (
-      <>
-        {tags.map((tag) => {
-          let color = tag.length > 5 ? "geekblue" : "green";
-          if (tag === "loser") {
-            color = "volcano";
-          }
-          return (
-            <Tag color={color} key={tag}>
-              {tag.toUpperCase()}
-            </Tag>
-          );
-        })}
-      </>
-    ),
+    title: "中文",
+    dataIndex: "address",
+    key: "address",
   },
   {
-    title: "Action",
+    title: "笔记",
+    dataIndex: "address",
+    key: "address",
+  },
+  {
+    title: "掌握程度",
+    dataIndex: "address",
+    key: "address",
+  },
+  {
+    title: "引用",
+    dataIndex: "address",
+    key: "address",
+  },
+
+  {
+    title: "操作",
     key: "action",
     render: (_, record) => (
       <Space size="middle">
@@ -96,9 +101,6 @@ const data: DataType[] = [
 const EnglishWorld: React.FC = () => {
   return (
     <div>
-      <div>当前版本号：{1.0}</div>
-      {/* <Button onClick={}>路径转化</Button>
-        <Button onClick={}>英语单词</Button> */}
       <Table<DataType> columns={columns} dataSource={data} />
     </div>
   );

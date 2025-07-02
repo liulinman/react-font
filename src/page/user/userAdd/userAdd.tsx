@@ -1,74 +1,84 @@
-import React from "react";
-import { Button, Form, Input, InputNumber } from "antd";
+import { useState } from "react";
+import { Modal, Button } from "antd";
 
-const layout = {
-  labelCol: { span: 8 },
-  wrapperCol: { span: 16 },
-};
+const ModalExample = () => {
+  const [modalsQueue, setModalsQueue] = useState<number[]>([]); // 队列，用于存储待弹出的模态框
+  const [currentModal, setCurrentModal] = useState<null | number>(null); // 当前弹出的modal标识
 
-const validateMessages = {
-  required: "${label} is required!",
-  types: {
-    email: "${label} is not a valid email!",
-    number: "${label} is not a valid number!",
-  },
-  number: {
-    range: "${label} must be between ${min} and ${max}",
-  },
-};
+  // 添加Modal到队列中并依次弹出
+  const showModalsInSequence = (modals: number[]) => {
+    setModalsQueue(modals);
+    setCurrentModal(modals[0]); // 设置第一个Modal为当前弹出的Modal
+  };
 
-const onFinish = async (values: any) => {
-  console.log(`values`, values);
+  // 处理Modal关闭后弹出下一个
+  const handleModalClose = () => {
+    setCurrentModal(null);
+  };
 
-  console.log(values);
+  const handleModalConfirm = () => {
+    const nextModalsQueue = [...modalsQueue];
+    nextModalsQueue.shift(); // 移除当前弹出的Modal
+    if (nextModalsQueue.length > 0) {
+      setCurrentModal(nextModalsQueue[0]); // 设置队列中的下一个Modal为当前弹出的Modal
+    } else {
+      setCurrentModal(null); // 如果没有下一个Modal，关闭当前Modal
+    }
+    setModalsQueue(nextModalsQueue); // 更新队列状态
+  };
 
-  const channel = new BroadcastChannel("ADD");
-  channel.postMessage("UPDATE");
-};
-
-const UserAdd: React.FC = () => {
   return (
-    <Form
-      {...layout}
-      name="nest-messages"
-      onFinish={onFinish}
-      style={{ maxWidth: 600 }}
-      validateMessages={validateMessages}
-    >
-      <Form.Item name={"userName"} label="Name" rules={[{ required: true }]}>
-        <Input />
-      </Form.Item>
-      {/* <Form.Item
-      name={["user", "email"]}
-      label="Email"
-      rules={[{ type: "email" }]}
-    >
-      <Input />
-    </Form.Item> */}
-      <Form.Item name={"userPassword"} label="userPassword">
-        <Input />
-      </Form.Item>
-      <Form.Item name={"userPhone"} label="userPhone">
-        <Input />
-      </Form.Item>
-      <Form.Item name={"userSex"} label="userSex">
-        <Input />
-      </Form.Item>
-      <Form.Item
-        name={"userAge"}
-        label="Age"
-        rules={[{ type: "number", min: 0, max: 99 }]}
-      >
-        <InputNumber />
-      </Form.Item>
+    <div>
+      <Button type="primary" onClick={() => showModalsInSequence([2, 1, 3, 4])}>
+        显示多个 Modals
+      </Button>
 
-      <Form.Item label={null}>
-        <Button type="primary" htmlType="submit">
-          Submit
-        </Button>
-      </Form.Item>
-    </Form>
+      {/* 根据currentModal的值来控制显示哪个Modal */}
+      {currentModal === 1 && (
+        <Modal
+          title="第一个 Modal"
+          open={true}
+          onOk={handleModalConfirm}
+          onCancel={handleModalClose}
+        >
+          <p>这是第一个 Modal</p>
+        </Modal>
+      )}
+
+      {currentModal === 2 && (
+        <Modal
+          title="第二个 Modal"
+          open={true}
+          onOk={handleModalConfirm}
+          onCancel={handleModalClose}
+        >
+          <p>这是第二个 Modal</p>
+        </Modal>
+      )}
+
+      {currentModal === 3 && (
+        <Modal
+          title="第三个 Modal"
+          open={true}
+          onOk={handleModalConfirm}
+          onCancel={handleModalClose}
+        >
+          <p>这是第三个 Modal</p>
+        </Modal>
+      )}
+
+      {currentModal === 4 && (
+        <Modal
+          title="第四个 Modal"
+          open={true}
+          onOk={handleModalConfirm}
+          onCancel={handleModalClose}
+        >
+          <p>这是第四个 Modal</p>
+        </Modal>
+      )}
+    </div>
   );
 };
 
-export default UserAdd;
+export default ModalExample;
