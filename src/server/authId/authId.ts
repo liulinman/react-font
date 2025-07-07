@@ -5,7 +5,7 @@ export const userFindList = () => {
   };
 };
 
-export const userCreate = (data) => {
+export const userCreate = (data: any) => {
   return {
     url: "/auth-id-map/createCookie",
     data,
@@ -13,7 +13,7 @@ export const userCreate = (data) => {
   };
 };
 
-export const findModel = (data) => {
+export const findModel = (data: any) => {
   return {
     url: "/auth-id-map/findModel",
     data,

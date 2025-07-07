@@ -39,7 +39,7 @@ const AuthIdMap: React.FC = () => {
   };
 
   // 处理 textarea 中的数据变化
-  const handleChange = (e) => {
+  const handleChange = (e: any) => {
     setFormattedData(e.target.value);
   };
 
@@ -56,7 +56,7 @@ const AuthIdMap: React.FC = () => {
   };
 
   const onSearch: SearchProps["onSearch"] = async (value) => {
-    const res = await request(findModel({ model: value.trim() }));
+    const res: any = await request(findModel({ model: value.trim() }));
     if (res.code === 200) {
       message.success("查找成功");
       const { list } = res.data;
