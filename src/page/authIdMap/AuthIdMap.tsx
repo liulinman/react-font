@@ -32,7 +32,7 @@ const AuthIdMap: React.FC = () => {
       })
     );
     if (res) {
-      message.success("添加cookie成功");
+      message.success("添加cookie成功!");
     }
 
     console.log(res);
