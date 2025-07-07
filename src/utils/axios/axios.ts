@@ -10,7 +10,7 @@ export interface YTRequest {
 
 // 创建 axios 实例
 const api = axios.create({
-  baseURL: "http://127.0.0.1:3000", // 基础 URL
+  baseURL: "http://47.108.140.63:3001", // 基础 URL
   timeout: 10000, // 请求超时
   headers: {
     "Content-Type": "application/json",

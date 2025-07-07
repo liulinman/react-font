@@ -4,6 +4,7 @@ import TransferSlash from "@/page/transferSlash/transferSlash";
 import UserList from "@/page/user/userList/userList";
 import UserAdd from "@/page/user/userAdd/userAdd";
 import EnglishWorld from "@/page/englishWorld/EnglishWorld";
+import AuthIdMap from "@/page/authIdMap/AuthIdMap";
 
 export const router = createBrowserRouter([
   {
@@ -26,5 +27,9 @@ export const router = createBrowserRouter([
   {
     path: "/englishWorld",
     element: <EnglishWorld />,
+  },
+  {
+    path: "/authIdMap",
+    element: <AuthIdMap />,
   },
 ]);

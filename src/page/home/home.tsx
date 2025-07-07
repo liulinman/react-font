@@ -22,11 +22,14 @@ const Home: React.FC = () => {
 
   return (
     <div>
-      <div>当前版本号：{1.0}</div>
+      {/* <div>当前版本号：{1.0}</div> */}
       <Button onClick={() => routeToNavigate("/transferSlash")}>
         路径转化
       </Button>
-      <Button onClick={() => routeToNavigate("/englishWorld")}>英语单词</Button>
+      {/* <Button onClick={() => routeToNavigate("/englishWorld")}>英语单词</Button> */}
+      <Button onClick={() => routeToNavigate("/authIdMap")}>
+        书联调erp权限模块id
+      </Button>
     </div>
   );
 };
