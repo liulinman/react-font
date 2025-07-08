@@ -25,6 +25,7 @@ const AuthIdMap: React.FC = () => {
   };
 
   const onUploadCookie = async (value: string) => {
+    if (!value.trim() || value.trim() === "") return;
     const res = await request(
       userCreate({
         cookieValue: value.trim(),
@@ -43,24 +44,55 @@ const AuthIdMap: React.FC = () => {
     setFormattedData(e.target.value);
   };
 
-  // 复制数据到剪贴板
-  const handleCopy = () => {
-    navigator.clipboard.writeText(formattedData).then(
-      () => {
-        message.success("已复制到剪贴板！");
-      },
-      () => {
-        message.error("复制失败！");
+  const copyToClipboard = () => {
+    const text = formattedData;
+    if (!text) {
+      message.error("没有内容可以复制");
+      return;
+    }
+
+    if (navigator.clipboard && navigator.clipboard?.writeText) {
+      // 使用现代的 clipboard API
+      navigator.clipboard
+        .writeText(text)
+        .then(() => {
+          message.success("内容已复制到剪贴板");
+        })
+        .catch(() => {
+          message.error("复制失败，请重试");
+        });
+    } else {
+      // 提示用户手动复制
+      // 旧浏览器回退方案
+      let textArea = document.createElement("textarea");
+      textArea.value = text;
+      textArea.style.top = "0";
+      textArea.style.left = "0";
+      textArea.style.position = "fixed";
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      try {
+        let successful = document.execCommand("copy");
+        let msg = successful ? "successful" : "unsuccessful";
+        console.log("Fallback: Copying text command was " + msg);
+      } catch (err) {
+        console.error("Fallback: Oops, unable to copy", err);
       }
-    );
+      document.body.removeChild(textArea);
+      message.success("复制成功");
+    }
   };
 
   const onSearch: SearchProps["onSearch"] = async (value) => {
+    if (!value.trim() || value.trim() === "") return;
     const res: any = await request(findModel({ model: value.trim() }));
-    if (res.code === 200) {
+    if (res.data.code === 200) {
       message.success("查找成功");
       const { list } = res.data;
       setFormattedData(formatData(JSON.stringify(list)));
+    } else if (res.data.code === 8001) {
+      message.info(res.data.message);
     }
   };
 
@@ -87,17 +119,43 @@ const AuthIdMap: React.FC = () => {
           onSearch={onSearch}
         />
       </div>
-      <textarea
-        rows={15}
-        style={{ width: "50%", fontFamily: "monospace", fontSize: "14px" }}
-        value={formattedData}
-        onChange={handleChange}
-      />
-      <div style={{ marginTop: 20 }}>
-        <Button type="primary" onClick={handleCopy}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <textarea
+          rows={15}
+          style={{
+            width: "35%",
+            height: "60%",
+            fontFamily: "monospace",
+            fontSize: "14px",
+          }}
+          value={formattedData}
+          onChange={handleChange}
+        />
+        <Button type="primary" onClick={copyToClipboard}>
+          转换成英文
+        </Button>
+        <textarea
+          rows={15}
+          style={{
+            width: "35%",
+            fontFamily: "monospace",
+            fontSize: "14px",
+          }}
+          value={formattedData}
+          onChange={handleChange}
+        />
+      </div>
+      {/* <div style={{ marginTop: 20 }}>
+        <Button type="primary" onClick={copyToClipboard}>
           一键复制
         </Button>
-      </div>
+      </div> */}
     </div>
   );
 };
