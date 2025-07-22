@@ -137,7 +137,7 @@ const AuthIdMap: React.FC = () => {
           value={formattedData}
           onChange={handleChange}
         />
-        <Button type="primary" onClick={copyToClipboard}>
+        {/* <Button type="primary" onClick={copyToClipboard}>
           转换成英文
         </Button>
         <textarea
@@ -149,7 +149,7 @@ const AuthIdMap: React.FC = () => {
           }}
           value={formattedData}
           onChange={handleChange}
-        />
+        /> */}
       </div>
       {/* <div style={{ marginTop: 20 }}>
         <Button type="primary" onClick={copyToClipboard}>
