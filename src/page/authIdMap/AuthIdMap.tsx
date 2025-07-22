@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-import { Button, GetProps, Input, message } from "antd";
+import { GetProps, Input, message } from "antd";
 import { useStyles } from "./home.style";
 import { findModel, userCreate } from "@/server/authId/authId";
 import request from "@/utils/axios/axios";
@@ -44,45 +44,45 @@ const AuthIdMap: React.FC = () => {
     setFormattedData(e.target.value);
   };
 
-  const copyToClipboard = () => {
-    const text = formattedData;
-    if (!text) {
-      message.error("没有内容可以复制");
-      return;
-    }
+  // const copyToClipboard = () => {
+  //   const text = formattedData;
+  //   if (!text) {
+  //     message.error("没有内容可以复制");
+  //     return;
+  //   }
 
-    if (navigator.clipboard && navigator.clipboard?.writeText) {
-      // 使用现代的 clipboard API
-      navigator.clipboard
-        .writeText(text)
-        .then(() => {
-          message.success("内容已复制到剪贴板");
-        })
-        .catch(() => {
-          message.error("复制失败，请重试");
-        });
-    } else {
-      // 提示用户手动复制
-      // 旧浏览器回退方案
-      let textArea = document.createElement("textarea");
-      textArea.value = text;
-      textArea.style.top = "0";
-      textArea.style.left = "0";
-      textArea.style.position = "fixed";
-      document.body.appendChild(textArea);
-      textArea.focus();
-      textArea.select();
-      try {
-        let successful = document.execCommand("copy");
-        let msg = successful ? "successful" : "unsuccessful";
-        console.log("Fallback: Copying text command was " + msg);
-      } catch (err) {
-        console.error("Fallback: Oops, unable to copy", err);
-      }
-      document.body.removeChild(textArea);
-      message.success("复制成功");
-    }
-  };
+  //   if (navigator.clipboard && navigator.clipboard?.writeText) {
+  //     // 使用现代的 clipboard API
+  //     navigator.clipboard
+  //       .writeText(text)
+  //       .then(() => {
+  //         message.success("内容已复制到剪贴板");
+  //       })
+  //       .catch(() => {
+  //         message.error("复制失败，请重试");
+  //       });
+  //   } else {
+  //     // 提示用户手动复制
+  //     // 旧浏览器回退方案
+  //     let textArea = document.createElement("textarea");
+  //     textArea.value = text;
+  //     textArea.style.top = "0";
+  //     textArea.style.left = "0";
+  //     textArea.style.position = "fixed";
+  //     document.body.appendChild(textArea);
+  //     textArea.focus();
+  //     textArea.select();
+  //     try {
+  //       let successful = document.execCommand("copy");
+  //       let msg = successful ? "successful" : "unsuccessful";
+  //       console.log("Fallback: Copying text command was " + msg);
+  //     } catch (err) {
+  //       console.error("Fallback: Oops, unable to copy", err);
+  //     }
+  //     document.body.removeChild(textArea);
+  //     message.success("复制成功");
+  //   }
+  // };
 
   const onSearch: SearchProps["onSearch"] = async (value) => {
     if (!value.trim() || value.trim() === "") return;
