@@ -20,3 +20,10 @@ export const findModel = (data: any) => {
     method: "POST",
   };
 };
+
+export const getAuthIdOption = () => {
+  return {
+    url: "/auth-id-map/modelSearch",
+    method: "GET",
+  };
+};
