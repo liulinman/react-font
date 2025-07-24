@@ -68,6 +68,7 @@ const AuthIdMap: React.FC = () => {
     }
   };
 
+  // tis
   const getLabel = async () => {
     const res: any = await request(getAuthIdOption());
     if (res.code === 200) {
