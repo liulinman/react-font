@@ -43,7 +43,7 @@ const AuthIdMap: React.FC = () => {
     console.log(res);
   };
 
-  const handleChange = (e: any) => {
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setFormattedData(e.target.value);
   };
 
@@ -57,23 +57,31 @@ const AuthIdMap: React.FC = () => {
       message.error("请选择一个模块！");
       return;
     }
-
-    const res: any = await request(findModel({ model: selectedModule }));
-    if (res.data.code === 200) {
+    const res = await request<{
+      code: number;
+      data?: Record<string, string>;
+      message: string;
+    }>(findModel({ model: selectedModule }));
+    if (res.code === 200 && res.data) {
       message.success("查询成功");
-      const { list } = res.data;
-      setFormattedData(formatData(JSON.stringify(list)));
+      setFormattedData(formatData(JSON.stringify(res.data)));
     } else {
-      message.error("查询失败，请稍后再试");
+      message.error(res.message || "查询失败，请稍后再试");
     }
   };
 
   // tis
   const getLabel = async () => {
-    const res: any = await request(getAuthIdOption());
+    const res = await request<{
+      code: number;
+      data?: { label: string; value: string }[];
+      message: string;
+    }>(getAuthIdOption());
     if (res.code === 200) {
       const { data = [] } = res;
       setOptions(data);
+    } else {
+      message.error(res.message || "查询失败，请稍后再试");
     }
   };
 

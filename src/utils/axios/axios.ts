@@ -1,3 +1,4 @@
+import { message } from "antd";
 import axios, { AxiosRequestConfig } from "axios";
 
 // 定义 YTRequest 类型
@@ -19,6 +20,20 @@ const api = axios.create({
     "Content-Type": "application/json",
   },
 });
+
+// 添加响应拦截器
+api.interceptors.response.use(
+  (response) => {
+    // 如果请求成功，直接返回响应数据
+    return response;
+  },
+  (error) => {
+    message.error(error.response.data.message);
+
+    // 返回错误，可以根据需求抛出或处理
+    return Promise.reject(error.response.data);
+  }
+);
 
 // 封装请求执行函数
 const request = async <T>(ytRequest: YTRequest): Promise<T> => {
