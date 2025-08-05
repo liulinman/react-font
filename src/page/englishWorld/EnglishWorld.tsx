@@ -137,17 +137,11 @@ const EnglishWorld: React.FC = () => {
       title: "新增时间",
       dataIndex: "englishCreateTime",
       key: "englishCreateTime",
-      render: (time) => {
-        return <span>{formatDate(time)}</span>;
-      },
     },
     {
       title: "修改时间",
       dataIndex: "englishUpdateTime",
       key: "englishUpdateTime",
-      render: (time) => {
-        return <span>{formatDate(time)}</span>;
-      },
     },
     {
       title: "操作",
@@ -175,18 +169,6 @@ const EnglishWorld: React.FC = () => {
     },
   ];
 
-  const formatDate = (isoDate: string) => {
-    const date = new Date(isoDate);
-
-    const year = date.getUTCFullYear(); // 使用 getUTCFullYear 获取 UTC 年
-    const month = String(date.getUTCMonth() + 1).padStart(2, "0"); // 使用 getUTCMonth 获取 UTC 月份
-    const day = String(date.getUTCDate()).padStart(2, "0"); // 使用 getUTCDate 获取 UTC 日
-    const hours = String(date.getUTCHours()).padStart(2, "0"); // 使用 getUTCHours 获取 UTC 小时
-    const minutes = String(date.getUTCMinutes()).padStart(2, "0"); // 使用 getUTCMinutes 获取 UTC 分钟
-    const seconds = String(date.getUTCSeconds()).padStart(2, "0"); // 使用 getUTCSeconds 获取 UTC 秒
-
-    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-  };
   // 查询数据
   const handleSearch = () => {
     const values = form.getFieldsValue();
