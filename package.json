@@ -14,7 +14,11 @@
     "antd": "^5.24.3",
     "antd-style": "^3.7.1",
     "axios": "^1.8.2",
+    "dayjs": "^1.11.13",
+    "decimal.js": "^10.6.0",
     "react": "18.3.1",
+    "react-dnd": "^16.0.1",
+    "react-dnd-html5-backend": "^16.0.1",
     "react-dom": "18.3.1",
     "react-router-dom": "^7.2.0"
   },
