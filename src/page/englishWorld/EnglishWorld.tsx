@@ -106,11 +106,15 @@ const EnglishWorld: React.FC = () => {
       dataIndex: "englishNote",
       key: "englishNote",
       render: (text) => {
-        return (
-          <Popover content={formatNote(text)} title="笔记内容">
-            <Button type="link">查看笔记</Button>
-          </Popover>
-        );
+        if (text) {
+          return (
+            <Popover content={formatNote(text)} title="笔记内容">
+              <Button type="link">查看笔记</Button>
+            </Popover>
+          );
+        } else {
+          return <Button type="text">无笔记</Button>;
+        }
       },
     },
     {
