@@ -232,7 +232,7 @@ const EnglishWorld: React.FC = () => {
     const res = await request<{ code: number; data: boolean }>(wordAdd(values));
     console.log(res);
     // 1 判断是不是已经有了
-    // 2 没有就直接添加
+
     if (res.data) {
       message.success("操作成功");
       setIsModalVisible(false);
