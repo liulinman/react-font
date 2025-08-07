@@ -7,7 +7,7 @@ interface Props {
   isModalVisible: boolean;
   currentRecord?: WordList | null;
   type: "edit" | "add";
-  onOk: (data: WordList) => void;
+  onOk: (data: WordList, type: "edit" | "add") => void;
   onCancel: () => void;
 }
 
@@ -28,8 +28,10 @@ export const EditAddModal = (props: Props) => {
     // 获取表单数据并调用 onOk 提交
     form
       .validateFields()
-      .then((values) => {
-        onOk(values);
+      .then((value) => {
+        const values =
+          type === "add" ? value : { ...value, id: currentRecord?.id };
+        onOk({ ...values }, type);
         form.resetFields();
       })
       .catch((info) => {

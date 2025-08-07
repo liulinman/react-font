@@ -14,7 +14,13 @@ import {
 import type { TableProps } from "antd";
 import { EditAddModal } from "./component/EditAddModal";
 import request from "@/utils/axios/axios";
-import { wordAdd, wordDel, wordFindList } from "@/server/word/word";
+import {
+  wordAdd,
+  wordDel,
+  wordExist,
+  wordFindList,
+  wordUpdate,
+} from "@/server/word/word";
 import { WordList } from "@/server/word/word.type";
 const { RangePicker } = DatePicker;
 
@@ -208,19 +214,47 @@ const EnglishWorld: React.FC = () => {
   };
 
   // 提交编辑
-  const handleModalOk = async (values: WordList) => {
-    // 更新数据（可以在这里加入更新逻辑）
-    // 开始发送请求
-    const res = await request<{ code: number; data: boolean }>(wordAdd(values));
-    console.log(res);
-    // 1 判断是不是已经有了
+  const handleModalOk = async (values: WordList, type: "edit" | "add") => {
+    if (type === "edit") {
+      // 开始真正的更新操作
+      const res = await request<{ code: number; data: boolean }>(
+        wordUpdate(values)
+      );
+      if (res.data) {
+        message.success("更新成功");
+        setIsModalVisible(false);
+        await initialWordData();
+      } else {
+        message.error("更新失败");
+      }
+    }
 
-    if (res.data) {
-      message.success("操作成功");
-      setIsModalVisible(false);
-      await initialWordData();
-    } else {
-      message.error("操作失败");
+    if (type === "add") {
+      const { englishWord } = values;
+
+      const res = await request<{ code: number; data: boolean }>(
+        wordExist({ englishWord })
+      );
+
+      if (res.data) {
+        Modal.info({
+          title: "添加失败",
+          content: "单词已经存在！",
+        });
+        return;
+      } else {
+        // 开始真正的插入操作
+        const res = await request<{ code: number; data: boolean }>(
+          wordAdd(values)
+        );
+        if (res.data) {
+          message.success("添加成功");
+          setIsModalVisible(false);
+          await initialWordData();
+        } else {
+          message.error("添加失败");
+        }
+      }
     }
   };
 

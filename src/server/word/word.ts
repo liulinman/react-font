@@ -22,3 +22,19 @@ export const wordDel = (data: { id: number }) => {
     data,
   };
 };
+
+export const wordExist = (data: { englishWord: string }) => {
+  return {
+    url: "/english/existEnglishWord",
+    method: "POST",
+    data,
+  };
+};
+
+export const wordUpdate = (data: WordList) => {
+  return {
+    url: "/english/updateEnglishWord",
+    method: "POST",
+    data,
+  };
+};
