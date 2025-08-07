@@ -52,6 +52,9 @@ export const EditAddModal = (props: Props) => {
       okText="确认"
       cancelText="取消"
       destroyOnClose
+      styles={{
+        body: { maxHeight: "500px", overflowY: "auto", padding: "10px" },
+      }}
     >
       {/* 编辑/添加表单 */}
       <Form form={form} layout="vertical">
@@ -60,32 +63,32 @@ export const EditAddModal = (props: Props) => {
           name="englishWord"
           rules={[{ required: true, message: "请输入单词名" }]}
         >
-          <Input />
+          <Input allowClear />
         </Form.Item>
         <Form.Item label="音标" name="englishPhonetic">
-          <Input />
+          <Input allowClear />
         </Form.Item>
         <Form.Item label="中文" name="englishChinese">
-          <Input />
+          <Input allowClear />
         </Form.Item>
         <Form.Item label="图片" name="englishImg">
-          <Input />
+          <Input allowClear />
         </Form.Item>
         <Form.Item label="类型" name="englishType">
-          <Select>
+          <Select allowClear>
             <Select.Option value={"0"}>单词</Select.Option>
             <Select.Option value={"1"}>短语</Select.Option>
           </Select>
         </Form.Item>
         <Form.Item label="笔记" name="englishNote">
-          <TextArea allowClear />
+          <TextArea rows={4} allowClear />
         </Form.Item>
         <Form.Item
           label="掌握程度"
           name="englishLevel"
           rules={[{ required: true, message: "请选择掌握程度" }]}
         >
-          <Select>
+          <Select allowClear>
             <Select.Option value={"0"}>不会</Select.Option>
             <Select.Option value={"1"}>一般</Select.Option>
             <Select.Option value={"2"}>熟练</Select.Option>
@@ -93,7 +96,7 @@ export const EditAddModal = (props: Props) => {
           </Select>
         </Form.Item>
         <Form.Item label="引用" name="englishReference">
-          <Input />
+          <Input allowClear />
         </Form.Item>
       </Form>
     </Modal>
