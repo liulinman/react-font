@@ -22,6 +22,7 @@ import {
   wordUpdate,
 } from "@/server/word/word";
 import { WordList } from "@/server/word/word.type";
+import moment from "moment";
 const { RangePicker } = DatePicker;
 
 const EnglishWorld: React.FC = () => {
@@ -68,7 +69,7 @@ const EnglishWorld: React.FC = () => {
       title: "序号",
       dataIndex: "key",
       key: "key",
-      render: (_, __, index) => {
+      render: (text: number, record: WordList, index: number) => {
         return index + 1;
       },
     },
@@ -111,7 +112,7 @@ const EnglishWorld: React.FC = () => {
       title: "笔记",
       dataIndex: "englishNote",
       key: "englishNote",
-      render: (text) => {
+      render: (text: string) => {
         if (text) {
           return (
             <Popover content={formatNote(text)} title="笔记内容">
@@ -143,17 +144,27 @@ const EnglishWorld: React.FC = () => {
       title: "新增时间",
       dataIndex: "englishCreateTime",
       key: "englishCreateTime",
+      render: (utcTime: string) => {
+        return (
+          <span>{moment(utcTime).local().format("YYYY-MM-DD HH:mm:ss")}</span>
+        );
+      },
     },
     {
       title: "修改时间",
       dataIndex: "englishUpdateTime",
       key: "englishUpdateTime",
+      render: (utcTime: string) => {
+        return (
+          <span>{moment(utcTime).local().format("YYYY-MM-DD HH:mm:ss")}</span>
+        );
+      },
     },
     {
       title: "操作",
       key: "action",
       fixed: "right",
-      render: (_, record) => (
+      render: (text: number, record: WordList) => (
         <Space size="middle">
           <Button
             type="primary"

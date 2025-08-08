@@ -21,6 +21,8 @@ export const EditAddModal = (props: Props) => {
   useEffect(() => {
     if (type === "edit" && currentRecord) {
       form.setFieldsValue(currentRecord);
+    } else {
+      form.resetFields();
     }
   }, [type, currentRecord, form]);
 
@@ -32,7 +34,6 @@ export const EditAddModal = (props: Props) => {
         const values =
           type === "add" ? value : { ...value, id: currentRecord?.id };
         onOk({ ...values }, type);
-        form.resetFields();
       })
       .catch((info) => {
         console.log("Validate Failed:", info);
@@ -41,7 +42,6 @@ export const EditAddModal = (props: Props) => {
 
   const handleModalCancel = () => {
     // 关闭模态框时清空表单数据
-    form.resetFields();
     onCancel();
   };
 
