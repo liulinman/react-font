@@ -70,7 +70,7 @@ const EnglishWorld: React.FC = () => {
       title: "序号",
       dataIndex: "key",
       key: "key",
-      render: (text: number, record: WordList, index: number) => {
+      render: (_text: number, _record: WordList, index: number) => {
         return index + 1;
       },
     },
@@ -165,7 +165,7 @@ const EnglishWorld: React.FC = () => {
       title: "操作",
       key: "action",
       fixed: "right",
-      render: (text: number, record: WordList) => (
+      render: (_text: number, record: WordList) => (
         <Space size="middle">
           <Button
             type="primary"
