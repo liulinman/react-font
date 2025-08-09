@@ -18,6 +18,7 @@ import {
   wordAdd,
   wordDel,
   wordExist,
+  wordFilter,
   wordFindList,
   wordUpdate,
 } from "@/server/word/word";
@@ -187,9 +188,23 @@ const EnglishWorld: React.FC = () => {
   ];
 
   // 查询数据
-  const handleSearch = () => {
+  const handleSearch = async () => {
     const values = form.getFieldsValue();
-    console.log(`==`, values);
+    const { time } = values;
+    const newValues: any = {};
+    if (time) {
+      // 将时间转换为UTC后，再转换为本地时间并格式化为YYYY-MM-DD HH:mm:ss
+      newValues.startTime = moment(time[0]).format("YYYY-MM-DD HH:mm:ss");
+      newValues.endTime = moment(time[1]).format("YYYY-MM-DD HH:mm:ss");
+    }
+
+    const res = await request<{ code: number; data: WordList[] }>(
+      wordFilter({ ...values, ...newValues })
+    );
+
+    if (res.code === 200) {
+      setWordList(res.data);
+    }
   };
 
   // 重置表单
@@ -228,15 +243,17 @@ const EnglishWorld: React.FC = () => {
   const handleModalOk = async (values: WordList, type: "edit" | "add") => {
     if (type === "edit") {
       // 开始真正的更新操作
-      const res = await request<{ code: number; data: boolean }>(
-        wordUpdate(values)
-      );
+      const res = await request<{
+        code: number;
+        data: boolean;
+        message: string;
+      }>(wordUpdate(values));
       if (res.data) {
         message.success("更新成功");
         setIsModalVisible(false);
         await initialWordData();
       } else {
-        message.error("更新失败");
+        message.error(res.message);
       }
     }
 
@@ -290,22 +307,30 @@ const EnglishWorld: React.FC = () => {
         <Form layout={"inline"} form={form} style={{ maxWidth: "none" }}>
           <Form.Item
             label="时间范围"
-            name="layouta"
+            name="time"
             style={{ marginBottom: "16px" }}
           >
             <RangePicker allowClear />
           </Form.Item>
           <Form.Item
             label="中文名"
-            name="layout"
+            name="englishChinese"
             style={{ marginBottom: "16px" }}
           >
             <Input placeholder="请输入" allowClear />
           </Form.Item>
-          <Form.Item label="英文名" style={{ marginBottom: "16px" }}>
+          <Form.Item
+            label="英文名"
+            name="englishWord"
+            style={{ marginBottom: "16px" }}
+          >
             <Input placeholder="请输入" allowClear />
           </Form.Item>
-          <Form.Item label="类型" style={{ marginBottom: "16px" }}>
+          <Form.Item
+            label="类型"
+            name="englishType"
+            style={{ marginBottom: "16px" }}
+          >
             <Select
               placeholder="请选择"
               allowClear
@@ -313,12 +338,16 @@ const EnglishWorld: React.FC = () => {
                 width: 200,
               }}
               options={[
-                { label: "单词", value: 0 },
-                { label: "短语", value: 1 },
+                { label: "单词", value: "0" },
+                { label: "短语", value: "1" },
               ]}
             />
           </Form.Item>
-          <Form.Item label="掌握程度" style={{ marginBottom: "16px" }}>
+          <Form.Item
+            label="掌握程度"
+            name="englishLevel"
+            style={{ marginBottom: "16px" }}
+          >
             <Select
               placeholder="请选择"
               allowClear
@@ -326,10 +355,10 @@ const EnglishWorld: React.FC = () => {
                 width: 200,
               }}
               options={[
-                { label: "不会", value: 0 },
-                { label: "一般", value: 1 },
-                { label: "熟练", value: 2 },
-                { label: "精通", value: 3 },
+                { label: "不会", value: "0" },
+                { label: "一般", value: "1" },
+                { label: "熟练", value: "2" },
+                { label: "精通", value: "3" },
               ]}
             />
           </Form.Item>
@@ -360,6 +389,11 @@ const EnglishWorld: React.FC = () => {
         rowKey="id"
         scroll={{ x: "max-content" }}
         bordered
+        pagination={{
+          total: wordList.length, // 设置总数
+          showTotal: (total: number) => `数量: ${total} `, // 展示总数
+          pageSize: 10, // 每页显示的数量
+        }}
       />
       {/* 编辑模态框 */}
       <EditAddModal

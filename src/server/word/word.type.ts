@@ -11,3 +11,12 @@ export type WordList = {
   englishUpdateTime?: string;
   englishImg?: string;
 };
+
+export type FilterWordList = {
+  englishChinese?: string;
+  englishWord?: string;
+  englishType?: string;
+  englishLevel?: string;
+  startTime?: string;
+  endTime?: string;
+};

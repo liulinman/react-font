@@ -1,3 +1,11 @@
+/*
+ * @Author: yifeng 2108546503@qq.com
+ * @Date: 2025-07-28 15:30:54
+ * @LastEditors: yifeng 2108546503@qq.com
+ * @LastEditTime: 2025-08-09 21:26:54
+ * @FilePath: /react-font/src/utils/axios/axios.ts
+ * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+ */
 import { message } from "antd";
 import axios, { AxiosRequestConfig } from "axios";
 
@@ -28,6 +36,7 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
+    console.log(error);
     message.error(error.response.data.message);
 
     // 返回错误，可以根据需求抛出或处理

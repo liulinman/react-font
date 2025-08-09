@@ -1,4 +1,4 @@
-import { WordList } from "./word.type";
+import { FilterWordList, WordList } from "./word.type";
 
 export const wordFindList = () => {
   return {
@@ -34,6 +34,14 @@ export const wordExist = (data: { englishWord: string }) => {
 export const wordUpdate = (data: WordList) => {
   return {
     url: "/english/updateEnglishWord",
+    method: "POST",
+    data,
+  };
+};
+
+export const wordFilter = (data: FilterWordList) => {
+  return {
+    url: "/english/filterWordList",
     method: "POST",
     data,
   };
