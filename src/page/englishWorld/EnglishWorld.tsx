@@ -191,6 +191,7 @@ const EnglishWorld: React.FC = () => {
   const handleSearch = async () => {
     const values = form.getFieldsValue();
     const { time } = values;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const newValues: any = {};
     if (time) {
       // 将时间转换为UTC后，再转换为本地时间并格式化为YYYY-MM-DD HH:mm:ss
