@@ -198,14 +198,16 @@ const EnglishWorld: React.FC = () => {
       newValues.startTime = moment(time[0]).format("YYYY-MM-DD HH:mm:ss");
       newValues.endTime = moment(time[1]).format("YYYY-MM-DD HH:mm:ss");
     }
-
+    setLoading(true);
     const res = await request<{ code: number; data: WordList[] }>(
       wordFilter({ ...values, ...newValues })
     );
 
     if (res.code === 200) {
       setWordList(res.data);
+      message.success("查询成功");
     }
+    setLoading(false);
   };
 
   // 重置表单
@@ -392,6 +394,8 @@ const EnglishWorld: React.FC = () => {
         bordered
         pagination={{
           total: wordList.length, // 设置总数
+          // pageSizeOptions: ["10", "20", "50", "100", "200", "500"],
+          // showSizeChanger: true,
           showTotal: (total: number) => `数量: ${total} `, // 展示总数
           pageSize: 10, // 每页显示的数量
         }}

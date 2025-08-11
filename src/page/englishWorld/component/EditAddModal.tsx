@@ -67,24 +67,6 @@ export const EditAddModal = (props: Props) => {
         >
           <Input allowClear />
         </Form.Item>
-        <Form.Item label="音标" name="englishPhonetic">
-          <Input allowClear />
-        </Form.Item>
-        <Form.Item label="中文" name="englishChinese">
-          <Input allowClear />
-        </Form.Item>
-        <Form.Item label="图片" name="englishImg">
-          <Input allowClear />
-        </Form.Item>
-        <Form.Item label="类型" name="englishType">
-          <Select allowClear>
-            <Select.Option value={"0"}>单词</Select.Option>
-            <Select.Option value={"1"}>短语</Select.Option>
-          </Select>
-        </Form.Item>
-        <Form.Item label="笔记" name="englishNote">
-          <TextArea rows={4} allowClear />
-        </Form.Item>
         <Form.Item
           label="掌握程度"
           name="englishLevel"
@@ -97,6 +79,30 @@ export const EditAddModal = (props: Props) => {
             <Select.Option value={"3"}>精通</Select.Option>
           </Select>
         </Form.Item>
+        <Form.Item
+          label="类型"
+          name="englishType"
+          rules={[{ required: true, message: "请选择类型" }]}
+        >
+          <Select allowClear>
+            <Select.Option value={"0"}>单词</Select.Option>
+            <Select.Option value={"1"}>短语</Select.Option>
+          </Select>
+        </Form.Item>
+        <Form.Item label="音标" name="englishPhonetic">
+          <Input allowClear />
+        </Form.Item>
+        <Form.Item label="中文" name="englishChinese">
+          <Input allowClear />
+        </Form.Item>
+        <Form.Item label="图片" name="englishImg">
+          <Input allowClear />
+        </Form.Item>
+
+        <Form.Item label="笔记" name="englishNote">
+          <TextArea rows={4} allowClear />
+        </Form.Item>
+
         <Form.Item label="引用" name="englishReference">
           <Input allowClear />
         </Form.Item>
