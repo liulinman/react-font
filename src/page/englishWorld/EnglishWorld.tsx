@@ -75,10 +75,22 @@ const EnglishWorld: React.FC = () => {
       },
     },
     {
-      width: 150,
+      width: 300,
       title: "单词名",
       dataIndex: "englishWord",
       key: "englishWord",
+      // render: (text: string, record: WordList) => {
+      //   const { englishType } = record;
+      //   if (englishType === "2") {
+      //     return (
+      //       <Popover content={formatNote(text)} title="句子">
+      //         <Button type="link">查看句子</Button>
+      //       </Popover>
+      //     );
+      //   } else {
+      //     return <span>{text}</span>;
+      //   }
+      // },
     },
     {
       width: 150,
@@ -104,7 +116,7 @@ const EnglishWorld: React.FC = () => {
       dataIndex: "englishType",
       key: "englishType",
       render: (level: number) => {
-        const levels = ["单词", "短语"];
+        const levels = ["单词", "短语", "句子"];
         return levels[level];
       },
     },
@@ -343,6 +355,7 @@ const EnglishWorld: React.FC = () => {
               options={[
                 { label: "单词", value: "0" },
                 { label: "短语", value: "1" },
+                { label: "句子", value: "2" },
               ]}
             />
           </Form.Item>

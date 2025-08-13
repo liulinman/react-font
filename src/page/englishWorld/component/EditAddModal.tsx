@@ -87,6 +87,7 @@ export const EditAddModal = (props: Props) => {
           <Select allowClear>
             <Select.Option value={"0"}>单词</Select.Option>
             <Select.Option value={"1"}>短语</Select.Option>
+            <Select.Option value={"2"}>句子</Select.Option>
           </Select>
         </Form.Item>
         <Form.Item label="音标" name="englishPhonetic">
