@@ -34,6 +34,9 @@ export const EditAddModal = (props: Props) => {
         const values =
           type === "add" ? value : { ...value, id: currentRecord?.id };
         onOk({ ...values }, type);
+        if (type === "add") {
+          form.resetFields();
+        }
       })
       .catch((info) => {
         console.log("Validate Failed:", info);
