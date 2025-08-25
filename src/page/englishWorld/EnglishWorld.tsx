@@ -409,7 +409,7 @@ const EnglishWorld: React.FC = () => {
         columns={columns}
         dataSource={wordList}
         rowKey="id"
-        scroll={{ x: "max-content" }}
+        scroll={{ x: "max-content", y: 550 }}
         bordered
         pagination={{
           total: wordList.length, // 设置总数
