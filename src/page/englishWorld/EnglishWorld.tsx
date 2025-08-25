@@ -225,6 +225,7 @@ const EnglishWorld: React.FC = () => {
   // 重置表单
   const handleReset = () => {
     form.resetFields();
+    initialWordData();
   };
 
   // 删除操作
