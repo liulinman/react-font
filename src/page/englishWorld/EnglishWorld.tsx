@@ -24,6 +24,7 @@ import {
 } from "@/server/word/word";
 import { WordList } from "@/server/word/word.type";
 import moment from "moment";
+import { convertToFormat } from "@/utils";
 const { RangePicker } = DatePicker;
 
 const EnglishWorld: React.FC = () => {
@@ -205,10 +206,15 @@ const EnglishWorld: React.FC = () => {
     const { time } = values;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const newValues: any = {};
+
     if (time) {
       // 将时间转换为UTC后，再转换为本地时间并格式化为YYYY-MM-DD HH:mm:ss
-      newValues.startTime = moment(time[0]).format("YYYY-MM-DD HH:mm:ss");
-      newValues.endTime = moment(time[1]).format("YYYY-MM-DD HH:mm:ss");
+      newValues.startTime = convertToFormat(time[0], "start");
+      newValues.endTime = convertToFormat(time[1], "end");
+      delete values.time;
+    }
+    if (time === null || time === undefined) {
+      delete values.time;
     }
     setLoading(true);
     const res = await request<{ code: number; data: WordList[] }>(
