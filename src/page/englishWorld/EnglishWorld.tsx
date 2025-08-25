@@ -217,7 +217,6 @@ const EnglishWorld: React.FC = () => {
 
     if (res.code === 200) {
       setWordList(res.data);
-      message.success("查询成功");
     }
     setLoading(false);
   };
