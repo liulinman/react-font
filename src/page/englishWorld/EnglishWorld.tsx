@@ -239,7 +239,7 @@ const EnglishWorld: React.FC = () => {
         );
         if (res.data) {
           message.success("删除成功");
-          await initialWordData();
+          await handleSearch();
         } else {
           message.error("删除失败");
         }
@@ -266,7 +266,7 @@ const EnglishWorld: React.FC = () => {
       if (res.data) {
         message.success("更新成功");
         setIsModalVisible(false);
-        await initialWordData();
+        await handleSearch();
       } else {
         message.error(res.message);
       }
@@ -293,7 +293,7 @@ const EnglishWorld: React.FC = () => {
         if (res.data) {
           message.success("添加成功");
           setIsModalVisible(false);
-          await initialWordData();
+          await handleSearch();
         } else {
           message.error("添加失败");
         }
