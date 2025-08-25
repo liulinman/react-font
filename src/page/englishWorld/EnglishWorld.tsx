@@ -331,7 +331,7 @@ const EnglishWorld: React.FC = () => {
             name="time"
             style={{ marginBottom: "16px" }}
           >
-            <RangePicker allowClear />
+            <RangePicker allowClear placeholder={["开始时间", "结束时间"]} />
           </Form.Item>
           <Form.Item
             label="中文名"
