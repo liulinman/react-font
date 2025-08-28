@@ -57,12 +57,16 @@ const EnglishWorld: React.FC = () => {
 
   // 将换行符转换为 HTML 的 <br /> 标签
   const formatNote = (text: string) => {
-    return text.split("\n").map((item, index) => (
-      <span key={index}>
-        {item}
-        <br />
-      </span>
-    ));
+    return (
+      <div style={{ maxHeight: "400px", maxWidth: "800px", overflow: "auto" }}>
+        {text.split("\n").map((item, index) => (
+          <span key={index}>
+            {item}
+            <br />
+          </span>
+        ))}
+      </div>
+    );
   };
 
   const columns: TableProps<WordList>["columns"] = [
@@ -80,18 +84,6 @@ const EnglishWorld: React.FC = () => {
       title: "单词名",
       dataIndex: "englishWord",
       key: "englishWord",
-      // render: (text: string, record: WordList) => {
-      //   const { englishType } = record;
-      //   if (englishType === "2") {
-      //     return (
-      //       <Popover content={formatNote(text)} title="句子">
-      //         <Button type="link">查看句子</Button>
-      //       </Popover>
-      //     );
-      //   } else {
-      //     return <span>{text}</span>;
-      //   }
-      // },
     },
     {
       width: 150,
