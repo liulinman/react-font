@@ -11,6 +11,17 @@ interface Props {
   onCancel: () => void;
 }
 
+type FormValues = {
+  englishWord: string;
+  englishLevel: string;
+  englishType: string;
+  englishPhonetic?: string;
+  englishChinese?: string;
+  englishImg?: string;
+  englishNote?: string;
+  englishReference?: string;
+};
+
 export const EditAddModal = (props: Props) => {
   const { isModalVisible, currentRecord, type, onOk, onCancel } = props;
 
@@ -48,6 +59,18 @@ export const EditAddModal = (props: Props) => {
     onCancel();
   };
 
+  const onValuesChange = (changedValues: FormValues) => {
+    const { englishWord } = changedValues;
+    if (englishWord) {
+      // 开始决定掌握程度和类型
+      const isPhrase = englishWord.trim().includes(" ");
+      form.setFieldsValue({
+        englishLevel: "0",
+        englishType: isPhrase ? "1" : "0",
+      });
+    }
+  };
+
   return (
     <Modal
       title={type === "edit" ? "编辑单词" : "添加单词"}
@@ -62,7 +85,7 @@ export const EditAddModal = (props: Props) => {
       }}
     >
       {/* 编辑/添加表单 */}
-      <Form form={form} layout="vertical">
+      <Form form={form} onValuesChange={onValuesChange} layout="vertical">
         <Form.Item
           label="单词名"
           name="englishWord"
