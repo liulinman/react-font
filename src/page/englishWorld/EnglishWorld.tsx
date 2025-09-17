@@ -19,13 +19,18 @@ import {
   wordDel,
   wordExist,
   wordFilter,
-  wordFindList,
   wordUpdate,
 } from "@/server/word/word";
 import { WordList } from "@/server/word/word.type";
 import moment from "moment";
 import { convertToFormat } from "@/utils";
 const { RangePicker } = DatePicker;
+
+type ListData = {
+  list: WordList[];
+  total: number;
+  totalPages: number; // 计算总页数ag
+};
 
 const EnglishWorld: React.FC = () => {
   const [form] = Form.useForm();
@@ -34,26 +39,33 @@ const EnglishWorld: React.FC = () => {
   const [wordRecord, setWordRecord] = useState<WordList>();
   const [wordList, setWordList] = useState<WordList[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [page, setPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(10);
+  const [totalNum, setTotalNum] = useState<number>(0);
 
-  const initialWordData = useCallback(async () => {
-    setLoading(true);
-    const res = await request<{
-      code: number;
-      data: WordList[];
-      message: string;
-    }>(wordFindList());
-    if (res.code === 200) {
-      setWordList(res.data);
-    } else {
-      message.error(`失败`);
-      setWordList([]);
-    }
-    setLoading(false);
-  }, []);
+  const initialWordData = useCallback(
+    async (page: number, pageSize: number) => {
+      setLoading(true);
+      const res = await request<{
+        code: number;
+        data: ListData;
+        message: string;
+      }>(wordFilter({ page, pageSize }));
+      if (res.code === 200) {
+        setWordList(res.data.list);
+        setTotalNum(res.data.total);
+      } else {
+        message.error(`失败`);
+        setWordList([]);
+      }
+      setLoading(false);
+    },
+    []
+  );
 
   useEffect(() => {
-    initialWordData();
-  }, [initialWordData]);
+    initialWordData(page, pageSize);
+  }, [initialWordData, page, pageSize]);
 
   // 将换行符转换为 HTML 的 <br /> 标签
   const formatNote = (text: string) => {
@@ -209,12 +221,13 @@ const EnglishWorld: React.FC = () => {
       delete values.time;
     }
     setLoading(true);
-    const res = await request<{ code: number; data: WordList[] }>(
-      wordFilter({ ...values, ...newValues })
+    const res = await request<{ code: number; data: ListData }>(
+      wordFilter({ ...values, ...newValues, page: 1, pageSize })
     );
 
     if (res.code === 200) {
-      setWordList(res.data);
+      setWordList(res.data.list);
+      setTotalNum(res.data.total);
     }
     setLoading(false);
   };
@@ -222,7 +235,7 @@ const EnglishWorld: React.FC = () => {
   // 重置表单
   const handleReset = () => {
     form.resetFields();
-    initialWordData();
+    initialWordData(1, 10);
   };
 
   // 删除操作
@@ -313,6 +326,12 @@ const EnglishWorld: React.FC = () => {
     setType(type);
   };
 
+  const handlePageChange = (page: number, pageSize: number) => {
+    setPage(page); // 设置当前页码
+    setPageSize(pageSize); // 设置每页显示条数
+    initialWordData(pa1e, pageSize);
+  };
+
   return (
     <div style={{ paddingLeft: "20px", paddingRight: "20px" }}>
       {/* 查询条件：时间范围 1、中文名 2、英文名 3 掌握程度 */}
@@ -401,14 +420,15 @@ const EnglishWorld: React.FC = () => {
         columns={columns}
         dataSource={wordList}
         rowKey="id"
-        scroll={{ x: "max-content", y: 550 }}
+        scroll={{ x: "max-content", y: "calc(100vh - 300px)" }} // 使用 100vh 减去其他元素高度
         bordered
         pagination={{
-          total: wordList.length, // 设置总数
-          // pageSizeOptions: ["10", "20", "50", "100", "200", "500"],
-          // showSizeChanger: true,
+          total: totalNum, // 设置总数
+          pageSizeOptions: ["10", "20", "50", "100", "200", "500"],
+          showSizeChanger: true,
           showTotal: (total: number) => `数量: ${total} `, // 展示总数
-          pageSize: 10, // 每页显示的数量
+          pageSize: pageSize, // 每页显示的数量
+          onChange: handlePageChange,
         }}
       />
       {/* 编辑模态框 */}

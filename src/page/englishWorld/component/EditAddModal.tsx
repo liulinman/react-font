@@ -1,7 +1,11 @@
-import { useEffect } from "react";
-import { Modal, Form, Input, Select } from "antd";
+import { useEffect, useState } from "react";
+import { Modal, Form, Input, Select, Upload, Button, message } from "antd";
 import { WordList } from "@/server/word/word.type";
 import TextArea from "antd/es/input/TextArea";
+import { UploadOutlined } from "@ant-design/icons";
+
+import request from "@/utils/axios/axios";
+import { uploadFile } from "@/server/word/word";
 
 interface Props {
   isModalVisible: boolean;
@@ -24,6 +28,7 @@ type FormValues = {
 
 export const EditAddModal = (props: Props) => {
   const { isModalVisible, currentRecord, type, onOk, onCancel } = props;
+  const [uploadLoading, setUploadLoading] = useState(false);
 
   // 初始化表单数据
   const [form] = Form.useForm();
@@ -68,6 +73,48 @@ export const EditAddModal = (props: Props) => {
         englishLevel: "0",
         englishType: isPhrase ? "1" : "0",
       });
+    }
+  };
+
+  // 上传文件处理方法
+  const onChange = (info: any) => {
+    if (info.file.status === "uploading") {
+      setUploadLoading(true);
+      return;
+    }
+    if (info.file.status === "done") {
+      setUploadLoading(false);
+      message.success(`${info.file.name} 上传成功`);
+      // 假设后端返回的数据结构为 { data: { url: string } }
+      const uploadedUrl =
+        info.file.response?.data?.url || info.file.response?.url;
+      if (uploadedUrl) {
+        form.setFieldsValue({ englishImg: uploadedUrl });
+      }
+    } else if (info.file.status === "error") {
+      setUploadLoading(false);
+      message.error(`${info.file.name} 上传失败`);
+    }
+  };
+
+  const customRequest = async (options: any) => {
+    const { file, onSuccess, onError, onProgress } = options;
+
+    try {
+      // 直接使用文件对象创建FormData
+      const fileBlob = new Blob([file], { type: file.type });
+
+      // 模拟上传进度
+      onProgress({ percent: 0 });
+
+      // 发送请求
+      const result = await request(uploadFile({ file: fileBlob }));
+
+      // 上传成功
+      onSuccess(result, file);
+    } catch (error) {
+      console.error("File upload failed", error);
+      onError(error);
     }
   };
 
@@ -123,7 +170,24 @@ export const EditAddModal = (props: Props) => {
           <Input allowClear />
         </Form.Item>
         <Form.Item label="图片" name="englishImg">
-          <Input allowClear />
+          <Upload
+            customRequest={customRequest}
+            onChange={onChange}
+            // showUploadList={false}
+          >
+            <Button icon={<UploadOutlined />} loading={uploadLoading}>
+              点击上传
+            </Button>
+          </Upload>
+          {/* {form.getFieldValue("englishImg") && (
+            <div style={{ marginTop: 8 }}>
+              <img
+                src={form.getFieldValue("englishImg")}
+                alt="预览"
+                style={{ maxWidth: "100%", maxHeight: 200 }}
+              />
+            </div>
+          )} */}
         </Form.Item>
 
         <Form.Item label="笔记" name="englishNote">
