@@ -329,7 +329,7 @@ const EnglishWorld: React.FC = () => {
   const handlePageChange = (page: number, pageSize: number) => {
     setPage(page); // 设置当前页码
     setPageSize(pageSize); // 设置每页显示条数
-    initialWordData(pa1e, pageSize);
+    initialWordData(page, pageSize);
   };
 
   return (
