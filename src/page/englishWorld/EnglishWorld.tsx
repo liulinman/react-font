@@ -69,17 +69,23 @@ const EnglishWorld: React.FC = () => {
   }, [initialWordData, page, pageSize]);
 
   // 将换行符转换为 HTML 的 <br /> 标签
-  const formatNote = (text: string) => {
-    return (
-      <div style={{ maxHeight: "400px", maxWidth: "800px", overflow: "auto" }}>
-        {text.split("\n").map((item, index) => (
-          <span key={index}>
-            {item}
-            <br />
-          </span>
-        ))}
-      </div>
-    );
+  const formatNote = (text?: string) => {
+    if (text) {
+      return (
+        <div
+          style={{ maxHeight: "400px", maxWidth: "800px", overflow: "auto" }}
+        >
+          {text.split("\n").map((item, index) => (
+            <span key={index}>
+              {item}
+              <br />
+            </span>
+          ))}
+        </div>
+      );
+    } else {
+      return null;
+    }
   };
 
   const columns: TableProps<WordList>["columns"] = [
@@ -427,7 +433,7 @@ const EnglishWorld: React.FC = () => {
         columns={columns}
         dataSource={wordList}
         rowKey="id"
-        scroll={{ x: "max-content", y: "calc(100vh - 300px)" }} // 使用 100vh 减去其他元素高度
+        scroll={{ x: "max-content", y: "calc(100vh - 260px)" }} // 使用 100vh 减去其他元素高度
         bordered
         pagination={{
           total: totalNum, // 设置总数
