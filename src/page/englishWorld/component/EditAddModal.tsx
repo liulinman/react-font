@@ -167,7 +167,7 @@ export const EditAddModal = (props: Props) => {
           <Input allowClear />
         </Form.Item>
         <Form.Item label="中文" name="englishChinese">
-          <Input allowClear />
+          <TextArea rows={4} allowClear />
         </Form.Item>
         <Form.Item label="图片" name="englishImg">
           <Upload

@@ -10,6 +10,7 @@ import {
   Select,
   Space,
   Table,
+  Tooltip,
 } from "antd";
 import type { TableProps } from "antd";
 import { EditAddModal } from "./component/EditAddModal";
@@ -110,10 +111,16 @@ const EnglishWorld: React.FC = () => {
       key: "englishImg",
     },
     {
-      width: 150,
+      width: 200,
       title: "中文",
       dataIndex: "englishChinese",
       key: "englishChinese",
+      ellipsis: true,
+      render: (englishChinese: string) => (
+        <Tooltip placement="topLeft" title={formatNote(englishChinese)}>
+          {englishChinese}
+        </Tooltip>
+      ),
     },
     {
       width: 100,
