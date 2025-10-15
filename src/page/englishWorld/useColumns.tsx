@@ -54,12 +54,6 @@ export const useColumns = (props: Props) => {
       fixed: "left",
     },
     {
-      width: 100,
-      title: "图片",
-      dataIndex: "englishImg",
-      key: "englishImg",
-    },
-    {
       width: 200,
       title: "中文",
       dataIndex: "englishChinese",
@@ -71,6 +65,12 @@ export const useColumns = (props: Props) => {
         </Tooltip>
       ),
       fixed: "left",
+    },
+    {
+      width: 100,
+      title: "图片",
+      dataIndex: "englishImg",
+      key: "englishImg",
     },
     {
       width: 100,
