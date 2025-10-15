@@ -103,12 +103,14 @@ const EnglishWorld: React.FC = () => {
       title: "单词名",
       dataIndex: "englishWord",
       key: "englishWord",
+      fixed: "left",
     },
     {
       width: 150,
       title: "音标",
       dataIndex: "englishPhonetic",
       key: "englishPhonetic",
+      fixed: "left",
     },
     {
       width: 100,
@@ -127,6 +129,7 @@ const EnglishWorld: React.FC = () => {
           {englishChinese}
         </Tooltip>
       ),
+      fixed: "left",
     },
     {
       width: 100,
