@@ -6,13 +6,10 @@ import {
   Input,
   message,
   Modal,
-  Popover,
   Select,
   Space,
   Table,
-  Tooltip,
 } from "antd";
-import type { TableProps } from "antd";
 import { EditAddModal } from "./component/EditAddModal";
 import request from "@/utils/axios/axios";
 import {
@@ -23,8 +20,8 @@ import {
   wordUpdate,
 } from "@/server/word/word";
 import { WordList } from "@/server/word/word.type";
-import moment from "moment";
 import { convertToFormat } from "@/utils";
+import { useColumns } from "./useColumns";
 const { RangePicker } = DatePicker;
 
 type ListData = {
@@ -43,6 +40,38 @@ const EnglishWorld: React.FC = () => {
   const [page, setPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
   const [totalNum, setTotalNum] = useState<number>(0);
+
+  // 删除操作
+  const handleDelete = async (id: number) => {
+    Modal.confirm({
+      title: "确认删除",
+      okText: "确认",
+      cancelText: "取消",
+      onOk: async () => {
+        const res = await request<{ code: number; data: boolean }>(
+          wordDel({ id })
+        );
+        if (res.data) {
+          message.success("删除成功");
+          await handleSearch();
+        } else {
+          message.error("删除失败");
+        }
+      },
+    });
+  };
+
+  // 编辑操作
+  const handleEdit = (record: WordList) => {
+    setWordRecord(record);
+    handleType("edit");
+    setIsModalVisible(true);
+  };
+
+  const { columns } = useColumns({
+    handleEdit,
+    handleDelete,
+  });
 
   const initialWordData = useCallback(
     async (page: number, pageSize: number) => {
@@ -67,158 +96,6 @@ const EnglishWorld: React.FC = () => {
   useEffect(() => {
     initialWordData(page, pageSize);
   }, [initialWordData, page, pageSize]);
-
-  // 将换行符转换为 HTML 的 <br /> 标签
-  const formatNote = (text?: string) => {
-    if (text) {
-      return (
-        <div
-          style={{ maxHeight: "400px", maxWidth: "800px", overflow: "auto" }}
-        >
-          {text.split("\n").map((item, index) => (
-            <span key={index}>
-              {item}
-              <br />
-            </span>
-          ))}
-        </div>
-      );
-    } else {
-      return null;
-    }
-  };
-
-  const columns: TableProps<WordList>["columns"] = [
-    {
-      width: 80,
-      title: "序号",
-      dataIndex: "key",
-      key: "key",
-      render: (_text: number, _record: WordList, index: number) => {
-        return index + 1;
-      },
-    },
-    {
-      width: 300,
-      title: "单词名",
-      dataIndex: "englishWord",
-      key: "englishWord",
-      fixed: "left",
-    },
-    {
-      width: 150,
-      title: "音标",
-      dataIndex: "englishPhonetic",
-      key: "englishPhonetic",
-      fixed: "left",
-    },
-    {
-      width: 100,
-      title: "图片",
-      dataIndex: "englishImg",
-      key: "englishImg",
-    },
-    {
-      width: 200,
-      title: "中文",
-      dataIndex: "englishChinese",
-      key: "englishChinese",
-      ellipsis: true,
-      render: (englishChinese: string) => (
-        <Tooltip placement="topLeft" title={formatNote(englishChinese)}>
-          {englishChinese}
-        </Tooltip>
-      ),
-      fixed: "left",
-    },
-    {
-      width: 100,
-      title: "类型",
-      dataIndex: "englishType",
-      key: "englishType",
-      render: (level: number) => {
-        const levels = ["单词", "短语", "句子"];
-        return levels[level];
-      },
-    },
-    {
-      width: 150,
-      title: "笔记",
-      dataIndex: "englishNote",
-      key: "englishNote",
-      render: (text: string) => {
-        if (text) {
-          return (
-            <Popover content={formatNote(text)} title="笔记内容">
-              <Button type="link">查看笔记</Button>
-            </Popover>
-          );
-        } else {
-          return <Button type="text">无笔记</Button>;
-        }
-      },
-    },
-    {
-      width: 100,
-      title: "掌握程度",
-      dataIndex: "englishLevel",
-      key: "englishLevel",
-      render: (level: number) => {
-        const levels = ["不会", "一般", "熟练", "精通"];
-        return levels[level];
-      },
-    },
-    {
-      width: 200,
-      title: "引用",
-      dataIndex: "englishReference",
-      key: "englishReference",
-    },
-    {
-      title: "新增时间",
-      dataIndex: "englishCreateTime",
-      key: "englishCreateTime",
-      render: (utcTime: string) => {
-        return (
-          <span>{moment(utcTime).local().format("YYYY-MM-DD HH:mm:ss")}</span>
-        );
-      },
-    },
-    {
-      title: "修改时间",
-      dataIndex: "englishUpdateTime",
-      key: "englishUpdateTime",
-      render: (utcTime: string) => {
-        return (
-          <span>{moment(utcTime).local().format("YYYY-MM-DD HH:mm:ss")}</span>
-        );
-      },
-    },
-    {
-      title: "操作",
-      key: "action",
-      fixed: "right",
-      render: (_text: number, record: WordList) => (
-        <Space size="middle">
-          <Button
-            type="primary"
-            size="small"
-            onClick={() => handleEdit(record)}
-          >
-            编辑
-          </Button>
-          <Button
-            color="danger"
-            variant="solid"
-            size="small"
-            onClick={() => handleDelete(record.id)}
-          >
-            删除
-          </Button>
-        </Space>
-      ),
-    },
-  ];
 
   // 查询数据
   const handleSearch = async () => {
@@ -252,33 +129,6 @@ const EnglishWorld: React.FC = () => {
   const handleReset = () => {
     form.resetFields();
     initialWordData(1, 10);
-  };
-
-  // 删除操作
-  const handleDelete = async (id: number) => {
-    Modal.confirm({
-      title: "确认删除",
-      okText: "确认",
-      cancelText: "取消",
-      onOk: async () => {
-        const res = await request<{ code: number; data: boolean }>(
-          wordDel({ id })
-        );
-        if (res.data) {
-          message.success("删除成功");
-          await handleSearch();
-        } else {
-          message.error("删除失败");
-        }
-      },
-    });
-  };
-
-  // 编辑操作
-  const handleEdit = (record: WordList) => {
-    setWordRecord(record);
-    handleType("edit");
-    setIsModalVisible(true);
   };
 
   // 提交编辑
