@@ -38,6 +38,7 @@ export const useColumns = (props: Props) => {
       render: (_text: number, _record: WordList, index: number) => {
         return index + 1;
       },
+      fixed: "left",
     },
     {
       width: 300,
@@ -51,7 +52,6 @@ export const useColumns = (props: Props) => {
       title: "音标",
       dataIndex: "englishPhonetic",
       key: "englishPhonetic",
-      fixed: "left",
     },
     {
       width: 200,
@@ -64,7 +64,6 @@ export const useColumns = (props: Props) => {
           {englishChinese}
         </Tooltip>
       ),
-      fixed: "left",
     },
     {
       width: 100,
