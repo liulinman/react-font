@@ -1,11 +1,13 @@
 import React, { useCallback, useEffect, useState } from "react";
 import {
   Button,
+  Col,
   DatePicker,
   Form,
   Input,
   message,
   Modal,
+  Row,
   Select,
   Space,
   Table,
@@ -195,84 +197,80 @@ const EnglishWorld: React.FC = () => {
   const handlePageChange = (page: number, pageSize: number) => {
     setPage(page); // 设置当前页码
     setPageSize(pageSize); // 设置每页显示条数
-    initialWordData(page, pageSize);
   };
 
   return (
-    <div style={{ paddingLeft: "20px", paddingRight: "20px" }}>
+    <div style={{ paddingLeft: "20px", paddingRight: "20px", width: "100%" }}>
       {/* 查询条件：时间范围 1、中文名 2、英文名 3 掌握程度 */}
-      <Space style={{ marginTop: 10 }}>
-        <Form layout={"inline"} form={form} style={{ maxWidth: "none" }}>
-          <Form.Item
-            label="时间范围"
-            name="time"
-            style={{ marginBottom: "16px" }}
-          >
-            <RangePicker allowClear placeholder={["开始时间", "结束时间"]} />
-          </Form.Item>
-          <Form.Item
-            label="中文名"
-            name="englishChinese"
-            style={{ marginBottom: "16px" }}
-          >
-            <Input placeholder="请输入" allowClear />
-          </Form.Item>
-          <Form.Item
-            label="英文名"
-            name="englishWord"
-            style={{ marginBottom: "16px" }}
-          >
-            <Input placeholder="请输入" allowClear />
-          </Form.Item>
-          <Form.Item
-            label="类型"
-            name="englishType"
-            style={{ marginBottom: "16px" }}
-          >
-            <Select
-              placeholder="请选择"
-              allowClear
-              style={{
-                width: 200,
-              }}
-              options={[
-                { label: "单词", value: "0" },
-                { label: "短语", value: "1" },
-                { label: "句子", value: "2" },
-              ]}
-            />
-          </Form.Item>
-          <Form.Item
-            label="掌握程度"
-            name="englishLevel"
-            style={{ marginBottom: "16px" }}
-          >
-            <Select
-              placeholder="请选择"
-              allowClear
-              style={{
-                width: 200,
-              }}
-              options={[
-                { label: "不会", value: "0" },
-                { label: "一般", value: "1" },
-                { label: "熟练", value: "2" },
-                { label: "精通", value: "3" },
-              ]}
-            />
-          </Form.Item>
-          <Form.Item>
-            <Space>
-              <Button type="primary" onClick={handleSearch}>
-                查询
-              </Button>
-              <Button htmlType="reset" onClick={handleReset}>
-                重置
-              </Button>
-            </Space>
-          </Form.Item>
-        </Form>
-      </Space>
+
+      <Form
+        form={form}
+        style={{ maxWidth: "none", width: "100%", marginTop: "10px" }}
+      >
+        <Row gutter={16}>
+          <Col span={6}>
+            <Form.Item label="时间范围" name="time">
+              <RangePicker allowClear placeholder={["开始时间", "结束时间"]} />
+            </Form.Item>
+          </Col>
+          <Col span={6}>
+            <Form.Item label="中文名" name="englishChinese">
+              <Input placeholder="请输入" allowClear />
+            </Form.Item>
+          </Col>
+          <Col span={6}>
+            <Form.Item label="英文名" name="englishWord">
+              <Input placeholder="请输入" allowClear />
+            </Form.Item>
+          </Col>
+          <Col span={6}>
+            <Form.Item label="类型" name="englishType">
+              <Select
+                placeholder="请选择"
+                allowClear
+                options={[
+                  { label: "单词", value: "0" },
+                  { label: "短语", value: "1" },
+                  { label: "句子", value: "2" },
+                ]}
+              />
+            </Form.Item>
+          </Col>
+        </Row>
+
+        <Row gutter={16}>
+          <Col span={6}>
+            <Form.Item label="掌握程度" name="englishLevel">
+              <Select
+                placeholder="请选择"
+                allowClear
+                options={[
+                  { label: "不会", value: "0" },
+                  { label: "一般", value: "1" },
+                  { label: "熟练", value: "2" },
+                  { label: "精通", value: "3" },
+                ]}
+              />
+            </Form.Item>
+          </Col>
+        </Row>
+      </Form>
+
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "flex-end",
+        }}
+      >
+        <Space>
+          <Button type="primary" onClick={handleSearch}>
+            查询
+          </Button>
+          <Button htmlType="reset" onClick={handleReset}>
+            重置
+          </Button>
+        </Space>
+      </div>
       <div>
         <Space size="small" style={{ marginTop: 10, marginBottom: 10 }}>
           <Button type="primary" onClick={handleAdd} size="middle">
@@ -286,7 +284,7 @@ const EnglishWorld: React.FC = () => {
         columns={columns}
         dataSource={wordList}
         rowKey="id"
-        scroll={{ x: "max-content", y: "calc(100vh - 260px)" }} // 使用 100vh 减去其他元素高度
+        scroll={{ x: "max-content", y: "calc(100vh - 350px)" }} // 使用 100vh 减去其他元素高度
         bordered
         pagination={{
           total: totalNum, // 设置总数
