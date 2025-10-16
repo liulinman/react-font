@@ -215,18 +215,26 @@ const EnglishWorld: React.FC = () => {
           </Col>
           <Col span={6}>
             <Form.Item label="中文名" name="englishChinese">
-              <Input placeholder="请输入" allowClear />
+              <Input placeholder="请输入中文名" allowClear />
             </Form.Item>
           </Col>
           <Col span={6}>
             <Form.Item label="英文名" name="englishWord">
-              <Input placeholder="请输入" allowClear />
+              <Input placeholder="请输入英文名" allowClear />
             </Form.Item>
           </Col>
           <Col span={6}>
+            <Form.Item label="音标" name="englishPhonetic">
+              <Input placeholder="请输入音标" allowClear />
+            </Form.Item>
+          </Col>
+        </Row>
+
+        <Row gutter={16}>
+          <Col span={6}>
             <Form.Item label="类型" name="englishType">
               <Select
-                placeholder="请选择"
+                placeholder="请选择类型"
                 allowClear
                 options={[
                   { label: "单词", value: "0" },
@@ -236,13 +244,10 @@ const EnglishWorld: React.FC = () => {
               />
             </Form.Item>
           </Col>
-        </Row>
-
-        <Row gutter={16}>
           <Col span={6}>
             <Form.Item label="掌握程度" name="englishLevel">
               <Select
-                placeholder="请选择"
+                placeholder="请选择掌握程度"
                 allowClear
                 options={[
                   { label: "不会", value: "0" },
