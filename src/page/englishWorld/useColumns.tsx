@@ -1,6 +1,7 @@
 import { WordList } from "@/server/word/word.type";
-import { Button, Popover, Space, TableProps, Tooltip } from "antd";
+import { Button, Popover, Space, TableProps, Tag, Tooltip } from "antd";
 import moment from "moment";
+import { TagColor } from "./types";
 
 type Props = {
   handleEdit: (record: WordList) => void;
@@ -105,7 +106,8 @@ export const useColumns = (props: Props) => {
       key: "englishLevel",
       render: (level: number) => {
         const levels = ["不会", "一般", "熟练", "精通"];
-        return levels[level];
+        console.log(`===`, TagColor[level], level);
+        return <Tag color={TagColor[level]}>{levels[level]}</Tag>;
       },
     },
     {
