@@ -104,10 +104,11 @@ export const useColumns = (props: Props) => {
       title: "掌握程度",
       dataIndex: "englishLevel",
       key: "englishLevel",
-      render: (level: number) => {
+      render: (level: string) => {
         const levels = ["不会", "一般", "熟练", "精通"];
-        console.log(`===`, TagColor[level], level);
-        return <Tag color={TagColor[level]}>{levels[level]}</Tag>;
+        const color = TagColor[level as keyof typeof TagColor];
+
+        return <Tag color={color}>{levels[Number(level)]}</Tag>;
       },
     },
     {
