@@ -1,5 +1,5 @@
 import { WordList } from "@/server/word/word.type";
-import { Button, Popover, Space, TableProps, Tag, Tooltip } from "antd";
+import { Button, Popover, Space, TableProps, Tag, Tooltip, Image } from "antd";
 import moment from "moment";
 import { TagColor } from "./types";
 
@@ -71,6 +71,14 @@ export const useColumns = (props: Props) => {
       title: "图片",
       dataIndex: "englishImg",
       key: "englishImg",
+      align: "center",
+      render: (value?: string) => {
+        if (value) {
+          return <Image src={value} width={30} height={30} />;
+        } else {
+          return null;
+        }
+      },
     },
     {
       width: 100,
