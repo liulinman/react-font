@@ -1,13 +1,11 @@
 import React, { useCallback, useEffect, useState } from "react";
 import {
   Button,
-  Col,
   DatePicker,
   Form,
   Input,
   message,
   Modal,
-  Row,
   Select,
   Space,
   Table,
@@ -24,6 +22,9 @@ import {
 import { WordList } from "@/server/word/word.type";
 import { convertToFormat } from "@/utils";
 import { useColumns } from "./useColumns";
+import { EnglishHeader } from "./component/EnglishHeader";
+import { FormFieldGroup } from "./component/FormFieldGroup";
+import { DownOutlined, PlusOutlined, UpOutlined } from "@ant-design/icons";
 const { RangePicker } = DatePicker;
 
 type ListData = {
@@ -44,6 +45,75 @@ const EnglishWorld: React.FC = () => {
   const [totalNum, setTotalNum] = useState<number>(0);
   const { mutateAsync: mutateWordAdd, isPending: buttonPending } =
     useMutation(wordAdd);
+  const [activeNav, setActiveNav] = useState("list");
+
+  const filterFields = [
+    {
+      key: "time",
+      node: (
+        <Form.Item label="时间范围" name="time">
+          <RangePicker allowClear placeholder={["开始时间", "结束时间"]} />
+        </Form.Item>
+      ),
+    },
+    {
+      key: "englishChinese",
+      node: (
+        <Form.Item label="中文名" name="englishChinese">
+          <Input placeholder="请输入中文名" allowClear />
+        </Form.Item>
+      ),
+    },
+    {
+      key: "englishWord",
+      node: (
+        <Form.Item label="英文名" name="englishWord">
+          <Input placeholder="请输入英文名" allowClear />
+        </Form.Item>
+      ),
+    },
+    {
+      key: "englishPhonetic",
+      node: (
+        <Form.Item label="音标" name="englishPhonetic">
+          <Input placeholder="请输入音标" allowClear />
+        </Form.Item>
+      ),
+    },
+    {
+      key: "englishType",
+      node: (
+        <Form.Item label="类型" name="englishType">
+          <Select
+            placeholder="请选择类型"
+            allowClear
+            options={[
+              { label: "单词", value: "0" },
+              { label: "短语", value: "1" },
+              { label: "句子", value: "2" },
+            ]}
+          />
+        </Form.Item>
+      ),
+    },
+    {
+      key: "englishLevel",
+      node: (
+        <Form.Item label="掌握程度" name="englishLevel">
+          <Select
+            placeholder="请选择掌握程度"
+            allowClear
+            options={[
+              { label: "不会", value: "0" },
+              { label: "一般", value: "1" },
+              { label: "熟练", value: "2" },
+              { label: "精通", value: "3" },
+            ]}
+          />
+        </Form.Item>
+      ),
+    },
+  ];
 
   // 删除操作
   const handleDelete = async (id: number) => {
@@ -200,119 +270,92 @@ const EnglishWorld: React.FC = () => {
   };
 
   return (
-    <div style={{ paddingLeft: "20px", paddingRight: "20px", width: "100%" }}>
-      {/* 查询条件：时间范围 1、中文名 2、英文名 3 掌握程度 */}
-
-      <Form
-        form={form}
-        style={{ maxWidth: "none", width: "100%", marginTop: "10px" }}
-      >
-        <Row gutter={16}>
-          <Col span={6}>
-            <Form.Item label="时间范围" name="time">
-              <RangePicker allowClear placeholder={["开始时间", "结束时间"]} />
-            </Form.Item>
-          </Col>
-          <Col span={6}>
-            <Form.Item label="中文名" name="englishChinese">
-              <Input placeholder="请输入中文名" allowClear />
-            </Form.Item>
-          </Col>
-          <Col span={6}>
-            <Form.Item label="英文名" name="englishWord">
-              <Input placeholder="请输入英文名" allowClear />
-            </Form.Item>
-          </Col>
-          <Col span={6}>
-            <Form.Item label="音标" name="englishPhonetic">
-              <Input placeholder="请输入音标" allowClear />
-            </Form.Item>
-          </Col>
-        </Row>
-
-        <Row gutter={16}>
-          <Col span={6}>
-            <Form.Item label="类型" name="englishType">
-              <Select
-                placeholder="请选择类型"
-                allowClear
-                options={[
-                  { label: "单词", value: "0" },
-                  { label: "短语", value: "1" },
-                  { label: "句子", value: "2" },
-                ]}
-              />
-            </Form.Item>
-          </Col>
-          <Col span={6}>
-            <Form.Item label="掌握程度" name="englishLevel">
-              <Select
-                placeholder="请选择掌握程度"
-                allowClear
-                options={[
-                  { label: "不会", value: "0" },
-                  { label: "一般", value: "1" },
-                  { label: "熟练", value: "2" },
-                  { label: "精通", value: "3" },
-                ]}
-              />
-            </Form.Item>
-          </Col>
-        </Row>
-      </Form>
-
+    <div>
+      <EnglishHeader activeKey={activeNav} onNavClick={setActiveNav} />
       <div
         style={{
-          display: "flex",
-          justifyContent: "flex-end",
+          paddingLeft: "20px",
+          paddingRight: "20px",
+          width: "100%",
+          marginTop: "90px", // 预留空间，避免被固定头部遮挡
         }}
       >
-        <Space>
-          <Button type="primary" onClick={handleSearch}>
-            查询
-          </Button>
-          <Button htmlType="reset" onClick={handleReset}>
-            重置
-          </Button>
-        </Space>
+        {/* 查询条件：时间范围 1、中文名 2、英文名 3 掌握程度 */}
+
+        <Form
+          form={form}
+          style={{ maxWidth: "none", width: "100%", marginTop: "10px" }}
+        >
+          <FormFieldGroup
+            items={filterFields}
+            columnsPerRow={4}
+            collapsedRows={1}
+            renderActions={({ toggle, expanded, shouldShowToggle }) => (
+              <Space>
+                <Button type="primary" onClick={handleSearch}>
+                  查询
+                </Button>
+                <Button htmlType="reset" onClick={handleReset}>
+                  重置
+                </Button>
+                {shouldShowToggle && (
+                  <Button type="link" onClick={toggle}>
+                    {expanded ? (
+                      <span className="gap-2">
+                        <span>收起查询</span>
+                        <UpOutlined />
+                      </span>
+                    ) : (
+                      <span className="gap-2">
+                        <span>展开查询</span>
+                        <DownOutlined />
+                      </span>
+                    )}
+                  </Button>
+                )}
+              </Space>
+            )}
+          />
+        </Form>
+        <div>
+          <Space size="small" style={{ marginTop: 10, marginBottom: 10 }}>
+            <Button
+              type="primary"
+              onClick={handleAdd}
+              size="middle"
+              loading={buttonPending}
+              icon={<PlusOutlined />}
+            >
+              新增
+            </Button>
+          </Space>
+        </div>
+        <Table<WordList>
+          bordered={false}
+          size="small"
+          loading={loading}
+          columns={columns}
+          dataSource={wordList}
+          rowKey="id"
+          scroll={{ x: "max-content", y: "calc(100vh - 350px)" }} // 使用 100vh 减去其他元素高度
+          pagination={{
+            total: totalNum, // 设置总数
+            pageSizeOptions: ["10", "20", "50", "100", "200", "500"],
+            showSizeChanger: true,
+            showTotal: (total: number) => `数量: ${total} `, // 展示总数
+            pageSize: pageSize, // 每页显示的数量
+            onChange: handlePageChange,
+          }}
+        />
+        {/* 编辑模态框 */}
+        <EditAddModal
+          isModalVisible={isModalVisible}
+          currentRecord={wordRecord}
+          type={type}
+          onOk={handleModalOk}
+          onCancel={handleModalCancel}
+        />
       </div>
-      <div>
-        <Space size="small" style={{ marginTop: 10, marginBottom: 10 }}>
-          <Button
-            type="primary"
-            onClick={handleAdd}
-            size="middle"
-            loading={buttonPending}
-          >
-            新增
-          </Button>
-        </Space>
-      </div>
-      <Table<WordList>
-        bordered={false}
-        size="small"
-        loading={loading}
-        columns={columns}
-        dataSource={wordList}
-        rowKey="id"
-        scroll={{ x: "max-content", y: "calc(100vh - 350px)" }} // 使用 100vh 减去其他元素高度
-        pagination={{
-          total: totalNum, // 设置总数
-          pageSizeOptions: ["10", "20", "50", "100", "200", "500"],
-          showSizeChanger: true,
-          showTotal: (total: number) => `数量: ${total} `, // 展示总数
-          pageSize: pageSize, // 每页显示的数量
-          onChange: handlePageChange,
-        }}
-      />
-      {/* 编辑模态框 */}
-      <EditAddModal
-        isModalVisible={isModalVisible}
-        currentRecord={wordRecord}
-        type={type}
-        onOk={handleModalOk}
-        onCancel={handleModalCancel}
-      />
     </div>
   );
 };

@@ -1,5 +1,14 @@
 import { WordList } from "@/server/word/word.type";
-import { Button, Popover, Space, TableProps, Tag, Tooltip, Image } from "antd";
+import {
+  Button,
+  Popover,
+  Space,
+  TableProps,
+  Tag,
+  Tooltip,
+  Image,
+  Typography,
+} from "antd";
 import moment from "moment";
 import { TagColor } from "./types";
 import { DeleteFilled, EditFilled } from "@ant-design/icons";
@@ -8,6 +17,8 @@ type Props = {
   handleEdit: (record: WordList) => void;
   handleDelete: (id: number) => void;
 };
+
+const { Paragraph } = Typography;
 
 export const useColumns = (props: Props) => {
   const { handleEdit, handleDelete } = props;
@@ -29,6 +40,11 @@ export const useColumns = (props: Props) => {
     } else {
       return null;
     }
+  };
+
+  const shouldShowTooltip = (text?: string, limit = 12) => {
+    if (!text) return false;
+    return text.length > limit;
   };
 
   const columns: TableProps<WordList>["columns"] = [
@@ -61,11 +77,25 @@ export const useColumns = (props: Props) => {
       dataIndex: "englishChinese",
       key: "englishChinese",
       ellipsis: true,
-      render: (englishChinese: string) => (
-        <Tooltip placement="topLeft" title={formatNote(englishChinese)}>
-          {englishChinese}
-        </Tooltip>
-      ),
+      render: (englishChinese: string) =>
+        (() => {
+          const paragraph = (
+            <Paragraph
+              style={{ marginBottom: 0, maxWidth: 160 }}
+              ellipsis={{ rows: 1, tooltip: false }}
+            >
+              {englishChinese || "-"}
+            </Paragraph>
+          );
+          if (shouldShowTooltip(englishChinese)) {
+            return (
+              <Tooltip placement="topLeft" title={formatNote(englishChinese)}>
+                {paragraph}
+              </Tooltip>
+            );
+          }
+          return paragraph;
+        })(),
     },
     {
       width: 100,
