@@ -1,3 +1,9 @@
+/* Tailwind CSS 指令 */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 保留原有的全局样式重置（因为 preflight: false） */
 * {
   margin: 0;
   padding: 0;

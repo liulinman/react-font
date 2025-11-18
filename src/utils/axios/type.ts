@@ -31,6 +31,6 @@ export type PaginationResponse<T> = {
 /**
  * 通用列表响应类型
  */
-export type ListResponse<T> = CommonRecord & {
+export type ListResponse<T> =  {
   data: PaginationResponse<T>;
 };
