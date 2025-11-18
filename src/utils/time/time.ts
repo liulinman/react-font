@@ -3,6 +3,12 @@ import utc from "dayjs/plugin/utc"; // 引入 utc 插件
 
 dayjs.extend(utc); // 使用 utc 插件
 
+/**
+ * @description: 国际时间转换方法，转换成当地时间
+ * @param {string} time
+ * @param {"start" | "end"} type 一天开始或者结束
+ * @return string
+ */
 export const convertToFormat = (time: string, type?: "start" | "end") => {
   // 首先，将输入的时间解析为 dayjs 对象
   const dayjsTime = dayjs(time);

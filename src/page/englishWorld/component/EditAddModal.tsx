@@ -1,11 +1,10 @@
-import { useEffect } from "react";
 import { Modal, Form, Input, Select, Upload, Button, message } from "antd";
-import { WordList } from "@/server/word/word.type";
-import TextArea from "antd/es/input/TextArea";
 import { UploadOutlined } from "@ant-design/icons";
-
+import TextArea from "antd/es/input/TextArea";
+import { WordList } from "@/server/word/word.type";
 import request from "@/utils/axios/axios";
-import { uploadFile } from "@/server/word/word";
+import { uploadFile } from "@/server";
+import { useEffect } from "react";
 
 interface Props {
   isModalVisible: boolean;
@@ -118,7 +117,7 @@ export const EditAddModal = (props: Props) => {
       onCancel={handleModalCancel}
       okText="确认"
       cancelText="取消"
-      destroyOnClose
+      destroyOnHidden
       styles={{
         body: { maxHeight: "500px", overflowY: "auto", padding: "10px" },
       }}

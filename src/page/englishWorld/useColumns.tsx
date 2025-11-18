@@ -2,6 +2,7 @@ import { WordList } from "@/server/word/word.type";
 import { Button, Popover, Space, TableProps, Tag, Tooltip, Image } from "antd";
 import moment from "moment";
 import { TagColor } from "./types";
+import { DeleteFilled, EditFilled } from "@ant-design/icons";
 
 type Props = {
   handleEdit: (record: WordList) => void;
@@ -150,19 +151,22 @@ export const useColumns = (props: Props) => {
       key: "action",
       fixed: "right",
       render: (_text: number, record: WordList) => (
-        <Space size="middle">
+        <Space size="small">
           <Button
-            type="primary"
+            variant="text"
+            color="primary"
             size="small"
             onClick={() => handleEdit(record)}
+            icon={<EditFilled />}
           >
             编辑
           </Button>
           <Button
             color="danger"
-            variant="solid"
+            variant="text"
             size="small"
             onClick={() => handleDelete(record.id)}
+            icon={<DeleteFilled />}
           >
             删除
           </Button>

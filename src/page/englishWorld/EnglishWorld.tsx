@@ -284,13 +284,13 @@ const EnglishWorld: React.FC = () => {
         </Space>
       </div>
       <Table<WordList>
+        bordered={false}
         size="small"
         loading={loading}
         columns={columns}
         dataSource={wordList}
         rowKey="id"
         scroll={{ x: "max-content", y: "calc(100vh - 350px)" }} // 使用 100vh 减去其他元素高度
-        bordered
         pagination={{
           total: totalNum, // 设置总数
           pageSizeOptions: ["10", "20", "50", "100", "200", "500"],

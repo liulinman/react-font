@@ -8,13 +8,6 @@ const Home: React.FC = () => {
   const navigate = useNavigate();
   const { styles } = useStyles();
 
-  // useEffect(() => {
-  //   getList();
-  // }, []);
-  // const getList = async () => {
-  //   await request(wordFindList());
-  // };
-
   const routeToNavigate = useCallback(
     (route: string) => {
       navigate(route);
