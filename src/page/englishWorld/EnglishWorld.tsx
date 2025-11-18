@@ -13,7 +13,7 @@ import {
   Table,
 } from "antd";
 import { EditAddModal } from "./component/EditAddModal";
-import request from "@/utils/axios/axios";
+import request, { useMutation } from "@/utils/axios/axios";
 import {
   wordAdd,
   wordDel,
@@ -42,6 +42,8 @@ const EnglishWorld: React.FC = () => {
   const [page, setPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
   const [totalNum, setTotalNum] = useState<number>(0);
+  const { mutateAsync: mutateWordAdd, isPending: buttonPending } =
+    useMutation(wordAdd);
 
   // 删除操作
   const handleDelete = async (id: number) => {
@@ -166,15 +168,13 @@ const EnglishWorld: React.FC = () => {
         return;
       } else {
         // 开始真正的插入操作
-        const res = await request<{ code: number; data: boolean }>(
-          wordAdd(values)
-        );
-        if (res.data) {
+        const res = await mutateWordAdd(values);
+        if (res.code === 200 && res.data) {
           message.success("添加成功");
           setIsModalVisible(false);
           await handleSearch();
         } else {
-          message.error("添加失败");
+          message.error(res.message || "添加失败");
         }
       }
     }
@@ -278,7 +278,12 @@ const EnglishWorld: React.FC = () => {
       </div>
       <div>
         <Space size="small" style={{ marginTop: 10, marginBottom: 10 }}>
-          <Button type="primary" onClick={handleAdd} size="middle">
+          <Button
+            type="primary"
+            onClick={handleAdd}
+            size="middle"
+            loading={buttonPending}
+          >
             新增
           </Button>
         </Space>

@@ -1,4 +1,6 @@
+import { YTRequest } from "@/utils/axios/axios";
 import { FilterWordList, WordList } from "./word.type";
+import { CommonRecord } from "@/utils/axios/type";
 
 export const wordFindList = () => {
   return {
@@ -7,11 +9,13 @@ export const wordFindList = () => {
   };
 };
 
-export const wordAdd = (data: Omit<WordList, "id">) => {
+export const wordAdd = (
+  data: Omit<WordList, "id">
+): YTRequest<CommonRecord> => {
   return {
     url: "/english/AddEnglishWord",
-    method: "POST",
     data,
+    method: "POST",
   };
 };
 
