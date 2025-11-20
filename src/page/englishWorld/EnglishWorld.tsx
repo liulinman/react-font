@@ -24,6 +24,7 @@ import { convertToFormat } from "@/utils";
 import { useColumns } from "./useColumns";
 import { EnglishHeader } from "./component/EnglishHeader";
 import { FormFieldGroup } from "./component/FormFieldGroup";
+import { EnglishStats } from "./component/EnglishStats";
 import { DownOutlined, PlusOutlined, UpOutlined } from "@ant-design/icons";
 const { RangePicker } = DatePicker;
 
@@ -280,81 +281,87 @@ const EnglishWorld: React.FC = () => {
           marginTop: "90px", // 预留空间，避免被固定头部遮挡
         }}
       >
-        {/* 查询条件：时间范围 1、中文名 2、英文名 3 掌握程度 */}
+        {activeNav === "stat" ? (
+          <EnglishStats />
+        ) : (
+          <>
+            {/* 查询条件 */}
 
-        <Form
-          form={form}
-          style={{ maxWidth: "none", width: "100%", marginTop: "10px" }}
-        >
-          <FormFieldGroup
-            items={filterFields}
-            columnsPerRow={4}
-            collapsedRows={1}
-            renderActions={({ toggle, expanded, shouldShowToggle }) => (
-              <Space>
-                <Button type="primary" onClick={handleSearch}>
-                  查询
-                </Button>
-                <Button htmlType="reset" onClick={handleReset}>
-                  重置
-                </Button>
-                {shouldShowToggle && (
-                  <Button type="link" onClick={toggle}>
-                    {expanded ? (
-                      <span className="gap-2">
-                        <span>收起查询</span>
-                        <UpOutlined />
-                      </span>
-                    ) : (
-                      <span className="gap-2">
-                        <span>展开查询</span>
-                        <DownOutlined />
-                      </span>
-                    )}
-                  </Button>
-                )}
-              </Space>
-            )}
-          />
-        </Form>
-        <div>
-          <Space size="small" style={{ marginTop: 10, marginBottom: 10 }}>
-            <Button
-              type="primary"
-              onClick={handleAdd}
-              size="middle"
-              loading={buttonPending}
-              icon={<PlusOutlined />}
+            <Form
+              form={form}
+              style={{ maxWidth: "none", width: "100%", marginTop: "10px" }}
             >
-              新增
-            </Button>
-          </Space>
-        </div>
-        <Table<WordList>
-          bordered={false}
-          size="small"
-          loading={loading}
-          columns={columns}
-          dataSource={wordList}
-          rowKey="id"
-          scroll={{ x: "max-content", y: "calc(100vh - 350px)" }} // 使用 100vh 减去其他元素高度
-          pagination={{
-            total: totalNum, // 设置总数
-            pageSizeOptions: ["10", "20", "50", "100", "200", "500"],
-            showSizeChanger: true,
-            showTotal: (total: number) => `数量: ${total} `, // 展示总数
-            pageSize: pageSize, // 每页显示的数量
-            onChange: handlePageChange,
-          }}
-        />
-        {/* 编辑模态框 */}
-        <EditAddModal
-          isModalVisible={isModalVisible}
-          currentRecord={wordRecord}
-          type={type}
-          onOk={handleModalOk}
-          onCancel={handleModalCancel}
-        />
+              <FormFieldGroup
+                items={filterFields}
+                columnsPerRow={4}
+                collapsedRows={1}
+                renderActions={({ toggle, expanded, shouldShowToggle }) => (
+                  <Space>
+                    <Button type="primary" onClick={handleSearch}>
+                      查询
+                    </Button>
+                    <Button htmlType="reset" onClick={handleReset}>
+                      重置
+                    </Button>
+                    {shouldShowToggle && (
+                      <Button type="link" onClick={toggle}>
+                        {expanded ? (
+                          <span className="gap-2">
+                            <span>收起查询</span>
+                            <UpOutlined />
+                          </span>
+                        ) : (
+                          <span className="gap-2">
+                            <span>展开查询</span>
+                            <DownOutlined />
+                          </span>
+                        )}
+                      </Button>
+                    )}
+                  </Space>
+                )}
+              />
+            </Form>
+            <div>
+              <Space size="small" style={{ marginTop: 10, marginBottom: 10 }}>
+                <Button
+                  type="primary"
+                  onClick={handleAdd}
+                  size="middle"
+                  loading={buttonPending}
+                  icon={<PlusOutlined />}
+                >
+                  新增
+                </Button>
+              </Space>
+            </div>
+            <Table<WordList>
+              bordered={false}
+              size="small"
+              loading={loading}
+              columns={columns}
+              dataSource={wordList}
+              rowKey="id"
+              scroll={{ x: "max-content", y: "calc(100vh - 350px)" }} // 使用 100vh 减去其他元素高度
+              pagination={{
+                total: totalNum, // 设置总数
+                pageSizeOptions: ["10", "20", "50", "100", "200", "500"],
+                showSizeChanger: true,
+                showTotal: (total: number) => `数量: ${total} `, // 展示总数
+                pageSize: pageSize, // 每页显示的数量
+                onChange: handlePageChange,
+              }}
+            />
+            {/* 编辑模态框 */}
+            <EditAddModal
+              isModalVisible={isModalVisible}
+              currentRecord={wordRecord}
+              type={type}
+              onOk={handleModalOk}
+              onCancel={handleModalCancel}
+            />
+          </>
+        )}
       </div>
     </div>
   );
