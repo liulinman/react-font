@@ -271,87 +271,127 @@ const EnglishWorld: React.FC = () => {
   };
 
   return (
-    <div>
+    <div style={{ background: "#f5f5f5", height: "100vh" }}>
       <EnglishHeader activeKey={activeNav} onNavClick={setActiveNav} />
       <div
         style={{
-          paddingLeft: "20px",
-          paddingRight: "20px",
+          padding: "20px",
+          paddingTop: "90px", // 使用 paddingTop 代替 margin-top，90px(header) + 20px
+          maxWidth: "2000px",
+          margin: "0 auto", // 只保留左右居中
           width: "100%",
-          marginTop: "90px", // 预留空间，避免被固定头部遮挡
+          height: "100vh", // 高度为 100vh
+          overflow: "auto", // 改为 auto，允许内部滚动
+          boxSizing: "border-box", // 确保 padding 包含在高度内
         }}
       >
         {activeNav === "stat" ? (
           <EnglishStats />
         ) : (
           <>
-            {/* 查询条件 */}
-
-            <Form
-              form={form}
-              style={{ maxWidth: "none", width: "100%", marginTop: "10px" }}
+            {/* 查询条件 - 添加卡片样式 */}
+            <div
+              style={{
+                background: "#fff",
+                padding: "8px 20px", // 减小 padding
+                borderRadius: "8px",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+                marginBottom: "8px",
+              }}
             >
-              <FormFieldGroup
-                items={filterFields}
-                columnsPerRow={4}
-                collapsedRows={1}
-                renderActions={({ toggle, expanded, shouldShowToggle }) => (
-                  <Space>
-                    <Button type="primary" onClick={handleSearch}>
-                      查询
-                    </Button>
-                    <Button htmlType="reset" onClick={handleReset}>
-                      重置
-                    </Button>
-                    {shouldShowToggle && (
-                      <Button type="link" onClick={toggle}>
-                        {expanded ? (
-                          <span className="gap-2">
-                            <span>收起查询</span>
-                            <UpOutlined />
-                          </span>
-                        ) : (
-                          <span className="gap-2">
-                            <span>展开查询</span>
-                            <DownOutlined />
-                          </span>
-                        )}
+              <Form
+                form={form}
+                style={{ maxWidth: "none", width: "100%" }}
+                layout="horizontal"
+                colon={false} // 去掉冒号，更简洁
+              >
+                <FormFieldGroup
+                  items={filterFields}
+                  columnsPerRow={4}
+                  collapsedRows={1}
+                  renderActions={({ toggle, expanded, shouldShowToggle }) => (
+                    <Space size="small">
+                      {" "}
+                      {/* 改为 small */}
+                      <Button
+                        type="primary"
+                        onClick={handleSearch}
+                        size="middle"
+                      >
+                        查询
                       </Button>
-                    )}
-                  </Space>
-                )}
-              />
-            </Form>
-            <div>
-              <Space size="small" style={{ marginTop: 10, marginBottom: 10 }}>
+                      <Button
+                        htmlType="reset"
+                        onClick={handleReset}
+                        size="middle"
+                      >
+                        重置
+                      </Button>
+                      {shouldShowToggle && (
+                        <Button type="link" onClick={toggle} size="small">
+                          {expanded ? (
+                            <span className="gap-2">
+                              <span>收起</span>
+                              <UpOutlined />
+                            </span>
+                          ) : (
+                            <span className="gap-2">
+                              <span>展开</span>
+                              <DownOutlined />
+                            </span>
+                          )}
+                        </Button>
+                      )}
+                    </Space>
+                  )}
+                />
+              </Form>
+            </div>
+
+            {/* 表格区域 - 添加卡片样式 */}
+            <div
+              style={{
+                background: "#fff",
+                padding: "20px",
+                borderRadius: "8px",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+                height: "calc(100vh - 90px - 40px - 120px - 32px)", // 动态计算：100vh - header - padding - 查询区域 - margins
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
+              {/* 在表格上方添加操作按钮 */}
+              <div style={{ marginBottom: 16 }}>
                 <Button
                   type="primary"
                   onClick={handleAdd}
-                  size="middle"
+                  size="small"
                   loading={buttonPending}
                   icon={<PlusOutlined />}
                 >
                   新增
                 </Button>
-              </Space>
+              </div>
+
+              <Table<WordList>
+                bordered={false}
+                size="middle"
+                loading={loading}
+                columns={columns}
+                dataSource={wordList}
+                rowKey="id"
+                scroll={{ x: 1400, y: "calc(100vh - 400px)" }}
+                pagination={{
+                  total: totalNum,
+                  pageSizeOptions: ["10", "20", "50", "100", "200", "500"],
+                  showSizeChanger: true,
+                  showTotal: (total: number) => `共 ${total} 条数据`,
+                  pageSize: pageSize,
+                  onChange: handlePageChange,
+                  showQuickJumper: true,
+                }}
+              />
             </div>
-            <Table<WordList>
-              bordered={false}
-              size="small"
-              loading={loading}
-              columns={columns}
-              dataSource={wordList}
-              rowKey="id"
-              scroll={{ x: "max-content", y: "calc(100vh - 350px)" }} // 使用 100vh 减去其他元素高度
-              pagination={{
-                total: totalNum, // 设置总数
-                pageSizeOptions: ["10", "20", "50", "100", "200", "500"],
-                showSizeChanger: true,
-                showTotal: (total: number) => `数量: ${total} `, // 展示总数
-                pageSize: pageSize, // 每页显示的数量
-                onChange: handlePageChange,
-              }}
-            />
             {/* 编辑模态框 */}
             <EditAddModal
               isModalVisible={isModalVisible}
