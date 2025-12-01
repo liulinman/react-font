@@ -5,6 +5,8 @@ import { WordList } from "@/server/word/word.type";
 import request from "@/utils/axios/axios";
 import { uploadFile } from "@/server";
 import { useEffect } from "react";
+import { enumToOptions } from "@/utils";
+import { EnglishAbsorb, EnglishType } from "../enum";
 
 interface Props {
   isModalVisible: boolean;
@@ -136,23 +138,14 @@ export const EditAddModal = (props: Props) => {
           name="englishLevel"
           rules={[{ required: true, message: "请选择掌握程度" }]}
         >
-          <Select allowClear>
-            <Select.Option value={"0"}>不会</Select.Option>
-            <Select.Option value={"1"}>一般</Select.Option>
-            <Select.Option value={"2"}>熟练</Select.Option>
-            <Select.Option value={"3"}>精通</Select.Option>
-          </Select>
+          <Select options={enumToOptions(EnglishAbsorb)} />
         </Form.Item>
         <Form.Item
           label="类型"
           name="englishType"
           rules={[{ required: true, message: "请选择类型" }]}
         >
-          <Select allowClear>
-            <Select.Option value={"0"}>单词</Select.Option>
-            <Select.Option value={"1"}>短语</Select.Option>
-            <Select.Option value={"2"}>句子</Select.Option>
-          </Select>
+          <Select options={enumToOptions(EnglishType)} allowClear />
         </Form.Item>
         <Form.Item label="音标" name="englishPhonetic">
           <Input allowClear />
@@ -164,15 +157,6 @@ export const EditAddModal = (props: Props) => {
           <Upload customRequest={customRequest} onChange={onChange}>
             <Button icon={<UploadOutlined />}>点击上传</Button>
           </Upload>
-          {/* {form.getFieldValue("englishImg") && (
-            <div style={{ marginTop: 8 }}>
-              <img
-                src={form.getFieldValue("englishImg")}
-                alt="预览"
-                style={{ maxWidth: "100%", maxHeight: 200 }}
-              />
-            </div>
-          )} */}
         </Form.Item>
 
         <Form.Item label="笔记" name="englishNote">

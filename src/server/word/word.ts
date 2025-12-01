@@ -58,3 +58,21 @@ export const uploadFile = (data: FormData) => {
     data,
   };
 };
+
+export const englishStats = (data: {
+  level: string;
+}): YTRequest<{
+  code: number;
+  data: {
+    levelCount: number;
+    totalCount: number;
+    percentage: number;
+  };
+  message: string;
+}> => {
+  return {
+    url: "/english/englishStats",
+    method: "POST",
+    data,
+  };
+};

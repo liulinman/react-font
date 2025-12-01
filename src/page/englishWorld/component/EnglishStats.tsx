@@ -1,5 +1,9 @@
-import { Card, Col, Row } from "antd";
+import { enumToOptions, useMutation } from "@/utils";
+import { Card, Col, Row, Select } from "antd";
 import ReactECharts from "echarts-for-react";
+import { EnglishAbsorb } from "../enum";
+import { englishStats } from "@/server";
+import { useEffect, useState } from "react";
 
 type DailyStat = {
   date: string;
@@ -8,7 +12,7 @@ type DailyStat = {
 
 type SummaryStat = {
   label: string;
-  value: number;
+  value: number | string;
   color: string;
 };
 
@@ -22,16 +26,6 @@ const dailyStats: DailyStat[] = [
   { date: "05-16", count: 42 },
 ];
 
-const summaryStats: SummaryStat[] = [
-  { label: "总学习单词", value: 1250, color: "#1677ff" },
-  { label: "已掌握单词", value: 860, color: "#52c41a" },
-  {
-    label: "掌握率",
-    value: Number(((860 / 1250) * 100).toFixed(1)),
-    color: "#faad14",
-  },
-];
-
 const wordTypeData = [
   { value: 320, name: "动词", color: "#1677ff" },
   { value: 240, name: "名词", color: "#52c41a" },
@@ -41,6 +35,20 @@ const wordTypeData = [
 ];
 
 export const EnglishStats = () => {
+  const [selectedLevel, setSelectedLevel] = useState<EnglishAbsorb>(
+    EnglishAbsorb["一般"]
+  );
+  const [summaryStats, setSummaryStats] = useState<SummaryStat[]>([
+    { label: "总学习单词", value: 0, color: "#1677ff" },
+    { label: "已掌握单词", value: 0, color: "#52c41a" },
+    {
+      label: "掌握率",
+      value: 0,
+      color: "#faad14",
+    },
+  ]);
+
+  const { mutateAsync: mutateEnglishStats } = useMutation(englishStats);
   const optionBar = {
     tooltip: {
       trigger: "axis",
@@ -72,6 +80,32 @@ export const EnglishStats = () => {
         },
       },
     ],
+  };
+
+  // 初始化加载数据
+  useEffect(() => {
+    loadStats(EnglishAbsorb["一般"]);
+  }, []);
+
+  // 加载统计数据
+  const loadStats = async (level: EnglishAbsorb) => {
+    try {
+      const res = await mutateEnglishStats({ level });
+      if (res.code === 200) {
+        const { levelCount, percentage, totalCount } = res.data;
+        setSummaryStats([
+          { label: "总学习单词", value: totalCount, color: "#1677ff" },
+          { label: "已掌握单词", value: levelCount, color: "#52c41a" },
+          {
+            label: "掌握率",
+            value: Number(percentage).toFixed(2), // 转换为百分比
+            color: "#faad14",
+          },
+        ]);
+      }
+    } catch (error) {
+      console.error("加载统计数据失败:", error);
+    }
   };
 
   const optionPie = {
@@ -115,14 +149,35 @@ export const EnglishStats = () => {
     ],
   };
 
+  const handleChange = async (value?: EnglishAbsorb) => {
+    if (value) {
+      setSelectedLevel(value);
+      await loadStats(value);
+    }
+  };
+
   return (
     <div className="mt-6">
       <Row gutter={16}>
-        {summaryStats.map((item) => (
+        {summaryStats?.map((item) => (
           <Col span={8} key={item.label}>
             <Card>
               <div className="flex flex-col gap-2">
-                <span className="text-gray-500">{item.label}</span>
+                <div>
+                  <span className="text-gray-500">{item.label}</span>{" "}
+                  {item.label === "已掌握单词" ? (
+                    <Select
+                      size="small"
+                      style={{ width: "80px" }}
+                      options={enumToOptions(EnglishAbsorb, [
+                        EnglishAbsorb["不会"],
+                      ])}
+                      value={selectedLevel}
+                      onChange={handleChange}
+                      allowClear
+                    />
+                  ) : null}
+                </div>
                 <span
                   className="text-2xl font-semibold"
                   style={{ color: item.color }}
