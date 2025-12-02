@@ -1,5 +1,5 @@
 import { YTRequest } from "@/utils/axios/axios";
-import { FilterWordList, WordList } from "./word.type";
+import { DailyStat, FilterWordList, WordList } from "./word.type";
 import { CommonRecord } from "@/utils/axios/type";
 
 export const wordFindList = () => {
@@ -67,6 +67,7 @@ export const englishStats = (data: {
     levelCount: number;
     totalCount: number;
     percentage: number;
+    dailyStats: DailyStat[];
   };
   message: string;
 }> => {

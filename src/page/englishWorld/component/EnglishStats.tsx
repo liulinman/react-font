@@ -16,16 +16,6 @@ type SummaryStat = {
   color: string;
 };
 
-const dailyStats: DailyStat[] = [
-  { date: "05-10", count: 32 },
-  { date: "05-11", count: 28 },
-  { date: "05-12", count: 35 },
-  { date: "05-13", count: 30 },
-  { date: "05-14", count: 40 },
-  { date: "05-15", count: 38 },
-  { date: "05-16", count: 42 },
-];
-
 const wordTypeData = [
   { value: 320, name: "动词", color: "#1677ff" },
   { value: 240, name: "名词", color: "#52c41a" },
@@ -47,6 +37,8 @@ export const EnglishStats = () => {
       color: "#faad14",
     },
   ]);
+
+  const [dailyStats, setDailyStats] = useState<DailyStat[]>([]);
 
   const { mutateAsync: mutateEnglishStats } = useMutation(englishStats);
   const optionBar = {
@@ -92,7 +84,7 @@ export const EnglishStats = () => {
     try {
       const res = await mutateEnglishStats({ level });
       if (res.code === 200) {
-        const { levelCount, percentage, totalCount } = res.data;
+        const { levelCount, percentage, totalCount, dailyStats } = res.data;
         setSummaryStats([
           { label: "总学习单词", value: totalCount, color: "#1677ff" },
           { label: "已掌握单词", value: levelCount, color: "#52c41a" },
@@ -102,6 +94,8 @@ export const EnglishStats = () => {
             color: "#faad14",
           },
         ]);
+
+        setDailyStats(dailyStats);
       }
     } catch (error) {
       console.error("加载统计数据失败:", error);
