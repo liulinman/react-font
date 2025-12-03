@@ -49,12 +49,44 @@ export const EnglishStats = () => {
       left: 30,
       right: 20,
       top: 40,
-      bottom: 30,
+      bottom: 60, // 增加底部空间以容纳旋转的标签
     },
+    dataZoom: [
+      {
+        type: "slider", // 滑动条
+        show: true,
+        xAxisIndex: [0],
+        start:
+          dailyStats.length > 14
+            ? ((dailyStats.length - 14) / dailyStats.length) * 100
+            : 0, // 从最近7条开始
+        end: 100, // 如果数据超过30条，默认只显示30条
+        bottom: 10,
+        height: 20,
+        borderColor: "#ddd",
+        fillerColor: "rgba(22, 119, 255, 0.1)",
+        handleStyle: {
+          color: "#1677ff",
+        },
+      },
+      {
+        type: "inside", // 支持鼠标滚轮缩放
+        xAxisIndex: [0],
+        start:
+          dailyStats.length > 14
+            ? ((dailyStats.length - 14) / dailyStats.length) * 100
+            : 0, // 从最近7条开始
+        end: 100, // 如果数据超过30条，默认只显示30条
+      },
+    ],
     xAxis: {
       type: "category",
       data: dailyStats.map((item) => item.date),
       axisTick: { show: false },
+      axisLabel: {
+        interval: 3,
+        color: "#666",
+      },
     },
     yAxis: {
       type: "value",
@@ -73,7 +105,6 @@ export const EnglishStats = () => {
       },
     ],
   };
-
   // 初始化加载数据
   useEffect(() => {
     loadStats(EnglishAbsorb["一般"]);
