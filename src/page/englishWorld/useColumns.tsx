@@ -195,11 +195,29 @@ export const useColumns = (props: Props) => {
       dataIndex: "englishReference",
       key: "englishReference",
       ellipsis: true,
-      render: (text: string) => (
-        <Tooltip title={text}>
-          <span style={{ color: "#666" }}>{text || "-"}</span>
-        </Tooltip>
-      ),
+      render: (text: string) => {
+        // 检查是否是 URL
+        const isUrl =
+          text && (text.startsWith("http://") || text.startsWith("https://"));
+
+        return (
+          <Tooltip title={text} placement="topLeft">
+            {isUrl ? (
+              <a
+                href={text}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: "#1677ff", textDecoration: "underline" }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {text}
+              </a>
+            ) : (
+              <span style={{ color: "#666" }}>{text || "-"}</span>
+            )}
+          </Tooltip>
+        );
+      },
     },
     {
       width: 180,

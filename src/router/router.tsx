@@ -5,6 +5,8 @@ import UserList from "@/page/user/userList/userList";
 import UserAdd from "@/page/user/userAdd/userAdd";
 import EnglishWorld from "@/page/englishWorld/EnglishWorld";
 import AuthIdMap from "@/page/authIdMap/AuthIdMap";
+import { PurchaseFlowPage } from "@/page/flowChart/FlowChart";
+import { SimpleTest } from "@/page/SimpleTest/SimpleTest";
 
 export const router = createBrowserRouter([
   {
@@ -31,5 +33,14 @@ export const router = createBrowserRouter([
   {
     path: "/authIdMap",
     element: <AuthIdMap />,
+  },
+  {
+    path: "/purchaseFlowChart",
+    element: <PurchaseFlowPage />,
+  },
+
+  {
+    path: "/test-flow",
+    element: <SimpleTest />,
   },
 ]);

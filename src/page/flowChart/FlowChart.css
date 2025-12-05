@@ -1,0 +1,29 @@
+.react-flow__node {
+  box-shadow: none !important;
+}
+
+.react-flow__node:hover {
+  transform: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+.react-flow__edge-path {
+  stroke-width: 1;
+}
+
+.react-flow__edge-text {
+  font-size: 12px;
+  fill: #8c8c8c;
+}
+
+.react-flow__controls {
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.react-flow__minimap {
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.react-flow__attribution {
+  display: none;
+}
