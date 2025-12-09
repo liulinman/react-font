@@ -146,6 +146,8 @@ const EnglishWorld: React.FC = () => {
   const { columns } = useColumns({
     handleEdit,
     handleDelete,
+    page,
+    pageSize,
   });
 
   const initialWordData = useCallback(
@@ -190,7 +192,7 @@ const EnglishWorld: React.FC = () => {
     }
     setLoading(true);
     const res = await request<{ code: number; data: ListData }>(
-      wordFilter({ ...values, ...newValues, page: 1, pageSize })
+      wordFilter({ ...values, ...newValues, page, pageSize })
     );
 
     if (res.code === 200) {

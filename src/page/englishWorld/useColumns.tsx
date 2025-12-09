@@ -16,12 +16,14 @@ import { DeleteFilled, EditFilled } from "@ant-design/icons";
 type Props = {
   handleEdit: (record: WordList) => void;
   handleDelete: (id: number) => void;
+  page: number;
+  pageSize: number;
 };
 
 const { Paragraph } = Typography;
 
 export const useColumns = (props: Props) => {
-  const { handleEdit, handleDelete } = props;
+  const { handleEdit, handleDelete, page, pageSize } = props;
 
   // 将换行符转换为 HTML 的 <br /> 标签
   const formatNote = (text?: string) => {
@@ -56,9 +58,9 @@ export const useColumns = (props: Props) => {
       key: "key",
       align: "center",
       render: (_text: number, _record: WordList, index: number) => {
-        return <span style={{ fontWeight: 500 }}>{index + 1}</span>;
+        const serialNumber = (page - 1) * pageSize + index + 1;
+        return <span style={{ fontWeight: 500 }}>{serialNumber}</span>;
       },
-      // fixed: "left",
     },
     {
       width: 180,
@@ -227,7 +229,7 @@ export const useColumns = (props: Props) => {
       render: (utcTime: string) => {
         return (
           <span style={{ color: "#666", fontSize: "13px" }}>
-            {moment(utcTime).local().format("YYYY-MM-DD HH:mm:ss")}
+            {moment(utcTime).local().format("YYYY-MM-DD")}
           </span>
         );
       },
@@ -240,7 +242,7 @@ export const useColumns = (props: Props) => {
       render: (utcTime: string) => {
         return (
           <span style={{ color: "#666", fontSize: "13px" }}>
-            {moment(utcTime).local().format("YYYY-MM-DD HH:mm:ss")}
+            {moment(utcTime).local().format("YYYY-MM-DD")}
           </span>
         );
       },
