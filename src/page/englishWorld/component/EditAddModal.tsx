@@ -6,7 +6,7 @@ import request from "@/utils/axios/axios";
 import { uploadFile } from "@/server";
 import { useEffect } from "react";
 import { enumToOptions } from "@/utils";
-import { EnglishAbsorb, EnglishType } from "../enum";
+import { EnglishAbsorb, EnglishPartSpeech, EnglishType } from "../enum";
 
 interface Props {
   isModalVisible: boolean;
@@ -22,6 +22,7 @@ type FormValues = {
   englishType: string;
   englishPhonetic?: string;
   englishChinese?: string;
+  englishPartSpeech?: number[];
   englishImg?: string;
   englishNote?: string;
   englishReference?: string;
@@ -72,6 +73,7 @@ export const EditAddModal = (props: Props) => {
       form.setFieldsValue({
         englishLevel: "0",
         englishType: isPhrase ? "1" : "0",
+        englishPartSpeech: [9],
       });
     }
   };
@@ -149,6 +151,14 @@ export const EditAddModal = (props: Props) => {
         </Form.Item>
         <Form.Item label="音标" name="englishPhonetic">
           <Input allowClear />
+        </Form.Item>
+        <Form.Item label="词性" name="englishPartSpeech">
+          <Select
+            mode="multiple"
+            options={enumToOptions(EnglishPartSpeech)}
+            allowClear
+            placeholder="请选择词性（可多选）"
+          />
         </Form.Item>
         <Form.Item label="中文" name="englishChinese">
           <TextArea rows={4} allowClear />

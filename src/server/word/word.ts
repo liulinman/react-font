@@ -68,6 +68,7 @@ export const englishStats = (data: {
     totalCount: number;
     percentage: number;
     dailyStats: DailyStat[];
+    partSpeechStatisticalClass: CommonRecord;
   };
   message: string;
 }> => {

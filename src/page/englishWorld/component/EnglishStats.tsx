@@ -1,7 +1,7 @@
 import { enumToOptions, useMutation } from "@/utils";
 import { Card, Col, Row, Select } from "antd";
 import ReactECharts from "echarts-for-react";
-import { EnglishAbsorb } from "../enum";
+import { EnglishAbsorb, EnglishPartSpeech } from "../enum";
 import { englishStats } from "@/server";
 import { useEffect, useState } from "react";
 
@@ -16,13 +16,24 @@ type SummaryStat = {
   color: string;
 };
 
-const wordTypeData = [
-  { value: 320, name: "动词", color: "#1677ff" },
-  { value: 240, name: "名词", color: "#52c41a" },
-  { value: 180, name: "形容词", color: "#faad14" },
-  { value: 120, name: "副词", color: "#9254de" },
-  { value: 90, name: "未分类", color: "#8c8c8c" },
-];
+type PartSpeechData = {
+  value: number;
+  name: string;
+  color: string;
+};
+
+// 词性对应的颜色
+const partSpeechColors: Record<number, string> = {
+  1: "#1677ff", // 动词
+  2: "#52c41a", // 名词
+  3: "#faad14", // 形容词
+  4: "#9254de", // 副词
+  5: "#f5222d", // 代词
+  6: "#13c2c2", // 介词
+  7: "#fa8c16", // 连词
+  8: "#eb2f96", // 感叹词
+  9: "#8c8c8c", // 未分类
+};
 
 export const EnglishStats = () => {
   const [selectedLevel, setSelectedLevel] = useState<EnglishAbsorb>(
@@ -39,8 +50,10 @@ export const EnglishStats = () => {
   ]);
 
   const [dailyStats, setDailyStats] = useState<DailyStat[]>([]);
+  const [wordTypeData, setWordTypeData] = useState<PartSpeechData[]>([]);
 
   const { mutateAsync: mutateEnglishStats } = useMutation(englishStats);
+
   const optionBar = {
     tooltip: {
       trigger: "axis",
@@ -49,18 +62,18 @@ export const EnglishStats = () => {
       left: 30,
       right: 20,
       top: 40,
-      bottom: 60, // 增加底部空间以容纳旋转的标签
+      bottom: 60,
     },
     dataZoom: [
       {
-        type: "slider", // 滑动条
+        type: "slider",
         show: true,
         xAxisIndex: [0],
         start:
           dailyStats.length > 14
             ? ((dailyStats.length - 14) / dailyStats.length) * 100
-            : 0, // 从最近7条开始
-        end: 100, // 如果数据超过30条，默认只显示30条
+            : 0,
+        end: 100,
         bottom: 10,
         height: 20,
         borderColor: "#ddd",
@@ -70,13 +83,13 @@ export const EnglishStats = () => {
         },
       },
       {
-        type: "inside", // 支持鼠标滚轮缩放
+        type: "inside",
         xAxisIndex: [0],
         start:
           dailyStats.length > 14
             ? ((dailyStats.length - 14) / dailyStats.length) * 100
-            : 0, // 从最近7条开始
-        end: 100, // 如果数据超过30条，默认只显示30条
+            : 0,
+        end: 100,
       },
     ],
     xAxis: {
@@ -105,6 +118,7 @@ export const EnglishStats = () => {
       },
     ],
   };
+
   // 初始化加载数据
   useEffect(() => {
     loadStats(EnglishAbsorb["一般"]);
@@ -115,18 +129,39 @@ export const EnglishStats = () => {
     try {
       const res = await mutateEnglishStats({ level });
       if (res.code === 200) {
-        const { levelCount, percentage, totalCount, dailyStats } = res.data;
+        const {
+          levelCount,
+          percentage,
+          totalCount,
+          dailyStats,
+          partSpeechStatisticalClass,
+        } = res.data;
+
         setSummaryStats([
           { label: "总学习单词", value: totalCount, color: "#1677ff" },
           { label: "已掌握单词", value: levelCount, color: "#52c41a" },
           {
             label: "掌握率",
-            value: Number(percentage).toFixed(2), // 转换为百分比
+            value: Number(percentage).toFixed(2),
             color: "#faad14",
           },
         ]);
 
         setDailyStats(dailyStats);
+
+        // 处理词性统计数据
+        const partSpeechData: PartSpeechData[] = Object.entries(
+          partSpeechStatisticalClass
+        ).map(([key, value]) => {
+          const partSpeechKey = Number(key);
+          return {
+            value: value as number,
+            name: EnglishPartSpeech[partSpeechKey],
+            color: partSpeechColors[partSpeechKey] || "#8c8c8c",
+          };
+        });
+
+        setWordTypeData(partSpeechData);
       }
     } catch (error) {
       console.error("加载统计数据失败:", error);

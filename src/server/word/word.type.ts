@@ -10,6 +10,7 @@ export type WordList = {
   englishCreateTime?: string;
   englishUpdateTime?: string;
   englishImg?: string;
+  englishPartSpeech?: number[];
 };
 
 export type FilterWordList = {
