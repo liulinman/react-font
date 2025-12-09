@@ -6,7 +6,7 @@ import request from "@/utils/axios/axios";
 import { uploadFile } from "@/server";
 import { useEffect, useState } from "react";
 import { enumToOptions } from "@/utils";
-import { EnglishAbsorb, EnglishPartSpeech, EnglishType } from "../enum";
+import { EnglishAbsorb, EnglishType } from "../enum";
 
 interface Props {
   isModalVisible: boolean;
