@@ -72,6 +72,7 @@ export const useColumns = (props: Props) => {
         <span style={{ fontWeight: 600, color: "#1890ff" }}>{text}</span>
       ),
     },
+    // ... 音标列
     {
       width: 150,
       title: "音标",
@@ -82,6 +83,66 @@ export const useColumns = (props: Props) => {
           {text || "-"}
         </span>
       ),
+    },
+    {
+      width: 200,
+      title: "词性",
+      dataIndex: "englishPartSpeech",
+      key: "englishPartSpeech",
+      align: "left",
+      render: (partSpeechList?: number[]) => {
+        if (!partSpeechList || partSpeechList.length === 0) {
+          return <span style={{ color: "#ccc" }}>-</span>;
+        }
+
+        const partSpeechMap: Record<number, { label: string; color: string }> =
+          {
+            1: { label: "动词", color: "blue" },
+            2: { label: "名词", color: "green" },
+            3: { label: "形容词", color: "orange" },
+            4: { label: "副词", color: "purple" },
+            5: { label: "代词", color: "red" },
+            6: { label: "介词", color: "cyan" },
+            7: { label: "连词", color: "volcano" },
+            8: { label: "感叹词", color: "magenta" },
+            9: { label: "未分类", color: "default" },
+          };
+
+        // 最多显示3个，超过的用 +N 表示
+        const displayList = partSpeechList.slice(0, 3);
+        const remainingCount = partSpeechList.length - 3;
+
+        const allTags = partSpeechList
+          .map((partSpeech) => {
+            const info = partSpeechMap[partSpeech];
+            return info?.label || "未知";
+          })
+          .join("、");
+
+        return (
+          <Tooltip title={partSpeechList.length > 3 ? allTags : undefined}>
+            <Space size={2} wrap style={{ maxWidth: "100%" }}>
+              {displayList.map((partSpeech) => {
+                const info = partSpeechMap[partSpeech];
+                return (
+                  <Tag
+                    key={partSpeech}
+                    color={info?.color || "default"}
+                    style={{ margin: 0, fontSize: "12px" }}
+                  >
+                    {info?.label || "未知"}
+                  </Tag>
+                );
+              })}
+              {remainingCount > 0 && (
+                <Tag color="default" style={{ margin: 0, fontSize: "12px" }}>
+                  +{remainingCount}
+                </Tag>
+              )}
+            </Space>
+          </Tooltip>
+        );
+      },
     },
     {
       width: 200,
