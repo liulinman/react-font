@@ -154,36 +154,53 @@ export const EditAddModal = (props: Props) => {
       okText="确认"
       cancelText="取消"
       destroyOnHidden
+      width={800} // 增加宽度
       styles={{
-        body: { maxHeight: "500px", overflowY: "auto", padding: "10px" },
+        body: {
+          maxHeight: "calc(100vh - 360px)",
+          overflowY: "auto",
+          padding: "20px",
+        },
       }}
     >
       {/* 编辑/添加表单 */}
       <Form form={form} onValuesChange={onValuesChange} layout="vertical">
-        <Form.Item
-          label="单词名"
-          name="englishWord"
-          rules={[{ required: true, message: "请输入单词名" }]}
-        >
-          <Input allowClear />
-        </Form.Item>
-        <Form.Item
-          label="掌握程度"
-          name="englishLevel"
-          rules={[{ required: true, message: "请选择掌握程度" }]}
-        >
-          <Select options={enumToOptions(EnglishAbsorb)} />
-        </Form.Item>
-        <Form.Item
-          label="类型"
-          name="englishType"
-          rules={[{ required: true, message: "请选择类型" }]}
-        >
-          <Select options={enumToOptions(EnglishType)} allowClear />
-        </Form.Item>
-        <Form.Item label="音标" name="englishPhonetic">
-          <Input allowClear />
-        </Form.Item>
+        {/* 第一行：单词名 + 掌握程度 */}
+        <div style={{ display: "flex", gap: "16px" }}>
+          <Form.Item
+            label="单词名"
+            name="englishWord"
+            rules={[{ required: true, message: "请输入单词名" }]}
+            style={{ flex: 1 }}
+          >
+            <Input allowClear />
+          </Form.Item>
+          <Form.Item
+            label="掌握程度"
+            name="englishLevel"
+            rules={[{ required: true, message: "请选择掌握程度" }]}
+            style={{ flex: 1 }}
+          >
+            <Select options={enumToOptions(EnglishAbsorb)} />
+          </Form.Item>
+        </div>
+
+        {/* 第二行：类型 + 音标 */}
+        <div style={{ display: "flex", gap: "16px" }}>
+          <Form.Item
+            label="类型"
+            name="englishType"
+            rules={[{ required: true, message: "请选择类型" }]}
+            style={{ flex: 1 }}
+          >
+            <Select options={enumToOptions(EnglishType)} allowClear />
+          </Form.Item>
+          <Form.Item label="音标" name="englishPhonetic" style={{ flex: 1 }}>
+            <Input allowClear />
+          </Form.Item>
+        </div>
+
+        {/* 词性 - 独立一行 */}
         <Form.Item label="词性" name="englishPartSpeech">
           <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
             {partSpeechOptions.map((option) => {
@@ -229,19 +246,25 @@ export const EditAddModal = (props: Props) => {
             })}
           </div>
         </Form.Item>
+
+        {/* 中文 - 独立一行 */}
         <Form.Item label="中文" name="englishChinese">
-          <TextArea rows={4} allowClear />
+          <TextArea rows={2} allowClear />
         </Form.Item>
+
+        {/* 图片 - 独立一行 */}
         <Form.Item label="图片" name="englishImg">
           <Upload customRequest={customRequest} onChange={onChange}>
             <Button icon={<UploadOutlined />}>点击上传</Button>
           </Upload>
         </Form.Item>
 
+        {/* 笔记 - 独立一行 */}
         <Form.Item label="笔记" name="englishNote">
           <TextArea rows={4} allowClear />
         </Form.Item>
 
+        {/* 引用 - 独立一行 */}
         <Form.Item label="引用" name="englishReference">
           <Input allowClear />
         </Form.Item>
