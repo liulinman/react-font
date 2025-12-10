@@ -90,9 +90,7 @@ export const EditAddModal = (props: Props) => {
       form.setFieldsValue({
         englishLevel: "0",
         englishType: isPhrase ? "1" : "0",
-        englishPartSpeech: [9],
       });
-      setSelectedPartSpeech([9]);
     }
   };
 
