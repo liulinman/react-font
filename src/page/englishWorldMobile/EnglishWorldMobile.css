@@ -1,0 +1,172 @@
+.english-world-mobile {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #f5f5f5;
+}
+
+.mobile-content {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 80px;
+}
+
+.search-section {
+  padding: 12px;
+  background-color: #fff;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.word-list {
+  padding: 12px;
+}
+
+.word-card {
+  margin-bottom: 12px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.word-card-header {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.word-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1677ff;
+}
+
+.word-phonetic {
+  font-size: 14px;
+  color: #8c8c8c;
+  font-style: italic;
+}
+
+.word-card-body {
+  margin-top: 12px;
+}
+
+.word-image {
+  margin-bottom: 12px;
+}
+
+.word-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.word-chinese {
+  font-size: 16px;
+  color: #262626;
+  line-height: 1.5;
+}
+
+.word-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.word-note {
+  margin-top: 8px;
+  padding: 8px;
+  background-color: #fafafa;
+  border-radius: 6px;
+}
+
+.note-label {
+  font-size: 12px;
+  color: #8c8c8c;
+  margin-bottom: 4px;
+}
+
+.note-content {
+  font-size: 14px;
+  color: #595959;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.word-reference {
+  margin-top: 8px;
+}
+
+.reference-link {
+  color: #1677ff;
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.reference-link:active {
+  opacity: 0.7;
+}
+
+.fab-container {
+  position: fixed;
+  right: 20px;
+  bottom: 80px;
+  z-index: 100;
+}
+
+.filter-popup {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: #fff;
+}
+
+.filter-popup .adm-form {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.picker-trigger {
+  padding: 12px;
+  background-color: #f5f5f5;
+  border-radius: 6px;
+  color: #262626;
+}
+
+.filter-actions {
+  padding: 16px;
+  background-color: #fff;
+  border-top: 1px solid #f0f0f0;
+  margin-top: auto;
+}
+
+.edit-modal {
+  height: 80vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #fff;
+}
+
+.edit-form-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+.edit-form-container .adm-form-item-label {
+  font-weight: 500;
+  color: #262626;
+}
+
+/* 适配移动端的样式优化 */
+@media (max-width: 375px) {
+  .word-title {
+    font-size: 16px;
+  }
+
+  .word-phonetic {
+    font-size: 12px;
+  }
+}
+

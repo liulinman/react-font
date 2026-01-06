@@ -7,6 +7,7 @@ import EnglishWorld from "@/page/englishWorld/EnglishWorld";
 import AuthIdMap from "@/page/authIdMap/AuthIdMap";
 import { PurchaseFlowPage } from "@/page/flowChart/FlowChart";
 import { SimpleTest } from "@/page/SimpleTest/SimpleTest";
+import EnglishWorldMobile from "@/page/englishWorldMobile/EnglishWorldMobile";
 
 export const router = createBrowserRouter([
   {
@@ -42,5 +43,9 @@ export const router = createBrowserRouter([
   {
     path: "/test-flow",
     element: <SimpleTest />,
+  },
+  {
+    path: "/englishWorldMobile",
+    element: <EnglishWorldMobile />,
   },
 ]);
