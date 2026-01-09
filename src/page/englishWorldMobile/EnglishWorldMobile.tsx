@@ -137,11 +137,7 @@ const EnglishWorldMobile: React.FC = () => {
       setLoading(true);
 
       try {
-        const res = await request<{
-          code: number;
-          data: ListData;
-          message: string;
-        }>(
+        const res = await request<ListData>(
           wordFilter({
             page: pageNum,
             pageSize,
@@ -150,28 +146,19 @@ const EnglishWorldMobile: React.FC = () => {
           })
         );
 
-        if (res.code === 200) {
-          setTotal(res.data.total);
-          if (reset) {
-            setWordList(res.data.list);
-            setHasMore(
-              res.data.list.length >= pageSize &&
-                res.data.list.length < res.data.total
-            );
-          } else {
-            setWordList((prev) => {
-              const newList = [...prev, ...res.data.list];
-              setHasMore(
-                res.data.list.length >= pageSize &&
-                  newList.length < res.data.total
-              );
-              return newList;
-            });
-          }
+        setTotal(res.total);
+        if (reset) {
+          setWordList(res.list);
+          setHasMore(
+            res.list.length >= pageSize && res.list.length < res.total
+          );
         } else {
-          Toast.show({
-            icon: "fail",
-            content: "加载失败",
+          setWordList((prev) => {
+            const newList = [...prev, ...res.list];
+            setHasMore(
+              res.list.length >= pageSize && newList.length < res.total
+            );
+            return newList;
           });
         }
       } catch {
@@ -193,41 +180,39 @@ const EnglishWorldMobile: React.FC = () => {
       setStatsLoading(true);
       try {
         const res = await mutateEnglishStats({ level });
-        if (res.code === 200) {
-          const {
-            levelCount,
-            percentage,
-            totalCount,
-            dailyStats,
-            partSpeechStatisticalClass,
-          } = res.data;
+        const {
+          levelCount,
+          percentage,
+          totalCount,
+          dailyStats,
+          partSpeechStatisticalClass,
+        } = res;
 
-          setSummaryStats([
-            { label: "总学习单词", value: totalCount, color: "#1677ff" },
-            { label: "已掌握单词", value: levelCount, color: "#52c41a" },
-            {
-              label: "掌握率",
-              value: Number(percentage).toFixed(2),
-              color: "#faad14",
-            },
-          ]);
+        setSummaryStats([
+          { label: "总学习单词", value: totalCount, color: "#1677ff" },
+          { label: "已掌握单词", value: levelCount, color: "#52c41a" },
+          {
+            label: "掌握率",
+            value: Number(percentage).toFixed(2),
+            color: "#faad14",
+          },
+        ]);
 
-          setDailyStats(dailyStats);
+        setDailyStats(dailyStats);
 
-          // 处理词性统计数据
-          const partSpeechData: PartSpeechData[] = Object.entries(
-            partSpeechStatisticalClass as CommonRecord
-          ).map(([key, value]) => {
-            const partSpeechKey = Number(key);
-            return {
-              value: value as number,
-              name: EnglishPartSpeech[partSpeechKey],
-              color: partSpeechColors[partSpeechKey] || "#8c8c8c",
-            };
-          });
+        // 处理词性统计数据
+        const partSpeechData: PartSpeechData[] = Object.entries(
+          partSpeechStatisticalClass as CommonRecord
+        ).map(([key, value]) => {
+          const partSpeechKey = Number(key);
+          return {
+            value: value as number,
+            name: EnglishPartSpeech[partSpeechKey],
+            color: partSpeechColors[partSpeechKey] || "#8c8c8c",
+          };
+        });
 
-          setWordTypeData(partSpeechData);
-        }
+        setWordTypeData(partSpeechData);
       } catch (error) {
         console.error("加载统计数据失败:", error);
         Toast.show({
@@ -285,10 +270,8 @@ const EnglishWorldMobile: React.FC = () => {
       cancelText: "取消",
       onConfirm: async () => {
         try {
-          const res = await request<{ code: number; data: boolean }>(
-            wordDel({ id })
-          );
-          if (res.data) {
+          const res = await request<boolean>(wordDel({ id }));
+          if (res) {
             Toast.show({
               icon: "success",
               content: "删除成功",
@@ -353,12 +336,8 @@ const EnglishWorldMobile: React.FC = () => {
       };
 
       if (editType === "edit") {
-        const res = await request<{
-          code: number;
-          data: boolean;
-          message: string;
-        }>(wordUpdate(submitData as WordList));
-        if (res.data) {
+        const res = await request<boolean>(wordUpdate(submitData as WordList));
+        if (res) {
           Toast.show({
             icon: "success",
             content: "更新成功",
@@ -368,16 +347,16 @@ const EnglishWorldMobile: React.FC = () => {
         } else {
           Toast.show({
             icon: "fail",
-            content: res.message || "更新失败",
+            content: "更新失败",
           });
         }
       } else {
         // 检查单词是否存在
-        const existRes = await request<{ code: number; data: boolean }>(
+        const existRes = await request<boolean>(
           wordExist({ englishWord: values.englishWord })
         );
 
-        if (existRes.data) {
+        if (existRes) {
           Dialog.alert({
             content: "单词已经存在！",
             confirmText: "确定",
@@ -386,7 +365,7 @@ const EnglishWorldMobile: React.FC = () => {
         }
 
         const res = await mutateWordAdd(submitData);
-        if (res.code === 200 && res.data) {
+        if (res) {
           Toast.show({
             icon: "success",
             content: "添加成功",
@@ -396,7 +375,7 @@ const EnglishWorldMobile: React.FC = () => {
         } else {
           Toast.show({
             icon: "fail",
-            content: res.message || "添加失败",
+            content: "添加失败",
           });
         }
       }
@@ -1193,22 +1172,10 @@ const EnglishWorldMobile: React.FC = () => {
                       try {
                         const formData = new FormData();
                         formData.append("file", file);
-                        const res = await request<{
-                          code: number;
-                          data: string;
-                          message: string;
-                        }>(uploadFile(formData));
-                        if (res.code === 200) {
-                          return {
-                            url: res.data,
-                          };
-                        } else {
-                          Toast.show({
-                            icon: "fail",
-                            content: "上传失败",
-                          });
-                          throw new Error("上传失败");
-                        }
+                        const res = await request<string>(uploadFile(formData));
+                        return {
+                          url: res,
+                        };
                       } catch (error) {
                         Toast.show({
                           icon: "fail",

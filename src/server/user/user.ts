@@ -20,7 +20,7 @@ export const userFindList = () => {
   };
 };
 
-export const userAdd = (data: any) => {
+export const userAdd = (data: Record<string, unknown>) => {
   return {
     url: "/user/createUser",
     method: "POST",
@@ -62,6 +62,6 @@ export const userLogout = () => {
   return {
     url: "/user/logout",
     method: "POST",
-    __responseType: {} as null,
+    __responseType: null as null,
   };
 };
