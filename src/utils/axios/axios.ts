@@ -22,9 +22,10 @@ export interface YTRequest<T = unknown> {
 export const api = axios.create({
   baseURL:
     process.env.NODE_ENV === "development"
-      ? "http://127.0.0.1:3000" // 开发环境的地址
+      ? "/api" // 开发环境使用 vite 代理，避免 CORS 问题
       : "http://47.108.140.63:3001", // 生产环境的地址
   timeout: 10000, // 请求超时
+  withCredentials: true, // 支持 Cookie
   headers: {
     "Content-Type": "application/json",
   },
@@ -33,17 +34,48 @@ export const api = axios.create({
 // 添加响应拦截器
 api.interceptors.response.use(
   (response) => {
-    // 如果请求成功，直接返回响应数据
-    return response;
+    // 如果请求成功，检查业务状态码
+    const { code, message: msg, data } = response.data;
+    if (code === 200) {
+      // 业务成功，返回 data 部分
+      return { ...response, data: data !== undefined ? data : response.data };
+    } else {
+      // 业务失败，抛出错误
+      message.error(msg || "请求失败");
+      return Promise.reject({
+        code,
+        message: msg,
+        data: null,
+      });
+    }
   },
   (error) => {
     console.log(error);
-    if (error.response?.data?.message) {
-      message.error(error.response.data.message);
+
+    // 处理 CORS 错误
+    if (
+      error.code === "ERR_NETWORK" ||
+      error.message?.includes("CORS") ||
+      !error.response
+    ) {
+      // CORS 错误或网络错误，不显示错误消息（可能是后端未启动或 CORS 未配置）
+      console.warn("CORS or Network Error:", error.message);
+      return Promise.reject({
+        code: "CORS_ERROR",
+        message: "跨域请求失败，请检查后端 CORS 配置",
+        data: null,
+      });
+    }
+
+    const errorData = error.response?.data;
+    if (errorData?.message) {
+      message.error(errorData.message);
+    } else if (error.message) {
+      message.error(error.message);
     }
 
     // 返回错误，可以根据需求抛出或处理
-    return Promise.reject(error.response?.data || error);
+    return Promise.reject(errorData || error);
   }
 );
 
@@ -75,6 +107,7 @@ const request = async <T>(ytRequest: YTRequest<T>): Promise<T> => {
       default:
         throw new Error("Unsupported method");
     }
+    // response.data 已经在拦截器中处理过了，直接返回
     return response.data;
   } catch (error) {
     console.error("Request failed:", error);

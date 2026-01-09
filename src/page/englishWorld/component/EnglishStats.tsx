@@ -128,41 +128,39 @@ export const EnglishStats = () => {
   const loadStats = async (level: EnglishAbsorb) => {
     try {
       const res = await mutateEnglishStats({ level });
-      if (res.code === 200) {
-        const {
-          levelCount,
-          percentage,
-          totalCount,
-          dailyStats,
-          partSpeechStatisticalClass,
-        } = res.data;
+      const {
+        levelCount,
+        percentage,
+        totalCount,
+        dailyStats,
+        partSpeechStatisticalClass,
+      } = res;
 
-        setSummaryStats([
-          { label: "总学习单词", value: totalCount, color: "#1677ff" },
-          { label: "已掌握单词", value: levelCount, color: "#52c41a" },
-          {
-            label: "掌握率",
-            value: Number(percentage).toFixed(2),
-            color: "#faad14",
-          },
-        ]);
+      setSummaryStats([
+        { label: "总学习单词", value: totalCount, color: "#1677ff" },
+        { label: "已掌握单词", value: levelCount, color: "#52c41a" },
+        {
+          label: "掌握率",
+          value: Number(percentage).toFixed(2),
+          color: "#faad14",
+        },
+      ]);
 
-        setDailyStats(dailyStats);
+      setDailyStats(dailyStats);
 
-        // 处理词性统计数据
-        const partSpeechData: PartSpeechData[] = Object.entries(
-          partSpeechStatisticalClass
-        ).map(([key, value]) => {
-          const partSpeechKey = Number(key);
-          return {
-            value: value as number,
-            name: EnglishPartSpeech[partSpeechKey],
-            color: partSpeechColors[partSpeechKey] || "#8c8c8c",
-          };
-        });
+      // 处理词性统计数据
+      const partSpeechData: PartSpeechData[] = Object.entries(
+        partSpeechStatisticalClass
+      ).map(([key, value]) => {
+        const partSpeechKey = Number(key);
+        return {
+          value: value as number,
+          name: EnglishPartSpeech[partSpeechKey],
+          color: partSpeechColors[partSpeechKey] || "#8c8c8c",
+        };
+      });
 
-        setWordTypeData(partSpeechData);
-      }
+      setWordTypeData(partSpeechData);
     } catch (error) {
       console.error("加载统计数据失败:", error);
     }

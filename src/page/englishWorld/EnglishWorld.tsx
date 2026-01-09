@@ -123,10 +123,8 @@ const EnglishWorld: React.FC = () => {
       okText: "确认",
       cancelText: "取消",
       onOk: async () => {
-        const res = await request<{ code: number; data: boolean }>(
-          wordDel({ id })
-        );
-        if (res.data) {
+        const res = await request<boolean>(wordDel({ id }));
+        if (res) {
           message.success("删除成功");
           await handleSearch();
         } else {
@@ -153,19 +151,17 @@ const EnglishWorld: React.FC = () => {
   const initialWordData = useCallback(
     async (page: number, pageSize: number) => {
       setLoading(true);
-      const res = await request<{
-        code: number;
-        data: ListData;
-        message: string;
-      }>(wordFilter({ page, pageSize }));
-      if (res.code === 200) {
-        setWordList(res.data.list);
-        setTotalNum(res.data.total);
-      } else {
-        message.error(`失败`);
+      try {
+        const res = await request<ListData>(wordFilter({ page, pageSize }));
+        setWordList(res.list);
+        setTotalNum(res.total);
+      } catch (error) {
+        console.error("加载数据失败:", error);
         setWordList([]);
+        setTotalNum(0);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     },
     []
   );
@@ -191,15 +187,19 @@ const EnglishWorld: React.FC = () => {
       delete values.time;
     }
     setLoading(true);
-    const res = await request<{ code: number; data: ListData }>(
-      wordFilter({ ...values, ...newValues, page, pageSize })
-    );
-
-    if (res.code === 200) {
-      setWordList(res.data.list);
-      setTotalNum(res.data.total);
+    try {
+      const res = await request<ListData>(
+        wordFilter({ ...values, ...newValues, page, pageSize })
+      );
+      setWordList(res.list);
+      setTotalNum(res.total);
+    } catch (error) {
+      console.error("查询失败:", error);
+      setWordList([]);
+      setTotalNum(0);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   // 重置表单
@@ -212,28 +212,22 @@ const EnglishWorld: React.FC = () => {
   const handleModalOk = async (values: WordList, type: "edit" | "add") => {
     if (type === "edit") {
       // 开始真正的更新操作
-      const res = await request<{
-        code: number;
-        data: boolean;
-        message: string;
-      }>(wordUpdate(values));
-      if (res.data) {
+      const res = await request<boolean>(wordUpdate(values));
+      if (res) {
         message.success("更新成功");
         setIsModalVisible(false);
         await handleSearch();
       } else {
-        message.error(res.message);
+        message.error("更新失败");
       }
     }
 
     if (type === "add") {
       const { englishWord } = values;
 
-      const res = await request<{ code: number; data: boolean }>(
-        wordExist({ englishWord })
-      );
+      const res = await request<boolean>(wordExist({ englishWord }));
 
-      if (res.data) {
+      if (res) {
         Modal.info({
           title: "添加失败",
           content: "单词已经存在！",
@@ -242,12 +236,12 @@ const EnglishWorld: React.FC = () => {
       } else {
         // 开始真正的插入操作
         const res = await mutateWordAdd(values);
-        if (res.code === 200 && res.data) {
+        if (res) {
           message.success("添加成功");
           setIsModalVisible(false);
           await handleSearch();
         } else {
-          message.error(res.message || "添加失败");
+          message.error("添加失败");
         }
       }
     }
@@ -372,6 +366,16 @@ const EnglishWorld: React.FC = () => {
                   icon={<PlusOutlined />}
                 >
                   新增
+                </Button>
+
+                <Button
+                  type="primary"
+                  onClick={handleAdd}
+                  size="small"
+                  loading={buttonPending}
+                  icon={<PlusOutlined />}
+                >
+                  默写（中文写英文）
                 </Button>
               </div>
 

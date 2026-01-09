@@ -62,19 +62,22 @@ export const uploadFile = (data: FormData) => {
 export const englishStats = (data: {
   level: string;
 }): YTRequest<{
-  code: number;
-  data: {
-    levelCount: number;
-    totalCount: number;
-    percentage: number;
-    dailyStats: DailyStat[];
-    partSpeechStatisticalClass: CommonRecord;
-  };
-  message: string;
+  levelCount: number;
+  totalCount: number;
+  percentage: number;
+  dailyStats: DailyStat[];
+  partSpeechStatisticalClass: CommonRecord;
 }> => {
   return {
     url: "/english/englishStats",
     method: "POST",
     data,
+    __responseType: {} as {
+      levelCount: number;
+      totalCount: number;
+      percentage: number;
+      dailyStats: DailyStat[];
+      partSpeechStatisticalClass: CommonRecord;
+    },
   };
 };

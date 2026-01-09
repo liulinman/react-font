@@ -20,5 +20,13 @@ export default defineConfig({
     host: "0.0.0.0", // 使 Vite 服务器监听所有 IP 地址
     port: 5173, // 可以指定端口，如果不指定，默认是 5173
     // open: true         // 是否在启动时自动打开浏览器
+    proxy: {
+      // 代理 API 请求到后端服务器
+      "/api": {
+        target: "http://localhost:3000",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ""), // 移除 /api 前缀
+      },
+    },
   },
 });

@@ -8,8 +8,14 @@ import AuthIdMap from "@/page/authIdMap/AuthIdMap";
 import { PurchaseFlowPage } from "@/page/flowChart/FlowChart";
 import { SimpleTest } from "@/page/SimpleTest/SimpleTest";
 import EnglishWorldMobile from "@/page/englishWorldMobile/EnglishWorldMobile";
+import Login from "@/page/login/Login";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 export const router = createBrowserRouter([
+  {
+    path: "/login",
+    element: <Login />,
+  },
   {
     path: "/",
     element: <Home />,
@@ -18,7 +24,6 @@ export const router = createBrowserRouter([
     path: "/transferSlash",
     element: <TransferSlash />,
   },
-
   {
     path: "/userList",
     element: <UserList />,
@@ -29,7 +34,19 @@ export const router = createBrowserRouter([
   },
   {
     path: "/englishWorld",
-    element: <EnglishWorld />,
+    element: (
+      <ProtectedRoute>
+        <EnglishWorld />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/englishWorldMobile",
+    element: (
+      <ProtectedRoute>
+        <EnglishWorldMobile />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/authIdMap",
@@ -39,13 +56,8 @@ export const router = createBrowserRouter([
     path: "/purchaseFlowChart",
     element: <PurchaseFlowPage />,
   },
-
   {
     path: "/test-flow",
     element: <SimpleTest />,
-  },
-  {
-    path: "/englishWorldMobile",
-    element: <EnglishWorldMobile />,
   },
 ]);
