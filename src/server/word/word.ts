@@ -60,7 +60,7 @@ export const uploadFile = (data: FormData) => {
 };
 
 export const englishStats = (data: {
-  level: string;
+  level: number;
 }): YTRequest<{
   levelCount: number;
   totalCount: number;

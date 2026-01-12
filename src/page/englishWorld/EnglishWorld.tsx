@@ -89,9 +89,9 @@ const EnglishWorld: React.FC = () => {
             placeholder="请选择类型"
             allowClear
             options={[
-              { label: "单词", value: "0" },
-              { label: "短语", value: "1" },
-              { label: "句子", value: "2" },
+              { label: "单词", value: 0 },
+              { label: "短语", value: 1 },
+              { label: "句子", value: 2 },
             ]}
           />
         </Form.Item>
@@ -105,10 +105,10 @@ const EnglishWorld: React.FC = () => {
             placeholder="请选择掌握程度"
             allowClear
             options={[
-              { label: "不会", value: "0" },
-              { label: "一般", value: "1" },
-              { label: "熟练", value: "2" },
-              { label: "精通", value: "3" },
+              { label: "不会", value: 0 },
+              { label: "一般", value: 1 },
+              { label: "熟练", value: 2 },
+              { label: "精通", value: 3 },
             ]}
           />
         </Form.Item>

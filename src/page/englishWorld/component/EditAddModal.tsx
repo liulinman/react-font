@@ -18,8 +18,8 @@ interface Props {
 
 type FormValues = {
   englishWord: string;
-  englishLevel: string;
-  englishType: string;
+  englishLevel: number;
+  englishType: number;
   englishPhonetic?: string;
   englishPartSpeech?: number[];
   englishChinese?: string;
@@ -88,8 +88,8 @@ export const EditAddModal = (props: Props) => {
       // 开始决定掌握程度和类型
       const isPhrase = englishWord.trim().includes(" ");
       form.setFieldsValue({
-        englishLevel: "0",
-        englishType: isPhrase ? "1" : "0",
+        englishLevel: 0,
+        englishType: isPhrase ? 1 : 0,
       });
     }
   };

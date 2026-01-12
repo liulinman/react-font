@@ -2,10 +2,10 @@ export type WordList = {
   id: number;
   englishWord: string;
   englishPhonetic?: string;
-  englishType?: string;
+  englishType?: number;
   englishChinese?: string;
   englishNote?: string;
-  englishLevel?: string;
+  englishLevel?: number;
   englishReference?: string;
   englishCreateTime?: string;
   englishUpdateTime?: string;
@@ -18,8 +18,8 @@ export type FilterWordList = {
   pageSize: number;
   englishChinese?: string;
   englishWord?: string;
-  englishType?: string;
-  englishLevel?: string;
+  englishType?: number;
+  englishLevel?: number;
   startTime?: string;
   endTime?: string;
 };
