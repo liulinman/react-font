@@ -22,3 +22,8 @@ export enum EnglishPartSpeech {
   "感叹词" = 8,
   "未分类" = 9,
 }
+
+export enum PracticeDirection {
+  ChineseToEnglish = 0, // 中文写英文
+  EnglishToChinese = 1, // 英文写中文
+}

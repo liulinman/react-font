@@ -4,6 +4,7 @@ import TransferSlash from "@/page/transferSlash/transferSlash";
 import UserList from "@/page/user/userList/userList";
 import UserAdd from "@/page/user/userAdd/userAdd";
 import EnglishWorld from "@/page/englishWorld/EnglishWorld";
+import { SystemSettingsPage } from "@/page/englishWorld/component/SystemSettingsPage";
 import AuthIdMap from "@/page/authIdMap/AuthIdMap";
 import { PurchaseFlowPage } from "@/page/flowChart/FlowChart";
 import { SimpleTest } from "@/page/SimpleTest/SimpleTest";
@@ -37,6 +38,14 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <EnglishWorld />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/englishWorld/settings",
+    element: (
+      <ProtectedRoute>
+        <SystemSettingsPage />
       </ProtectedRoute>
     ),
   },

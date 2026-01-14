@@ -26,6 +26,7 @@ import { EnglishHeader } from "./component/EnglishHeader";
 import { FormFieldGroup } from "./component/FormFieldGroup";
 import { EnglishStats } from "./component/EnglishStats";
 import { DownOutlined, PlusOutlined, UpOutlined } from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
 const { RangePicker } = DatePicker;
 
 type ListData = {
@@ -47,6 +48,16 @@ const EnglishWorld: React.FC = () => {
   const { mutateAsync: mutateWordAdd, isPending: buttonPending } =
     useMutation(wordAdd);
   const [activeNav, setActiveNav] = useState("list");
+  const navigate = useNavigate();
+
+  // 处理导航点击
+  const handleNavClick = (key: string) => {
+    if (key === "setting") {
+      navigate("/englishWorld/settings");
+    } else {
+      setActiveNav(key);
+    }
+  };
 
   const filterFields = [
     {
@@ -268,7 +279,7 @@ const EnglishWorld: React.FC = () => {
 
   return (
     <div style={{ background: "#f5f5f5", height: "100vh" }}>
-      <EnglishHeader activeKey={activeNav} onNavClick={setActiveNav} />
+      <EnglishHeader activeKey={activeNav} onNavClick={handleNavClick} />
       <div
         style={{
           padding: "20px",
