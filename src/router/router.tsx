@@ -5,6 +5,7 @@ import UserList from "@/page/user/userList/userList";
 import UserAdd from "@/page/user/userAdd/userAdd";
 import EnglishWorld from "@/page/englishWorld/EnglishWorld";
 import { SystemSettingsPage } from "@/page/englishWorld/component/SystemSettingsPage";
+import { RecitePage } from "@/page/englishWorld/recite/RecitePage";
 import AuthIdMap from "@/page/authIdMap/AuthIdMap";
 import { PurchaseFlowPage } from "@/page/flowChart/FlowChart";
 import { SimpleTest } from "@/page/SimpleTest/SimpleTest";
@@ -46,6 +47,14 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <SystemSettingsPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/englishWorld/recite",
+    element: (
+      <ProtectedRoute>
+        <RecitePage />
       </ProtectedRoute>
     ),
   },

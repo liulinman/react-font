@@ -18,6 +18,11 @@ const navItems = [
     label: "单词列表",
   },
   {
+    key: "recite",
+    icon: <BookFilled />,
+    label: "单词默写",
+  },
+  {
     key: "stat",
     icon: <BarChartOutlined />,
     label: "学习统计",
@@ -112,7 +117,13 @@ export const EnglishHeader = ({
                   ? "bg-blue-500 text-white shadow-md"
                   : "text-gray-600"
               }`}
-              onClick={() => onNavClick?.(key)}
+              onClick={() => {
+                if (key === "recite") {
+                  navigate("/englishWorld/recite");
+                } else {
+                  onNavClick?.(key);
+                }
+              }}
             >
               {label}
             </Button>
