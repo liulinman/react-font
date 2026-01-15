@@ -68,4 +68,6 @@ export type {
   Statistics,
   DirectionStat,
   HistoryItem,
+  ReciteSession,
+  HistoryWordItem,
 } from "./recite.type";

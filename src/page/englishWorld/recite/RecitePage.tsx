@@ -36,7 +36,9 @@ import {
   type SubmitAnswerResponse,
   type Question,
   type AnswerItem,
-  type HistoryItem,
+  type ReciteSession,
+  type HistoryWordItem,
+  type GetHistoryResponse,
   type GetStatsResponse,
 } from "@/server/recite/recite";
 import { getSystemSettings } from "../component/SystemSettings";
@@ -54,11 +56,14 @@ export const RecitePage: React.FC = () => {
   const [direction, setDirection] = useState<number>(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [results, setResults] = useState<SubmitAnswerResponse | null>(null);
-  const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [history, setHistory] = useState<ReciteSession[]>([]);
   const [stats, setStats] = useState<GetStatsResponse | null>(null);
   const [showHistory, setShowHistory] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [expandedSessions, setExpandedSessions] = useState<number[]>([]);
+  const [historyPage, setHistoryPage] = useState(1);
+  const [historyTotal, setHistoryTotal] = useState(0);
 
   // 开始默写
   const handleStartRecite = useCallback(async () => {
@@ -123,6 +128,8 @@ export const RecitePage: React.FC = () => {
 
       setResults(response);
       setStatus("submitted");
+      // 保存会话ID（可选，用于后续功能）
+      console.log("本次默写会话ID:", response.sessionId);
       message.success("提交成功！");
     } catch (error: unknown) {
       console.error("提交答案失败:", error);
@@ -135,16 +142,18 @@ export const RecitePage: React.FC = () => {
   }, [questions, answers, direction]);
 
   // 获取历史记录
-  const loadHistory = useCallback(async () => {
+  const loadHistory = useCallback(async (pageNum: number = 1) => {
     try {
       setLoading(true);
-      const response = await request<{ list: HistoryItem[] }>(
+      const response = await request<GetHistoryResponse>(
         getReciteHistory({
-          page: 1,
-          pageSize: 50,
+          page: pageNum,
+          pageSize: 10, // 每页显示10个会话
         })
       );
       setHistory(response.list || []);
+      setHistoryTotal(response.total || 0);
+      setHistoryPage(response.page || 1);
     } catch (error: unknown) {
       console.error("获取历史记录失败:", error);
       const errorMessage =
@@ -153,6 +162,15 @@ export const RecitePage: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  // 切换会话展开状态
+  const toggleSession = useCallback((sessionId: number) => {
+    setExpandedSessions((prev) =>
+      prev.includes(sessionId)
+        ? prev.filter((id) => id !== sessionId)
+        : [...prev, sessionId]
+    );
   }, []);
 
   // 获取统计信息
@@ -205,7 +223,7 @@ export const RecitePage: React.FC = () => {
               icon={<HistoryOutlined />}
               onClick={() => {
                 setShowHistory(true);
-                loadHistory();
+                loadHistory(1);
               }}
             >
               历史记录
@@ -429,67 +447,196 @@ export const RecitePage: React.FC = () => {
         <Modal
           title="默写历史记录"
           open={showHistory}
-          onCancel={() => setShowHistory(false)}
+          onCancel={() => {
+            setShowHistory(false);
+            setExpandedSessions([]);
+          }}
           footer={null}
-          width={800}
+          width={900}
         >
           <Spin spinning={loading}>
             {history.length === 0 ? (
               <Empty description="暂无历史记录" />
             ) : (
-              <div className="space-y-2 max-h-96 overflow-y-auto">
-                {history.map((item) => (
-                  <Card key={item.id} size="small" className="mb-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Text strong>{item.englishWord}</Text>
-                          <Tag
-                            color={
-                              item.direction ===
-                              PracticeDirection.ChineseToEnglish
-                                ? "blue"
-                                : "purple"
-                            }
-                          >
-                            {item.direction ===
-                            PracticeDirection.ChineseToEnglish
-                              ? "中文写英文"
-                              : "英文写中文"}
-                          </Tag>
-                          {item.isCorrect === 1 ? (
-                            <Tag color="success" icon={<CheckOutlined />}>
-                              正确
-                            </Tag>
-                          ) : (
-                            <Tag color="error" icon={<CloseOutlined />}>
-                              错误
-                            </Tag>
-                          )}
-                        </div>
-                        <div className="text-sm text-gray-500 space-y-1">
-                          <div>
-                            正确答案:{" "}
-                            <Text className="text-green-600">
-                              {item.correctAnswer}
+              <div className="space-y-4">
+                {/* 会话列表 */}
+                <div className="space-y-3 max-h-[500px] overflow-y-auto">
+                  {history.map((session) => (
+                    <Card
+                      key={session.sessionId}
+                      size="small"
+                      className="mb-3 border border-gray-200"
+                    >
+                      {/* 会话摘要信息 */}
+                      <div className="mb-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-3">
+                            <Text strong className="text-base">
+                              {new Date(session.createTime).toLocaleString(
+                                "zh-CN"
+                              )}
                             </Text>
+                            <Tag
+                              color={
+                                session.direction ===
+                                PracticeDirection.ChineseToEnglish
+                                  ? "blue"
+                                  : "purple"
+                              }
+                            >
+                              {session.direction ===
+                              PracticeDirection.ChineseToEnglish
+                                ? "中文写英文"
+                                : "英文写中文"}
+                            </Tag>
                           </div>
-                          {item.isCorrect === 0 && (
-                            <div>
-                              你的答案:{" "}
-                              <Text className="text-red-600">
-                                {item.userAnswer}
-                              </Text>
-                            </div>
-                          )}
-                          <div>
-                            时间: {new Date(item.createTime).toLocaleString()}
+                          <Button
+                            type="link"
+                            size="small"
+                            onClick={() => toggleSession(session.sessionId)}
+                          >
+                            {expandedSessions.includes(session.sessionId)
+                              ? "收起详情"
+                              : "展开详情"}
+                          </Button>
+                        </div>
+                        <Row gutter={16}>
+                          <Col span={6}>
+                            <Statistic
+                              title="总数"
+                              value={session.wordCount}
+                              valueStyle={{ fontSize: "16px" }}
+                            />
+                          </Col>
+                          <Col span={6}>
+                            <Statistic
+                              title="正确"
+                              value={session.correctCount}
+                              valueStyle={{
+                                color: "#3f8600",
+                                fontSize: "16px",
+                              }}
+                              prefix={<CheckOutlined />}
+                            />
+                          </Col>
+                          <Col span={6}>
+                            <Statistic
+                              title="错误"
+                              value={session.errorCount}
+                              valueStyle={{
+                                color: "#cf1322",
+                                fontSize: "16px",
+                              }}
+                              prefix={<CloseOutlined />}
+                            />
+                          </Col>
+                          <Col span={6}>
+                            <Statistic
+                              title="正确率"
+                              value={session.accuracy}
+                              precision={2}
+                              suffix="%"
+                              valueStyle={{
+                                color:
+                                  session.accuracy >= 80
+                                    ? "#3f8600"
+                                    : session.accuracy >= 60
+                                    ? "#faad14"
+                                    : "#cf1322",
+                                fontSize: "16px",
+                              }}
+                            />
+                          </Col>
+                        </Row>
+                      </div>
+
+                      {/* 单词详情（可展开） */}
+                      {expandedSessions.includes(session.sessionId) && (
+                        <div className="mt-3 pt-3 border-t border-gray-100">
+                          <Text strong className="mb-2 block">
+                            单词详情 ({session.words.length} 个)
+                          </Text>
+                          <div className="space-y-2 max-h-64 overflow-y-auto">
+                            {session.words.map((word: HistoryWordItem) => (
+                              <div
+                                key={word.id}
+                                className={`p-3 rounded border ${
+                                  word.isCorrect
+                                    ? "bg-green-50 border-green-200"
+                                    : "bg-red-50 border-red-200"
+                                }`}
+                              >
+                                <div className="flex items-center justify-between mb-1">
+                                  <Text strong className="text-base">
+                                    {word.englishWord}
+                                  </Text>
+                                  {word.isCorrect ? (
+                                    <Tag
+                                      color="success"
+                                      icon={<CheckOutlined />}
+                                    >
+                                      正确
+                                    </Tag>
+                                  ) : (
+                                    <Tag color="error" icon={<CloseOutlined />}>
+                                      错误
+                                    </Tag>
+                                  )}
+                                </div>
+                                <div className="text-sm space-y-1">
+                                  <div>
+                                    <Text type="secondary">正确答案: </Text>
+                                    <Text strong className="text-green-600">
+                                      {word.correctAnswer}
+                                    </Text>
+                                  </div>
+                                  {!word.isCorrect && (
+                                    <div>
+                                      <Text type="secondary">你的答案: </Text>
+                                      <Text strong className="text-red-600">
+                                        {word.userAnswer || "(未填写)"}
+                                      </Text>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
                           </div>
                         </div>
-                      </div>
-                    </div>
-                  </Card>
-                ))}
+                      )}
+                    </Card>
+                  ))}
+                </div>
+
+                {/* 分页 */}
+                {historyTotal > 0 && (
+                  <div className="flex items-center justify-center gap-4 pt-4 border-t">
+                    <Button
+                      disabled={historyPage === 1}
+                      onClick={() => {
+                        const newPage = historyPage - 1;
+                        setHistoryPage(newPage);
+                        loadHistory(newPage);
+                      }}
+                    >
+                      上一页
+                    </Button>
+                    <Text>
+                      第 {historyPage} 页，共 {Math.ceil(historyTotal / 10)}{" "}
+                      页（共 {historyTotal} 次默写）
+                    </Text>
+                    <Button
+                      disabled={historyPage >= Math.ceil(historyTotal / 10)}
+                      onClick={() => {
+                        const newPage = historyPage + 1;
+                        setHistoryPage(newPage);
+                        loadHistory(newPage);
+                      }}
+                    >
+                      下一页
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
           </Spin>

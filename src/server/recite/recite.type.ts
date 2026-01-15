@@ -58,11 +58,36 @@ export interface DirectionStat {
 
 // 提交答案响应
 export interface SubmitAnswerResponse {
+  sessionId: number; // 本次默写的会话ID
   results: AnswerResult[]; // 答题结果列表
   statistics: Statistics; // 统计信息
 }
 
-// 历史记录项
+// 历史记录中的单词项
+export interface HistoryWordItem {
+  id: number; // 记录ID
+  wordId: number; // 单词ID
+  englishWord: string; // 英文单词
+  correctAnswer: string; // 正确答案
+  userAnswer: string; // 用户答案
+  isCorrect: boolean; // 是否正确
+  direction: number; // 练习方向
+  createTime: string; // 创建时间（ISO 8601 格式）
+}
+
+// 历史记录会话（新格式）
+export interface ReciteSession {
+  sessionId: number; // 会话ID
+  wordCount: number; // 单词总数
+  correctCount: number; // 正确数量
+  errorCount: number; // 错误数量
+  accuracy: number; // 正确率（百分比）
+  direction: number; // 练习方向：0-中文写英文, 1-英文写中文
+  createTime: string; // 创建时间（ISO 8601 格式）
+  words: HistoryWordItem[]; // 该会话下的所有单词记录
+}
+
+// 历史记录项（旧格式，保留用于向后兼容）
 export interface HistoryItem {
   id: number; // 记录ID
   userId: number; // 用户ID
@@ -82,10 +107,10 @@ export interface GetHistoryParams {
   direction?: number; // 练习方向筛选（0-中文写英文, 1-英文写中文），不传则查询所有方向
 }
 
-// 获取历史记录响应
+// 获取历史记录响应（新格式）
 export interface GetHistoryResponse {
-  list: HistoryItem[]; // 历史记录列表
-  total: number; // 总记录数
+  list: ReciteSession[]; // 历史记录会话列表
+  total: number; // 会话总数（不是单词总数）
   page: number; // 当前页码
   pageSize: number; // 每页数量
   totalPages: number; // 总页数
@@ -103,4 +128,3 @@ export interface GetStatsResponse {
     [key: string]: DirectionStat; // 按方向统计，key 为 "0" 或 "1"
   };
 }
-
