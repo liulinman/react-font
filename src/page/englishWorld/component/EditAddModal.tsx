@@ -66,6 +66,7 @@ export const EditAddModal = (props: Props) => {
       .then((value) => {
         const values =
           type === "add" ? value : { ...value, id: currentRecord?.id };
+
         onOk({ ...values }, type);
         if (type === "add") {
           form.resetFields();
@@ -115,8 +116,13 @@ export const EditAddModal = (props: Props) => {
     }
     if (info.file.status === "done") {
       message.success(`${info.file.name} 上传成功`);
-      const { response } = info.file;
-      form.setFieldsValue({ englishImg: response.data });
+      // 从 file.response 获取响应数据（customRequest 中设置的）
+      // 上传接口返回的是 URL 字符串
+      const imageUrl = info.file.response;
+      if (imageUrl) {
+        // 直接将 URL 设置到表单字段
+        form.setFieldsValue({ englishImg: imageUrl });
+      }
     } else if (info.file.status === "error") {
       message.error(`${info.file.name} 上传失败`);
     }
@@ -131,12 +137,22 @@ export const EditAddModal = (props: Props) => {
       formData.append("file", file);
 
       // 模拟上传进度
-      onProgress({ percent: 0 });
+      onProgress({ percent: 30 });
 
-      const response = await request(uploadFile(formData));
+      // 调用上传接口，request 函数已经处理了响应拦截，直接返回 URL 字符串
+      const imageUrl = await request<string>(uploadFile(formData));
 
-      // 上传成功
-      onSuccess(response, file);
+      // 模拟上传完成
+      onProgress({ percent: 100 });
+
+      // 将响应数据设置到 file.response，这样 onChange 可以访问到
+      file.response = imageUrl;
+
+      // 直接设置表单值，确保图片URL被保存（双重保险）
+      form.setFieldsValue({ englishImg: imageUrl });
+
+      // 上传成功，onSuccess 的第一个参数会被设置到 file.response
+      onSuccess(imageUrl, file);
     } catch (error) {
       console.error("File upload failed", error);
       onError(error);

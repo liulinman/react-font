@@ -378,16 +378,6 @@ const EnglishWorld: React.FC = () => {
                 >
                   新增
                 </Button>
-
-                <Button
-                  type="primary"
-                  onClick={handleAdd}
-                  size="small"
-                  loading={buttonPending}
-                  icon={<PlusOutlined />}
-                >
-                  默写（中文写英文）
-                </Button>
               </div>
 
               <Table<WordList>
