@@ -69,7 +69,15 @@ export const useColumns = (props: Props) => {
       key: "englishWord",
       // fixed: "left",
       render: (text: string) => (
-        <span style={{ fontWeight: 600, color: "#1890ff" }}>{text}</span>
+        <a
+          href={`https://www.baidu.com/s?wd=${encodeURIComponent(text)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ fontWeight: 600, color: "#1890ff", cursor: "pointer" }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {text}
+        </a>
       ),
     },
     // ... 音标列

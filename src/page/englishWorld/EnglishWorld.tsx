@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Button,
   DatePicker,
@@ -45,6 +45,7 @@ const EnglishWorld: React.FC = () => {
   const [page, setPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
   const [totalNum, setTotalNum] = useState<number>(0);
+  const filterParamsRef = useRef<Record<string, unknown>>({}); // 使用 ref 保存筛选条件，避免不必要的重新渲染
   const { mutateAsync: mutateWordAdd, isPending: buttonPending } =
     useMutation(wordAdd);
   const [activeNav, setActiveNav] = useState("list");
@@ -137,7 +138,7 @@ const EnglishWorld: React.FC = () => {
         const res = await request<boolean>(wordDel({ id }));
         if (res) {
           message.success("删除成功");
-          await handleSearch();
+          handleSearch(); // 触发查询刷新列表
         } else {
           message.error("删除失败");
         }
@@ -159,11 +160,17 @@ const EnglishWorld: React.FC = () => {
     pageSize,
   });
 
-  const initialWordData = useCallback(
-    async (page: number, pageSize: number) => {
+  // 统一的查询函数，使用保存的筛选条件
+  const fetchWordData = useCallback(
+    async (page: number, pageSize: number, filters: Record<string, unknown> = {}) => {
       setLoading(true);
       try {
-        const res = await request<ListData>(wordFilter({ page, pageSize }));
+        const queryParams = {
+          page,
+          pageSize,
+          ...filters, // 使用传入的筛选条件
+        };
+        const res = await request<ListData>(wordFilter(queryParams));
         setWordList(res.list);
         setTotalNum(res.total);
       } catch (error) {
@@ -178,11 +185,11 @@ const EnglishWorld: React.FC = () => {
   );
 
   useEffect(() => {
-    initialWordData(page, pageSize);
-  }, [initialWordData, page, pageSize]);
+    fetchWordData(page, pageSize, filterParamsRef.current);
+  }, [fetchWordData, page, pageSize]);
 
   // 查询数据
-  const handleSearch = async () => {
+  const handleSearch = () => {
     const values = form.getFieldsValue();
     const { time } = values;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -197,26 +204,29 @@ const EnglishWorld: React.FC = () => {
     if (time === null || time === undefined) {
       delete values.time;
     }
-    setLoading(true);
-    try {
-      const res = await request<ListData>(
-        wordFilter({ ...values, ...newValues, page, pageSize })
-      );
-      setWordList(res.list);
-      setTotalNum(res.total);
-    } catch (error) {
-      console.error("查询失败:", error);
-      setWordList([]);
-      setTotalNum(0);
-    } finally {
-      setLoading(false);
-    }
+    
+    // 合并筛选条件
+    const filters = { ...values, ...newValues };
+    // 移除空值
+    Object.keys(filters).forEach((key) => {
+      if (filters[key] === undefined || filters[key] === null || filters[key] === '') {
+        delete filters[key];
+      }
+    });
+    
+    // 保存筛选条件到 ref（同步更新，确保 useEffect 能获取到最新值）
+    filterParamsRef.current = filters;
+    // 重置到第一页，这会触发 useEffect 执行查询
+    setPage(1);
   };
 
   // 重置表单
   const handleReset = () => {
     form.resetFields();
-    initialWordData(1, 10);
+    filterParamsRef.current = {}; // 清除筛选条件
+    setPage(1); // 重置到第一页
+    setPageSize(10); // 重置每页条数
+    // useEffect 会自动触发查询，不需要手动调用 initialWordData
   };
 
   // 提交编辑
@@ -227,7 +237,7 @@ const EnglishWorld: React.FC = () => {
       if (res) {
         message.success("更新成功");
         setIsModalVisible(false);
-        await handleSearch();
+        handleSearch(); // 触发查询刷新列表
       } else {
         message.error("更新失败");
       }
@@ -250,7 +260,7 @@ const EnglishWorld: React.FC = () => {
         if (res) {
           message.success("添加成功");
           setIsModalVisible(false);
-          await handleSearch();
+          handleSearch(); // 触发查询刷新列表
         } else {
           message.error("添加失败");
         }
