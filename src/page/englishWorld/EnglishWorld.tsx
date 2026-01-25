@@ -138,7 +138,8 @@ const EnglishWorld: React.FC = () => {
         const res = await request<boolean>(wordDel({ id }));
         if (res) {
           message.success("删除成功");
-          handleSearch(); // 触发查询刷新列表
+          // 直接使用当前筛选条件和页码刷新列表
+          await fetchWordData(page, pageSize, filterParamsRef.current);
         } else {
           message.error("删除失败");
         }
@@ -237,7 +238,8 @@ const EnglishWorld: React.FC = () => {
       if (res) {
         message.success("更新成功");
         setIsModalVisible(false);
-        handleSearch(); // 触发查询刷新列表
+        // 直接使用当前筛选条件和页码刷新列表
+        await fetchWordData(page, pageSize, filterParamsRef.current);
       } else {
         message.error("更新失败");
       }
@@ -260,7 +262,9 @@ const EnglishWorld: React.FC = () => {
         if (res) {
           message.success("添加成功");
           setIsModalVisible(false);
-          handleSearch(); // 触发查询刷新列表
+          // 添加后重置到第一页并刷新列表
+          setPage(1);
+          await fetchWordData(1, pageSize, filterParamsRef.current);
         } else {
           message.error("添加失败");
         }
