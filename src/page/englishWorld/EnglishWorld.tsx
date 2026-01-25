@@ -190,7 +190,7 @@ const EnglishWorld: React.FC = () => {
   }, [fetchWordData, page, pageSize]);
 
   // 查询数据
-  const handleSearch = () => {
+  const handleSearch = async () => {
     const values = form.getFieldsValue();
     const { time } = values;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -215,19 +215,22 @@ const EnglishWorld: React.FC = () => {
       }
     });
     
-    // 保存筛选条件到 ref（同步更新，确保 useEffect 能获取到最新值）
+    // 保存筛选条件到 ref（同步更新，确保后续分页能使用）
     filterParamsRef.current = filters;
-    // 重置到第一页，这会触发 useEffect 执行查询
+    // 重置到第一页
     setPage(1);
+    // 直接调用查询，确保立即生效（即使当前已经在第1页）
+    await fetchWordData(1, pageSize, filters);
   };
 
   // 重置表单
-  const handleReset = () => {
+  const handleReset = async () => {
     form.resetFields();
     filterParamsRef.current = {}; // 清除筛选条件
     setPage(1); // 重置到第一页
     setPageSize(10); // 重置每页条数
-    // useEffect 会自动触发查询，不需要手动调用 initialWordData
+    // 直接调用查询，确保立即生效（即使当前已经在第1页且每页条数已经是10）
+    await fetchWordData(1, 10, {});
   };
 
   // 提交编辑
