@@ -1,12 +1,10 @@
-# 第一阶段：pnpm monorepo 构建
+# 构建 web-utils 应用
 FROM node:23.3.0 AS build
 
 WORKDIR /app
 
-# 安装 pnpm
 RUN corepack enable && corepack prepare pnpm@10.8.1 --activate
 
-# 复制 workspace 配置
 COPY package.json pnpm-workspace.yaml ./
 COPY apps/english-world/package.json ./apps/english-world/
 COPY apps/web-utils/package.json ./apps/web-utils/
@@ -14,20 +12,17 @@ COPY packages/api/package.json ./packages/api/
 COPY packages/utils/package.json ./packages/utils/
 COPY packages/ui/package.json ./packages/ui/
 
-# 安装依赖（仅 production 可省略 devDependencies，这里保留以便 build）
 RUN pnpm install
 
-# 复制源码
 COPY . .
 
-# 构建 english-world 应用（默认部署此应用）
-RUN pnpm --filter @font/english-world build
+# 只构建 web-utils
+RUN pnpm --filter @font/web-utils build
 
-# 第二阶段：Nginx 托管
 FROM nginx:alpine
 
 COPY nginx.conf /etc/nginx/nginx.conf
-COPY --from=build /app/apps/english-world/dist /usr/share/nginx/html
+COPY --from=build /app/apps/web-utils/dist /usr/share/nginx/html
 
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]

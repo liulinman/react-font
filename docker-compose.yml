@@ -1,11 +1,22 @@
 version: "3.8"
 
 services:
-  frontend:
+  # 英语单词应用 - 端口 8081
+  frontend-english-world:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: frontend
-    image: frontend:latest # 确保设置了正确的镜像标签
+    container_name: frontend-english-world
+    image: frontend-english-world:latest
     ports:
       - "8081:80"
+
+  # 前端工具应用 - 端口 8082
+  frontend-web-utils:
+    build:
+      context: .
+      dockerfile: Dockerfile.web-utils
+    container_name: frontend-web-utils
+    image: frontend-web-utils:latest
+    ports:
+      - "8082:80"

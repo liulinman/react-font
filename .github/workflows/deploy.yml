@@ -10,56 +10,47 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout 代码
       - name: Checkout code
         uses: actions/checkout@v2
 
-      # 设置 Docker 构建环境
       - name: Set up Docker Buildx
-        uses:
-          docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v2
 
-          # 安装 Docker Compose
       - name: Install Docker Compose
         run: |
           sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
           sudo chmod +x /usr/local/bin/docker-compose
 
-      # 构建 Docker 镜像
-      - name: Build Docker Image
+      # 构建两个应用的 Docker 镜像
+      - name: Build Docker Images
         run: |
-          docker-compose -f docker-compose.yml build frontend
+          docker-compose -f docker-compose.yml build
 
-      # 将镜像保存为文件
-      - name: Save Docker Image
+      # 将两个镜像保存为一个 tar 文件
+      - name: Save Docker Images
         run: |
-          docker tag frontend frontend:latest
-          docker save -o frontend.tar frontend:latest
+          docker save -o frontend.tar frontend-english-world:latest frontend-web-utils:latest
 
-      # 设置 SSH 密钥，用于 SSH 连接到服务器
       - name: Set up SSH
         uses: webfactory/ssh-agent@v0.5.3
         with:
           ssh-private-key: ${{ secrets.SERVER }}
 
-      # 将镜像文件传输到远程服务器
-      - name: Transfer Docker Image to Server
+      # 传输镜像和配置到服务器
+      - name: Transfer to Server
         run: |
           scp -o StrictHostKeyChecking=no frontend.tar root@47.108.140.63:/root
           scp -o StrictHostKeyChecking=no docker-compose.yml root@47.108.140.63:/root
           scp -o StrictHostKeyChecking=no nginx.conf root@47.108.140.63:/root/nginx.conf
 
-      # 连接到服务器并部署 Docker 镜像
-      - name: Deploy Docker Image to Server
+      # 在服务器上加载镜像并启动两个容器
+      - name: Deploy on Server
         run: |
           ssh -T -o StrictHostKeyChecking=no root@47.108.140.63 << 'EOF'
-            # 停止并删除当前正在运行的容器
-            docker stop frontend || true
-            docker rm frontend || true
+            docker stop frontend-english-world frontend-web-utils || true
+            docker rm frontend-english-world frontend-web-utils || true
 
-            # 加载传输的 Docker 镜像
             docker load -i /root/frontend.tar
 
-            # 使用 Docker Compose 启动服务
             docker-compose -f docker-compose.yml up -d
           EOF
