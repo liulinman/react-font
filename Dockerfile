@@ -3,8 +3,8 @@ FROM node:23.3.0 AS build
 
 WORKDIR /app
 
-# 安装 pnpm
-RUN corepack enable && corepack prepare pnpm@10.8.1 --activate
+# 安装 pnpm（用 npm 安装避免 corepack 签名校验与镜像不兼容）
+RUN npm install -g pnpm@10.8.1
 
 # 复制 workspace 配置
 COPY package.json pnpm-workspace.yaml ./

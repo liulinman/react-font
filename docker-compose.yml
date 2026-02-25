@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   # 英语单词应用 - 端口 8081
   frontend-english-world:
