@@ -47,8 +47,9 @@ jobs:
       - name: Deploy on Server
         run: |
           ssh -T -o StrictHostKeyChecking=no root@47.108.140.63 << 'EOF'
-            docker stop frontend-english-world frontend-web-utils || true
-            docker rm frontend-english-world frontend-web-utils || true
+            # 停掉新、旧前端容器，避免 8081/8082 被占用
+            docker stop frontend-english-world frontend-web-utils frontend || true
+            docker rm frontend-english-world frontend-web-utils frontend || true
 
             docker load -i /root/frontend.tar
 
