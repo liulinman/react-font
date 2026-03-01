@@ -57,31 +57,29 @@ const AuthIdMap: React.FC = () => {
       message.error("请选择一个模块！");
       return;
     }
-    const res = await request<{
-      code: number;
-      data?: Record<string, string>;
-      message: string;
-    }>(findModel({ model: selectedModule }));
-    if (res.code === 200 && res.data) {
+    try {
+      // 拦截器在 code===200 时只返回后端的 data，不是 { code, data, message }
+      const data = await request<Record<string, string>>(
+        findModel({ model: selectedModule })
+      );
       message.success("查询成功");
-      setFormattedData(formatData(JSON.stringify(res.data)));
-    } else {
-      message.error(res.message || "查询失败，请稍后再试");
+      setFormattedData(formatData(JSON.stringify(data ?? {})));
+    } catch (e: unknown) {
+      const err = e as { message?: string };
+      message.error(err?.message || "查询失败，请稍后再试");
     }
   };
 
-  // tis
+  // 获取下拉选项：拦截器在 code===200 时只返回后端的 data（选项数组）
   const getLabel = async () => {
-    const res = await request<{
-      code: number;
-      data?: { label: string; value: string }[];
-      message: string;
-    }>(getAuthIdOption());
-    if (res.code === 200) {
-      const { data = [] } = res;
-      setOptions(data);
-    } else {
-      message.error(res.message || "查询失败，请稍后再试");
+    try {
+      const data = await request<{ label: string; value: string }[]>(
+        getAuthIdOption()
+      );
+      setOptions(Array.isArray(data) ? data : []);
+    } catch (e: unknown) {
+      const err = e as { message?: string };
+      message.error(err?.message || "查询失败，请稍后再试");
     }
   };
 
