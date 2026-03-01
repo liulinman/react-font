@@ -23,11 +23,24 @@ import { WordList } from "@/server/word/word.type";
 import { convertToFormat } from "@font/utils";
 import { useColumns } from "./useColumns";
 import { EnglishHeader } from "./component/EnglishHeader";
+import { WordAgentTab } from "./component/WordAgentTab";
 import { FormFieldGroup } from "./component/FormFieldGroup";
 import { EnglishStats } from "./component/EnglishStats";
 import { DownOutlined, PlusOutlined, UpOutlined } from "@ant-design/icons";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 const { RangePicker } = DatePicker;
+
+const HASH_TO_NAV: Record<string, string> = {
+  list: "list",
+  "ai-tool": "aiTool",
+  aitool: "aiTool",
+  stat: "stat",
+};
+
+function getNavFromHash(hash: string): string {
+  const key = hash.replace(/^#\/?/, "").toLowerCase().trim();
+  return HASH_TO_NAV[key] ?? "list";
+}
 
 type ListData = {
   list: WordList[];
@@ -48,16 +61,19 @@ const EnglishWorld: React.FC = () => {
   const filterParamsRef = useRef<Record<string, unknown>>({}); // 使用 ref 保存筛选条件，避免不必要的重新渲染
   const { mutateAsync: mutateWordAdd, isPending: buttonPending } =
     useMutation(wordAdd);
-  const [activeNav, setActiveNav] = useState("list");
+  const location = useLocation();
   const navigate = useNavigate();
+  const activeNav = getNavFromHash(location.hash || "");
 
-  // 处理导航点击
-  const handleNavClick = (key: string) => {
-    if (key === "setting") {
-      navigate("/englishWorld/settings");
-    } else {
-      setActiveNav(key);
+  // 进入页面无 hash 时写入 #list，保证刷新后仍在当前 tab
+  useEffect(() => {
+    if (location.pathname === "/englishWorld" && !location.hash) {
+      navigate({ pathname: "/englishWorld", hash: "list" }, { replace: true });
     }
+  }, [location.pathname, location.hash, navigate]);
+
+  const handleNavClick = (_key: string) => {
+    // 实际跳转已在 EnglishHeader 中通过 navigate + hash 处理
   };
 
   const filterFields = [
@@ -309,7 +325,9 @@ const EnglishWorld: React.FC = () => {
           boxSizing: "border-box", // 确保 padding 包含在高度内
         }}
       >
-        {activeNav === "stat" ? (
+        {activeNav === "aiTool" ? (
+          <WordAgentTab />
+        ) : activeNav === "stat" ? (
           <EnglishStats />
         ) : (
           <>

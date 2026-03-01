@@ -5,6 +5,7 @@ import {
   SettingOutlined,
   UserOutlined,
   LogoutOutlined,
+  RobotOutlined,
 } from "@ant-design/icons";
 import { Button, Dropdown, Modal } from "antd";
 import type { MenuProps } from "antd";
@@ -12,27 +13,16 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
 const navItems = [
-  {
-    key: "list",
-    icon: <UnorderedListOutlined />,
-    label: "单词列表",
-  },
-  {
-    key: "recite",
-    icon: <BookFilled />,
-    label: "单词默写",
-  },
-  {
-    key: "stat",
-    icon: <BarChartOutlined />,
-    label: "学习统计",
-  },
-  {
-    key: "setting",
-    icon: <SettingOutlined />,
-    label: "系统设置",
-  },
+  { key: "list", icon: <UnorderedListOutlined />, label: "单词列表" },
+  { key: "recite", icon: <BookFilled />, label: "单词默写" },
+  { key: "aiTool", icon: <RobotOutlined />, label: "AI 工具" },
+  { key: "stat", icon: <BarChartOutlined />, label: "学习统计" },
+  { key: "setting", icon: <SettingOutlined />, label: "系统设置" },
 ];
+
+function getHashForNav(key: string): string {
+  return key === "aiTool" ? "ai-tool" : key;
+}
 
 type EnglishHeaderProps = {
   activeKey?: string;
@@ -120,9 +110,12 @@ export const EnglishHeader = ({
               onClick={() => {
                 if (key === "recite") {
                   navigate("/englishWorld/recite");
-                } else {
-                  onNavClick?.(key);
+                } else if (key === "setting") {
+                  navigate("/englishWorld/settings");
+                } else if (key === "list" || key === "aiTool" || key === "stat") {
+                  navigate({ pathname: "/englishWorld", hash: getHashForNav(key) });
                 }
+                onNavClick?.(key);
               }}
             >
               {label}
