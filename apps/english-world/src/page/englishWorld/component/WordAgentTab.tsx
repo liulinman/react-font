@@ -23,6 +23,9 @@ export const WordAgentTab: React.FC = () => {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [words, setWords] = useState<WordAgentItem[]>([]);
+  /** 当前正在流式输出的单词（chunk 打字机效果） */
+  const [streamingWord, setStreamingWord] = useState<string | null>(null);
+  const [streamingChunk, setStreamingChunk] = useState("");
   const abortRef = useRef<AbortController | null>(null);
   const streamCountRef = useRef(0);
 
@@ -60,6 +63,8 @@ export const WordAgentTab: React.FC = () => {
 
     setLoading(true);
     setWords([]);
+    setStreamingWord(null);
+    setStreamingChunk("");
     streamCountRef.current = 0;
 
     try {
@@ -121,16 +126,26 @@ export const WordAgentTab: React.FC = () => {
           try {
             const obj = JSON.parse(line.slice(6).trim()) as {
               type: string;
-              data?: WordAgentItem;
+              word?: string;
+              data?: WordAgentItem | string;
               message?: string;
             };
-            if (obj.type === "word" && obj.data) {
+            if (obj.type === "chunk" && obj.word != null && typeof obj.data === "string") {
+              setStreamingWord(obj.word);
+              setStreamingChunk((prev) => prev + obj.data);
+            } else if (obj.type === "word" && obj.data && typeof obj.data === "object") {
+              setStreamingWord(null);
+              setStreamingChunk("");
               streamCountRef.current += 1;
-              setWords((prev) => [...prev, obj.data!]);
+              setWords((prev) => [...prev, obj.data as WordAgentItem]);
             } else if (obj.type === "done") {
+              setStreamingWord(null);
+              setStreamingChunk("");
               message.success(`已返回 ${streamCountRef.current} 个单词`);
               setLoading(false);
             } else if (obj.type === "error") {
+              setStreamingWord(null);
+              setStreamingChunk("");
               message.error(obj.message ?? "查询出错");
               setLoading(false);
             }
@@ -144,14 +159,23 @@ export const WordAgentTab: React.FC = () => {
         try {
           const obj = JSON.parse(buf.replace(/^data:\s*/, "").trim()) as {
             type: string;
-            data?: WordAgentItem;
+            word?: string;
+            data?: WordAgentItem | string;
             message?: string;
           };
-          if (obj.type === "word" && obj.data) {
+          if (obj.type === "chunk" && obj.word != null && typeof obj.data === "string") {
+            setStreamingWord(obj.word);
+            setStreamingChunk((prev) => prev + obj.data);
+          } else if (obj.type === "word" && obj.data && typeof obj.data === "object") {
+            setStreamingWord(null);
+            setStreamingChunk("");
             streamCountRef.current += 1;
-            setWords((prev) => [...prev, obj.data!]);
+            setWords((prev) => [...prev, obj.data as WordAgentItem]);
+          } else if (obj.type === "done" || obj.type === "error") {
+            setStreamingWord(null);
+            setStreamingChunk("");
+            setLoading(false);
           }
-          if (obj.type === "done" || obj.type === "error") setLoading(false);
           if (obj.type === "done") message.success(`已返回 ${streamCountRef.current} 个单词`);
           if (obj.type === "error") message.error(obj.message ?? "查询出错");
         } catch {
@@ -299,7 +323,7 @@ export const WordAgentTab: React.FC = () => {
           </div>
         )}
 
-        {words.length > 0 && (
+        {(words.length > 0 || streamingWord) && (
           <div
             style={{
               display: "flex",
@@ -515,7 +539,64 @@ export const WordAgentTab: React.FC = () => {
                 )}
               </div>
             ))}
-            {loading && words.length > 0 && (
+            {streamingWord && (
+              <div
+                style={{
+                  background: "#fff",
+                  border: "1px dashed #c7d2fe",
+                  borderRadius: 14,
+                  padding: "20px 24px",
+                  boxShadow: "0 2px 12px rgba(102, 126, 234, 0.1)",
+                }}
+              >
+                <div style={{ marginBottom: 12 }}>
+                  <span
+                    style={{
+                      fontSize: 20,
+                      fontWeight: 600,
+                      color: "#667eea",
+                      marginRight: 12,
+                    }}
+                  >
+                    {streamingWord}
+                  </span>
+                  <span
+                    style={{
+                      color: "#94a3b8",
+                      fontSize: 13,
+                      marginLeft: 8,
+                    }}
+                  >
+                    AI 正在输出…
+                  </span>
+                </div>
+                <pre
+                  style={{
+                    margin: 0,
+                    whiteSpace: "pre-wrap",
+                    wordBreak: "break-word",
+                    fontFamily: "inherit",
+                    fontSize: 14,
+                    lineHeight: 1.6,
+                    color: "#334155",
+                    minHeight: 24,
+                  }}
+                >
+                  {streamingChunk || "\u00A0"}
+                  <span
+                    style={{
+                      display: "inline-block",
+                      width: 2,
+                      height: 16,
+                      marginLeft: 2,
+                      background: "#667eea",
+                      verticalAlign: "text-bottom",
+                    }}
+                  />
+                </pre>
+              </div>
+            )}
+            {loading && (words.length > 0 || streamingWord) && (
               <div
                 style={{
                   textAlign: "center",
