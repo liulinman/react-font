@@ -23,6 +23,8 @@ export interface WordAgentItem {
   word: string;
   phonetic: string;
   meaning: string;
+  /** 词性（与 EnglishPartSpeech 枚举一致）：1=动词 2=名词 3=形容词 4=副词 5=代词 6=介词 7=连词 8=感叹词 9=未分类 */
+  partOfSpeech?: number[];
   examples: ExampleItem[];
   ieltsCase: IeltsCase | null;
 }

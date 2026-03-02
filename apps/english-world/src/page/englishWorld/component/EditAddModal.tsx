@@ -8,11 +8,17 @@ import { useEffect, useState } from "react";
 import { enumToOptions } from "@font/utils";
 import { EnglishAbsorb, EnglishType } from "../enum";
 
+/** 新增时的预填数据（如从 AI 查询结果带入） */
+export type AddInitialValues = Partial<Omit<WordList, "id">>;
+
 interface Props {
   isModalVisible: boolean;
   currentRecord?: WordList | null;
+  /** 新增模式下预填的表单值（如从 AI 单词卡片带入） */
+  addInitialValues?: AddInitialValues | null;
   type: "edit" | "add";
-  onOk: (data: WordList, type: "edit" | "add") => void;
+  /** 提交回调；返回 true 表示成功（添加成功时会清空表单），否则保留表单内容 */
+  onOk: (data: WordList, type: "edit" | "add") => void | boolean | Promise<void | boolean>;
   onCancel: () => void;
 }
 
@@ -29,7 +35,7 @@ type FormValues = {
 };
 
 export const EditAddModal = (props: Props) => {
-  const { isModalVisible, currentRecord, type, onOk, onCancel } = props;
+  const { isModalVisible, currentRecord, addInitialValues, type, onOk, onCancel } = props;
 
   // 初始化表单数据
   const [form] = Form.useForm();
@@ -48,34 +54,35 @@ export const EditAddModal = (props: Props) => {
     { value: 9, label: "未分类", color: "default" },
   ];
 
-  // 如果是编辑，表单预填充 currentRecord 数据
+  // 编辑时预填 currentRecord；新增时若有 addInitialValues 则预填
   useEffect(() => {
     if (type === "edit" && currentRecord) {
       form.setFieldsValue(currentRecord);
       setSelectedPartSpeech(currentRecord.englishPartSpeech || []);
+    } else if (type === "add" && addInitialValues) {
+      form.setFieldsValue(addInitialValues);
+      setSelectedPartSpeech(addInitialValues.englishPartSpeech || []);
     } else {
       form.resetFields();
       setSelectedPartSpeech([]);
     }
-  }, [type, currentRecord, form]);
+  }, [type, currentRecord, addInitialValues, form, isModalVisible]);
 
-  const handleModalOk = () => {
-    // 获取表单数据并调用 onOk 提交
-    form
-      .validateFields()
-      .then((value) => {
-        const values =
-          type === "add" ? value : { ...value, id: currentRecord?.id };
+  const handleModalOk = async () => {
+    try {
+      const value = await form.validateFields();
+      const values =
+        type === "add" ? value : { ...value, id: currentRecord?.id };
 
-        onOk({ ...values }, type);
-        if (type === "add") {
-          form.resetFields();
-          setSelectedPartSpeech([]);
-        }
-      })
-      .catch((info) => {
-        console.log("Validate Failed:", info);
-      });
+      const result = await Promise.resolve(onOk({ ...values }, type));
+      // 仅当添加成功（返回 true）时清空表单，避免「单词已存在」等失败时把用户输入清空
+      if (type === "add" && result === true) {
+        form.resetFields();
+        setSelectedPartSpeech([]);
+      }
+    } catch (info) {
+      console.log("Validate Failed:", info);
+    }
   };
 
   const handleModalCancel = () => {

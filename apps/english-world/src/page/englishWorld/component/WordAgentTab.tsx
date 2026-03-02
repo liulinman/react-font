@@ -1,12 +1,16 @@
 import React, { useRef, useState } from "react";
 import { Button, Input, message, Spin } from "antd";
-import { RobotOutlined, SearchOutlined } from "@ant-design/icons";
+import { PlusOutlined, RobotOutlined, SearchOutlined } from "@ant-design/icons";
 import request, { getApiBaseUrl } from "@font/api";
 import { wordAgentQuery } from "@/server/wordAgent/wordAgent";
 import type {
   WordAgentItem,
   WordAgentResponse,
 } from "@/server/wordAgent/wordAgent";
+import { wordAdd, wordExist } from "@/server/word/word";
+import type { WordList } from "@/server/word/word.type";
+import { EditAddModal, type AddInitialValues } from "./EditAddModal";
+import { EnglishPartSpeech } from "../enum";
 
 const STREAM_PATH = "/word-agent/query-stream";
 
@@ -19,6 +23,18 @@ function buildRequestBody(inputText: string): { word?: string; words?: string[] 
   return { words: parts };
 }
 
+/** 将 AI 查询结果转为「新增单词」弹窗的预填数据 */
+function wordAgentItemToAddInitial(item: WordAgentItem): AddInitialValues {
+  return {
+    englishWord: item.word,
+    englishPhonetic: item.phonetic,
+    englishChinese: item.meaning,
+    englishPartSpeech: item.partOfSpeech?.length ? item.partOfSpeech : undefined,
+    englishLevel: 0,
+    englishType: 0,
+  };
+}
+
 export const WordAgentTab: React.FC = () => {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -26,8 +42,45 @@ export const WordAgentTab: React.FC = () => {
   /** 当前正在流式输出的单词（chunk 打字机效果） */
   const [streamingWord, setStreamingWord] = useState<string | null>(null);
   const [streamingChunk, setStreamingChunk] = useState("");
+  const [addModalVisible, setAddModalVisible] = useState(false);
+  const [addInitialValues, setAddInitialValues] = useState<AddInitialValues | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const streamCountRef = useRef(0);
+
+  const openAddModal = (item: WordAgentItem) => {
+    setAddInitialValues(wordAgentItemToAddInitial(item));
+    setAddModalVisible(true);
+  };
+
+  const handleAddModalOk = async (data: WordList, type: "edit" | "add"): Promise<boolean> => {
+    if (type !== "add") return false;
+    const englishWord = (data.englishWord ?? "").trim();
+    if (!englishWord) {
+      message.warning("请输入单词名");
+      return false;
+    }
+    try {
+      const exists = await request<boolean>(wordExist({ englishWord }));
+      if (exists) {
+        message.warning("该单词已存在，无需重复添加");
+        return false; // 不关闭弹窗、不清空表单
+      }
+      await request(wordAdd(data));
+      message.success("已保存到单词本");
+      setAddModalVisible(false);
+      setAddInitialValues(null);
+      return true;
+    } catch (e: unknown) {
+      const err = e as { message?: string };
+      message.error(err?.message ?? "保存失败");
+      return false;
+    }
+  };
+
+  const handleAddModalCancel = () => {
+    setAddModalVisible(false);
+    setAddInitialValues(null);
+  };
 
   const tryOneShotQuery = async (body: { word?: string; words?: string[] }) => {
     try {
@@ -343,27 +396,76 @@ export const WordAgentTab: React.FC = () => {
                   boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
                 }}
               >
-                <div style={{ marginBottom: 12 }}>
-                  <span
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    marginBottom: 12,
+                    flexWrap: "wrap",
+                    gap: 8,
+                  }}
+                >
+                  <div>
+                    <span
+                      style={{
+                        fontSize: 20,
+                        fontWeight: 600,
+                        color: "#667eea",
+                        marginRight: 12,
+                      }}
+                    >
+                      {item.word}
+                    </span>
+                    <span
+                      style={{
+                        color: "#64748b",
+                        fontFamily: "monospace",
+                        fontSize: 15,
+                      }}
+                    >
+                      {item.phonetic}
+                    </span>
+                  </div>
+                  <Button
+                    type="primary"
+                    size="small"
+                    icon={<PlusOutlined />}
+                    onClick={() => openAddModal(item)}
                     style={{
-                      fontSize: 20,
-                      fontWeight: 600,
-                      color: "#667eea",
-                      marginRight: 12,
+                      borderRadius: 8,
+                      background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                      border: "none",
                     }}
                   >
-                    {item.word}
-                  </span>
-                  <span
-                    style={{
-                      color: "#64748b",
-                      fontFamily: "monospace",
-                      fontSize: 15,
-                    }}
-                  >
-                    {item.phonetic}
-                  </span>
+                    新增单词
+                  </Button>
                 </div>
+                {item.partOfSpeech && item.partOfSpeech.length > 0 && (
+                  <div
+                    style={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: 6,
+                      marginBottom: 12,
+                    }}
+                  >
+                    {item.partOfSpeech.map((code) => (
+                      <span
+                        key={code}
+                        style={{
+                          padding: "2px 8px",
+                          borderRadius: 6,
+                          fontSize: 12,
+                          background: "#eef2ff",
+                          color: "#4f46e5",
+                        }}
+                      >
+                        {(EnglishPartSpeech as Record<number, string>)[code] ?? `词性${code}`}
+                      </span>
+                    ))}
+                  </div>
+                )}
                 <p
                   style={{
                     margin: "0 0 12px 0",
@@ -611,6 +713,14 @@ export const WordAgentTab: React.FC = () => {
           </div>
         )}
       </div>
+
+      <EditAddModal
+        isModalVisible={addModalVisible}
+        type="add"
+        addInitialValues={addInitialValues}
+        onOk={handleAddModalOk}
+        onCancel={handleAddModalCancel}
+      />
     </div>
   );
 };
