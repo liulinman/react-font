@@ -2,7 +2,9 @@ import { YTRequest } from "@font/api";
 
 /**
  * 单词 Agent 接口（DeepSeek）
- * POST /word-agent/query
+ * - 普通查询: POST /word-agent/query
+ * - 流式查询: POST /word-agent/query-stream（推荐多词时使用）
+ * 请求体二选一: word（字符串，可逗号/空格分隔）或 words（字符串数组）
  */
 export interface ExampleItem {
   en: string;

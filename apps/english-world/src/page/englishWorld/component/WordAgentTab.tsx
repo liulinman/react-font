@@ -1,31 +1,34 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { Button, Input, message, Spin } from "antd";
 import { RobotOutlined, SearchOutlined } from "@ant-design/icons";
-import request from "@font/api";
+import request, { getApiBaseUrl } from "@font/api";
 import { wordAgentQuery } from "@/server/wordAgent/wordAgent";
 import type {
   WordAgentItem,
   WordAgentResponse,
 } from "@/server/wordAgent/wordAgent";
 
+const STREAM_PATH = "/word-agent/query-stream";
+
+/** 解析输入为请求体：word（单/多词逗号空格分隔）或 words 数组 */
+function buildRequestBody(inputText: string): { word?: string; words?: string[] } {
+  const trimmed = inputText.trim();
+  if (!trimmed) return {};
+  const parts = trimmed.split(/[\s,]+/).filter(Boolean);
+  if (parts.length <= 1) return { word: trimmed };
+  return { words: parts };
+}
+
 export const WordAgentTab: React.FC = () => {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [words, setWords] = useState<WordAgentItem[]>([]);
+  const abortRef = useRef<AbortController | null>(null);
+  const streamCountRef = useRef(0);
 
-  const handleQuery = async () => {
-    const trimmed = input.trim();
-    if (!trimmed) {
-      message.warning("请输入要查询的单词");
-      return;
-    }
-
-    setLoading(true);
-    setWords([]);
+  const tryOneShotQuery = async (body: { word?: string; words?: string[] }) => {
     try {
-      const data = await request<WordAgentResponse>(
-        wordAgentQuery({ word: trimmed }),
-      );
+      const data = await request<WordAgentResponse>(wordAgentQuery(body));
       if (data?.words?.length) {
         setWords(data.words);
         message.success(`已查询 ${data.words.length} 个单词`);
@@ -41,6 +44,126 @@ export const WordAgentTab: React.FC = () => {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleQuery = async () => {
+    const body = buildRequestBody(input);
+    if (!body.word && !body.words?.length) {
+      message.warning("请输入要查询的单词");
+      return;
+    }
+
+    if (abortRef.current) abortRef.current.abort();
+    abortRef.current = new AbortController();
+    const signal = abortRef.current.signal;
+
+    setLoading(true);
+    setWords([]);
+    streamCountRef.current = 0;
+
+    try {
+      const url = `${getApiBaseUrl()}${STREAM_PATH}`;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+        credentials: "include",
+        signal,
+      });
+
+      if (!res.ok || !res.body) {
+        const contentType = res.headers.get("content-type") || "";
+        if (
+          res.status === 404 ||
+          res.status === 502 ||
+          !contentType.includes("event-stream")
+        ) {
+          await tryOneShotQuery(body);
+          return;
+        }
+        const err = await res.json().catch(() => ({}));
+        message.error((err as { message?: string }).message || "请求失败");
+        setLoading(false);
+        return;
+      }
+
+      const contentType = res.headers.get("content-type") || "";
+      if (
+        !contentType.includes("event-stream") &&
+        contentType.includes("application/json")
+      ) {
+        const json = await res.json();
+        const list = json?.data?.words ?? json?.words ?? [];
+        if (list.length) {
+          setWords(list);
+          message.success(`已查询 ${list.length} 个单词`);
+        } else {
+          message.info("未返回结果");
+        }
+        setLoading(false);
+        return;
+      }
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buf = "";
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+        const lines = buf.split("\n");
+        buf = lines.pop() ?? "";
+
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          try {
+            const obj = JSON.parse(line.slice(6).trim()) as {
+              type: string;
+              data?: WordAgentItem;
+              message?: string;
+            };
+            if (obj.type === "word" && obj.data) {
+              streamCountRef.current += 1;
+              setWords((prev) => [...prev, obj.data!]);
+            } else if (obj.type === "done") {
+              message.success(`已返回 ${streamCountRef.current} 个单词`);
+              setLoading(false);
+            } else if (obj.type === "error") {
+              message.error(obj.message ?? "查询出错");
+              setLoading(false);
+            }
+          } catch {
+            // 忽略单行解析错误
+          }
+        }
+      }
+
+      if (buf.trim()) {
+        try {
+          const obj = JSON.parse(buf.replace(/^data:\s*/, "").trim()) as {
+            type: string;
+            data?: WordAgentItem;
+            message?: string;
+          };
+          if (obj.type === "word" && obj.data) {
+            streamCountRef.current += 1;
+            setWords((prev) => [...prev, obj.data!]);
+          }
+          if (obj.type === "done" || obj.type === "error") setLoading(false);
+          if (obj.type === "done") message.success(`已返回 ${streamCountRef.current} 个单词`);
+          if (obj.type === "error") message.error(obj.message ?? "查询出错");
+        } catch {
+          // ignore
+        }
+      }
+      setLoading(false);
+    } catch (e: unknown) {
+      if ((e as { name?: string }).name === "AbortError") return;
+      await tryOneShotQuery(body);
+    } finally {
+      abortRef.current = null;
     }
   };
 
@@ -162,7 +285,7 @@ export const WordAgentTab: React.FC = () => {
           </Button>
         </div>
 
-        {loading && (
+        {loading && words.length === 0 && (
           <div
             style={{
               textAlign: "center",
@@ -172,11 +295,11 @@ export const WordAgentTab: React.FC = () => {
               marginTop: 24,
             }}
           >
-            <Spin size="large" tip="AI 正在查询..." />
+            <Spin size="large" tip="AI 正在查询（流式返回）..." />
           </div>
         )}
 
-        {!loading && words.length > 0 && (
+        {words.length > 0 && (
           <div
             style={{
               display: "flex",
@@ -392,6 +515,18 @@ export const WordAgentTab: React.FC = () => {
                 )}
               </div>
             ))}
+            {loading && words.length > 0 && (
+              <div
+                style={{
+                  textAlign: "center",
+                  padding: "24px",
+                  color: "#64748b",
+                  fontSize: 13,
+                }}
+              >
+                <Spin size="small" tip="正在接收更多…" />
+              </div>
+            )}
           </div>
         )}
       </div>

@@ -1,5 +1,6 @@
 export {
   api,
+  getApiBaseUrl,
   request,
   useRequestQuery,
   useRequestMutation,

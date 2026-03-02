@@ -18,14 +18,18 @@ export interface YTRequest<T = unknown> {
   __responseType?: T;
 }
 
-// 创建 axios 实例
+const API_BASE =
+  process.env.NODE_ENV === "development"
+    ? "/api"
+    : "http://47.108.140.63:3001";
+
+/** 供 fetch 等非 axios 请求使用（如 SSE 流式接口） */
+export const getApiBaseUrl = () => API_BASE;
+
 export const api = axios.create({
-  baseURL:
-    process.env.NODE_ENV === "development"
-      ? "/api" // 开发环境使用 vite 代理，避免 CORS 问题
-      : "http://47.108.140.63:3001", // 生产环境的地址
-  timeout: 10000, // 请求超时
-  withCredentials: true, // 支持 Cookie
+  baseURL: API_BASE,
+  timeout: 10000,
+  withCredentials: true,
   headers: {
     "Content-Type": "application/json",
   },
