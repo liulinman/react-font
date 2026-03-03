@@ -19,16 +19,14 @@ export interface YTRequest<T = unknown> {
 }
 
 const API_BASE =
-  process.env.NODE_ENV === "development"
-    ? "/api"
-    : "http://47.108.140.63:3001";
+  process.env.NODE_ENV === "development" ? "/api" : "http://47.108.140.63:3001";
 
 /** 供 fetch 等非 axios 请求使用（如 SSE 流式接口） */
 export const getApiBaseUrl = () => API_BASE;
 
 export const api = axios.create({
   baseURL: API_BASE,
-  timeout: 10000,
+  timeout: 60000,
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
@@ -41,7 +39,8 @@ let lastErrorMsg: string | null = null;
 let lastErrorTime = 0;
 function showErrorOnce(msg: string) {
   const now = Date.now();
-  if (msg && msg === lastErrorMsg && now - lastErrorTime < DEDUP_SEC * 1000) return;
+  if (msg && msg === lastErrorMsg && now - lastErrorTime < DEDUP_SEC * 1000)
+    return;
   lastErrorMsg = msg;
   lastErrorTime = now;
   message.error(msg || "请求失败");
@@ -89,7 +88,7 @@ api.interceptors.response.use(
 
     // 返回错误，可以根据需求抛出或处理
     return Promise.reject(errorData || error);
-  }
+  },
 );
 
 // 封装请求执行函数（保留以保持向后兼容）
@@ -152,13 +151,13 @@ const fetchRequest = async <T>(ytRequest: YTRequest<T>): Promise<T> => {
 // 使用 useQuery 封装的 GET 请求 Hook
 export const useRequestQuery = <
   TRequest extends YTRequest<TResponse>,
-  TResponse = ExtractResponseType<TRequest>
+  TResponse = ExtractResponseType<TRequest>,
 >(
   ytRequest: TRequest | (() => TRequest),
   options?: Omit<
     UseQueryOptions<TResponse, Error, TResponse, QueryKey>,
     "queryKey" | "queryFn"
-  >
+  >,
 ) => {
   const requestConfig =
     typeof ytRequest === "function" ? ytRequest() : ytRequest;
@@ -176,7 +175,7 @@ export const useRequestQuery = <
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function useMutation<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  TRequestFn extends (...args: any[]) => YTRequest<any>
+  TRequestFn extends (...args: any[]) => YTRequest<any>,
 >(
   requestFn: TRequestFn,
   options?: UseMutationOptions<
@@ -185,11 +184,10 @@ export function useMutation<
     Parameters<TRequestFn>["length"] extends 0
       ? void
       : Parameters<TRequestFn>[0]
-  >
+  >,
 ) {
-  type TResponse = ReturnType<TRequestFn> extends YTRequest<infer R>
-    ? R
-    : never;
+  type TResponse =
+    ReturnType<TRequestFn> extends YTRequest<infer R> ? R : never;
   type TVariables = Parameters<TRequestFn>["length"] extends 0
     ? void
     : Parameters<TRequestFn>[0];

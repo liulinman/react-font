@@ -9,6 +9,7 @@ import {
   Select,
   Space,
   Table,
+  Tabs,
 } from "antd";
 import { EditAddModal } from "./component/EditAddModal";
 import request, { useMutation } from "@font/api";
@@ -24,6 +25,7 @@ import { convertToFormat } from "@font/utils";
 import { useColumns } from "./useColumns";
 import { EnglishHeader } from "./component/EnglishHeader";
 import { WordAgentTab } from "./component/WordAgentTab";
+import { ExerciseAgentTab } from "./component/ExerciseAgentTab";
 import { FormFieldGroup } from "./component/FormFieldGroup";
 import { EnglishStats } from "./component/EnglishStats";
 import { DownOutlined, PlusOutlined, UpOutlined } from "@ant-design/icons";
@@ -326,7 +328,18 @@ const EnglishWorld: React.FC = () => {
         }}
       >
         {activeNav === "aiTool" ? (
-          <WordAgentTab />
+          <Tabs
+            defaultActiveKey="word"
+            size="large"
+            items={[
+              { key: "word", label: "AI 单词查询", children: <WordAgentTab /> },
+              {
+                key: "exercise",
+                label: "阅读 + 选择题练习",
+                children: <ExerciseAgentTab />,
+              },
+            ]}
+          />
         ) : activeNav === "stat" ? (
           <EnglishStats />
         ) : (
