@@ -35,6 +35,18 @@ export const api = axios.create({
   },
 });
 
+/** 相同错误文案在短时间只提示一次，避免「未登录」等重复弹窗 */
+const DEDUP_SEC = 2;
+let lastErrorMsg: string | null = null;
+let lastErrorTime = 0;
+function showErrorOnce(msg: string) {
+  const now = Date.now();
+  if (msg && msg === lastErrorMsg && now - lastErrorTime < DEDUP_SEC * 1000) return;
+  lastErrorMsg = msg;
+  lastErrorTime = now;
+  message.error(msg || "请求失败");
+}
+
 // 添加响应拦截器
 api.interceptors.response.use(
   (response) => {
@@ -45,7 +57,7 @@ api.interceptors.response.use(
       return { ...response, data: data !== undefined ? data : response.data };
     } else {
       // 业务失败，抛出错误
-      message.error(msg || "请求失败");
+      showErrorOnce(msg || "请求失败");
       return Promise.reject({
         code,
         message: msg,
@@ -72,11 +84,8 @@ api.interceptors.response.use(
     }
 
     const errorData = error.response?.data;
-    if (errorData?.message) {
-      message.error(errorData.message);
-    } else if (error.message) {
-      message.error(error.message);
-    }
+    const msg = errorData?.message ?? error.message;
+    if (msg) showErrorOnce(typeof msg === "string" ? msg : String(msg));
 
     // 返回错误，可以根据需求抛出或处理
     return Promise.reject(errorData || error);

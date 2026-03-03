@@ -23,7 +23,10 @@ const Login: React.FC = () => {
   }, [isAuthenticated, navigate, location]);
 
   // 登录表单提交
-  const handleLogin = async (values: { username: string; password: string }) => {
+  const handleLogin = async (values: {
+    username: string;
+    password: string;
+  }) => {
     setLoading(true);
     try {
       await login(values.username, values.password);
@@ -65,7 +68,7 @@ const Login: React.FC = () => {
 
   return (
     <div className="login-container">
-      <Card className="login-card" title="英语单词管理系统">
+      <Card className="login-card" title="英语世界 · AI 单词">
         <Tabs activeKey={activeTab} onChange={setActiveTab} centered>
           <TabPane tab="登录" key="login">
             <Form
@@ -102,7 +105,12 @@ const Login: React.FC = () => {
               </Form.Item>
 
               <Form.Item>
-                <Button type="primary" htmlType="submit" block loading={loading}>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  block
+                  loading={loading}
+                >
                   登录
                 </Button>
               </Form.Item>
@@ -169,7 +177,12 @@ const Login: React.FC = () => {
               </Form.Item>
 
               <Form.Item>
-                <Button type="primary" htmlType="submit" block loading={loading}>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  block
+                  loading={loading}
+                >
                   注册
                 </Button>
               </Form.Item>
@@ -182,4 +195,3 @@ const Login: React.FC = () => {
 };
 
 export default Login;
-

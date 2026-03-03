@@ -92,7 +92,7 @@ export const EnglishHeader = ({
         {/* Logo */}
         <div className="flex items-center gap-2 text-blue-600 font-semibold text-lg">
           <BookFilled className="text-2xl" />
-          <span className="text-gray-800">单词管理系统</span>
+          <span className="text-gray-800">English World · AI 单词</span>
         </div>
 
         {/* Navigation */}

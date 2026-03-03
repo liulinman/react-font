@@ -78,7 +78,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       message.success("登录成功");
     },
     onError: (error: ApiError) => {
-      message.error(error?.message || "登录失败");
+      // 错误文案已由 axios 响应拦截器统一展示，此处不再重复 message.error
       throw error;
     },
   });
@@ -88,7 +88,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       message.success("注册成功");
     },
     onError: (error: ApiError) => {
-      message.error(error?.message || "注册失败");
+      // 错误文案已由 axios 响应拦截器统一展示，此处不再重复
       throw error;
     },
   });
@@ -98,7 +98,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(null);
     },
     onError: (error: ApiError) => {
-      message.error(error?.message || "退出登录失败");
+      // 错误文案已由 axios 响应拦截器统一展示，此处不再重复
       throw error;
     },
   });
