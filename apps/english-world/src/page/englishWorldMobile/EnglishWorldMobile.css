@@ -5,6 +5,18 @@
   background-color: #f5f5f5;
 }
 
+/* 防止 iOS 聚焦输入框时自动放大：字体至少 16px */
+.english-world-mobile input,
+.english-world-mobile textarea,
+.english-world-mobile .adm-input,
+.english-world-mobile .adm-text-area {
+  font-size: 16px !important;
+}
+.english-world-mobile .adm-input-element,
+.english-world-mobile .adm-text-area-element {
+  font-size: 16px !important;
+}
+
 .mobile-content {
   flex: 1;
   overflow-y: auto;

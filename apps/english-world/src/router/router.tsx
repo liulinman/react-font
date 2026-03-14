@@ -6,6 +6,7 @@ import EnglishWorldMobile from "@/page/englishWorldMobile/EnglishWorldMobile";
 import Login from "@/page/login/Login";
 import { ProtectedRoute } from "@font/ui";
 import { useAuth } from "@/contexts/AuthContext";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 function ProtectedWrapper({ children }: { children: React.ReactNode }) {
   const auth = useAuth();
@@ -51,9 +52,11 @@ export const router = createBrowserRouter([
   {
     path: "/englishWorldMobile",
     element: (
-      <ProtectedWrapper>
-        <EnglishWorldMobile />
-      </ProtectedWrapper>
+      <ErrorBoundary>
+        <ProtectedWrapper>
+          <EnglishWorldMobile />
+        </ProtectedWrapper>
+      </ErrorBoundary>
     ),
   },
 ]);

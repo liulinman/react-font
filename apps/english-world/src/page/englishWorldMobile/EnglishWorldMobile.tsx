@@ -19,6 +19,7 @@ import {
   Empty,
   Loading,
   ImageUploader,
+  Tabs,
 } from "antd-mobile";
 import type { ImageUploadItem } from "antd-mobile/es/components/image-uploader";
 import type { PickerActions } from "antd-mobile/es/components/picker";
@@ -28,6 +29,7 @@ import {
   DeleteOutline,
   FilterOutline,
   AppOutline,
+  AppstoreOutline,
 } from "antd-mobile-icons";
 import request, { useMutation } from "@font/api";
 import {
@@ -45,6 +47,8 @@ import { enumToOptions, type CommonRecord } from "@font/utils";
 import ReactECharts from "echarts-for-react";
 import { PhotoProvider, PhotoView } from "react-photo-view";
 import "react-photo-view/dist/react-photo-view.css";
+import { WordAgentTabMobile } from "./WordAgentTabMobile";
+import { ExerciseAgentTabMobile } from "./ExerciseAgentTabMobile";
 import "./EnglishWorldMobile.css";
 
 type ListData = {
@@ -102,7 +106,7 @@ const EnglishWorldMobile: React.FC = () => {
   const statsLevelPickerRef = useRef<PickerActions>(null);
   const filterTypePickerRef = useRef<PickerActions>(null);
   const filterLevelPickerRef = useRef<PickerActions>(null);
-  const [activeView, setActiveView] = useState<"list" | "stats">("list");
+  const [activeView, setActiveView] = useState<"list" | "stats" | "aiTool">("list");
 
   // 统计相关状态
   const [selectedLevel, setSelectedLevel] = useState<EnglishAbsorb>(
@@ -535,6 +539,14 @@ const EnglishWorldMobile: React.FC = () => {
                 <Button
                   fill="none"
                   size="small"
+                  onClick={() => setActiveView("aiTool")}
+                  style={{ padding: "4px 8px" }}
+                >
+                  <AppstoreOutline />
+                </Button>
+                <Button
+                  fill="none"
+                  size="small"
                   onClick={() => setActiveView("stats")}
                   style={{ padding: "4px 8px" }}
                 >
@@ -562,11 +574,26 @@ const EnglishWorldMobile: React.FC = () => {
           </Space>
         }
       >
-        {activeView === "list" ? "单词管理" : "学习统计"}
+        {activeView === "list"
+          ? "单词管理"
+          : activeView === "stats"
+            ? "学习统计"
+            : "AI 工具"}
       </NavBar>
 
       <div className="mobile-content">
-        {activeView === "list" ? (
+        {activeView === "aiTool" ? (
+          <Tabs
+            style={{ "--title-font-size": "14px", "--content-padding": "0" }}
+          >
+            <Tabs.Tab title="AI 单词查询" key="word">
+              <WordAgentTabMobile />
+            </Tabs.Tab>
+            <Tabs.Tab title="阅读+选择题" key="exercise">
+              <ExerciseAgentTabMobile />
+            </Tabs.Tab>
+          </Tabs>
+        ) : activeView === "list" ? (
           <>
             {/* 搜索栏 */}
             <div className="search-section">
