@@ -31,9 +31,7 @@ export const WordAgentTabMobile: React.FC = () => {
   const [streamingWord, setStreamingWord] = useState<string | null>(null);
   const [streamingChunk, setStreamingChunk] = useState("");
   const [addModalVisible, setAddModalVisible] = useState(false);
-  const [addInitialValues, setAddInitialValues] = useState<
-    Partial<WordList> | null
-  >(null);
+  const [, setAddInitialValues] = useState<Partial<WordList> | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const streamCountRef = useRef(0);
   const [form] = Form.useForm();
@@ -231,18 +229,6 @@ export const WordAgentTabMobile: React.FC = () => {
     }
   };
 
-  const partSpeechOptions = [
-    { label: "动词", value: 1 },
-    { label: "名词", value: 2 },
-    { label: "形容词", value: 3 },
-    { label: "副词", value: 4 },
-    { label: "代词", value: 5 },
-    { label: "介词", value: 6 },
-    { label: "连词", value: 7 },
-    { label: "感叹词", value: 8 },
-    { label: "未分类", value: 9 },
-  ];
-
   return (
     <div style={{ padding: "16px", paddingBottom: 24 }}>
       <Card style={{ borderRadius: 12, marginBottom: 16 }}>
@@ -435,7 +421,7 @@ export const WordAgentTabMobile: React.FC = () => {
               onClick={() => levelPickerRef.current?.open()}
             >
               <Picker
-                ref={levelPickerRef}
+                ref={levelPickerRef as React.RefObject<PickerActions>}
                 columns={[
                   [
                     { label: "不会", value: 0 },
@@ -461,7 +447,7 @@ export const WordAgentTabMobile: React.FC = () => {
               onClick={() => typePickerRef.current?.open()}
             >
               <Picker
-                ref={typePickerRef}
+                ref={typePickerRef as React.RefObject<PickerActions>}
                 columns={[
                   [
                     { label: "单词", value: 0 },

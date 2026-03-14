@@ -7,6 +7,7 @@ import {
   Radio,
   Toast,
   Picker,
+  TextArea,
 } from "antd-mobile";
 import type { PickerActions } from "antd-mobile/es/components/picker";
 import { CheckCircleOutline, CloseCircleOutline } from "antd-mobile-icons";
@@ -286,7 +287,7 @@ export const ExerciseAgentTabMobile: React.FC = () => {
             onClick={() => sourceTypePickerRef.current?.open()}
           >
             <Picker
-              ref={sourceTypePickerRef}
+              ref={sourceTypePickerRef as React.RefObject<PickerActions>}
               columns={[
                 [
                   { label: "按熟练度筛选", value: "proficiency" },
@@ -323,7 +324,7 @@ export const ExerciseAgentTabMobile: React.FC = () => {
                       onClick={() => proficiencyPickerRef.current?.open()}
                     >
                       <Picker
-                        ref={proficiencyPickerRef}
+                        ref={proficiencyPickerRef as React.RefObject<PickerActions>}
                         columns={[
                           [
                             { label: EnglishAbsorb[0], value: 0 },
@@ -364,7 +365,7 @@ export const ExerciseAgentTabMobile: React.FC = () => {
                     },
                   ]}
                 >
-                  <Input.TextArea
+                  <TextArea
                     placeholder="例如：fake, confront, habitat"
                     rows={3}
                   />
