@@ -59,7 +59,7 @@ export interface ExerciseSubmitResponse {
 }
 
 export const exerciseGenerate = (
-  data: ExerciseGenerateParams
+  data: ExerciseGenerateParams,
 ): YTRequest<ExerciseGenerateResponse> => ({
   url: "/exercise-agent/generate",
   method: "POST",

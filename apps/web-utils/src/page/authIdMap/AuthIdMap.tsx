@@ -8,12 +8,8 @@ const { Search } = Input;
 
 const AuthIdMap: React.FC = () => {
   const [formattedData, setFormattedData] = useState("");
-  const [options, setOptions] = useState<{ label: string; value: string }[]>(
-    []
-  );
-  const [selectedModule, setSelectedModule] = useState<string | undefined>(
-    undefined
-  );
+  const [options, setOptions] = useState<{ label: string; value: string }[]>([]);
+  const [selectedModule, setSelectedModule] = useState<string | undefined>(undefined);
 
   const { styles } = useStyles();
 
@@ -34,7 +30,7 @@ const AuthIdMap: React.FC = () => {
       userCreate({
         cookieValue: value.trim(),
         type: "authId",
-      })
+      }),
     );
     if (res) {
       message.success("添加cookie成功!");
@@ -59,9 +55,7 @@ const AuthIdMap: React.FC = () => {
     }
     try {
       // 拦截器在 code===200 时只返回后端的 data，不是 { code, data, message }
-      const data = await request<Record<string, string>>(
-        findModel({ model: selectedModule })
-      );
+      const data = await request<Record<string, string>>(findModel({ model: selectedModule }));
       message.success("查询成功");
       setFormattedData(formatData(JSON.stringify(data ?? {})));
     } catch (e: unknown) {
@@ -73,9 +67,7 @@ const AuthIdMap: React.FC = () => {
   // 获取下拉选项：拦截器在 code===200 时只返回后端的 data（选项数组）
   const getLabel = async () => {
     try {
-      const data = await request<{ label: string; value: string }[]>(
-        getAuthIdOption()
-      );
+      const data = await request<{ label: string; value: string }[]>(getAuthIdOption());
       setOptions(Array.isArray(data) ? data : []);
     } catch (e: unknown) {
       const err = e as { message?: string };

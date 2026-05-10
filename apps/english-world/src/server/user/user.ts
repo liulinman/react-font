@@ -1,9 +1,4 @@
-import type {
-  RegisterParams,
-  LoginParams,
-  UserInfo,
-  LoginResponse,
-} from "./user.type";
+import type { RegisterParams, LoginParams, UserInfo, LoginResponse } from "./user.type";
 
 export const userFindList = () => {
   return {

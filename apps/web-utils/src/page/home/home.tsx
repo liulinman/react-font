@@ -12,7 +12,7 @@ const Home: React.FC = () => {
     (route: string) => {
       navigate(route);
     },
-    [navigate]
+    [navigate],
   );
 
   const data = [];
@@ -66,13 +66,9 @@ const Home: React.FC = () => {
     <div className="p-4">
       {/* 使用 Tailwind CSS 类名 */}
       <div className="mb-4 flex gap-2">
-        <Button onClick={() => routeToNavigate("/transferSlash")}>
-          路径转化
-        </Button>
+        <Button onClick={() => routeToNavigate("/transferSlash")}>路径转化</Button>
         {/* <Button onClick={() => routeToNavigate("/englishWorld")}>英语单词</Button> */}
-        <Button onClick={() => routeToNavigate("/authIdMap")}>
-          书联调erp权限模块id
-        </Button>
+        <Button onClick={() => routeToNavigate("/authIdMap")}>书联调erp权限模块id</Button>
       </div>
 
       <Table

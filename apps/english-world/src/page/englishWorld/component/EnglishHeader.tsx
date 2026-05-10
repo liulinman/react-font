@@ -29,10 +29,7 @@ type EnglishHeaderProps = {
   onNavClick?: (key: string) => void;
 };
 
-export const EnglishHeader = ({
-  activeKey = "list",
-  onNavClick,
-}: EnglishHeaderProps) => {
+export const EnglishHeader = ({ activeKey = "list", onNavClick }: EnglishHeaderProps) => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
 
@@ -58,13 +55,9 @@ export const EnglishHeader = ({
       key: "userInfo",
       label: (
         <div className="px-2 py-1">
-          <div className="text-sm font-medium text-gray-700">
-            {user?.username || "管理员"}
-          </div>
+          <div className="text-sm font-medium text-gray-700">{user?.username || "管理员"}</div>
           {user?.username && (
-            <div className="text-xs text-gray-500 mt-1">
-              用户名: {user.username}
-            </div>
+            <div className="text-xs text-gray-500 mt-1">用户名: {user.username}</div>
           )}
         </div>
       ),
@@ -92,7 +85,7 @@ export const EnglishHeader = ({
         {/* Logo */}
         <div className="flex items-center gap-2 text-blue-600 font-semibold text-lg">
           <BookFilled className="text-2xl" />
-          <span className="text-gray-800">English World · AI 单词</span>
+          <span className="text-gray-800">English World · AI 单词====</span>
         </div>
 
         {/* Navigation */}
@@ -103,9 +96,7 @@ export const EnglishHeader = ({
               type={key === activeKey ? "primary" : "text"}
               icon={icon}
               className={`flex items-center gap-1 transition-all duration-200 ${
-                key === activeKey
-                  ? "bg-blue-500 text-white shadow-md"
-                  : "text-gray-600"
+                key === activeKey ? "bg-blue-500 text-white shadow-md" : "text-gray-600"
               }`}
               onClick={() => {
                 if (key === "recite") {
@@ -113,7 +104,10 @@ export const EnglishHeader = ({
                 } else if (key === "setting") {
                   navigate("/englishWorld/settings");
                 } else if (key === "list" || key === "aiTool" || key === "stat") {
-                  navigate({ pathname: "/englishWorld", hash: getHashForNav(key) });
+                  navigate({
+                    pathname: "/englishWorld",
+                    hash: getHashForNav(key),
+                  });
                 }
                 onNavClick?.(key);
               }}

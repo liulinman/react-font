@@ -37,9 +37,7 @@ const partSpeechColors: Record<number, string> = {
 };
 
 export const EnglishStats = () => {
-  const [selectedLevel, setSelectedLevel] = useState<EnglishAbsorb>(
-    EnglishAbsorb["一般"]
-  );
+  const [selectedLevel, setSelectedLevel] = useState<EnglishAbsorb>(EnglishAbsorb["一般"]);
   const [summaryStats, setSummaryStats] = useState<SummaryStat[]>([
     { label: "总学习单词", value: 0, color: "#1677ff" },
     { label: "已掌握单词", value: 0, color: "#52c41a" },
@@ -70,10 +68,7 @@ export const EnglishStats = () => {
         type: "slider",
         show: true,
         xAxisIndex: [0],
-        start:
-          dailyStats.length > 14
-            ? ((dailyStats.length - 14) / dailyStats.length) * 100
-            : 0,
+        start: dailyStats.length > 14 ? ((dailyStats.length - 14) / dailyStats.length) * 100 : 0,
         end: 100,
         bottom: 10,
         height: 20,
@@ -86,10 +81,7 @@ export const EnglishStats = () => {
       {
         type: "inside",
         xAxisIndex: [0],
-        start:
-          dailyStats.length > 14
-            ? ((dailyStats.length - 14) / dailyStats.length) * 100
-            : 0,
+        start: dailyStats.length > 14 ? ((dailyStats.length - 14) / dailyStats.length) * 100 : 0,
         end: 100,
       },
     ],
@@ -129,13 +121,7 @@ export const EnglishStats = () => {
   const loadStats = async (level: EnglishAbsorb) => {
     try {
       const res = await mutateEnglishStats({ level });
-      const {
-        levelCount,
-        percentage,
-        totalCount,
-        dailyStats,
-        partSpeechStatisticalClass,
-      } = res;
+      const { levelCount, percentage, totalCount, dailyStats, partSpeechStatisticalClass } = res;
 
       setSummaryStats([
         { label: "总学习单词", value: totalCount, color: "#1677ff" },
@@ -150,16 +136,16 @@ export const EnglishStats = () => {
       setDailyStats(dailyStats);
 
       // 处理词性统计数据
-      const partSpeechData: PartSpeechData[] = Object.entries(
-        partSpeechStatisticalClass
-      ).map(([key, value]) => {
-        const partSpeechKey = Number(key);
-        return {
-          value: value as number,
-          name: EnglishPartSpeech[partSpeechKey],
-          color: partSpeechColors[partSpeechKey] || "#8c8c8c",
-        };
-      });
+      const partSpeechData: PartSpeechData[] = Object.entries(partSpeechStatisticalClass).map(
+        ([key, value]) => {
+          const partSpeechKey = Number(key);
+          return {
+            value: value as number,
+            name: EnglishPartSpeech[partSpeechKey],
+            color: partSpeechColors[partSpeechKey] || "#8c8c8c",
+          };
+        },
+      );
 
       setWordTypeData(partSpeechData);
     } catch (error) {
@@ -228,19 +214,14 @@ export const EnglishStats = () => {
                     <Select
                       size="small"
                       style={{ width: "80px" }}
-                      options={enumToOptions(EnglishAbsorb, [
-                        EnglishAbsorb["不会"],
-                      ])}
+                      options={enumToOptions(EnglishAbsorb, [EnglishAbsorb["不会"]])}
                       value={selectedLevel}
                       onChange={handleChange}
                       allowClear
                     />
                   ) : null}
                 </div>
-                <span
-                  className="text-2xl font-semibold"
-                  style={{ color: item.color }}
-                >
+                <span className="text-2xl font-semibold" style={{ color: item.color }}>
                   {item.label === "掌握率" ? `${item.value}%` : item.value}
                 </span>
               </div>

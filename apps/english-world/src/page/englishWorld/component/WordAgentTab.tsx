@@ -3,10 +3,7 @@ import { Button, Input, message, Spin } from "antd";
 import { PlusOutlined, RobotOutlined, SearchOutlined } from "@ant-design/icons";
 import request, { getApiBaseUrl } from "@font/api";
 import { wordAgentQuery } from "@/server/wordAgent/wordAgent";
-import type {
-  WordAgentItem,
-  WordAgentResponse,
-} from "@/server/wordAgent/wordAgent";
+import type { WordAgentItem, WordAgentResponse } from "@/server/wordAgent/wordAgent";
 import { wordAdd, wordExist } from "@/server/word/word";
 import type { WordList } from "@/server/word/word.type";
 import { EditAddModal, type AddInitialValues } from "./EditAddModal";
@@ -132,11 +129,7 @@ export const WordAgentTab: React.FC = () => {
 
       if (!res.ok || !res.body) {
         const contentType = res.headers.get("content-type") || "";
-        if (
-          res.status === 404 ||
-          res.status === 502 ||
-          !contentType.includes("event-stream")
-        ) {
+        if (res.status === 404 || res.status === 502 || !contentType.includes("event-stream")) {
           await tryOneShotQuery(body);
           return;
         }
@@ -147,10 +140,7 @@ export const WordAgentTab: React.FC = () => {
       }
 
       const contentType = res.headers.get("content-type") || "";
-      if (
-        !contentType.includes("event-stream") &&
-        contentType.includes("application/json")
-      ) {
+      if (!contentType.includes("event-stream") && contentType.includes("application/json")) {
         const json = await res.json();
         const list = json?.data?.words ?? json?.words ?? [];
         if (list.length) {
@@ -289,9 +279,7 @@ export const WordAgentTab: React.FC = () => {
             >
               AI 单词查询
             </h1>
-            <span
-              style={{ fontSize: 13, color: "rgba(255,255,255,0.85)" }}
-            ></span>
+            <span style={{ fontSize: 13, color: "rgba(255,255,255,0.85)" }}></span>
           </div>
         </div>
         <p
@@ -474,9 +462,7 @@ export const WordAgentTab: React.FC = () => {
                     lineHeight: 1.6,
                   }}
                 >
-                  <span style={{ color: "#64748b", fontWeight: 500 }}>
-                    释义：
-                  </span>
+                  <span style={{ color: "#64748b", fontWeight: 500 }}>释义：</span>
                   {item.meaning}
                 </p>
                 {item.examples?.length > 0 && (
@@ -504,9 +490,7 @@ export const WordAgentTab: React.FC = () => {
                             marginBottom: 10,
                             padding: "6px 0",
                             borderBottom:
-                              i < item.examples.length - 1
-                                ? "1px solid #f0f0f0"
-                                : "none",
+                              i < item.examples.length - 1 ? "1px solid #f0f0f0" : "none",
                           }}
                         >
                           <div
@@ -533,14 +517,12 @@ export const WordAgentTab: React.FC = () => {
                     </ul>
                   </div>
                 )}
-                {item.ieltsCase != null &&
-                typeof item.ieltsCase === "object" ? (
+                {item.ieltsCase != null && typeof item.ieltsCase === "object" ? (
                   <div
                     style={{
                       marginTop: 16,
                       padding: "16px 18px",
-                      background:
-                        "linear-gradient(135deg, #f0f4ff 0%, #faf5ff 100%)",
+                      background: "linear-gradient(135deg, #f0f4ff 0%, #faf5ff 100%)",
                       borderRadius: 12,
                       borderLeft: "4px solid #667eea",
                     }}

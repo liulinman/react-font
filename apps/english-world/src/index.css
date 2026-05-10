@@ -14,3 +14,17 @@ body,
   min-height: 100vh;
   height: 100%;
 }
+
+/* 单词列表掌握程度行边条 */
+.ant-table-row.level-0 {
+  border-left: 4px solid #f5222d !important;
+}
+.ant-table-row.level-1 {
+  border-left: 4px solid #fa8c16 !important;
+}
+.ant-table-row.level-2 {
+  border-left: 4px solid #1677ff !important;
+}
+.ant-table-row.level-3 {
+  border-left: 4px solid #52c41a !important;
+}

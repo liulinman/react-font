@@ -49,7 +49,7 @@ import { PhotoProvider, PhotoView } from "react-photo-view";
 import "react-photo-view/dist/react-photo-view.css";
 import { WordAgentTabMobile } from "./WordAgentTabMobile";
 import { ExerciseAgentTabMobile } from "./ExerciseAgentTabMobile";
-import "./EnglishWorldMobile.css";
+import { useMobileStyles } from "./englishWorldMobile.styles";
 
 type ListData = {
   list: WordList[];
@@ -83,6 +83,7 @@ const partSpeechColors: Record<number, string> = {
 };
 
 const EnglishWorldMobile: React.FC = () => {
+  const { styles } = useMobileStyles();
   const [wordList, setWordList] = useState<WordList[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const loadingRef = useRef<boolean>(false);
@@ -90,9 +91,7 @@ const EnglishWorldMobile: React.FC = () => {
   const pageSize = 20;
   const [hasMore, setHasMore] = useState<boolean>(true);
   const [total, setTotal] = useState<number>(0);
-  const [expandedNotes, setExpandedNotes] = useState<Record<number, boolean>>(
-    {}
-  );
+  const [expandedNotes, setExpandedNotes] = useState<Record<number, boolean>>({});
   const [searchKeyword, setSearchKeyword] = useState<string>("");
   const [showFilter, setShowFilter] = useState<boolean>(false);
   const [showEditModal, setShowEditModal] = useState<boolean>(false);
@@ -109,9 +108,7 @@ const EnglishWorldMobile: React.FC = () => {
   const [activeView, setActiveView] = useState<"list" | "stats" | "aiTool">("list");
 
   // 统计相关状态
-  const [selectedLevel, setSelectedLevel] = useState<EnglishAbsorb>(
-    EnglishAbsorb["一般"]
-  );
+  const [selectedLevel, setSelectedLevel] = useState<EnglishAbsorb>(EnglishAbsorb["一般"]);
   const [summaryStats, setSummaryStats] = useState<SummaryStat[]>([
     { label: "总学习单词", value: 0, color: "#1677ff" },
     { label: "已掌握单词", value: 0, color: "#52c41a" },
@@ -128,8 +125,7 @@ const EnglishWorldMobile: React.FC = () => {
     englishChinese?: string;
   }>({});
 
-  const { mutateAsync: mutateWordAdd, isPending: buttonPending } =
-    useMutation(wordAdd);
+  const { mutateAsync: mutateWordAdd, isPending: buttonPending } = useMutation(wordAdd);
   const { mutateAsync: mutateEnglishStats } = useMutation(englishStats);
 
   // 初始化加载数据
@@ -146,21 +142,17 @@ const EnglishWorldMobile: React.FC = () => {
             pageSize,
             ...filterValues,
             ...(searchKeyword ? { englishWord: searchKeyword } : {}),
-          })
+          }),
         );
 
         setTotal(res.total);
         if (reset) {
           setWordList(res.list);
-          setHasMore(
-            res.list.length >= pageSize && res.list.length < res.total
-          );
+          setHasMore(res.list.length >= pageSize && res.list.length < res.total);
         } else {
           setWordList((prev) => {
             const newList = [...prev, ...res.list];
-            setHasMore(
-              res.list.length >= pageSize && newList.length < res.total
-            );
+            setHasMore(res.list.length >= pageSize && newList.length < res.total);
             return newList;
           });
         }
@@ -174,7 +166,7 @@ const EnglishWorldMobile: React.FC = () => {
         setLoading(false);
       }
     },
-    [pageSize, filterValues, searchKeyword]
+    [pageSize, filterValues, searchKeyword],
   );
 
   // 加载统计数据
@@ -183,13 +175,7 @@ const EnglishWorldMobile: React.FC = () => {
       setStatsLoading(true);
       try {
         const res = await mutateEnglishStats({ level });
-        const {
-          levelCount,
-          percentage,
-          totalCount,
-          dailyStats,
-          partSpeechStatisticalClass,
-        } = res;
+        const { levelCount, percentage, totalCount, dailyStats, partSpeechStatisticalClass } = res;
 
         setSummaryStats([
           { label: "总学习单词", value: totalCount, color: "#1677ff" },
@@ -205,7 +191,7 @@ const EnglishWorldMobile: React.FC = () => {
 
         // 处理词性统计数据
         const partSpeechData: PartSpeechData[] = Object.entries(
-          partSpeechStatisticalClass as CommonRecord
+          partSpeechStatisticalClass as CommonRecord,
         ).map(([key, value]) => {
           const partSpeechKey = Number(key);
           return {
@@ -226,7 +212,7 @@ const EnglishWorldMobile: React.FC = () => {
         setStatsLoading(false);
       }
     },
-    [mutateEnglishStats]
+    [mutateEnglishStats],
   );
 
   useEffect(() => {
@@ -333,9 +319,7 @@ const EnglishWorldMobile: React.FC = () => {
       const values = await form.validateFields();
       const submitData = {
         ...values,
-        ...(editType === "edit" && currentRecord
-          ? { id: currentRecord.id }
-          : {}),
+        ...(editType === "edit" && currentRecord ? { id: currentRecord.id } : {}),
       };
 
       if (editType === "edit") {
@@ -355,9 +339,7 @@ const EnglishWorldMobile: React.FC = () => {
         }
       } else {
         // 检查单词是否存在
-        const existRes = await request<boolean>(
-          wordExist({ englishWord: values.englishWord })
-        );
+        const existRes = await request<boolean>(wordExist({ englishWord: values.englishWord }));
 
         if (existRes) {
           Dialog.alert({
@@ -529,7 +511,7 @@ const EnglishWorldMobile: React.FC = () => {
   };
 
   return (
-    <div className="english-world-mobile">
+    <div className={styles.root}>
       <NavBar
         back={null}
         right={
@@ -540,7 +522,7 @@ const EnglishWorldMobile: React.FC = () => {
                   fill="none"
                   size="small"
                   onClick={() => setActiveView("aiTool")}
-                  style={{ padding: "4px 8px" }}
+                  className="px-2 py-1"
                 >
                   <AppstoreOutline />
                 </Button>
@@ -548,7 +530,7 @@ const EnglishWorldMobile: React.FC = () => {
                   fill="none"
                   size="small"
                   onClick={() => setActiveView("stats")}
-                  style={{ padding: "4px 8px" }}
+                  className="px-2 py-1"
                 >
                   <AppOutline />
                 </Button>
@@ -556,7 +538,7 @@ const EnglishWorldMobile: React.FC = () => {
                   fill="none"
                   size="small"
                   onClick={() => setShowFilter(true)}
-                  style={{ padding: "4px 8px" }}
+                  className="px-2 py-1"
                 >
                   <FilterOutline />
                 </Button>
@@ -566,7 +548,7 @@ const EnglishWorldMobile: React.FC = () => {
                 fill="none"
                 size="small"
                 onClick={() => setActiveView("list")}
-                style={{ padding: "4px 8px" }}
+                className="px-2 py-1"
               >
                 列表
               </Button>
@@ -574,18 +556,12 @@ const EnglishWorldMobile: React.FC = () => {
           </Space>
         }
       >
-        {activeView === "list"
-          ? "单词管理"
-          : activeView === "stats"
-            ? "学习统计"
-            : "AI 工具"}
+        {activeView === "list" ? "单词管理" : activeView === "stats" ? "学习统计" : "AI 工具"}
       </NavBar>
 
-      <div className="mobile-content">
+      <div className={styles.content}>
         {activeView === "aiTool" ? (
-          <Tabs
-            style={{ "--title-font-size": "14px", "--content-padding": "0" }}
-          >
+          <Tabs style={{ "--title-font-size": "14px", "--content-padding": "0" }}>
             <Tabs.Tab title="AI 单词查询" key="word">
               <WordAgentTabMobile />
             </Tabs.Tab>
@@ -596,7 +572,7 @@ const EnglishWorldMobile: React.FC = () => {
         ) : activeView === "list" ? (
           <>
             {/* 搜索栏 */}
-            <div className="search-section">
+            <div className={styles.searchSection}>
               <SearchBar
                 placeholder="搜索单词或中文"
                 value={searchKeyword}
@@ -623,20 +599,16 @@ const EnglishWorldMobile: React.FC = () => {
                 <Empty description="暂无数据" />
               ) : (
                 <PhotoProvider>
-                  <div className="word-list">
+                  <div className={styles.wordList}>
                     {wordList.map((item) => (
                       <Card
                         key={item.id}
-                        className="word-card"
+                        className={styles.wordCard}
                         title={
-                          <div className="word-card-header">
-                            <span className="word-title">
-                              {item.englishWord}
-                            </span>
+                          <div className={styles.wordCardHeader}>
+                            <span className={styles.wordTitle}>{item.englishWord}</span>
                             {item.englishPhonetic && (
-                              <span className="word-phonetic">
-                                [{item.englishPhonetic}]
-                              </span>
+                              <span className={styles.wordPhonetic}>[{item.englishPhonetic}]</span>
                             )}
                           </div>
                         }
@@ -646,7 +618,7 @@ const EnglishWorldMobile: React.FC = () => {
                               fill="none"
                               size="small"
                               onClick={() => handleEdit(item)}
-                              style={{ padding: "4px" }}
+                              className="p-1"
                             >
                               <EditSOutline />
                             </Button>
@@ -654,16 +626,16 @@ const EnglishWorldMobile: React.FC = () => {
                               fill="none"
                               size="small"
                               onClick={() => handleDelete(item.id)}
-                              style={{ padding: "4px", color: "#ff3141" }}
+                              className="p-1 text-[#ff3141]"
                             >
                               <DeleteOutline />
                             </Button>
                           </Space>
                         }
                       >
-                        <div className="word-card-body">
+                        <div className={styles.wordCardBody}>
                           {item.englishImg && (
-                            <div className="word-image">
+                            <div className={styles.wordImage}>
                               <PhotoView src={item.englishImg}>
                                 <Image
                                   src={item.englishImg}
@@ -678,46 +650,33 @@ const EnglishWorldMobile: React.FC = () => {
                               </PhotoView>
                             </div>
                           )}
-                          <div className="word-info">
+                          <div className={styles.wordInfo}>
                             {item.englishChinese && (
-                              <div className="word-chinese">
-                                {item.englishChinese}
-                              </div>
+                              <div className={styles.wordChinese}>{item.englishChinese}</div>
                             )}
-                            <div className="word-tags">
+                            <div className={styles.wordTags}>
                               <Tag color={getTypeLabel(item.englishType).color}>
                                 {getTypeLabel(item.englishType).label}
                               </Tag>
-                              <Tag
-                                color={getLevelLabel(item.englishLevel).color}
-                              >
+                              <Tag color={getLevelLabel(item.englishLevel).color}>
                                 {getLevelLabel(item.englishLevel).label}
                               </Tag>
-                              {item.englishPartSpeech &&
-                                item.englishPartSpeech.length > 0 && (
-                                  <Tag color="default">
-                                    {partSpeechOptions
-                                      .filter((opt) =>
-                                        item.englishPartSpeech?.includes(
-                                          opt.value
-                                        )
-                                      )
-                                      .map((opt) => opt.label)
-                                      .join("、")}
-                                  </Tag>
-                                )}
+                              {item.englishPartSpeech && item.englishPartSpeech.length > 0 && (
+                                <Tag color="default">
+                                  {partSpeechOptions
+                                    .filter((opt) => item.englishPartSpeech?.includes(opt.value))
+                                    .map((opt) => opt.label)
+                                    .join("、")}
+                                </Tag>
+                              )}
                             </div>
                             {item.englishNote && (
-                              <div className="word-note">
-                                <div className="note-label">笔记：</div>
-                                <div className="note-content">
-                                  {expandedNotes[item.id] ||
-                                  item.englishNote.length <= 100
+                              <div className={styles.wordNote}>
+                                <div className={styles.noteLabel}>笔记：</div>
+                                <div className={styles.noteContent}>
+                                  {expandedNotes[item.id] || item.englishNote.length <= 100
                                     ? item.englishNote
-                                    : `${item.englishNote.substring(
-                                        0,
-                                        100
-                                      )}...`}
+                                    : `${item.englishNote.substring(0, 100)}...`}
                                 </div>
                                 {item.englishNote.length > 100 && (
                                   <div
@@ -744,12 +703,12 @@ const EnglishWorldMobile: React.FC = () => {
                               </div>
                             )}
                             {item.englishReference && (
-                              <div className="word-reference">
+                              <div className={styles.wordReference}>
                                 <a
                                   href={item.englishReference}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="reference-link"
+                                  className={styles.referenceLink}
                                 >
                                   参考链接
                                 </a>
@@ -772,7 +731,7 @@ const EnglishWorldMobile: React.FC = () => {
             </PullToRefresh>
 
             {/* 添加按钮 */}
-            <div className="fab-container">
+            <div className={styles.fabContainer}>
               <Button
                 color="primary"
                 shape="rounded"
@@ -846,10 +805,9 @@ const EnglishWorldMobile: React.FC = () => {
                                   }}
                                 >
                                   (
-                                  {enumToOptions(EnglishAbsorb, [
-                                    EnglishAbsorb["不会"],
-                                  ]).find((opt) => opt.value === selectedLevel)
-                                    ?.label || ""}
+                                  {enumToOptions(EnglishAbsorb, [EnglishAbsorb["不会"]]).find(
+                                    (opt) => opt.value === selectedLevel,
+                                  )?.label || ""}
                                   )
                                 </span>
                               )}
@@ -861,9 +819,7 @@ const EnglishWorldMobile: React.FC = () => {
                                 fontWeight: "bold",
                               }}
                             >
-                              {item.label === "掌握率"
-                                ? `${item.value}%`
-                                : item.value}
+                              {item.label === "掌握率" ? `${item.value}%` : item.value}
                             </div>
                           </div>
                         </div>
@@ -872,34 +828,23 @@ const EnglishWorldMobile: React.FC = () => {
                   </div>
 
                   {/* 每日新增单词图表 */}
-                  <Card
-                    title="每日新增单词"
-                    style={{ borderRadius: "12px", marginBottom: "16px" }}
-                  >
-                    <ReactECharts
-                      option={optionBar}
-                      style={{ height: "250px", width: "100%" }}
-                    />
+                  <Card title="每日新增单词" style={{ borderRadius: "12px", marginBottom: "16px" }}>
+                    <ReactECharts option={optionBar} style={{ height: "250px", width: "100%" }} />
                   </Card>
 
                   {/* 词性分布图表 */}
                   <Card title="词性分布" style={{ borderRadius: "12px" }}>
-                    <ReactECharts
-                      option={optionPie}
-                      style={{ height: "250px", width: "100%" }}
-                    />
+                    <ReactECharts option={optionPie} style={{ height: "250px", width: "100%" }} />
                   </Card>
 
                   {/* 掌握程度选择器（隐藏） */}
                   <Picker
                     ref={statsLevelPickerRef as React.RefObject<PickerActions>}
                     columns={[
-                      enumToOptions(EnglishAbsorb, [EnglishAbsorb["不会"]]).map(
-                        (opt) => ({
-                          label: opt.label,
-                          value: opt.value as EnglishAbsorb,
-                        })
-                      ),
+                      enumToOptions(EnglishAbsorb, [EnglishAbsorb["不会"]]).map((opt) => ({
+                        label: opt.label,
+                        value: opt.value as EnglishAbsorb,
+                      })),
                     ]}
                     value={[selectedLevel]}
                     onConfirm={(val) => {
@@ -923,13 +868,9 @@ const EnglishWorldMobile: React.FC = () => {
           position="right"
           bodyStyle={{ width: "80vw", height: "100vh" }}
         >
-          <div className="filter-popup">
+          <div className={styles.filterPopup}>
             <NavBar onBack={() => setShowFilter(false)}>筛选条件</NavBar>
-            <Form
-              form={filterForm}
-              layout="vertical"
-              initialValues={filterValues}
-            >
+            <Form form={filterForm} layout="vertical" initialValues={filterValues}>
               <Form.Item
                 label="类型"
                 name="englishType"
@@ -955,9 +896,7 @@ const EnglishWorldMobile: React.FC = () => {
                   ]}
                 >
                   {(items) => (
-                    <div className="picker-trigger">
-                      {items?.[0]?.label || "请选择"}
-                    </div>
+                    <div className={styles.pickerTrigger}>{items?.[0]?.label || "请选择"}</div>
                   )}
                 </Picker>
               </Form.Item>
@@ -987,16 +926,14 @@ const EnglishWorldMobile: React.FC = () => {
                   ]}
                 >
                   {(items) => (
-                    <div className="picker-trigger">
-                      {items?.[0]?.label || "请选择"}
-                    </div>
+                    <div className={styles.pickerTrigger}>{items?.[0]?.label || "请选择"}</div>
                   )}
                 </Picker>
               </Form.Item>
               <Form.Item label="中文" name="englishChinese">
                 <Input placeholder="请输入中文" />
               </Form.Item>
-              <div className="filter-actions">
+              <div className={styles.filterActions}>
                 <Button
                   block
                   onClick={() => {
@@ -1004,7 +941,7 @@ const EnglishWorldMobile: React.FC = () => {
                     filterForm.resetFields();
                     setShowFilter(false);
                   }}
-                  style={{ marginBottom: "12px" }}
+                  className="mb-3"
                 >
                   重置
                 </Button>
@@ -1033,23 +970,18 @@ const EnglishWorldMobile: React.FC = () => {
             borderTopRightRadius: "16px",
           }}
         >
-          <div className="edit-modal">
+          <div className={styles.editModal}>
             <NavBar
               onBack={() => setShowEditModal(false)}
               right={
-                <Button
-                  fill="none"
-                  size="small"
-                  onClick={handleSubmit}
-                  loading={buttonPending}
-                >
+                <Button fill="none" size="small" onClick={handleSubmit} loading={buttonPending}>
                   保存
                 </Button>
               }
             >
               {editType === "edit" ? "编辑单词" : "添加单词"}
             </NavBar>
-            <div className="edit-form-container">
+            <div className={styles.editFormContainer}>
               <Form form={form} layout="vertical">
                 <Form.Item
                   label="单词名"
@@ -1085,9 +1017,7 @@ const EnglishWorldMobile: React.FC = () => {
                     ]}
                   >
                     {(items) => (
-                      <div className="picker-trigger">
-                        {items?.[0]?.label || "请选择"}
-                      </div>
+                      <div className={styles.pickerTrigger}>{items?.[0]?.label || "请选择"}</div>
                     )}
                   </Picker>
                 </Form.Item>
@@ -1117,9 +1047,7 @@ const EnglishWorldMobile: React.FC = () => {
                     ]}
                   >
                     {(items) => (
-                      <div className="picker-trigger">
-                        {items?.[0]?.label || "请选择"}
-                      </div>
+                      <div className={styles.pickerTrigger}>{items?.[0]?.label || "请选择"}</div>
                     )}
                   </Picker>
                 </Form.Item>
@@ -1127,13 +1055,9 @@ const EnglishWorldMobile: React.FC = () => {
                   <Input placeholder="请输入音标" />
                 </Form.Item>
                 <Form.Item label="词性" name="englishPartSpeech">
-                  <div
-                    style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}
-                  >
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                     {partSpeechOptions.map((option) => {
-                      const isSelected = selectedPartSpeech.includes(
-                        option.value
-                      );
+                      const isSelected = selectedPartSpeech.includes(option.value);
                       return (
                         <Tag
                           key={option.value}
@@ -1146,13 +1070,10 @@ const EnglishWorldMobile: React.FC = () => {
                             let newSelected: number[];
                             if (selectedPartSpeech.includes(option.value)) {
                               newSelected = selectedPartSpeech.filter(
-                                (item) => item !== option.value
+                                (item) => item !== option.value,
                               );
                             } else {
-                              newSelected = [
-                                ...selectedPartSpeech,
-                                option.value,
-                              ];
+                              newSelected = [...selectedPartSpeech, option.value];
                             }
                             setSelectedPartSpeech(newSelected);
                             form.setFieldsValue({
@@ -1167,12 +1088,7 @@ const EnglishWorldMobile: React.FC = () => {
                   </div>
                 </Form.Item>
                 <Form.Item label="中文" name="englishChinese">
-                  <TextArea
-                    placeholder="请输入中文释义"
-                    rows={2}
-                    showCount
-                    maxLength={200}
-                  />
+                  <TextArea placeholder="请输入中文释义" rows={2} showCount maxLength={200} />
                 </Form.Item>
                 <Form.Item
                   label="图片"
@@ -1213,12 +1129,7 @@ const EnglishWorldMobile: React.FC = () => {
                   />
                 </Form.Item>
                 <Form.Item label="笔记" name="englishNote">
-                  <TextArea
-                    placeholder="请输入笔记"
-                    rows={4}
-                    showCount
-                    maxLength={500}
-                  />
+                  <TextArea placeholder="请输入笔记" rows={4} showCount maxLength={500} />
                 </Form.Item>
                 <Form.Item label="引用" name="englishReference">
                   <Input placeholder="请输入引用链接" />

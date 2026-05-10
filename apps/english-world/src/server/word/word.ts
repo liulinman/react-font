@@ -8,9 +8,7 @@ export const wordFindList = () => {
   };
 };
 
-export const wordAdd = (
-  data: Omit<WordList, "id">
-): YTRequest<CommonRecord> => {
+export const wordAdd = (data: Omit<WordList, "id">): YTRequest<CommonRecord> => {
   return {
     url: "/english/AddEnglishWord",
     data,

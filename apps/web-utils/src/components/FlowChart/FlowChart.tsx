@@ -12,12 +12,7 @@ import "reactflow/dist/style.css";
 import { useNavigate } from "react-router-dom";
 import "./FlowChart.css";
 
-export type NodeType =
-  | "purchase"
-  | "inventory"
-  | "supplier"
-  | "stats"
-  | "default";
+export type NodeType = "purchase" | "inventory" | "supplier" | "stats" | "default";
 
 export interface FlowNodeConfig {
   id: string;
@@ -73,14 +68,14 @@ export const FlowChart = ({
           n.nodeType === "purchase"
             ? "#e6f4ff"
             : n.nodeType === "inventory" || n.nodeType === "supplier"
-            ? "#f6ffed"
-            : "#e6f4ff",
+              ? "#f6ffed"
+              : "#e6f4ff",
         border: `1px solid ${
           n.nodeType === "purchase"
             ? "#91caff"
             : n.nodeType === "inventory" || n.nodeType === "supplier"
-            ? "#95de64"
-            : "#91caff"
+              ? "#95de64"
+              : "#91caff"
         }`,
         borderRadius: "4px",
         padding: "8px 16px",
@@ -88,8 +83,8 @@ export const FlowChart = ({
           n.nodeType === "purchase"
             ? "#1677ff"
             : n.nodeType === "inventory" || n.nodeType === "supplier"
-            ? "#52c41a"
-            : "#1677ff",
+              ? "#52c41a"
+              : "#1677ff",
         fontWeight: 400,
         fontSize: "13px",
         minWidth: "100px",
@@ -143,10 +138,7 @@ export const FlowChart = ({
     labelBgBorderRadius: 2,
   }));
 
-  const [nodes, , onNodesChange] = useNodesState([
-    ...groupNodes,
-    ...reactFlowNodes,
-  ]);
+  const [nodes, , onNodesChange] = useNodesState([...groupNodes, ...reactFlowNodes]);
   const [edges, , onEdgesChange] = useEdgesState(reactFlowEdges);
 
   const handleNodeClick = (_event: React.MouseEvent, node: Node) => {
@@ -176,10 +168,7 @@ export const FlowChart = ({
             nodeColor={(node) => {
               const nodeConfig = nodeConfigs.find((n) => n.id === node.id);
               if (nodeConfig?.nodeType === "purchase") return "#e6f4ff";
-              if (
-                nodeConfig?.nodeType === "inventory" ||
-                nodeConfig?.nodeType === "supplier"
-              )
+              if (nodeConfig?.nodeType === "inventory" || nodeConfig?.nodeType === "supplier")
                 return "#f6ffed";
               return "#fff";
             }}

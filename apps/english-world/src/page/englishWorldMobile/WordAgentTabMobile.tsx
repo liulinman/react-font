@@ -4,19 +4,14 @@ import type { PickerActions } from "antd-mobile/es/components/picker";
 import { AddOutline, SearchOutline } from "antd-mobile-icons";
 import request, { getApiBaseUrl } from "@font/api";
 import { wordAgentQuery } from "@/server/wordAgent/wordAgent";
-import type {
-  WordAgentItem,
-  WordAgentResponse,
-} from "@/server/wordAgent/wordAgent";
+import type { WordAgentItem, WordAgentResponse } from "@/server/wordAgent/wordAgent";
 import { wordAdd, wordExist } from "@/server/word/word";
 import type { WordList } from "@/server/word/word.type";
 import { EnglishPartSpeech } from "@/page/englishWorld/enum";
 
 const STREAM_PATH = "/word-agent/query-stream";
 
-function buildRequestBody(
-  inputText: string
-): { word?: string; words?: string[] } {
+function buildRequestBody(inputText: string): { word?: string; words?: string[] } {
   const trimmed = inputText.trim();
   if (!trimmed) return {};
   const parts = trimmed.split(/[\s,]+/).filter(Boolean);
@@ -60,10 +55,7 @@ export const WordAgentTabMobile: React.FC = () => {
     }, 100);
   };
 
-  const tryOneShotQuery = async (body: {
-    word?: string;
-    words?: string[];
-  }) => {
+  const tryOneShotQuery = async (body: { word?: string; words?: string[] }) => {
     try {
       const data = await request<WordAgentResponse>(wordAgentQuery(body));
       if (data?.words?.length) {
@@ -107,11 +99,7 @@ export const WordAgentTabMobile: React.FC = () => {
 
       if (!res.ok || !res.body) {
         const contentType = res.headers.get("content-type") || "";
-        if (
-          res.status === 404 ||
-          res.status === 502 ||
-          !contentType.includes("event-stream")
-        ) {
+        if (res.status === 404 || res.status === 502 || !contentType.includes("event-stream")) {
           await tryOneShotQuery(body);
           return;
         }
@@ -121,10 +109,7 @@ export const WordAgentTabMobile: React.FC = () => {
       }
 
       const contentType = res.headers.get("content-type") || "";
-      if (
-        !contentType.includes("event-stream") &&
-        contentType.includes("application/json")
-      ) {
+      if (!contentType.includes("event-stream") && contentType.includes("application/json")) {
         const json = await res.json();
         const list = json?.data?.words ?? json?.words ?? [];
         if (list.length) {
@@ -156,18 +141,10 @@ export const WordAgentTabMobile: React.FC = () => {
               data?: WordAgentItem | string;
               message?: string;
             };
-            if (
-              obj.type === "chunk" &&
-              obj.word != null &&
-              typeof obj.data === "string"
-            ) {
+            if (obj.type === "chunk" && obj.word != null && typeof obj.data === "string") {
               setStreamingWord(obj.word);
               setStreamingChunk((prev) => prev + obj.data);
-            } else if (
-              obj.type === "word" &&
-              obj.data &&
-              typeof obj.data === "object"
-            ) {
+            } else if (obj.type === "word" && obj.data && typeof obj.data === "object") {
               setStreamingWord(null);
               setStreamingChunk("");
               streamCountRef.current += 1;
@@ -215,9 +192,7 @@ export const WordAgentTabMobile: React.FC = () => {
       }
       const submitData: WordList = {
         ...values,
-        englishPartSpeech: Array.isArray(values.englishPartSpeech)
-          ? values.englishPartSpeech
-          : [],
+        englishPartSpeech: Array.isArray(values.englishPartSpeech) ? values.englishPartSpeech : [],
       } as WordList;
       await request(wordAdd(submitData));
       Toast.show({ icon: "success", content: "已保存到单词本" });
@@ -232,9 +207,7 @@ export const WordAgentTabMobile: React.FC = () => {
   return (
     <div style={{ padding: "16px", paddingBottom: 24 }}>
       <Card style={{ borderRadius: 12, marginBottom: 16 }}>
-        <div style={{ marginBottom: 12, color: "#667eea", fontWeight: 600 }}>
-          AI 单词查询
-        </div>
+        <div style={{ marginBottom: 12, color: "#667eea", fontWeight: 600 }}>AI 单词查询</div>
         <p style={{ margin: "0 0 12px 0", fontSize: 13, color: "#666" }}>
           输入单词（支持多个，逗号或空格分隔），获取释义、音标等。
         </p>
@@ -256,9 +229,7 @@ export const WordAgentTabMobile: React.FC = () => {
       </Card>
 
       {loading && words.length === 0 && !streamingWord && (
-        <div style={{ textAlign: "center", padding: 32, color: "#999" }}>
-          AI 正在查询…
-        </div>
+        <div style={{ textAlign: "center", padding: 32, color: "#999" }}>AI 正在查询…</div>
       )}
 
       {(words.length > 0 || streamingWord) && (
@@ -284,9 +255,7 @@ export const WordAgentTabMobile: React.FC = () => {
                   >
                     {item.word}
                   </span>
-                  <span style={{ color: "#64748b", fontSize: 14 }}>
-                    {item.phonetic}
-                  </span>
+                  <span style={{ color: "#64748b", fontSize: 14 }}>{item.phonetic}</span>
                 </div>
                 <Button
                   size="small"
@@ -317,15 +286,12 @@ export const WordAgentTabMobile: React.FC = () => {
                         color: "#4f46e5",
                       }}
                     >
-                      {(EnglishPartSpeech as Record<number, string>)[code] ??
-                        `词性${code}`}
+                      {(EnglishPartSpeech as Record<number, string>)[code] ?? `词性${code}`}
                     </span>
                   ))}
                 </div>
               ) : null}
-              <p style={{ margin: 0, fontSize: 14, color: "#334155" }}>
-                {item.meaning}
-              </p>
+              <p style={{ margin: 0, fontSize: 14, color: "#334155" }}>{item.meaning}</p>
               {item.examples?.length > 0 && (
                 <div style={{ marginTop: 10 }}>
                   <span style={{ fontSize: 12, color: "#64748b" }}>例句</span>
@@ -344,12 +310,8 @@ export const WordAgentTabMobile: React.FC = () => {
           {streamingWord && (
             <Card style={{ borderRadius: 12, borderStyle: "dashed" }}>
               <div style={{ marginBottom: 8 }}>
-                <span style={{ fontWeight: 600, color: "#667eea" }}>
-                  {streamingWord}
-                </span>
-                <span style={{ marginLeft: 8, fontSize: 12, color: "#94a3b8" }}>
-                  AI 正在输出…
-                </span>
+                <span style={{ fontWeight: 600, color: "#667eea" }}>{streamingWord}</span>
+                <span style={{ marginLeft: 8, fontSize: 12, color: "#94a3b8" }}>AI 正在输出…</span>
               </div>
               <pre
                 style={{
@@ -383,18 +345,10 @@ export const WordAgentTabMobile: React.FC = () => {
             }}
           >
             <span style={{ fontWeight: 600 }}>加入单词本</span>
-            <Button
-              fill="none"
-              size="small"
-              onClick={() => setAddModalVisible(false)}
-            >
+            <Button fill="none" size="small" onClick={() => setAddModalVisible(false)}>
               取消
             </Button>
-            <Button
-              color="primary"
-              size="small"
-              onClick={handleAddSubmit}
-            >
+            <Button color="primary" size="small" onClick={handleAddSubmit}>
               保存
             </Button>
           </div>
@@ -431,11 +385,7 @@ export const WordAgentTabMobile: React.FC = () => {
                   ],
                 ]}
               >
-                {(items) => (
-                  <div style={{ padding: "8px 0" }}>
-                    {items?.[0]?.label ?? "请选择"}
-                  </div>
-                )}
+                {(items) => <div style={{ padding: "8px 0" }}>{items?.[0]?.label ?? "请选择"}</div>}
               </Picker>
             </Form.Item>
             <Form.Item
@@ -456,11 +406,7 @@ export const WordAgentTabMobile: React.FC = () => {
                   ],
                 ]}
               >
-                {(items) => (
-                  <div style={{ padding: "8px 0" }}>
-                    {items?.[0]?.label ?? "请选择"}
-                  </div>
-                )}
+                {(items) => <div style={{ padding: "8px 0" }}>{items?.[0]?.label ?? "请选择"}</div>}
               </Picker>
             </Form.Item>
           </Form>

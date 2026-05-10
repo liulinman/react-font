@@ -82,7 +82,7 @@ export const RecitePage: React.FC = () => {
           proficiencyLevels: config.proficiencyLevels,
           types: config.types,
           direction: config.direction,
-        })
+        }),
       );
 
       setQuestions(response.questions);
@@ -95,8 +95,7 @@ export const RecitePage: React.FC = () => {
       message.success("开始默写！");
     } catch (error: unknown) {
       console.error("开始默写失败:", error);
-      const errorMessage =
-        error instanceof Error ? error.message : "开始默写失败，请重试";
+      const errorMessage = error instanceof Error ? error.message : "开始默写失败，请重试";
       message.error(errorMessage);
       setStatus("idle");
     } finally {
@@ -123,7 +122,7 @@ export const RecitePage: React.FC = () => {
         submitAnswer({
           answers: answerItems,
           direction,
-        })
+        }),
       );
 
       setResults(response);
@@ -133,8 +132,7 @@ export const RecitePage: React.FC = () => {
       message.success("提交成功！");
     } catch (error: unknown) {
       console.error("提交答案失败:", error);
-      const errorMessage =
-        error instanceof Error ? error.message : "提交答案失败，请重试";
+      const errorMessage = error instanceof Error ? error.message : "提交答案失败，请重试";
       message.error(errorMessage);
     } finally {
       setLoading(false);
@@ -149,15 +147,14 @@ export const RecitePage: React.FC = () => {
         getReciteHistory({
           page: pageNum,
           pageSize: 10, // 每页显示10个会话
-        })
+        }),
       );
       setHistory(response.list || []);
       setHistoryTotal(response.total || 0);
       setHistoryPage(response.page || 1);
     } catch (error: unknown) {
       console.error("获取历史记录失败:", error);
-      const errorMessage =
-        error instanceof Error ? error.message : "获取历史记录失败";
+      const errorMessage = error instanceof Error ? error.message : "获取历史记录失败";
       message.error(errorMessage);
     } finally {
       setLoading(false);
@@ -167,9 +164,7 @@ export const RecitePage: React.FC = () => {
   // 切换会话展开状态
   const toggleSession = useCallback((sessionId: number) => {
     setExpandedSessions((prev) =>
-      prev.includes(sessionId)
-        ? prev.filter((id) => id !== sessionId)
-        : [...prev, sessionId]
+      prev.includes(sessionId) ? prev.filter((id) => id !== sessionId) : [...prev, sessionId],
     );
   }, []);
 
@@ -181,8 +176,7 @@ export const RecitePage: React.FC = () => {
       setStats(response);
     } catch (error: unknown) {
       console.error("获取统计信息失败:", error);
-      const errorMessage =
-        error instanceof Error ? error.message : "获取统计信息失败";
+      const errorMessage = error instanceof Error ? error.message : "获取统计信息失败";
       message.error(errorMessage);
     } finally {
       setLoading(false);
@@ -249,21 +243,12 @@ export const RecitePage: React.FC = () => {
               </Button>
             )}
             {status === "practicing" && (
-              <Button
-                type="primary"
-                onClick={handleSubmit}
-                loading={loading}
-                size="large"
-              >
+              <Button type="primary" onClick={handleSubmit} loading={loading} size="large">
                 提交答案
               </Button>
             )}
             {status === "submitted" && (
-              <Button
-                icon={<ReloadOutlined />}
-                onClick={handleRestart}
-                size="large"
-              >
+              <Button icon={<ReloadOutlined />} onClick={handleRestart} size="large">
                 重新开始
               </Button>
             )}
@@ -276,9 +261,7 @@ export const RecitePage: React.FC = () => {
             <div className="mb-4">
               <Text type="secondary">
                 练习方向:{" "}
-                {direction === PracticeDirection.ChineseToEnglish
-                  ? "中文写英文"
-                  : "英文写中文"}
+                {direction === PracticeDirection.ChineseToEnglish ? "中文写英文" : "英文写中文"}
               </Text>
               <Text type="secondary" className="ml-4">
                 共 {questions.length} 题
@@ -309,13 +292,11 @@ export const RecitePage: React.FC = () => {
                     }}
                     onPressEnter={(e) => {
                       e.preventDefault();
-                      const currentIndex = questions.findIndex(
-                        (q) => q.wordId === question.wordId
-                      );
+                      const currentIndex = questions.findIndex((q) => q.wordId === question.wordId);
                       if (currentIndex < questions.length - 1) {
                         const nextQuestion = questions[currentIndex + 1];
                         const nextInput = document.querySelector(
-                          `input[name="answer_${nextQuestion.wordId}"]`
+                          `input[name="answer_${nextQuestion.wordId}"]`,
                         ) as HTMLInputElement;
                         nextInput?.focus();
                       }
@@ -333,10 +314,7 @@ export const RecitePage: React.FC = () => {
             <div className="mb-6">
               <Row gutter={16}>
                 <Col span={6}>
-                  <Statistic
-                    title="总题数"
-                    value={results.statistics.totalCount}
-                  />
+                  <Statistic title="总题数" value={results.statistics.totalCount} />
                 </Col>
                 <Col span={6}>
                   <Statistic
@@ -365,8 +343,8 @@ export const RecitePage: React.FC = () => {
                         results.statistics.accuracy >= 80
                           ? "#3f8600"
                           : results.statistics.accuracy >= 60
-                          ? "#faad14"
-                          : "#cf1322",
+                            ? "#faad14"
+                            : "#cf1322",
                     }}
                   />
                 </Col>
@@ -378,9 +356,7 @@ export const RecitePage: React.FC = () => {
                 <div
                   key={result.wordId}
                   className={`p-4 rounded-lg border ${
-                    result.isCorrect
-                      ? "bg-green-50 border-green-200"
-                      : "bg-red-50 border-red-200"
+                    result.isCorrect ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"
                   }`}
                 >
                   <div className="flex items-center justify-between mb-2">
@@ -472,20 +448,16 @@ export const RecitePage: React.FC = () => {
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-3">
                             <Text strong className="text-base">
-                              {new Date(session.createTime).toLocaleString(
-                                "zh-CN"
-                              )}
+                              {new Date(session.createTime).toLocaleString("zh-CN")}
                             </Text>
                             <Tag
                               color={
-                                session.direction ===
-                                PracticeDirection.ChineseToEnglish
+                                session.direction === PracticeDirection.ChineseToEnglish
                                   ? "blue"
                                   : "purple"
                               }
                             >
-                              {session.direction ===
-                              PracticeDirection.ChineseToEnglish
+                              {session.direction === PracticeDirection.ChineseToEnglish
                                 ? "中文写英文"
                                 : "英文写中文"}
                             </Tag>
@@ -495,9 +467,7 @@ export const RecitePage: React.FC = () => {
                             size="small"
                             onClick={() => toggleSession(session.sessionId)}
                           >
-                            {expandedSessions.includes(session.sessionId)
-                              ? "收起详情"
-                              : "展开详情"}
+                            {expandedSessions.includes(session.sessionId) ? "收起详情" : "展开详情"}
                           </Button>
                         </div>
                         <Row gutter={16}>
@@ -541,8 +511,8 @@ export const RecitePage: React.FC = () => {
                                   session.accuracy >= 80
                                     ? "#3f8600"
                                     : session.accuracy >= 60
-                                    ? "#faad14"
-                                    : "#cf1322",
+                                      ? "#faad14"
+                                      : "#cf1322",
                                 fontSize: "16px",
                               }}
                             />
@@ -571,10 +541,7 @@ export const RecitePage: React.FC = () => {
                                     {word.englishWord}
                                   </Text>
                                   {word.isCorrect ? (
-                                    <Tag
-                                      color="success"
-                                      icon={<CheckOutlined />}
-                                    >
+                                    <Tag color="success" icon={<CheckOutlined />}>
                                       正确
                                     </Tag>
                                   ) : (
@@ -622,8 +589,8 @@ export const RecitePage: React.FC = () => {
                       上一页
                     </Button>
                     <Text>
-                      第 {historyPage} 页，共 {Math.ceil(historyTotal / 10)}{" "}
-                      页（共 {historyTotal} 次默写）
+                      第 {historyPage} 页，共 {Math.ceil(historyTotal / 10)} 页（共 {historyTotal}{" "}
+                      次默写）
                     </Text>
                     <Button
                       disabled={historyPage >= Math.ceil(historyTotal / 10)}
@@ -657,10 +624,7 @@ export const RecitePage: React.FC = () => {
                   <Title level={4}>总体统计</Title>
                   <Row gutter={16}>
                     <Col span={6}>
-                      <Statistic
-                        title="总题数"
-                        value={stats.statistics.totalCount}
-                      />
+                      <Statistic title="总题数" value={stats.statistics.totalCount} />
                     </Col>
                     <Col span={6}>
                       <Statistic
@@ -687,8 +651,8 @@ export const RecitePage: React.FC = () => {
                             stats.statistics.accuracy >= 80
                               ? "#3f8600"
                               : stats.statistics.accuracy >= 60
-                              ? "#faad14"
-                              : "#cf1322",
+                                ? "#faad14"
+                                : "#cf1322",
                         }}
                       />
                     </Col>
@@ -703,10 +667,7 @@ export const RecitePage: React.FC = () => {
                         <div className="mb-2">
                           <Tag color="blue">中文写英文</Tag>
                         </div>
-                        <Statistic
-                          title="总题数"
-                          value={stats.directionStats["0"]?.total || 0}
-                        />
+                        <Statistic title="总题数" value={stats.directionStats["0"]?.total || 0} />
                         <Statistic
                           title="正确数"
                           value={stats.directionStats["0"]?.correct || 0}
@@ -725,10 +686,7 @@ export const RecitePage: React.FC = () => {
                         <div className="mb-2">
                           <Tag color="purple">英文写中文</Tag>
                         </div>
-                        <Statistic
-                          title="总题数"
-                          value={stats.directionStats["1"]?.total || 0}
-                        />
+                        <Statistic title="总题数" value={stats.directionStats["1"]?.total || 0} />
                         <Statistic
                           title="正确数"
                           value={stats.directionStats["1"]?.correct || 0}

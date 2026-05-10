@@ -7,12 +7,7 @@ import React, {
   useCallback,
 } from "react";
 import { useMutation } from "@font/api";
-import {
-  getCurrentUser,
-  userLogin,
-  userLogout,
-  userRegister,
-} from "@/server/user/user";
+import { getCurrentUser, userLogin, userLogout, userRegister } from "@/server/user/user";
 import type { UserInfo, LoginResponse } from "@/server/user/user.type";
 import { message } from "antd";
 
@@ -27,11 +22,7 @@ interface AuthContextType {
   loading: boolean;
   isAuthenticated: boolean;
   login: (username: string, password: string) => Promise<UserInfo>;
-  register: (
-    username: string,
-    password: string,
-    avatar?: string
-  ) => Promise<UserInfo>;
+  register: (username: string, password: string, avatar?: string) => Promise<UserInfo>;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
 }
@@ -111,10 +102,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, [checkCurrentUser]);
 
-  const login = async (
-    username: string,
-    password: string
-  ): Promise<UserInfo> => {
+  const login = async (username: string, password: string): Promise<UserInfo> => {
     const result = await loginMutation({ username, password });
     return result.user;
   };
@@ -122,7 +110,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const register = async (
     username: string,
     password: string,
-    avatar?: string
+    avatar?: string,
   ): Promise<UserInfo> => {
     const result = await registerMutation({ username, password, avatar });
     return result;
@@ -146,7 +134,5 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     checkAuth,
   };
 
-  return (
-    <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

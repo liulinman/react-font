@@ -71,8 +71,7 @@ export const EditAddModal = (props: Props) => {
   const handleModalOk = async () => {
     try {
       const value = await form.validateFields();
-      const values =
-        type === "add" ? value : { ...value, id: currentRecord?.id };
+      const values = type === "add" ? value : { ...value, id: currentRecord?.id };
 
       const result = await Promise.resolve(onOk({ ...values }, type));
       // 仅当添加成功（返回 true）时清空表单，避免「单词已存在」等失败时把用户输入清空
@@ -187,12 +186,12 @@ export const EditAddModal = (props: Props) => {
       {/* 编辑/添加表单 */}
       <Form form={form} onValuesChange={onValuesChange} layout="vertical">
         {/* 第一行：单词名 + 掌握程度 */}
-        <div style={{ display: "flex", gap: "16px" }}>
+        <div className="flex gap-4">
           <Form.Item
             label="单词名"
             name="englishWord"
             rules={[{ required: true, message: "请输入单词名" }]}
-            style={{ flex: 1 }}
+            className="flex-1"
           >
             <Input allowClear />
           </Form.Item>
@@ -200,19 +199,19 @@ export const EditAddModal = (props: Props) => {
             label="掌握程度"
             name="englishLevel"
             rules={[{ required: true, message: "请选择掌握程度" }]}
-            style={{ flex: 1 }}
+            className="flex-1"
           >
             <Select options={enumToOptions(EnglishAbsorb)} />
           </Form.Item>
         </div>
 
         {/* 第二行：类型 + 音标 */}
-        <div style={{ display: "flex", gap: "16px" }}>
+        <div className="flex gap-4">
           <Form.Item
             label="类型"
             name="englishType"
             rules={[{ required: true, message: "请选择类型" }]}
-            style={{ flex: 1 }}
+            className="flex-1"
           >
             <Select options={enumToOptions(EnglishType)} allowClear />
           </Form.Item>
@@ -223,7 +222,7 @@ export const EditAddModal = (props: Props) => {
 
         {/* 词性 - 独立一行 */}
         <Form.Item label="词性" name="englishPartSpeech">
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+          <div className="flex flex-wrap gap-2">
             {partSpeechOptions.map((option) => {
               const isSelected = selectedPartSpeech.includes(option.value);
 
@@ -250,9 +249,7 @@ export const EditAddModal = (props: Props) => {
                   style={{
                     padding: "4px 12px",
                     fontSize: "14px",
-                    border: isSelected
-                      ? `1px solid ${bgColor}`
-                      : "1px solid #d9d9d9",
+                    border: isSelected ? `1px solid ${bgColor}` : "1px solid #d9d9d9",
                     borderRadius: "4px",
                     cursor: "pointer",
                     backgroundColor: isSelected ? bgColor : "transparent",

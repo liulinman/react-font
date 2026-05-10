@@ -1,10 +1,7 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
-  content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
-  ],
+  content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
     extend: {
       // 可以在这里扩展主题，比如自定义颜色、间距等
@@ -22,4 +19,3 @@ const config: Config = {
 };
 
 export default config;
-

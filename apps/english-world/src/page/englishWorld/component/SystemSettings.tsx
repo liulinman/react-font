@@ -61,13 +61,13 @@ export const getSystemSettings = async (): Promise<SystemSettings> => {
         proficiencyLevels: Array.isArray(value.proficiencyLevels)
           ? value.proficiencyLevels
           : value.proficiencyLevel != null
-          ? [value.proficiencyLevel as number]
-          : DEFAULT_SETTINGS.wordDictation.proficiencyLevels,
+            ? [value.proficiencyLevel as number]
+            : DEFAULT_SETTINGS.wordDictation.proficiencyLevels,
         types: Array.isArray(value.types)
           ? value.types
           : value.type !== undefined
-          ? [value.type as number]
-          : DEFAULT_SETTINGS.wordDictation.types,
+            ? [value.type as number]
+            : DEFAULT_SETTINGS.wordDictation.types,
         direction:
           value.direction !== undefined
             ? (value.direction as PracticeDirection)
@@ -85,13 +85,13 @@ export const getSystemSettings = async (): Promise<SystemSettings> => {
         proficiencyLevels: Array.isArray(value.proficiencyLevels)
           ? value.proficiencyLevels
           : value.proficiencyLevel != null
-          ? [value.proficiencyLevel as number]
-          : DEFAULT_SETTINGS.wordListening.proficiencyLevels,
+            ? [value.proficiencyLevel as number]
+            : DEFAULT_SETTINGS.wordListening.proficiencyLevels,
         types: Array.isArray(value.types)
           ? value.types
           : value.type !== undefined
-          ? [value.type as number]
-          : DEFAULT_SETTINGS.wordListening.types,
+            ? [value.type as number]
+            : DEFAULT_SETTINGS.wordListening.types,
         direction:
           value.direction !== undefined
             ? (value.direction as PracticeDirection)
@@ -109,9 +109,7 @@ export const getSystemSettings = async (): Promise<SystemSettings> => {
 /**
  * 保存配置到后端
  */
-export const saveSystemSettings = async (
-  settings: SystemSettings
-): Promise<boolean> => {
+export const saveSystemSettings = async (settings: SystemSettings): Promise<boolean> => {
   try {
     // 使用批量设置接口
     const configs = [
@@ -160,10 +158,7 @@ type SystemSettingsProps = {
   onClose: () => void;
 };
 
-export const SystemSettings: React.FC<SystemSettingsProps> = ({
-  visible,
-  onClose,
-}) => {
+export const SystemSettings: React.FC<SystemSettingsProps> = ({ visible, onClose }) => {
   const [form] = Form.useForm<SystemSettings>();
   const [loading, setLoading] = useState(false);
 
@@ -276,12 +271,7 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({
             ]}
             tooltip="单词库中的单词总数"
           >
-            <InputNumber
-              style={{ width: "100%" }}
-              placeholder="请输入单词个数"
-              min={1}
-              max={500}
-            />
+            <InputNumber style={{ width: "100%" }} placeholder="请输入单词个数" min={1} max={500} />
           </Form.Item>
         </Card>
 

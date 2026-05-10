@@ -18,8 +18,7 @@ export interface YTRequest<T = unknown> {
   __responseType?: T;
 }
 
-const API_BASE =
-  process.env.NODE_ENV === "development" ? "/api" : "http://47.108.140.63:3001";
+const API_BASE = process.env.NODE_ENV === "development" ? "/api" : "http://47.108.140.63:3001";
 
 /** 供 fetch 等非 axios 请求使用（如 SSE 流式接口） */
 export const getApiBaseUrl = () => API_BASE;
@@ -39,8 +38,7 @@ let lastErrorMsg: string | null = null;
 let lastErrorTime = 0;
 function showErrorOnce(msg: string) {
   const now = Date.now();
-  if (msg && msg === lastErrorMsg && now - lastErrorTime < DEDUP_SEC * 1000)
-    return;
+  if (msg && msg === lastErrorMsg && now - lastErrorTime < DEDUP_SEC * 1000) return;
   lastErrorMsg = msg;
   lastErrorTime = now;
   message.error(msg || "请求失败");
@@ -68,11 +66,7 @@ api.interceptors.response.use(
     console.log(error);
 
     // 处理 CORS 错误
-    if (
-      error.code === "ERR_NETWORK" ||
-      error.message?.includes("CORS") ||
-      !error.response
-    ) {
+    if (error.code === "ERR_NETWORK" || error.message?.includes("CORS") || !error.response) {
       // CORS 错误或网络错误，不显示错误消息（可能是后端未启动或 CORS 未配置）
       console.warn("CORS or Network Error:", error.message);
       return Promise.reject({
@@ -154,13 +148,9 @@ export const useRequestQuery = <
   TResponse = ExtractResponseType<TRequest>,
 >(
   ytRequest: TRequest | (() => TRequest),
-  options?: Omit<
-    UseQueryOptions<TResponse, Error, TResponse, QueryKey>,
-    "queryKey" | "queryFn"
-  >,
+  options?: Omit<UseQueryOptions<TResponse, Error, TResponse, QueryKey>, "queryKey" | "queryFn">,
 ) => {
-  const requestConfig =
-    typeof ytRequest === "function" ? ytRequest() : ytRequest;
+  const requestConfig = typeof ytRequest === "function" ? ytRequest() : ytRequest;
 
   return useQuery<TResponse, Error>({
     queryKey: [requestConfig.url, requestConfig.data],
@@ -181,16 +171,11 @@ export function useMutation<
   options?: UseMutationOptions<
     ReturnType<TRequestFn> extends YTRequest<infer R> ? R : never,
     Error,
-    Parameters<TRequestFn>["length"] extends 0
-      ? void
-      : Parameters<TRequestFn>[0]
+    Parameters<TRequestFn>["length"] extends 0 ? void : Parameters<TRequestFn>[0]
   >,
 ) {
-  type TResponse =
-    ReturnType<TRequestFn> extends YTRequest<infer R> ? R : never;
-  type TVariables = Parameters<TRequestFn>["length"] extends 0
-    ? void
-    : Parameters<TRequestFn>[0];
+  type TResponse = ReturnType<TRequestFn> extends YTRequest<infer R> ? R : never;
+  type TVariables = Parameters<TRequestFn>["length"] extends 0 ? void : Parameters<TRequestFn>[0];
 
   const mutationResult = _useMutation<TResponse, Error, TVariables>({
     mutationFn: async (data?: TVariables) => {
@@ -201,9 +186,7 @@ export function useMutation<
         return fetchRequest<TResponse>(requestConfig);
       } else {
         // 有参数函数
-        const requestConfig = (
-          requestFn as (data: unknown) => YTRequest<TResponse>
-        )(data);
+        const requestConfig = (requestFn as (data: unknown) => YTRequest<TResponse>)(data);
         return fetchRequest<TResponse>(requestConfig);
       }
     },

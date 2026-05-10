@@ -5,7 +5,7 @@
  */
 export const enumToOptions = (
   enumObj: Record<string, string | number>,
-  omitValue?: Array<string | number>
+  omitValue?: Array<string | number>,
 ) => {
   return Object.entries(enumObj)
     .map(([key, value]) => {

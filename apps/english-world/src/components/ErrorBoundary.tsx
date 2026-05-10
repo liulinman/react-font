@@ -36,9 +36,7 @@ export class ErrorBoundary extends Component<Props, State> {
             justifyContent: "center",
           }}
         >
-          <div style={{ color: "#ff4d4f", marginBottom: 12, fontWeight: 600 }}>
-            页面加载出错
-          </div>
+          <div style={{ color: "#ff4d4f", marginBottom: 12, fontWeight: 600 }}>页面加载出错</div>
           <pre
             style={{
               fontSize: 12,

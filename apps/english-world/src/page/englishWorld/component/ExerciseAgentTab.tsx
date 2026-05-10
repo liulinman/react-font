@@ -1,25 +1,8 @@
 import React, { useState } from "react";
-import {
-  Button,
-  Card,
-  Form,
-  Input,
-  InputNumber,
-  message,
-  Radio,
-  Select,
-  Spin,
-} from "antd";
-import {
-  BookOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-} from "@ant-design/icons";
+import { Button, Card, Form, Input, InputNumber, message, Radio, Select, Spin } from "antd";
+import { BookOutlined, CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons";
 import request, { getApiBaseUrl } from "@font/api";
-import {
-  exerciseGenerate,
-  exerciseSubmit,
-} from "@/server/exerciseAgent/exerciseAgent";
+import { exerciseGenerate, exerciseSubmit } from "@/server/exerciseAgent/exerciseAgent";
 import type {
   ExerciseGenerateParams,
   ExerciseGenerateResponse,
@@ -46,10 +29,7 @@ export const ExerciseAgentTab: React.FC = () => {
   const handleGenerate = async () => {
     try {
       const values = await form.validateFields();
-      const sourceType = values.sourceType as
-        | "proficiency"
-        | "random"
-        | "custom";
+      const sourceType = values.sourceType as "proficiency" | "random" | "custom";
 
       let params: ExerciseGenerateParams;
       if (sourceType === "proficiency") {
@@ -118,10 +98,7 @@ export const ExerciseAgentTab: React.FC = () => {
             try {
               const obj = JSON.parse(payload) as {
                 type?: string;
-                data?:
-                  | string
-                  | ExerciseGenerateResponse
-                  | { data?: ExerciseGenerateResponse };
+                data?: string | ExerciseGenerateResponse | { data?: ExerciseGenerateResponse };
               };
               if (obj.type === "chunk" && typeof obj.data === "string") {
                 jsonAccum += obj.data;
@@ -150,11 +127,7 @@ export const ExerciseAgentTab: React.FC = () => {
             if (obj.type === "chunk" && typeof obj.data === "string") {
               jsonAccum += obj.data;
               setStreamingChunk((prev) => prev + obj.data);
-            } else if (
-              obj.type === "done" &&
-              obj.data != null &&
-              typeof obj.data === "object"
-            )
+            } else if (obj.type === "done" && obj.data != null && typeof obj.data === "object")
               doneData = obj.data as ExerciseGenerateResponse;
           } catch {
             // ignore
@@ -194,9 +167,7 @@ export const ExerciseAgentTab: React.FC = () => {
         setQuestions(data.questions ?? []);
         message.success("练习已生成");
       } else {
-        const data = await request<ExerciseGenerateResponse>(
-          exerciseGenerate(params),
-        );
+        const data = await request<ExerciseGenerateResponse>(exerciseGenerate(params));
         setSessionId(data.sessionId);
         setArticle(data.article ?? "");
         setWords(data.words ?? []);
@@ -236,8 +207,7 @@ export const ExerciseAgentTab: React.FC = () => {
             const key = keys[i];
             const selectedIndex = Number(answers[key]);
             return {
-              questionId:
-                q?.id != null && String(q.id).trim() !== "" ? q.id : key,
+              questionId: q?.id != null && String(q.id).trim() !== "" ? q.id : key,
               selectedIndex: Number.isNaN(selectedIndex) ? 0 : selectedIndex,
             };
           }),
@@ -257,8 +227,7 @@ export const ExerciseAgentTab: React.FC = () => {
   const getQuestionKey = (q: ExerciseQuestion, idx: number) =>
     q?.id != null && String(q.id).trim() !== "" ? String(q.id) : `q-${idx}`;
 
-  const getResult = (questionId: string) =>
-    results?.find((r) => r.questionId === questionId);
+  const getResult = (questionId: string) => results?.find((r) => r.questionId === questionId);
 
   return (
     <div style={{ maxWidth: 920, margin: "0 auto", padding: "0 16px" }}>
@@ -334,11 +303,7 @@ export const ExerciseAgentTab: React.FC = () => {
             count: 8,
           }}
         >
-          <Form.Item
-            label="选题方式"
-            name="sourceType"
-            rules={[{ required: true }]}
-          >
+          <Form.Item label="选题方式" name="sourceType" rules={[{ required: true }]}>
             <Select
               options={[
                 { value: "proficiency", label: "按熟练度筛选" },
@@ -348,10 +313,7 @@ export const ExerciseAgentTab: React.FC = () => {
             />
           </Form.Item>
 
-          <Form.Item
-            noStyle
-            shouldUpdate={(prev, cur) => prev.sourceType !== cur.sourceType}
-          >
+          <Form.Item noStyle shouldUpdate={(prev, cur) => prev.sourceType !== cur.sourceType}>
             {({ getFieldValue }) => {
               const st = getFieldValue("sourceType");
               if (st === "proficiency") {
@@ -360,9 +322,7 @@ export const ExerciseAgentTab: React.FC = () => {
                     <Form.Item
                       label="熟练度"
                       name="proficiencyLevels"
-                      rules={[
-                        { required: true, message: "请选择至少一个熟练度" },
-                      ]}
+                      rules={[{ required: true, message: "请选择至少一个熟练度" }]}
                     >
                       <Select
                         mode="multiple"
@@ -420,10 +380,7 @@ export const ExerciseAgentTab: React.FC = () => {
                     },
                   ]}
                 >
-                  <Input.TextArea
-                    placeholder="例如：fake, confront, habitat, reluctant"
-                    rows={3}
-                  />
+                  <Input.TextArea placeholder="例如：fake, confront, habitat, reluctant" rows={3} />
                 </Form.Item>
               );
             }}
@@ -464,9 +421,7 @@ export const ExerciseAgentTab: React.FC = () => {
               boxShadow: "0 2px 12px rgba(102, 126, 234, 0.1)",
             }}
           >
-            <div style={{ marginBottom: 12, color: "#667eea", fontWeight: 600 }}>
-              AI 正在生成…
-            </div>
+            <div style={{ marginBottom: 12, color: "#667eea", fontWeight: 600 }}>AI 正在生成…</div>
             <pre
               style={{
                 margin: 0,
@@ -525,9 +480,7 @@ export const ExerciseAgentTab: React.FC = () => {
                   {article}
                 </div>
                 {words.length > 0 && (
-                  <div
-                    style={{ marginTop: 12, fontSize: 13, color: "#64748b" }}
-                  >
+                  <div style={{ marginTop: 12, fontSize: 13, color: "#64748b" }}>
                     涉及词汇：{words.join("、")}
                   </div>
                 )}
@@ -535,11 +488,7 @@ export const ExerciseAgentTab: React.FC = () => {
             ) : null}
 
             <div style={{ marginTop: 24 }}>
-              <div
-                style={{ fontWeight: 600, marginBottom: 16, color: "#334155" }}
-              >
-                选择题
-              </div>
+              <div style={{ fontWeight: 600, marginBottom: 16, color: "#334155" }}>选择题</div>
               {questions.map((q, idx) => {
                 const qKey = getQuestionKey(q, idx);
                 const result = getResult(q.id ?? qKey);
@@ -549,18 +498,12 @@ export const ExerciseAgentTab: React.FC = () => {
                     size="small"
                     style={{
                       marginBottom: 16,
-                      borderColor: result
-                        ? result.correct
-                          ? "#52c41a"
-                          : "#ff4d4f"
-                        : undefined,
+                      borderColor: result ? (result.correct ? "#52c41a" : "#ff4d4f") : undefined,
                       borderWidth: result ? 2 : 1,
                     }}
                   >
                     <div style={{ marginBottom: 12 }}>
-                      <span style={{ color: "#64748b", marginRight: 8 }}>
-                        {idx + 1}.
-                      </span>
+                      <span style={{ color: "#64748b", marginRight: 8 }}>{idx + 1}.</span>
                       {result && (
                         <span style={{ marginRight: 8 }}>
                           {result.correct ? (
@@ -590,9 +533,7 @@ export const ExerciseAgentTab: React.FC = () => {
                             {result &&
                               result.correctIndex === i &&
                               result.userSelectedIndex !== i && (
-                                <span
-                                  style={{ color: "#52c41a", marginLeft: 8 }}
-                                >
+                                <span style={{ color: "#52c41a", marginLeft: 8 }}>
                                   （正确答案）
                                 </span>
                               )}
@@ -629,8 +570,7 @@ export const ExerciseAgentTab: React.FC = () => {
                   loading={submitting}
                   disabled={sessionId == null || questions.length === 0}
                   style={{
-                    background:
-                      "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
                     border: "none",
                     borderRadius: 12,
                   }}

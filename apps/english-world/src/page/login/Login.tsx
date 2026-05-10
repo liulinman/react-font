@@ -3,7 +3,7 @@ import { Form, Input, Button, Card, Tabs, message } from "antd";
 import { UserOutlined, LockOutlined } from "@ant-design/icons";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import "./Login.css";
+import { useLoginStyles } from "./login.styles";
 
 const { TabPane } = Tabs;
 
@@ -12,6 +12,7 @@ const Login: React.FC = () => {
   const location = useLocation();
   const { login, register, isAuthenticated } = useAuth();
   const [loading, setLoading] = useState(false);
+  const { styles } = useLoginStyles();
   const [activeTab, setActiveTab] = useState<string>("login");
 
   // 如果已登录，跳转到原页面或首页
@@ -23,10 +24,7 @@ const Login: React.FC = () => {
   }, [isAuthenticated, navigate, location]);
 
   // 登录表单提交
-  const handleLogin = async (values: {
-    username: string;
-    password: string;
-  }) => {
+  const handleLogin = async (values: { username: string; password: string }) => {
     setLoading(true);
     try {
       await login(values.username, values.password);
@@ -67,8 +65,8 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="login-container">
-      <Card className="login-card" title="英语世界 · AI 单词">
+    <div className="min-h-screen flex justify-center items-center p-5 bg-gradient-to-br from-[#667eea] to-[#764ba2]">
+      <Card className={styles.card} title="英语世界 · AI 单词">
         <Tabs activeKey={activeTab} onChange={setActiveTab} centered>
           <TabPane tab="登录" key="login">
             <Form
@@ -85,10 +83,7 @@ const Login: React.FC = () => {
                   { min: 3, message: "用户名至少3个字符" },
                 ]}
               >
-                <Input
-                  prefix={<UserOutlined />}
-                  placeholder="用户名（至少3个字符）"
-                />
+                <Input prefix={<UserOutlined />} placeholder="用户名（至少3个字符）" />
               </Form.Item>
 
               <Form.Item
@@ -98,19 +93,11 @@ const Login: React.FC = () => {
                   { min: 6, message: "密码至少6个字符" },
                 ]}
               >
-                <Input.Password
-                  prefix={<LockOutlined />}
-                  placeholder="密码（至少6个字符）"
-                />
+                <Input.Password prefix={<LockOutlined />} placeholder="密码（至少6个字符）" />
               </Form.Item>
 
               <Form.Item>
-                <Button
-                  type="primary"
-                  htmlType="submit"
-                  block
-                  loading={loading}
-                >
+                <Button type="primary" htmlType="submit" block loading={loading}>
                   登录
                 </Button>
               </Form.Item>
@@ -132,10 +119,7 @@ const Login: React.FC = () => {
                   { min: 3, max: 20, message: "用户名长度为3-20个字符" },
                 ]}
               >
-                <Input
-                  prefix={<UserOutlined />}
-                  placeholder="用户名（3-20个字符）"
-                />
+                <Input prefix={<UserOutlined />} placeholder="用户名（3-20个字符）" />
               </Form.Item>
 
               <Form.Item
@@ -145,10 +129,7 @@ const Login: React.FC = () => {
                   { min: 6, message: "密码至少6个字符" },
                 ]}
               >
-                <Input.Password
-                  prefix={<LockOutlined />}
-                  placeholder="密码（至少6个字符）"
-                />
+                <Input.Password prefix={<LockOutlined />} placeholder="密码（至少6个字符）" />
               </Form.Item>
 
               <Form.Item
@@ -166,10 +147,7 @@ const Login: React.FC = () => {
                   }),
                 ]}
               >
-                <Input.Password
-                  prefix={<LockOutlined />}
-                  placeholder="确认密码"
-                />
+                <Input.Password prefix={<LockOutlined />} placeholder="确认密码" />
               </Form.Item>
 
               <Form.Item name="avatar">
@@ -177,12 +155,7 @@ const Login: React.FC = () => {
               </Form.Item>
 
               <Form.Item>
-                <Button
-                  type="primary"
-                  htmlType="submit"
-                  block
-                  loading={loading}
-                >
+                <Button type="primary" htmlType="submit" block loading={loading}>
                   注册
                 </Button>
               </Form.Item>

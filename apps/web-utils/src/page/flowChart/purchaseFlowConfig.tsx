@@ -1,7 +1,4 @@
-import {
-  FlowNodeConfig,
-  FlowEdgeConfig,
-} from "@/components/FlowChart/FlowChart";
+import { FlowNodeConfig, FlowEdgeConfig } from "@/components/FlowChart/FlowChart";
 
 export const purchaseNodes: FlowNodeConfig[] = [
   // 采购订单

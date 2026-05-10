@@ -31,10 +31,7 @@ export const SystemSettingsPage: React.FC = () => {
   const navigate = useNavigate();
   const [form] = Form.useForm<SystemSettings>();
   const [loading, setLoading] = useState(false);
-  const [activeKey, setActiveKey] = useState<string | string[]>([
-    "wordDictation",
-    "wordListening",
-  ]);
+  const [activeKey, setActiveKey] = useState<string | string[]>(["wordDictation", "wordListening"]);
 
   // 处理导航点击
   const handleNavClick = (key: string) => {
@@ -142,9 +139,7 @@ export const SystemSettingsPage: React.FC = () => {
         }}
       >
         <Card
-          title={
-            <span style={{ fontSize: "20px", fontWeight: 600 }}>系统设置</span>
-          }
+          title={<span style={{ fontSize: "20px", fontWeight: 600 }}>系统设置</span>}
           extra={
             <Space>
               <Button onClick={handleReset}>重置默认</Button>
@@ -186,11 +181,7 @@ export const SystemSettingsPage: React.FC = () => {
             >
               {/* 单词默写配置模块 */}
               <Panel
-                header={
-                  <span style={{ fontSize: "16px", fontWeight: 500 }}>
-                    单词默写配置
-                  </span>
-                }
+                header={<span style={{ fontSize: "16px", fontWeight: 500 }}>单词默写配置</span>}
                 key="wordDictation"
                 style={{
                   marginBottom: 0,
@@ -201,11 +192,7 @@ export const SystemSettingsPage: React.FC = () => {
               >
                 <div style={{ padding: "8px 0" }}>
                   <Form.Item
-                    label={
-                      <span style={{ fontSize: "14px", fontWeight: 500 }}>
-                        单词默写数量
-                      </span>
-                    }
+                    label={<span style={{ fontSize: "14px", fontWeight: 500 }}>单词默写数量</span>}
                     name={["wordDictation", "dictationCount"]}
                     rules={[
                       { required: true, message: "请输入单词默写数量" },
@@ -229,11 +216,7 @@ export const SystemSettingsPage: React.FC = () => {
                   </Form.Item>
 
                   <Form.Item
-                    label={
-                      <span style={{ fontSize: "14px", fontWeight: 500 }}>
-                        熟练程度
-                      </span>
-                    }
+                    label={<span style={{ fontSize: "14px", fontWeight: 500 }}>熟练程度</span>}
                     name={["wordDictation", "proficiencyLevels"]}
                     rules={[
                       {
@@ -255,8 +238,7 @@ export const SystemSettingsPage: React.FC = () => {
                     >
                       {proficiencyOptions.map((option) => {
                         const levelValue = option.value as number;
-                        const color =
-                          proficiencyColors[levelValue] || "#d9d9d9";
+                        const color = proficiencyColors[levelValue] || "#d9d9d9";
                         return (
                           <Checkbox
                             key={levelValue}
@@ -288,11 +270,7 @@ export const SystemSettingsPage: React.FC = () => {
                   </Form.Item>
 
                   <Form.Item
-                    label={
-                      <span style={{ fontSize: "14px", fontWeight: 500 }}>
-                        默写类型
-                      </span>
-                    }
+                    label={<span style={{ fontSize: "14px", fontWeight: 500 }}>默写类型</span>}
                     name={["wordDictation", "types"]}
                     rules={[
                       {
@@ -346,22 +324,14 @@ export const SystemSettingsPage: React.FC = () => {
                   </Form.Item>
 
                   <Form.Item
-                    label={
-                      <span style={{ fontSize: "14px", fontWeight: 500 }}>
-                        练习方向
-                      </span>
-                    }
+                    label={<span style={{ fontSize: "14px", fontWeight: 500 }}>练习方向</span>}
                     name={["wordDictation", "direction"]}
                     rules={[{ required: true, message: "请选择练习方向" }]}
                     tooltip="选择是根据中文写英文，还是根据英文写中文"
                   >
                     <Radio.Group>
-                      <Radio value={PracticeDirection.ChineseToEnglish}>
-                        中文写英文
-                      </Radio>
-                      <Radio value={PracticeDirection.EnglishToChinese}>
-                        英文写中文
-                      </Radio>
+                      <Radio value={PracticeDirection.ChineseToEnglish}>中文写英文</Radio>
+                      <Radio value={PracticeDirection.EnglishToChinese}>英文写中文</Radio>
                     </Radio.Group>
                   </Form.Item>
                 </div>
@@ -369,11 +339,7 @@ export const SystemSettingsPage: React.FC = () => {
 
               {/* 单词听写配置模块 */}
               <Panel
-                header={
-                  <span style={{ fontSize: "16px", fontWeight: 500 }}>
-                    单词听写配置
-                  </span>
-                }
+                header={<span style={{ fontSize: "16px", fontWeight: 500 }}>单词听写配置</span>}
                 key="wordListening"
                 style={{
                   marginBottom: 0,
@@ -385,11 +351,7 @@ export const SystemSettingsPage: React.FC = () => {
               >
                 <div style={{ padding: "8px 0" }}>
                   <Form.Item
-                    label={
-                      <span style={{ fontSize: "14px", fontWeight: 500 }}>
-                        单词听写数量
-                      </span>
-                    }
+                    label={<span style={{ fontSize: "14px", fontWeight: 500 }}>单词听写数量</span>}
                     name={["wordListening", "dictationCount"]}
                     rules={[
                       { required: true, message: "请输入单词听写数量" },
@@ -413,11 +375,7 @@ export const SystemSettingsPage: React.FC = () => {
                   </Form.Item>
 
                   <Form.Item
-                    label={
-                      <span style={{ fontSize: "14px", fontWeight: 500 }}>
-                        熟练程度
-                      </span>
-                    }
+                    label={<span style={{ fontSize: "14px", fontWeight: 500 }}>熟练程度</span>}
                     name={["wordListening", "proficiencyLevels"]}
                     rules={[
                       {
@@ -439,8 +397,7 @@ export const SystemSettingsPage: React.FC = () => {
                     >
                       {proficiencyOptions.map((option) => {
                         const levelValue = option.value as number;
-                        const color =
-                          proficiencyColors[levelValue] || "#d9d9d9";
+                        const color = proficiencyColors[levelValue] || "#d9d9d9";
                         return (
                           <Checkbox
                             key={levelValue}
@@ -472,11 +429,7 @@ export const SystemSettingsPage: React.FC = () => {
                   </Form.Item>
 
                   <Form.Item
-                    label={
-                      <span style={{ fontSize: "14px", fontWeight: 500 }}>
-                        听写类型
-                      </span>
-                    }
+                    label={<span style={{ fontSize: "14px", fontWeight: 500 }}>听写类型</span>}
                     name={["wordListening", "types"]}
                     rules={[
                       {
@@ -530,22 +483,14 @@ export const SystemSettingsPage: React.FC = () => {
                   </Form.Item>
 
                   <Form.Item
-                    label={
-                      <span style={{ fontSize: "14px", fontWeight: 500 }}>
-                        练习方向
-                      </span>
-                    }
+                    label={<span style={{ fontSize: "14px", fontWeight: 500 }}>练习方向</span>}
                     name={["wordListening", "direction"]}
                     rules={[{ required: true, message: "请选择练习方向" }]}
                     tooltip="选择是根据中文写英文，还是根据英文写中文"
                   >
                     <Radio.Group>
-                      <Radio value={PracticeDirection.ChineseToEnglish}>
-                        中文写英文
-                      </Radio>
-                      <Radio value={PracticeDirection.EnglishToChinese}>
-                        英文写中文
-                      </Radio>
+                      <Radio value={PracticeDirection.ChineseToEnglish}>中文写英文</Radio>
+                      <Radio value={PracticeDirection.EnglishToChinese}>英文写中文</Radio>
                     </Radio.Group>
                   </Form.Item>
                 </div>

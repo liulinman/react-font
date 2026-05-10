@@ -27,9 +27,7 @@ export interface BatchSetResult {
   error?: string;
 }
 
-export const getConfig = (data: {
-  configKey: string;
-}): YTRequest<ConfigItem> => {
+export const getConfig = (data: { configKey: string }): YTRequest<ConfigItem> => {
   return {
     url: "/config/get",
     method: "POST",
@@ -68,9 +66,7 @@ export const batchSetConfigs = (data: {
   };
 };
 
-export const deleteConfig = (data: {
-  configKey: string;
-}): YTRequest<null> => {
+export const deleteConfig = (data: { configKey: string }): YTRequest<null> => {
   return {
     url: "/config/delete",
     method: "POST",

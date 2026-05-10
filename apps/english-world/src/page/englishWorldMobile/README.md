@@ -51,8 +51,8 @@ pnpm add antd-mobile antd-mobile-icons
 样式文件：`EnglishWorldMobile.css`
 
 主要特点：
+
 - 移动端适配的卡片布局
 - 响应式设计
 - 优化的间距和字体大小
 - 圆角和阴影效果
-

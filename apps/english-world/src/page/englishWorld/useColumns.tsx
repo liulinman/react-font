@@ -1,16 +1,7 @@
 import { WordList } from "@/server/word/word.type";
-import {
-  Button,
-  Popover,
-  Space,
-  TableProps,
-  Tag,
-  Tooltip,
-  Image,
-  Typography,
-} from "antd";
-import moment from "moment";
+import { Button, Popover, Space, TableProps, Tag, Tooltip, Image, Typography } from "antd";
 import { TagColor } from "./types";
+import { formatUtcTime, PART_SPEECH_MAP, WORD_TYPE_MAP, LEVEL_MAP } from "@/utils/formatters";
 import { DeleteFilled, EditFilled } from "@ant-design/icons";
 
 type Props = {
@@ -20,18 +11,48 @@ type Props = {
   pageSize: number;
 };
 
+export const CORE_COLUMN_KEYS = ["key", "englishWord", "englishChinese", "englishLevel", "action"];
+
+export const EXTRA_COLUMN_KEYS = [
+  "englishPhonetic",
+  "englishPartSpeech",
+  "englishImg",
+  "englishType",
+  "englishNote",
+  "englishReference",
+  "englishCreateTime",
+  "englishUpdateTime",
+];
+
+export const ALL_COLUMN_LABELS: Record<string, string> = {
+  key: "序号",
+  englishWord: "单词",
+  englishPhonetic: "音标",
+  englishPartSpeech: "词性",
+  englishChinese: "中文释义",
+  englishImg: "图片",
+  englishType: "类型",
+  englishNote: "笔记",
+  englishLevel: "掌握程度",
+  englishReference: "引用",
+  englishCreateTime: "创建时间",
+  englishUpdateTime: "更新时间",
+  action: "操作",
+};
+
+export function getRowClassName(record: WordList): string {
+  return `level-${record.englishLevel ?? 0}`;
+}
+
 const { Paragraph } = Typography;
 
 export const useColumns = (props: Props) => {
   const { handleEdit, handleDelete, page, pageSize } = props;
 
-  // 将换行符转换为 HTML 的 <br /> 标签
   const formatNote = (text?: string) => {
     if (text) {
       return (
-        <div
-          style={{ maxHeight: "400px", maxWidth: "800px", overflow: "auto" }}
-        >
+        <div className="max-h-[400px] max-w-[800px] overflow-auto">
           {text.split("\n").map((item, index) => (
             <span key={index}>
               {item}
@@ -40,9 +61,8 @@ export const useColumns = (props: Props) => {
           ))}
         </div>
       );
-    } else {
-      return null;
     }
+    return null;
   };
 
   const shouldShowTooltip = (text?: string, limit = 12) => {
@@ -59,7 +79,7 @@ export const useColumns = (props: Props) => {
       align: "center",
       render: (_text: number, _record: WordList, index: number) => {
         const serialNumber = (page - 1) * pageSize + index + 1;
-        return <span style={{ fontWeight: 500 }}>{serialNumber}</span>;
+        return <span className="font-medium">{serialNumber}</span>;
       },
     },
     {
@@ -73,7 +93,7 @@ export const useColumns = (props: Props) => {
           href={`https://www.baidu.com/s?wd=${encodeURIComponent(text)}`}
           target="_blank"
           rel="noopener noreferrer"
-          style={{ fontWeight: 600, color: "#1890ff", cursor: "pointer" }}
+          className="font-semibold text-blue-500 cursor-pointer"
           onClick={(e) => e.stopPropagation()}
         >
           {text}
@@ -86,11 +106,7 @@ export const useColumns = (props: Props) => {
       title: "音标",
       dataIndex: "englishPhonetic",
       key: "englishPhonetic",
-      render: (text: string) => (
-        <span style={{ color: "#666", fontStyle: "italic" }}>
-          {text || "-"}
-        </span>
-      ),
+      render: (text: string) => <span className="text-gray-500 italic">{text || "-"}</span>,
     },
     {
       width: 200,
@@ -100,50 +116,27 @@ export const useColumns = (props: Props) => {
       align: "left",
       render: (partSpeechList?: number[]) => {
         if (!partSpeechList || partSpeechList.length === 0) {
-          return <span style={{ color: "#ccc" }}>-</span>;
+          return <span className="text-gray-300">-</span>;
         }
 
-        const partSpeechMap: Record<number, { label: string; color: string }> =
-          {
-            1: { label: "动词", color: "blue" },
-            2: { label: "名词", color: "green" },
-            3: { label: "形容词", color: "orange" },
-            4: { label: "副词", color: "purple" },
-            5: { label: "代词", color: "red" },
-            6: { label: "介词", color: "cyan" },
-            7: { label: "连词", color: "volcano" },
-            8: { label: "感叹词", color: "magenta" },
-            9: { label: "未分类", color: "default" },
-          };
-
-        // 最多显示3个，超过的用 +N 表示
         const displayList = partSpeechList.slice(0, 3);
         const remainingCount = partSpeechList.length - 3;
 
-        const allTags = partSpeechList
-          .map((partSpeech) => {
-            const info = partSpeechMap[partSpeech];
-            return info?.label || "未知";
-          })
-          .join("、");
+        const allTags = partSpeechList.map((ps) => PART_SPEECH_MAP[ps]?.label || "未知").join("、");
 
         return (
           <Tooltip title={partSpeechList.length > 3 ? allTags : undefined}>
-            <Space size={2} wrap style={{ maxWidth: "100%" }}>
-              {displayList.map((partSpeech) => {
-                const info = partSpeechMap[partSpeech];
+            <Space size={2} wrap className="max-w-full">
+              {displayList.map((ps) => {
+                const info = PART_SPEECH_MAP[ps];
                 return (
-                  <Tag
-                    key={partSpeech}
-                    color={info?.color || "default"}
-                    style={{ margin: 0, fontSize: "12px" }}
-                  >
+                  <Tag key={ps} color={info?.color || "default"} className="m-0 text-xs">
                     {info?.label || "未知"}
                   </Tag>
                 );
               })}
               {remainingCount > 0 && (
-                <Tag color="default" style={{ margin: 0, fontSize: "12px" }}>
+                <Tag color="default" className="m-0 text-xs">
                   +{remainingCount}
                 </Tag>
               )}
@@ -161,10 +154,7 @@ export const useColumns = (props: Props) => {
       render: (englishChinese: string) =>
         (() => {
           const paragraph = (
-            <Paragraph
-              style={{ marginBottom: 0, maxWidth: 180 }}
-              ellipsis={{ rows: 2, tooltip: false }}
-            >
+            <Paragraph className="mb-0 max-w-[180px]" ellipsis={{ rows: 2, tooltip: false }}>
               {englishChinese || "-"}
             </Paragraph>
           );
@@ -186,16 +176,9 @@ export const useColumns = (props: Props) => {
       align: "center",
       render: (value?: string) => {
         if (value) {
-          return (
-            <Image
-              src={value}
-              width={40}
-              height={40}
-              style={{ borderRadius: "4px", objectFit: "cover" }}
-            />
-          );
+          return <Image src={value} width={40} height={40} className="rounded object-cover" />;
         } else {
-          return <span style={{ color: "#ccc" }}>-</span>;
+          return <span className="text-gray-300">-</span>;
         }
       },
     },
@@ -206,13 +189,8 @@ export const useColumns = (props: Props) => {
       key: "englishType",
       align: "center",
       render: (level: number) => {
-        const types = [
-          { label: "单词", color: "blue" },
-          { label: "短语", color: "green" },
-          { label: "句子", color: "orange" },
-        ];
-        const type = types[level];
-        return <Tag color={type.color}>{type.label}</Tag>;
+        const type = WORD_TYPE_MAP[level];
+        return <Tag color={type?.color}>{type?.label}</Tag>;
       },
     },
     {
@@ -224,18 +202,14 @@ export const useColumns = (props: Props) => {
       render: (text: string) => {
         if (text) {
           return (
-            <Popover
-              content={formatNote(text)}
-              title="笔记内容"
-              trigger="hover"
-            >
+            <Popover content={formatNote(text)} title="笔记内容" trigger="hover">
               <Button type="link" size="small">
                 查看笔记
               </Button>
             </Popover>
           );
         } else {
-          return <span style={{ color: "#ccc" }}>无</span>;
+          return <span className="text-gray-300">无</span>;
         }
       },
     },
@@ -246,18 +220,9 @@ export const useColumns = (props: Props) => {
       key: "englishLevel",
       align: "center",
       render: (level: number) => {
-        const levels = [
-          { label: "不会", color: "red" },
-          { label: "一般", color: "orange" },
-          { label: "熟练", color: "blue" },
-          { label: "精通", color: "green" },
-        ];
-        const currentLevel = levels[level];
-        const color = TagColor[level];
-
-        return (
-          <Tag color={color || currentLevel.color}>{currentLevel.label}</Tag>
-        );
+        const info = LEVEL_MAP[level] || LEVEL_MAP[0];
+        const color = TagColor[level] || info.color;
+        return <Tag color={color}>{info.label}</Tag>;
       },
     },
     {
@@ -268,8 +233,7 @@ export const useColumns = (props: Props) => {
       ellipsis: true,
       render: (text: string) => {
         // 检查是否是 URL
-        const isUrl =
-          text && (text.startsWith("http://") || text.startsWith("https://"));
+        const isUrl = text && (text.startsWith("http://") || text.startsWith("https://"));
 
         return (
           <Tooltip title={text} placement="topLeft">
@@ -278,13 +242,13 @@ export const useColumns = (props: Props) => {
                 href={text}
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{ color: "#1677ff", textDecoration: "underline" }}
+                className="text-blue-600 underline"
                 onClick={(e) => e.stopPropagation()}
               >
                 {text}
               </a>
             ) : (
-              <span style={{ color: "#666" }}>{text || "-"}</span>
+              <span className="text-gray-500">{text || "-"}</span>
             )}
           </Tooltip>
         );
@@ -296,11 +260,7 @@ export const useColumns = (props: Props) => {
       dataIndex: "englishCreateTime",
       key: "englishCreateTime",
       render: (utcTime: string) => {
-        return (
-          <span style={{ color: "#666", fontSize: "13px" }}>
-            {moment(utcTime).local().format("YYYY-MM-DD")}
-          </span>
-        );
+        return <span className="text-gray-500 text-[13px]">{formatUtcTime(utcTime)}</span>;
       },
     },
     {
@@ -309,11 +269,7 @@ export const useColumns = (props: Props) => {
       dataIndex: "englishUpdateTime",
       key: "englishUpdateTime",
       render: (utcTime: string) => {
-        return (
-          <span style={{ color: "#666", fontSize: "13px" }}>
-            {moment(utcTime).local().format("YYYY-MM-DD")}
-          </span>
-        );
+        return <span className="text-gray-500 text-[13px]">{formatUtcTime(utcTime)}</span>;
       },
     },
     {
@@ -329,7 +285,7 @@ export const useColumns = (props: Props) => {
             size="small"
             onClick={() => handleEdit(record)}
             icon={<EditFilled />}
-            style={{ padding: "0 8px" }}
+            className="px-2"
           >
             编辑
           </Button>
@@ -339,7 +295,7 @@ export const useColumns = (props: Props) => {
             size="small"
             onClick={() => handleDelete(record.id)}
             icon={<DeleteFilled />}
-            style={{ padding: "0 8px" }}
+            className="px-2"
           >
             删除
           </Button>

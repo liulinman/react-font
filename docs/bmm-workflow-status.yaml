@@ -1,0 +1,33 @@
+version: "6.0.0"
+project_name: "react-font-refactor"
+project_type: "refactoring"
+project_level: 1
+output_folder: "docs"
+last_updated: "2026-05-09"
+
+workflow_status:
+  brainstorm:
+    status: "docs/brainstorming-refactor-2026-05-09.md"
+    completed: "2026-05-09"
+
+  tech-spec:
+    status: "docs/tech-spec-refactor-2026-05-09.md"
+    completed: "2026-05-09"
+
+  implementation:
+    status: "completed"
+    completed: "2026-05-09"
+
+phases:
+  - name: "基础设施"
+    status: "completed"
+    stories: ["Prettier + lint-staged + husky"]
+  - name: "样式架构"
+    status: "completed"
+    stories: ["样式分层治理", "弹性布局替换硬编码"]
+  - name: "列表UI"
+    status: "completed"
+    stories: ["列可见性切换", "密度切换", "掌握程度颜色边条"]
+  - name: "代码抽象"
+    status: "completed"
+    stories: ["提取formatters.ts", "dayjs替代moment"]

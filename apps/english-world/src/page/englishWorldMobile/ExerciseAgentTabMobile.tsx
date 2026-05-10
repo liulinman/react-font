@@ -1,21 +1,9 @@
 import React, { useState } from "react";
-import {
-  Button,
-  Card,
-  Form,
-  Input,
-  Radio,
-  Toast,
-  Picker,
-  TextArea,
-} from "antd-mobile";
+import { Button, Card, Form, Input, Radio, Toast, Picker, TextArea } from "antd-mobile";
 import type { PickerActions } from "antd-mobile/es/components/picker";
 import { CheckCircleOutline, CloseCircleOutline } from "antd-mobile-icons";
 import request, { getApiBaseUrl } from "@font/api";
-import {
-  exerciseGenerate,
-  exerciseSubmit,
-} from "@/server/exerciseAgent/exerciseAgent";
+import { exerciseGenerate, exerciseSubmit } from "@/server/exerciseAgent/exerciseAgent";
 import type {
   ExerciseGenerateParams,
   ExerciseGenerateResponse,
@@ -47,10 +35,7 @@ export const ExerciseAgentTabMobile: React.FC = () => {
   const handleGenerate = async () => {
     try {
       const values = await form.validateFields();
-      const sourceType = values.sourceType as
-        | "proficiency"
-        | "random"
-        | "custom";
+      const sourceType = values.sourceType as "proficiency" | "random" | "custom";
 
       let params: ExerciseGenerateParams;
       if (sourceType === "proficiency") {
@@ -193,9 +178,7 @@ export const ExerciseAgentTabMobile: React.FC = () => {
         setQuestions(data.questions ?? []);
         Toast.show({ icon: "success", content: "练习已生成" });
       } else {
-        const data = await request<ExerciseGenerateResponse>(
-          exerciseGenerate(params)
-        );
+        const data = await request<ExerciseGenerateResponse>(exerciseGenerate(params));
         setSessionId(data.sessionId);
         setArticle(data.article ?? "");
         setWords(data.words ?? []);
@@ -237,12 +220,11 @@ export const ExerciseAgentTabMobile: React.FC = () => {
             const key = keys[i];
             const selectedIndex = Number(answers[key]);
             return {
-              questionId:
-                q?.id != null && String(q.id).trim() !== "" ? q.id : key,
+              questionId: q?.id != null && String(q.id).trim() !== "" ? q.id : key,
               selectedIndex: Number.isNaN(selectedIndex) ? 0 : selectedIndex,
             };
           }),
-        })
+        }),
       );
       setResults(res.results ?? []);
       Toast.show({ icon: "success", content: "已提交" });
@@ -254,15 +236,12 @@ export const ExerciseAgentTabMobile: React.FC = () => {
     }
   };
 
-  const getResult = (questionId: string) =>
-    results?.find((r) => r.questionId === questionId);
+  const getResult = (questionId: string) => results?.find((r) => r.questionId === questionId);
 
   return (
     <div style={{ padding: "16px", paddingBottom: 24 }}>
       <Card style={{ borderRadius: 12, marginBottom: 16 }}>
-        <div style={{ marginBottom: 8, color: "#667eea", fontWeight: 600 }}>
-          阅读 + 选择题练习
-        </div>
+        <div style={{ marginBottom: 8, color: "#667eea", fontWeight: 600 }}>阅读 + 选择题练习</div>
         <p style={{ margin: 0, fontSize: 13, color: "#666" }}>
           按熟练度/随机/自定义单词生成短文与单选题，提交后查看解析。
         </p>
@@ -296,18 +275,11 @@ export const ExerciseAgentTabMobile: React.FC = () => {
                 ],
               ]}
             >
-              {(items) => (
-                <div style={{ padding: "8px 0" }}>
-                  {items?.[0]?.label ?? "请选择"}
-                </div>
-              )}
+              {(items) => <div style={{ padding: "8px 0" }}>{items?.[0]?.label ?? "请选择"}</div>}
             </Picker>
           </Form.Item>
 
-          <Form.Item
-            noStyle
-            shouldUpdate={(prev, cur) => prev.sourceType !== cur.sourceType}
-          >
+          <Form.Item noStyle shouldUpdate={(prev, cur) => prev.sourceType !== cur.sourceType}>
             {({ getFieldValue }) => {
               const st = getFieldValue("sourceType");
               if (st === "proficiency") {
@@ -365,10 +337,7 @@ export const ExerciseAgentTabMobile: React.FC = () => {
                     },
                   ]}
                 >
-                  <TextArea
-                    placeholder="例如：fake, confront, habitat"
-                    rows={3}
-                  />
+                  <TextArea placeholder="例如：fake, confront, habitat" rows={3} />
                 </Form.Item>
               );
             }}
@@ -402,9 +371,7 @@ export const ExerciseAgentTabMobile: React.FC = () => {
               border: "1px dashed #c7d2fe",
             }}
           >
-            <div style={{ marginBottom: 8, color: "#667eea", fontWeight: 600 }}>
-              AI 正在生成…
-            </div>
+            <div style={{ marginBottom: 8, color: "#667eea", fontWeight: 600 }}>AI 正在生成…</div>
             <pre
               style={{
                 margin: 0,
@@ -423,10 +390,7 @@ export const ExerciseAgentTabMobile: React.FC = () => {
       {!loading && (article || questions.length > 0) && (
         <>
           {article ? (
-            <Card
-              title="阅读短文"
-              style={{ borderRadius: 12, marginBottom: 16 }}
-            >
+            <Card title="阅读短文" style={{ borderRadius: 12, marginBottom: 16 }}>
               <div
                 style={{
                   whiteSpace: "pre-wrap",
@@ -446,9 +410,7 @@ export const ExerciseAgentTabMobile: React.FC = () => {
           ) : null}
 
           <div style={{ marginBottom: 16 }}>
-            <div style={{ fontWeight: 600, marginBottom: 12, color: "#334155" }}>
-              选择题
-            </div>
+            <div style={{ fontWeight: 600, marginBottom: 12, color: "#334155" }}>选择题</div>
             {questions.map((q, idx) => {
               const qKey = getQuestionKey(q, idx);
               const result = getResult(q.id ?? qKey);
@@ -458,34 +420,22 @@ export const ExerciseAgentTabMobile: React.FC = () => {
                   style={{
                     marginBottom: 12,
                     borderRadius: 12,
-                    borderColor: result
-                      ? result.correct
-                        ? "#52c41a"
-                        : "#ff4d4f"
-                      : undefined,
+                    borderColor: result ? (result.correct ? "#52c41a" : "#ff4d4f") : undefined,
                     borderWidth: result ? 2 : 1,
                   }}
                 >
                   <div style={{ marginBottom: 10 }}>
-                    <span style={{ color: "#64748b", marginRight: 6 }}>
-                      {idx + 1}.
-                    </span>
+                    <span style={{ color: "#64748b", marginRight: 6 }}>{idx + 1}.</span>
                     {result && (
                       <span style={{ marginRight: 6 }}>
                         {result.correct ? (
-                          <CheckCircleOutline
-                            style={{ color: "#52c41a", fontSize: 16 }}
-                          />
+                          <CheckCircleOutline style={{ color: "#52c41a", fontSize: 16 }} />
                         ) : (
-                          <CloseCircleOutline
-                            style={{ color: "#ff4d4f", fontSize: 16 }}
-                          />
+                          <CloseCircleOutline style={{ color: "#ff4d4f", fontSize: 16 }} />
                         )}
                       </span>
                     )}
-                    <span style={{ color: "#334155", fontSize: 14 }}>
-                      {q.stem}
-                    </span>
+                    <span style={{ color: "#334155", fontSize: 14 }}>{q.stem}</span>
                   </div>
                   <Radio.Group
                     value={answers[qKey]}
@@ -500,13 +450,9 @@ export const ExerciseAgentTabMobile: React.FC = () => {
                     {q.options.map((opt, i) => (
                       <Radio key={i} value={i} style={{ display: "block", marginBottom: 8 }}>
                         {OPTION_LABELS[i]}. {opt}
-                        {result &&
-                          result.correctIndex === i &&
-                          result.userSelectedIndex !== i && (
-                            <span style={{ color: "#52c41a", marginLeft: 6 }}>
-                              （正确答案）
-                            </span>
-                          )}
+                        {result && result.correctIndex === i && result.userSelectedIndex !== i && (
+                          <span style={{ color: "#52c41a", marginLeft: 6 }}>（正确答案）</span>
+                        )}
                       </Radio>
                     ))}
                   </Radio.Group>

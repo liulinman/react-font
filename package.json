@@ -7,11 +7,29 @@
     "dev": "turbo run dev",
     "build": "turbo run build",
     "lint": "turbo run lint",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md,yaml,yml}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,css,md,yaml,yml}\"",
     "preview:english-world": "pnpm --filter @font/english-world preview",
-    "preview:web-utils": "pnpm --filter @font/web-utils preview"
+    "preview:web-utils": "pnpm --filter @font/web-utils preview",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx,json,css,md,yaml,yml}": [
+      "prettier --write"
+    ]
   },
   "devDependencies": {
-    "turbo": "^2.3.0"
+    "@eslint/js": "^10.0.1",
+    "clsx": "^2.1.1",
+    "eslint": "^10.3.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.2",
+    "globals": "^17.6.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.0.3",
+    "prettier": "^3.8.3",
+    "turbo": "^2.3.0",
+    "typescript-eslint": "^8.59.2"
   },
   "packageManager": "pnpm@10.8.1",
   "engines": {

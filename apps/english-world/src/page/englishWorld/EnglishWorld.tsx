@@ -2,10 +2,12 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Button,
   DatePicker,
+  Dropdown,
   Form,
   Input,
   message,
   Modal,
+  Segmented,
   Select,
   Space,
   Table,
@@ -13,22 +15,22 @@ import {
 } from "antd";
 import { EditAddModal } from "./component/EditAddModal";
 import request, { useMutation } from "@font/api";
-import {
-  wordAdd,
-  wordDel,
-  wordExist,
-  wordFilter,
-  wordUpdate,
-} from "@/server/word/word";
+import { wordAdd, wordDel, wordExist, wordFilter, wordUpdate } from "@/server/word/word";
 import { WordList } from "@/server/word/word.type";
 import { convertToFormat } from "@font/utils";
-import { useColumns } from "./useColumns";
+import {
+  useColumns,
+  CORE_COLUMN_KEYS,
+  EXTRA_COLUMN_KEYS,
+  ALL_COLUMN_LABELS,
+  getRowClassName,
+} from "./useColumns";
 import { EnglishHeader } from "./component/EnglishHeader";
 import { WordAgentTab } from "./component/WordAgentTab";
 import { ExerciseAgentTab } from "./component/ExerciseAgentTab";
 import { FormFieldGroup } from "./component/FormFieldGroup";
 import { EnglishStats } from "./component/EnglishStats";
-import { DownOutlined, PlusOutlined, UpOutlined } from "@ant-design/icons";
+import { DownOutlined, PlusOutlined, SettingOutlined, UpOutlined } from "@ant-design/icons";
 import { useNavigate, useLocation } from "react-router-dom";
 const { RangePicker } = DatePicker;
 
@@ -60,9 +62,12 @@ const EnglishWorld: React.FC = () => {
   const [page, setPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
   const [totalNum, setTotalNum] = useState<number>(0);
+  const [visibleColumns, setVisibleColumns] = useState<Set<string>>(
+    () => new Set([...CORE_COLUMN_KEYS]),
+  );
+  const [tableSize, setTableSize] = useState<"small" | "middle">("middle");
   const filterParamsRef = useRef<Record<string, unknown>>({}); // 使用 ref 保存筛选条件，避免不必要的重新渲染
-  const { mutateAsync: mutateWordAdd, isPending: buttonPending } =
-    useMutation(wordAdd);
+  const { mutateAsync: mutateWordAdd, isPending: buttonPending } = useMutation(wordAdd);
   const location = useLocation();
   const navigate = useNavigate();
   const activeNav = getNavFromHash(location.hash || "");
@@ -172,12 +177,41 @@ const EnglishWorld: React.FC = () => {
     setIsModalVisible(true);
   };
 
-  const { columns } = useColumns({
+  const { columns: allColumns } = useColumns({
     handleEdit,
     handleDelete,
     page,
     pageSize,
   });
+
+  const columns = allColumns?.filter((col) => visibleColumns.has(col.key as string));
+
+  const toggleColumn = (key: string, visible: boolean) => {
+    setVisibleColumns((prev) => {
+      const next = new Set(prev);
+      if (visible) {
+        next.add(key);
+      } else {
+        next.delete(key);
+      }
+      return next;
+    });
+  };
+
+  const columnMenuItems = [...CORE_COLUMN_KEYS, ...EXTRA_COLUMN_KEYS].map((key) => ({
+    key,
+    label: (
+      <label className="flex items-center gap-2 cursor-pointer">
+        <input
+          type="checkbox"
+          checked={visibleColumns.has(key)}
+          disabled={CORE_COLUMN_KEYS.includes(key)}
+          onChange={(e) => toggleColumn(key, e.target.checked)}
+        />
+        <span>{ALL_COLUMN_LABELS[key] || key}</span>
+      </label>
+    ),
+  }));
 
   // 统一的查询函数，使用保存的筛选条件
   const fetchWordData = useCallback(
@@ -200,7 +234,7 @@ const EnglishWorld: React.FC = () => {
         setLoading(false);
       }
     },
-    []
+    [],
   );
 
   useEffect(() => {
@@ -223,16 +257,16 @@ const EnglishWorld: React.FC = () => {
     if (time === null || time === undefined) {
       delete values.time;
     }
-    
+
     // 合并筛选条件
     const filters = { ...values, ...newValues };
     // 移除空值
     Object.keys(filters).forEach((key) => {
-      if (filters[key] === undefined || filters[key] === null || filters[key] === '') {
+      if (filters[key] === undefined || filters[key] === null || filters[key] === "") {
         delete filters[key];
       }
     });
-    
+
     // 保存筛选条件到 ref（同步更新，确保后续分页能使用）
     filterParamsRef.current = filters;
     // 重置到第一页
@@ -313,150 +347,125 @@ const EnglishWorld: React.FC = () => {
   };
 
   return (
-    <div style={{ background: "#f5f5f5", height: "100vh" }}>
+    <div className="h-screen overflow-hidden bg-gray-100">
       <EnglishHeader activeKey={activeNav} onNavClick={handleNavClick} />
-      <div
-        style={{
-          padding: "20px",
-          paddingTop: "90px", // 使用 paddingTop 代替 margin-top，90px(header) + 20px
-          maxWidth: "2000px",
-          margin: "0 auto", // 只保留左右居中
-          width: "100%",
-          height: "100vh", // 高度为 100vh
-          overflow: "auto", // 改为 auto，允许内部滚动
-          boxSizing: "border-box", // 确保 padding 包含在高度内
-        }}
-      >
-        {activeNav === "aiTool" ? (
-          <Tabs
-            defaultActiveKey="word"
-            size="large"
-            items={[
-              { key: "word", label: "AI 单词查询", children: <WordAgentTab /> },
-              {
-                key: "exercise",
-                label: "阅读 + 选择题练习",
-                children: <ExerciseAgentTab />,
-              },
-            ]}
-          />
-        ) : activeNav === "stat" ? (
-          <EnglishStats />
-        ) : (
-          <>
-            {/* 查询条件 - 添加卡片样式 */}
-            <div
-              style={{
-                background: "#fff",
-                padding: "8px 20px", // 减小 padding
-                borderRadius: "8px",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-                marginBottom: "8px",
-              }}
-            >
-              <Form
-                form={form}
-                style={{ maxWidth: "none", width: "100%" }}
-                layout="horizontal"
-                colon={false} // 去掉冒号，更简洁
-              >
-                <FormFieldGroup
-                  items={filterFields}
-                  columnsPerRow={4}
-                  collapsedRows={1}
-                  renderActions={({ toggle, expanded, shouldShowToggle }) => (
-                    <Space size="small">
-                      {" "}
-                      {/* 改为 small */}
-                      <Button
-                        type="primary"
-                        onClick={handleSearch}
-                        size="middle"
-                      >
-                        查询
-                      </Button>
-                      <Button
-                        htmlType="reset"
-                        onClick={handleReset}
-                        size="middle"
-                      >
-                        重置
-                      </Button>
-                      {shouldShowToggle && (
-                        <Button type="link" onClick={toggle} size="small">
-                          {expanded ? (
-                            <span className="gap-2">
-                              <span>收起</span>
-                              <UpOutlined />
-                            </span>
-                          ) : (
-                            <span className="gap-2">
-                              <span>展开</span>
-                              <DownOutlined />
-                            </span>
-                          )}
+      <div className="h-full overflow-auto pt-[90px]">
+        <div className="p-5 max-w-[2000px] mx-auto">
+          {activeNav === "aiTool" ? (
+            <Tabs
+              defaultActiveKey="word"
+              size="large"
+              items={[
+                { key: "word", label: "AI 单词查询", children: <WordAgentTab /> },
+                {
+                  key: "exercise",
+                  label: "阅读 + 选择题练习",
+                  children: <ExerciseAgentTab />,
+                },
+              ]}
+            />
+          ) : activeNav === "stat" ? (
+            <EnglishStats />
+          ) : (
+            <>
+              {/* 查询条件 */}
+              <div className="bg-white py-2 px-5 rounded-lg shadow-sm mb-2">
+                <Form form={form} layout="horizontal" colon={false} className="w-full">
+                  <FormFieldGroup
+                    items={filterFields}
+                    columnsPerRow={4}
+                    collapsedRows={1}
+                    renderActions={({ toggle, expanded, shouldShowToggle }) => (
+                      <Space size="small">
+                        <Button type="primary" onClick={handleSearch} size="middle">
+                          查询
                         </Button>
-                      )}
-                    </Space>
-                  )}
-                />
-              </Form>
-            </div>
-
-            {/* 表格区域 - 添加卡片样式 */}
-            <div
-              style={{
-                background: "#fff",
-                padding: "20px",
-                borderRadius: "8px",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-                height: "calc(100vh - 90px - 40px - 120px - 32px)", // 动态计算：100vh - header - padding - 查询区域 - margins
-                display: "flex",
-                flexDirection: "column",
-              }}
-            >
-              {/* 在表格上方添加操作按钮 */}
-              <div style={{ marginBottom: 16 }}>
-                <Button
-                  type="primary"
-                  onClick={handleAdd}
-                  size="small"
-                  loading={buttonPending}
-                  icon={<PlusOutlined />}
-                >
-                  新增
-                </Button>
+                        <Button htmlType="reset" onClick={handleReset} size="middle">
+                          重置
+                        </Button>
+                        {shouldShowToggle && (
+                          <Button type="link" onClick={toggle} size="small">
+                            {expanded ? (
+                              <span className="gap-2">
+                                <span>收起</span>
+                                <UpOutlined />
+                              </span>
+                            ) : (
+                              <span className="gap-2">
+                                <span>展开</span>
+                                <DownOutlined />
+                              </span>
+                            )}
+                          </Button>
+                        )}
+                      </Space>
+                    )}
+                  />
+                </Form>
               </div>
 
-              <Table<WordList>
-                bordered={false}
-                size="middle"
-                loading={loading}
-                columns={columns}
-                dataSource={wordList}
-                rowKey="id"
-                scroll={{ x: 1400, y: "calc(100vh - 400px)" }}
-                pagination={{
-                  total: totalNum,
-                  pageSizeOptions: ["10", "20", "50", "100", "200", "500"],
-                  showSizeChanger: true,
-                  showTotal: (total: number) => `共 ${total} 条数据`,
-                  pageSize: pageSize,
-                  onChange: handlePageChange,
-                  showQuickJumper: true,
-                }}
+              {/* 表格区域 */}
+              <div className="bg-white p-5 rounded-lg shadow-sm flex flex-col">
+                <div className="mb-4 flex items-center justify-between flex-wrap gap-2">
+                  <Button
+                    type="primary"
+                    onClick={handleAdd}
+                    size="small"
+                    loading={buttonPending}
+                    icon={<PlusOutlined />}
+                  >
+                    新增
+                  </Button>
+
+                  <Space size="small">
+                    <Dropdown menu={{ items: columnMenuItems }} trigger={["click"]}>
+                      <Button size="small" icon={<SettingOutlined />}>
+                        列设置
+                      </Button>
+                    </Dropdown>
+                    <Segmented
+                      size="small"
+                      value={tableSize}
+                      onChange={(val) => setTableSize(val as "small" | "middle")}
+                      options={[
+                        { label: "紧凑", value: "small" },
+                        { label: "舒适", value: "middle" },
+                      ]}
+                    />
+                  </Space>
+                </div>
+
+                <Table<WordList>
+                  bordered={false}
+                  size={tableSize}
+                  loading={loading}
+                  columns={columns}
+                  dataSource={wordList}
+                  rowKey="id"
+                  rowClassName={getRowClassName}
+                  scroll={{ x: 1400 }}
+                  pagination={{
+                    total: totalNum,
+                    pageSizeOptions: ["10", "20", "50", "100", "200", "500"],
+                    showSizeChanger: true,
+                    showTotal: (total: number) => `共 ${total} 条数据`,
+                    pageSize: pageSize,
+                    onChange: handlePageChange,
+                    showQuickJumper: true,
+                  }}
+                />
+              </div>
+
+              <EditAddModal
+                isModalVisible={isModalVisible}
+                currentRecord={wordRecord}
+                type={type}
+                onOk={handleModalOk}
+                onCancel={handleModalCancel}
               />
-            </div>
-            {/* 编辑模态框 */}
-            <EditAddModal
-              isModalVisible={isModalVisible}
-              currentRecord={wordRecord}
-              type={type}
-              onOk={handleModalOk}
-              onCancel={handleModalCancel}
-            />
-          </>
-        )}
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

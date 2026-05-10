@@ -44,6 +44,7 @@ import { Button } from "antd";
 ### 常用 Tailwind 类名示例
 
 #### 布局
+
 - `flex` - flexbox 布局
 - `grid` - grid 布局
 - `gap-4` - 间距
@@ -51,16 +52,19 @@ import { Button } from "antd";
 - `m-4` - 外边距
 
 #### 颜色
+
 - `bg-blue-500` - 背景色
 - `text-white` - 文字颜色
 - `border-gray-300` - 边框颜色
 
 #### 尺寸
+
 - `w-full` - 宽度 100%
 - `h-screen` - 高度 100vh
 - `max-w-4xl` - 最大宽度
 
 #### 响应式
+
 - `md:flex` - 中等屏幕及以上使用 flex
 - `lg:grid` - 大屏幕使用 grid
 - `sm:text-sm` - 小屏幕字体大小
@@ -92,4 +96,3 @@ theme: {
 
 - [Tailwind CSS 官方文档](https://tailwindcss.com/docs)
 - [Tailwind CSS 类名参考](https://tailwindcss.com/docs/utility-first)
-
