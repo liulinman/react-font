@@ -27,9 +27,12 @@ import { EnglishAbsorb } from "@/page/englishWorld/enum";
 const OPTION_LABELS = ["A", "B", "C", "D"];
 
 function getQuestionKey(q: ExerciseQuestion, idx: number) {
-  return q?.id != null && String(q.id).trim() !== "" ? String(q.id) : `q-${idx}`;
+  return q?.id != null && String(q.id).trim() !== ""
+    ? String(q.id)
+    : `q-${idx}`;
 }
 
+/**j */
 export const ExerciseAgentTabMobile: React.FC = () => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
@@ -55,7 +58,11 @@ export const ExerciseAgentTabMobile: React.FC = () => {
       let params: ExerciseGenerateParams;
       if (sourceType === "proficiency") {
         const levels = values.proficiencyLevels;
-        const arr = Array.isArray(levels) ? levels : levels != null ? [levels] : [0, 1];
+        const arr = Array.isArray(levels)
+          ? levels
+          : levels != null
+            ? [levels]
+            : [0, 1];
         params = {
           sourceType: "proficiency",
           proficiencyLevels: arr.map(Number),
@@ -123,7 +130,10 @@ export const ExerciseAgentTabMobile: React.FC = () => {
             try {
               const obj = JSON.parse(payload) as {
                 type?: string;
-                data?: string | ExerciseGenerateResponse | { data?: ExerciseGenerateResponse };
+                data?:
+                  | string
+                  | ExerciseGenerateResponse
+                  | { data?: ExerciseGenerateResponse };
               };
               if (obj.type === "chunk" && typeof obj.data === "string") {
                 jsonAccum += obj.data;
@@ -148,7 +158,11 @@ export const ExerciseAgentTabMobile: React.FC = () => {
               type?: string;
               data?: string | ExerciseGenerateResponse;
             };
-            if (obj.type === "done" && obj.data != null && typeof obj.data === "object") {
+            if (
+              obj.type === "done" &&
+              obj.data != null &&
+              typeof obj.data === "object"
+            ) {
               doneData = obj.data as ExerciseGenerateResponse;
             }
           } catch {
@@ -194,7 +208,7 @@ export const ExerciseAgentTabMobile: React.FC = () => {
         Toast.show({ icon: "success", content: "练习已生成" });
       } else {
         const data = await request<ExerciseGenerateResponse>(
-          exerciseGenerate(params)
+          exerciseGenerate(params),
         );
         setSessionId(data.sessionId);
         setArticle(data.article ?? "");
@@ -242,7 +256,7 @@ export const ExerciseAgentTabMobile: React.FC = () => {
               selectedIndex: Number.isNaN(selectedIndex) ? 0 : selectedIndex,
             };
           }),
-        })
+        }),
       );
       setResults(res.results ?? []);
       Toast.show({ icon: "success", content: "已提交" });
@@ -319,12 +333,18 @@ export const ExerciseAgentTabMobile: React.FC = () => {
                       trigger="onConfirm"
                       getValueFromEvent={(v) => (Array.isArray(v) ? v : [v])}
                       getValueProps={(v) => ({
-                        value: Array.isArray(v) ? v : v != null ? [v] : undefined,
+                        value: Array.isArray(v)
+                          ? v
+                          : v != null
+                            ? [v]
+                            : undefined,
                       })}
                       onClick={() => proficiencyPickerRef.current?.open()}
                     >
                       <Picker
-                        ref={proficiencyPickerRef as React.RefObject<PickerActions>}
+                        ref={
+                          proficiencyPickerRef as React.RefObject<PickerActions>
+                        }
                         columns={[
                           [
                             { label: EnglishAbsorb[0], value: 0 },
@@ -342,7 +362,12 @@ export const ExerciseAgentTabMobile: React.FC = () => {
                       </Picker>
                     </Form.Item>
                     <Form.Item label="抽词数量" name="count">
-                      <Input type="number" placeholder="3～20" min={3} max={20} />
+                      <Input
+                        type="number"
+                        placeholder="3～20"
+                        min={3}
+                        max={20}
+                      />
                     </Form.Item>
                   </>
                 );
@@ -446,7 +471,9 @@ export const ExerciseAgentTabMobile: React.FC = () => {
           ) : null}
 
           <div style={{ marginBottom: 16 }}>
-            <div style={{ fontWeight: 600, marginBottom: 12, color: "#334155" }}>
+            <div
+              style={{ fontWeight: 600, marginBottom: 12, color: "#334155" }}
+            >
               选择题
             </div>
             {questions.map((q, idx) => {
@@ -498,7 +525,11 @@ export const ExerciseAgentTabMobile: React.FC = () => {
                     disabled={results != null}
                   >
                     {q.options.map((opt, i) => (
-                      <Radio key={i} value={i} style={{ display: "block", marginBottom: 8 }}>
+                      <Radio
+                        key={i}
+                        value={i}
+                        style={{ display: "block", marginBottom: 8 }}
+                      >
                         {OPTION_LABELS[i]}. {opt}
                         {result &&
                           result.correctIndex === i &&
