@@ -7,7 +7,6 @@ import {
   message,
   Modal,
   Select,
-  Space,
   Table,
   Tabs,
 } from "antd";
@@ -25,6 +24,7 @@ import { DownOutlined, PlusOutlined, UpOutlined } from "@ant-design/icons";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useWordList } from "./hooks/useWordList";
 import { normalizeDesktopWordFilters } from "./utils/wordFilters";
+import "./EnglishWorld.css";
 const { RangePicker } = DatePicker;
 
 const HASH_TO_NAV: Record<string, string> = {
@@ -242,20 +242,9 @@ const EnglishWorld: React.FC = () => {
   };
 
   return (
-    <div style={{ background: "#f5f5f5", height: "100vh" }}>
+    <div className="english-world-shell">
       <EnglishHeader activeKey={activeNav} onNavClick={handleNavClick} />
-      <div
-        style={{
-          padding: "20px",
-          paddingTop: "90px", // 使用 paddingTop 代替 margin-top，90px(header) + 20px
-          maxWidth: "2000px",
-          margin: "0 auto", // 只保留左右居中
-          width: "100%",
-          height: "100vh", // 高度为 100vh
-          overflow: "auto", // 改为 auto，允许内部滚动
-          boxSizing: "border-box", // 确保 padding 包含在高度内
-        }}
-      >
+      <main className="english-world-main">
         {activeNav === "aiTool" ? (
           <Tabs
             defaultActiveKey="word"
@@ -272,20 +261,11 @@ const EnglishWorld: React.FC = () => {
         ) : activeNav === "stat" ? (
           <EnglishStats />
         ) : (
-          <>
-            {/* 查询条件 - 添加卡片样式 */}
-            <div
-              style={{
-                background: "#fff",
-                padding: "8px 20px", // 减小 padding
-                borderRadius: "8px",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-                marginBottom: "8px",
-              }}
-            >
+          <div className="english-world-stack">
+            <section className="english-world-filter-panel">
               <Form
                 form={form}
-                style={{ maxWidth: "none", width: "100%" }}
+                className="english-world-filter-form"
                 layout="horizontal"
                 colon={false} // 去掉冒号，更简洁
               >
@@ -294,9 +274,7 @@ const EnglishWorld: React.FC = () => {
                   columnsPerRow={4}
                   collapsedRows={1}
                   renderActions={({ toggle, expanded, shouldShowToggle }) => (
-                    <Space size="small">
-                      {" "}
-                      {/* 改为 small */}
+                    <div className="english-world-filter-actions">
                       <Button
                         type="primary"
                         onClick={handleSearch}
@@ -326,30 +304,22 @@ const EnglishWorld: React.FC = () => {
                           )}
                         </Button>
                       )}
-                    </Space>
+                    </div>
                   )}
                 />
               </Form>
-            </div>
+            </section>
 
-            {/* 表格区域 - 添加卡片样式 */}
-            <div
-              style={{
-                background: "#fff",
-                padding: "20px",
-                borderRadius: "8px",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-                height: "calc(100vh - 90px - 40px - 120px - 32px)", // 动态计算：100vh - header - padding - 查询区域 - margins
-                display: "flex",
-                flexDirection: "column",
-              }}
-            >
-              {/* 在表格上方添加操作按钮 */}
-              <div style={{ marginBottom: 16 }}>
+            <section className="english-world-table-panel">
+              <div className="english-world-table-toolbar">
+                <div className="english-world-table-title">
+                  <strong>单词列表</strong>
+                  <span>共 {totalNum} 条，当前第 {page} 页</span>
+                </div>
                 <Button
                   type="primary"
                   onClick={handleAdd}
-                  size="small"
+                  size="middle"
                   loading={buttonPending}
                   icon={<PlusOutlined />}
                 >
@@ -357,25 +327,27 @@ const EnglishWorld: React.FC = () => {
                 </Button>
               </div>
 
-              <Table<WordList>
-                bordered={false}
-                size="middle"
-                loading={loading}
-                columns={columns}
-                dataSource={wordList}
-                rowKey="id"
-                scroll={{ x: 1400, y: "calc(100vh - 400px)" }}
-                pagination={{
-                  total: totalNum,
-                  pageSizeOptions: ["10", "20", "50", "100", "200", "500"],
-                  showSizeChanger: true,
-                  showTotal: (total: number) => `共 ${total} 条数据`,
-                  pageSize: pageSize,
-                  onChange: handlePageChange,
-                  showQuickJumper: true,
-                }}
-              />
-            </div>
+              <div className="english-world-table-wrap">
+                <Table<WordList>
+                  bordered={false}
+                  size="middle"
+                  loading={loading}
+                  columns={columns}
+                  dataSource={wordList}
+                  rowKey="id"
+                  scroll={{ x: 1360, y: "calc(100vh - 360px)" }}
+                  pagination={{
+                    total: totalNum,
+                    pageSizeOptions: ["10", "20", "50", "100", "200", "500"],
+                    showSizeChanger: true,
+                    showTotal: (total: number) => `共 ${total} 条数据`,
+                    pageSize: pageSize,
+                    onChange: handlePageChange,
+                    showQuickJumper: true,
+                  }}
+                />
+              </div>
+            </section>
             {/* 编辑模态框 */}
             <EditAddModal
               isModalVisible={isModalVisible}
@@ -384,9 +356,9 @@ const EnglishWorld: React.FC = () => {
               onOk={handleModalOk}
               onCancel={handleModalCancel}
             />
-          </>
+          </div>
         )}
-      </div>
+      </main>
     </div>
   );
 };

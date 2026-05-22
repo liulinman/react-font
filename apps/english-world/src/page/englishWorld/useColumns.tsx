@@ -12,6 +12,7 @@ import {
 import moment from "moment";
 import { TagColor } from "./types";
 import { DeleteFilled, EditFilled } from "@ant-design/icons";
+import { getPartSpeechLabel } from "./utils/wordLabels";
 
 type Props = {
   handleEdit: (record: WordList) => void;
@@ -52,18 +53,18 @@ export const useColumns = (props: Props) => {
 
   const columns: TableProps<WordList>["columns"] = [
     {
-      width: 80,
+      width: 72,
       title: "序号",
       dataIndex: "key",
       key: "key",
       align: "center",
       render: (_text: number, _record: WordList, index: number) => {
         const serialNumber = (page - 1) * pageSize + index + 1;
-        return <span style={{ fontWeight: 500 }}>{serialNumber}</span>;
+        return <span style={{ color: "#6b7280", fontWeight: 600 }}>{serialNumber}</span>;
       },
     },
     {
-      width: 180,
+      width: 170,
       title: "单词",
       dataIndex: "englishWord",
       key: "englishWord",
@@ -73,7 +74,7 @@ export const useColumns = (props: Props) => {
           href={`https://www.baidu.com/s?wd=${encodeURIComponent(text)}`}
           target="_blank"
           rel="noopener noreferrer"
-          style={{ fontWeight: 600, color: "#1890ff", cursor: "pointer" }}
+          className="word-link"
           onClick={(e) => e.stopPropagation()}
         >
           {text}
@@ -82,39 +83,26 @@ export const useColumns = (props: Props) => {
     },
     // ... 音标列
     {
-      width: 150,
+      width: 140,
       title: "音标",
       dataIndex: "englishPhonetic",
       key: "englishPhonetic",
       render: (text: string) => (
-        <span style={{ color: "#666", fontStyle: "italic" }}>
+        <span className="word-phonetic">
           {text || "-"}
         </span>
       ),
     },
     {
-      width: 200,
+      width: 190,
       title: "词性",
       dataIndex: "englishPartSpeech",
       key: "englishPartSpeech",
       align: "left",
       render: (partSpeechList?: number[]) => {
         if (!partSpeechList || partSpeechList.length === 0) {
-          return <span style={{ color: "#ccc" }}>-</span>;
+          return <span className="word-muted">-</span>;
         }
-
-        const partSpeechMap: Record<number, { label: string; color: string }> =
-          {
-            1: { label: "动词", color: "blue" },
-            2: { label: "名词", color: "green" },
-            3: { label: "形容词", color: "orange" },
-            4: { label: "副词", color: "purple" },
-            5: { label: "代词", color: "red" },
-            6: { label: "介词", color: "cyan" },
-            7: { label: "连词", color: "volcano" },
-            8: { label: "感叹词", color: "magenta" },
-            9: { label: "未分类", color: "default" },
-          };
 
         // 最多显示3个，超过的用 +N 表示
         const displayList = partSpeechList.slice(0, 3);
@@ -122,8 +110,7 @@ export const useColumns = (props: Props) => {
 
         const allTags = partSpeechList
           .map((partSpeech) => {
-            const info = partSpeechMap[partSpeech];
-            return info?.label || "未知";
+            return getPartSpeechLabel(partSpeech)?.label || "未知";
           })
           .join("、");
 
@@ -131,7 +118,7 @@ export const useColumns = (props: Props) => {
           <Tooltip title={partSpeechList.length > 3 ? allTags : undefined}>
             <Space size={2} wrap style={{ maxWidth: "100%" }}>
               {displayList.map((partSpeech) => {
-                const info = partSpeechMap[partSpeech];
+                const info = getPartSpeechLabel(partSpeech);
                 return (
                   <Tag
                     key={partSpeech}
@@ -153,7 +140,7 @@ export const useColumns = (props: Props) => {
       },
     },
     {
-      width: 200,
+      width: 240,
       title: "中文释义",
       dataIndex: "englishChinese",
       key: "englishChinese",
@@ -195,12 +182,12 @@ export const useColumns = (props: Props) => {
             />
           );
         } else {
-          return <span style={{ color: "#ccc" }}>-</span>;
+              return <span className="word-muted">-</span>;
         }
       },
     },
     {
-      width: 100,
+      width: 92,
       title: "类型",
       dataIndex: "englishType",
       key: "englishType",
@@ -216,7 +203,7 @@ export const useColumns = (props: Props) => {
       },
     },
     {
-      width: 120,
+      width: 104,
       title: "笔记",
       dataIndex: "englishNote",
       key: "englishNote",
@@ -235,7 +222,7 @@ export const useColumns = (props: Props) => {
             </Popover>
           );
         } else {
-          return <span style={{ color: "#ccc" }}>无</span>;
+          return <span className="word-muted">无</span>;
         }
       },
     },
@@ -261,7 +248,7 @@ export const useColumns = (props: Props) => {
       },
     },
     {
-      width: 200,
+      width: 180,
       title: "引用",
       dataIndex: "englishReference",
       key: "englishReference",
@@ -291,7 +278,7 @@ export const useColumns = (props: Props) => {
       },
     },
     {
-      width: 180,
+      width: 132,
       title: "创建时间",
       dataIndex: "englishCreateTime",
       key: "englishCreateTime",
@@ -304,7 +291,7 @@ export const useColumns = (props: Props) => {
       },
     },
     {
-      width: 180,
+      width: 132,
       title: "更新时间",
       dataIndex: "englishUpdateTime",
       key: "englishUpdateTime",
@@ -317,33 +304,33 @@ export const useColumns = (props: Props) => {
       },
     },
     {
-      width: 150,
+      width: 136,
       title: "操作",
       key: "action",
       fixed: "right",
       align: "center",
       render: (_text: number, record: WordList) => (
-        <Space size="small">
+        <span className="word-action-group">
           <Button
-            type="link"
+            type="text"
             size="small"
             onClick={() => handleEdit(record)}
             icon={<EditFilled />}
-            style={{ padding: "0 8px" }}
+            className="word-action-button"
           >
             编辑
           </Button>
           <Button
-            type="link"
+            type="text"
             danger
             size="small"
             onClick={() => handleDelete(record.id)}
             icon={<DeleteFilled />}
-            style={{ padding: "0 8px" }}
+            className="word-action-button"
           >
             删除
           </Button>
-        </Space>
+        </span>
       ),
     },
   ];

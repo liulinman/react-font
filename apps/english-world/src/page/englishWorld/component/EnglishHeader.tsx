@@ -87,26 +87,26 @@ export const EnglishHeader = ({
   ];
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-white shadow-md">
-      <div className="flex items-center justify-between px-10 py-4 w-full max-w-[1500px] mx-auto">
+    <header className="english-world-header">
+      <div className="english-world-header-inner">
         {/* Logo */}
-        <div className="flex items-center gap-2 text-blue-600 font-semibold text-lg">
-          <BookFilled className="text-2xl" />
-          <span className="text-gray-800">English World · AI 单词</span>
+        <div className="english-world-brand">
+          <span className="english-world-brand-mark">
+            <BookFilled />
+          </span>
+          <span className="english-world-brand-title">
+            English World · AI 单词
+          </span>
         </div>
 
         {/* Navigation */}
-        <nav className="flex items-center gap-3">
+        <nav className="english-world-nav">
           {navItems.map(({ key, icon, label }) => (
             <Button
               key={key}
               type={key === activeKey ? "primary" : "text"}
               icon={icon}
-              className={`flex items-center gap-1 transition-all duration-200 ${
-                key === activeKey
-                  ? "bg-blue-500 text-white shadow-md"
-                  : "text-gray-600"
-              }`}
+              className="english-world-nav-button"
               onClick={() => {
                 if (key === "recite") {
                   navigate("/englishWorld/recite");
@@ -125,11 +125,13 @@ export const EnglishHeader = ({
 
         {/* User Info */}
         <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
-          <div className="flex items-center gap-2 text-gray-700 cursor-pointer hover:text-blue-600 transition-colors">
-            <div className="w-10 h-10 bg-blue-100 text-blue-600 flex items-center justify-center rounded-full">
+          <div className="english-world-user">
+            <div className="english-world-user-avatar">
               <UserOutlined />
             </div>
-            <span>{user?.username || "管理员"}</span>
+            <span className="english-world-user-name">
+              {user?.username || "管理员"}
+            </span>
           </div>
         </Dropdown>
       </div>
