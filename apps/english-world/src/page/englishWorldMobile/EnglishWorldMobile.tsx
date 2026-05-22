@@ -49,6 +49,12 @@ import { PhotoProvider, PhotoView } from "react-photo-view";
 import "react-photo-view/dist/react-photo-view.css";
 import { WordAgentTabMobile } from "./WordAgentTabMobile";
 import { ExerciseAgentTabMobile } from "./ExerciseAgentTabMobile";
+import {
+  getLevelLabel,
+  getPartSpeechLabel,
+  getTypeLabel,
+} from "@/page/englishWorld/utils/wordLabels";
+import { normalizeMobileWordFilters } from "@/page/englishWorld/utils/wordFilters";
 import "./EnglishWorldMobile.css";
 
 type ListData = {
@@ -144,8 +150,7 @@ const EnglishWorldMobile: React.FC = () => {
           wordFilter({
             page: pageNum,
             pageSize,
-            ...filterValues,
-            ...(searchKeyword ? { englishWord: searchKeyword } : {}),
+            ...normalizeMobileWordFilters(filterValues, searchKeyword),
           })
         );
 
@@ -397,39 +402,11 @@ const EnglishWorldMobile: React.FC = () => {
     setShowFilter(false);
   };
 
-  // 获取类型标签
-  const getTypeLabel = (type?: number) => {
-    const types: Record<number, { label: string; color: string }> = {
-      0: { label: "单词", color: "primary" },
-      1: { label: "短语", color: "success" },
-      2: { label: "句子", color: "warning" },
-    };
-    return types[type ?? 0] || types[0];
-  };
-
-  // 获取掌握程度标签
-  const getLevelLabel = (level?: number) => {
-    const levels: Record<number, { label: string; color: string }> = {
-      0: { label: "不会", color: "danger" },
-      1: { label: "一般", color: "warning" },
-      2: { label: "熟练", color: "primary" },
-      3: { label: "精通", color: "success" },
-    };
-    return levels[level ?? 0] || levels[0];
-  };
-
   // 词性选项
-  const partSpeechOptions = [
-    { label: "动词", value: 1, color: "primary" },
-    { label: "名词", value: 2, color: "success" },
-    { label: "形容词", value: 3, color: "warning" },
-    { label: "副词", value: 4, color: "default" },
-    { label: "代词", value: 5, color: "danger" },
-    { label: "介词", value: 6, color: "default" },
-    { label: "连词", value: 7, color: "default" },
-    { label: "感叹词", value: 8, color: "default" },
-    { label: "未分类", value: 9, color: "default" },
-  ];
+  const partSpeechOptions = [1, 2, 3, 4, 5, 6, 7, 8, 9].map((value) => ({
+    value,
+    ...getPartSpeechLabel(value),
+  }));
 
   // 统计图表配置
   const optionBar = {
