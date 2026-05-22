@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Button,
   DatePicker,
@@ -13,15 +13,8 @@ import {
 } from "antd";
 import { EditAddModal } from "./component/EditAddModal";
 import request, { useMutation } from "@font/api";
-import {
-  wordAdd,
-  wordDel,
-  wordExist,
-  wordFilter,
-  wordUpdate,
-} from "@/server/word/word";
+import { wordAdd, wordDel, wordExist, wordUpdate } from "@/server/word/word";
 import { WordList } from "@/server/word/word.type";
-import { convertToFormat } from "@font/utils";
 import { useColumns } from "./useColumns";
 import { EnglishHeader } from "./component/EnglishHeader";
 import { WordAgentTab } from "./component/WordAgentTab";
@@ -30,6 +23,8 @@ import { FormFieldGroup } from "./component/FormFieldGroup";
 import { EnglishStats } from "./component/EnglishStats";
 import { DownOutlined, PlusOutlined, UpOutlined } from "@ant-design/icons";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useWordList } from "./hooks/useWordList";
+import { normalizeDesktopWordFilters } from "./utils/wordFilters";
 const { RangePicker } = DatePicker;
 
 const HASH_TO_NAV: Record<string, string> = {
@@ -44,28 +39,28 @@ function getNavFromHash(hash: string): string {
   return HASH_TO_NAV[key] ?? "list";
 }
 
-type ListData = {
-  list: WordList[];
-  total: number;
-  totalPages: number; // 计算总页数ag
-};
-
 const EnglishWorld: React.FC = () => {
   const [form] = Form.useForm();
   const [type, setType] = useState<"edit" | "add">("add");
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [wordRecord, setWordRecord] = useState<WordList>();
-  const [wordList, setWordList] = useState<WordList[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [page, setPage] = useState<number>(1);
-  const [pageSize, setPageSize] = useState<number>(10);
-  const [totalNum, setTotalNum] = useState<number>(0);
-  const filterParamsRef = useRef<Record<string, unknown>>({}); // 使用 ref 保存筛选条件，避免不必要的重新渲染
   const { mutateAsync: mutateWordAdd, isPending: buttonPending } =
     useMutation(wordAdd);
   const location = useLocation();
   const navigate = useNavigate();
   const activeNav = getNavFromHash(location.hash || "");
+  const {
+    wordList,
+    loading,
+    page,
+    pageSize,
+    totalNum,
+    getCurrentFilters,
+    search,
+    reset,
+    refresh,
+    changePage,
+  } = useWordList(10);
 
   // 进入页面无 hash 时写入 #list，保证刷新后仍在当前 tab
   useEffect(() => {
@@ -156,8 +151,7 @@ const EnglishWorld: React.FC = () => {
         const res = await request<boolean>(wordDel({ id }));
         if (res) {
           message.success("删除成功");
-          // 直接使用当前筛选条件和页码刷新列表
-          await fetchWordData(page, pageSize, filterParamsRef.current);
+          await refresh();
         } else {
           message.error("删除失败");
         }
@@ -179,76 +173,15 @@ const EnglishWorld: React.FC = () => {
     pageSize,
   });
 
-  // 统一的查询函数，使用保存的筛选条件
-  const fetchWordData = useCallback(
-    async (page: number, pageSize: number, filters: Record<string, unknown> = {}) => {
-      setLoading(true);
-      try {
-        const queryParams = {
-          page,
-          pageSize,
-          ...filters, // 使用传入的筛选条件
-        };
-        const res = await request<ListData>(wordFilter(queryParams));
-        setWordList(res.list);
-        setTotalNum(res.total);
-      } catch (error) {
-        console.error("加载数据失败:", error);
-        setWordList([]);
-        setTotalNum(0);
-      } finally {
-        setLoading(false);
-      }
-    },
-    []
-  );
-
-  useEffect(() => {
-    fetchWordData(page, pageSize, filterParamsRef.current);
-  }, [fetchWordData, page, pageSize]);
-
   // 查询数据
   const handleSearch = async () => {
-    const values = form.getFieldsValue();
-    const { time } = values;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const newValues: any = {};
-
-    if (time) {
-      // 将时间转换为UTC后，再转换为本地时间并格式化为YYYY-MM-DD HH:mm:ss
-      newValues.startTime = convertToFormat(time[0], "start");
-      newValues.endTime = convertToFormat(time[1], "end");
-      delete values.time;
-    }
-    if (time === null || time === undefined) {
-      delete values.time;
-    }
-    
-    // 合并筛选条件
-    const filters = { ...values, ...newValues };
-    // 移除空值
-    Object.keys(filters).forEach((key) => {
-      if (filters[key] === undefined || filters[key] === null || filters[key] === '') {
-        delete filters[key];
-      }
-    });
-    
-    // 保存筛选条件到 ref（同步更新，确保后续分页能使用）
-    filterParamsRef.current = filters;
-    // 重置到第一页
-    setPage(1);
-    // 直接调用查询，确保立即生效（即使当前已经在第1页）
-    await fetchWordData(1, pageSize, filters);
+    await search(normalizeDesktopWordFilters(form.getFieldsValue()));
   };
 
   // 重置表单
   const handleReset = async () => {
     form.resetFields();
-    filterParamsRef.current = {}; // 清除筛选条件
-    setPage(1); // 重置到第一页
-    setPageSize(10); // 重置每页条数
-    // 直接调用查询，确保立即生效（即使当前已经在第1页且每页条数已经是10）
-    await fetchWordData(1, 10, {});
+    await reset();
   };
 
   // 提交编辑
@@ -259,8 +192,7 @@ const EnglishWorld: React.FC = () => {
       if (res) {
         message.success("更新成功");
         setIsModalVisible(false);
-        // 直接使用当前筛选条件和页码刷新列表
-        await fetchWordData(page, pageSize, filterParamsRef.current);
+        await refresh();
       } else {
         message.error("更新失败");
       }
@@ -283,9 +215,7 @@ const EnglishWorld: React.FC = () => {
         if (res) {
           message.success("添加成功");
           setIsModalVisible(false);
-          // 添加后重置到第一页并刷新列表
-          setPage(1);
-          await fetchWordData(1, pageSize, filterParamsRef.current);
+          await search(getCurrentFilters());
         } else {
           message.error("添加失败");
         }
@@ -308,8 +238,7 @@ const EnglishWorld: React.FC = () => {
   };
 
   const handlePageChange = (page: number, pageSize: number) => {
-    setPage(page); // 设置当前页码
-    setPageSize(pageSize); // 设置每页显示条数
+    changePage(page, pageSize);
   };
 
   return (
