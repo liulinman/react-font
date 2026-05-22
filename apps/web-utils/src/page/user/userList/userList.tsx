@@ -6,7 +6,7 @@
  * @FilePath: \font\src\page\user\userList\userList.tsx
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 
 import { Table } from "antd";
 import request from "@font/api";
@@ -35,24 +35,39 @@ const columns = [
   },
 ];
 
-const UserList: React.FC = () => {
-  const [dataSource, setDataSource] = useState([]);
-  const channel = new BroadcastChannel("ADD");
-  channel.onmessage = function (event) {
-    console.log("Received message:", event.data);
-    if (event.data === "UPDATE") {
-      getUsetList();
-    }
-  };
+type UserRow = {
+  key?: React.Key;
+  userName?: string;
+  userPhone?: string;
+  userSex?: string;
+  userAge?: number;
+};
 
-  useEffect(() => {
-    getUsetList();
+const UserList: React.FC = () => {
+  const [dataSource, setDataSource] = useState<UserRow[]>([]);
+
+  const getUserList = useCallback(async () => {
+    const res = await request<{ data?: UserRow[] }>(userFindList());
+    setDataSource(res?.data ?? []);
   }, []);
 
-  const getUsetList = async () => {
-    const res: any = await request(userFindList());
-    setDataSource(res?.data);
-  };
+  useEffect(() => {
+    const channel = new BroadcastChannel("ADD");
+    channel.onmessage = (event) => {
+      if (event.data === "UPDATE") {
+        void getUserList();
+      }
+    };
+
+    const timer = window.setTimeout(() => {
+      void getUserList();
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timer);
+      channel.close();
+    };
+  }, [getUserList]);
 
   return (
     <div>

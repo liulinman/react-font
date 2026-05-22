@@ -235,16 +235,22 @@ const EnglishWorldMobile: React.FC = () => {
   );
 
   useEffect(() => {
-    setPage(1);
-    setWordList([]);
-    loadWordData(1, true);
+    const timer = window.setTimeout(() => {
+      setPage(1);
+      setWordList([]);
+      void loadWordData(1, true);
+    }, 0);
+    return () => window.clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(filterValues), searchKeyword]);
 
   // 当切换到统计视图时加载数据
   useEffect(() => {
     if (activeView === "stats") {
-      loadStats(selectedLevel);
+      const timer = window.setTimeout(() => {
+        void loadStats(selectedLevel);
+      }, 0);
+      return () => window.clearTimeout(timer);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeView, selectedLevel]);

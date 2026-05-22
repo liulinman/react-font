@@ -1,4 +1,5 @@
 import { Modal, Form, Input, Select, Upload, Button, message, Tag } from "antd";
+import type { UploadProps } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
 import TextArea from "antd/es/input/TextArea";
 import { WordList } from "@/server/word/word.type";
@@ -56,16 +57,20 @@ export const EditAddModal = (props: Props) => {
 
   // 编辑时预填 currentRecord；新增时若有 addInitialValues 则预填
   useEffect(() => {
-    if (type === "edit" && currentRecord) {
-      form.setFieldsValue(currentRecord);
-      setSelectedPartSpeech(currentRecord.englishPartSpeech || []);
-    } else if (type === "add" && addInitialValues) {
-      form.setFieldsValue(addInitialValues);
-      setSelectedPartSpeech(addInitialValues.englishPartSpeech || []);
-    } else {
-      form.resetFields();
-      setSelectedPartSpeech([]);
-    }
+    const timer = window.setTimeout(() => {
+      if (type === "edit" && currentRecord) {
+        form.setFieldsValue(currentRecord);
+        setSelectedPartSpeech(currentRecord.englishPartSpeech || []);
+      } else if (type === "add" && addInitialValues) {
+        form.setFieldsValue(addInitialValues);
+        setSelectedPartSpeech(addInitialValues.englishPartSpeech || []);
+      } else {
+        form.resetFields();
+        setSelectedPartSpeech([]);
+      }
+    }, 0);
+
+    return () => window.clearTimeout(timer);
   }, [type, currentRecord, addInitialValues, form, isModalVisible]);
 
   const handleModalOk = async () => {
@@ -117,7 +122,7 @@ export const EditAddModal = (props: Props) => {
   };
 
   // 上传文件处理方法
-  const onChange = (info: any) => {
+  const onChange: UploadProps["onChange"] = (info) => {
     if (info.file.status === "uploading") {
       return;
     }
@@ -135,34 +140,31 @@ export const EditAddModal = (props: Props) => {
     }
   };
 
-  const customRequest = async (options: any) => {
+  const customRequest: UploadProps["customRequest"] = async (options) => {
     const { file, onSuccess, onError, onProgress } = options;
 
     try {
       // 直接使用文件对象创建FormData
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("file", file as Blob);
 
       // 模拟上传进度
-      onProgress({ percent: 30 });
+      onProgress?.({ percent: 30 });
 
       // 调用上传接口，request 函数已经处理了响应拦截，直接返回 URL 字符串
       const imageUrl = await request<string>(uploadFile(formData));
 
       // 模拟上传完成
-      onProgress({ percent: 100 });
-
-      // 将响应数据设置到 file.response，这样 onChange 可以访问到
-      file.response = imageUrl;
+      onProgress?.({ percent: 100 });
 
       // 直接设置表单值，确保图片URL被保存（双重保险）
       form.setFieldsValue({ englishImg: imageUrl });
 
       // 上传成功，onSuccess 的第一个参数会被设置到 file.response
-      onSuccess(imageUrl, file);
+      onSuccess?.(imageUrl);
     } catch (error) {
       console.error("File upload failed", error);
-      onError(error);
+      onError?.(error as Error);
     }
   };
 

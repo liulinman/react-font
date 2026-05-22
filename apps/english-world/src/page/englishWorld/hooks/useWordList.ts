@@ -46,7 +46,11 @@ export function useWordList(initialPageSize = 10) {
   );
 
   useEffect(() => {
-    fetchWordData(page, pageSize);
+    const timer = window.setTimeout(() => {
+      void fetchWordData(page, pageSize);
+    }, 0);
+
+    return () => window.clearTimeout(timer);
   }, [fetchWordData, page, pageSize]);
 
   const search = async (filters: Record<string, unknown>) => {

@@ -69,7 +69,7 @@ const EnglishWorld: React.FC = () => {
     }
   }, [location.pathname, location.hash, navigate]);
 
-  const handleNavClick = (_key: string) => {
+  const handleNavClick = () => {
     // 实际跳转已在 EnglishHeader 中通过 navigate + hash 处理
   };
 

@@ -1,3 +1,5 @@
+export type AuthIdPayload = Record<string, unknown>;
+
 export const userFindList = () => {
   return {
     url: "/auth-id-map",
@@ -5,7 +7,7 @@ export const userFindList = () => {
   };
 };
 
-export const userCreate = (data: any) => {
+export const userCreate = (data: AuthIdPayload) => {
   return {
     url: "/auth-id-map/createCookie",
     data,
@@ -13,7 +15,7 @@ export const userCreate = (data: any) => {
   };
 };
 
-export const findModel = (data: any) => {
+export const findModel = (data: AuthIdPayload) => {
   return {
     url: "/auth-id-map/findModel",
     data,

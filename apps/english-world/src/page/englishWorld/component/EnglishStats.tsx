@@ -4,7 +4,7 @@ import { Card, Col, Row, Select } from "antd";
 import ReactECharts from "echarts-for-react";
 import { EnglishAbsorb, EnglishPartSpeech } from "../enum";
 import { englishStats } from "@/server";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 type DailyStat = {
   date: string;
@@ -120,13 +120,8 @@ export const EnglishStats = () => {
     ],
   };
 
-  // 初始化加载数据
-  useEffect(() => {
-    loadStats(EnglishAbsorb["一般"]);
-  }, []);
-
   // 加载统计数据
-  const loadStats = async (level: EnglishAbsorb) => {
+  const loadStats = useCallback(async (level: EnglishAbsorb) => {
     try {
       const res = await mutateEnglishStats({ level });
       const {
@@ -165,7 +160,16 @@ export const EnglishStats = () => {
     } catch (error) {
       console.error("加载统计数据失败:", error);
     }
-  };
+  }, [mutateEnglishStats]);
+
+  // 初始化加载数据
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void loadStats(EnglishAbsorb["一般"]);
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, [loadStats]);
 
   const optionPie = {
     tooltip: {

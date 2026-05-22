@@ -224,7 +224,7 @@ export const WordAgentTabMobile: React.FC = () => {
       setAddModalVisible(false);
       setAddInitialValues(null);
       form.resetFields();
-    } catch (err) {
+    } catch {
       // validation or request error
     }
   };

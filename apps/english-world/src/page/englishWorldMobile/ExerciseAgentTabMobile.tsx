@@ -66,12 +66,12 @@ export const ExerciseAgentTabMobile: React.FC = () => {
         params = {
           sourceType: "proficiency",
           proficiencyLevels: arr.map(Number),
-          count: Math.min(20, Math.max(3, Number(values.count) ?? 8)),
+          count: Math.min(20, Math.max(3, Number(values.count ?? 8))),
         };
       } else if (sourceType === "random") {
         params = {
           sourceType: "random",
-          count: Math.min(20, Math.max(3, Number(values.count) ?? 8)),
+          count: Math.min(20, Math.max(3, Number(values.count ?? 8))),
         };
       } else {
         const raw = (values.words ?? "")

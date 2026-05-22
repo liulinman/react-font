@@ -7,6 +7,12 @@ import "./Login.css";
 
 const { TabPane } = Tabs;
 
+type LocationState = {
+  from?: {
+    pathname?: string;
+  };
+};
+
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -17,7 +23,7 @@ const Login: React.FC = () => {
   // 如果已登录，跳转到原页面或首页
   useEffect(() => {
     if (isAuthenticated) {
-      const from = (location.state as any)?.from?.pathname || "/";
+      const from = (location.state as LocationState | null)?.from?.pathname || "/";
       navigate(from, { replace: true });
     }
   }, [isAuthenticated, navigate, location]);
@@ -30,7 +36,9 @@ const Login: React.FC = () => {
     setLoading(true);
     try {
       await login(values.username, values.password);
-      const from = (location.state as any)?.from?.pathname || "/englishWorld";
+      const from =
+        (location.state as LocationState | null)?.from?.pathname ||
+        "/englishWorld";
       navigate(from, { replace: true });
     } catch (error) {
       // 错误已在 AuthContext 中处理

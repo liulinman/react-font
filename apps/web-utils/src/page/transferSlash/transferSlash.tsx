@@ -52,7 +52,7 @@ const TransferSlash: React.FC = () => {
     } else {
       // 提示用户手动复制
       // 旧浏览器回退方案
-      let textArea = document.createElement("textarea");
+      const textArea = document.createElement("textarea");
       textArea.value = text;
       textArea.style.top = "0";
       textArea.style.left = "0";
@@ -61,8 +61,8 @@ const TransferSlash: React.FC = () => {
       textArea.focus();
       textArea.select();
       try {
-        let successful = document.execCommand("copy");
-        let msg = successful ? "successful" : "unsuccessful";
+        const successful = document.execCommand("copy");
+        const msg = successful ? "successful" : "unsuccessful";
         console.log("Fallback: Copying text command was " + msg);
       } catch (err) {
         console.error("Fallback: Oops, unable to copy", err);
