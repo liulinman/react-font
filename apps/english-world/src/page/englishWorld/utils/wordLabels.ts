@@ -1,8 +1,8 @@
 export type WordTagColor =
-  | "primary"
-  | "success"
-  | "warning"
-  | "danger"
+  | "blue"
+  | "green"
+  | "orange"
+  | "red"
   | "default";
 
 export type WordLabel = {
@@ -11,24 +11,24 @@ export type WordLabel = {
 };
 
 const TYPE_LABELS: Record<number, WordLabel> = {
-  0: { label: "单词", color: "primary" },
-  1: { label: "短语", color: "success" },
-  2: { label: "句子", color: "warning" },
+  0: { label: "单词", color: "blue" },
+  1: { label: "短语", color: "green" },
+  2: { label: "句子", color: "orange" },
 };
 
 const LEVEL_LABELS: Record<number, WordLabel> = {
-  0: { label: "不会", color: "danger" },
-  1: { label: "一般", color: "warning" },
-  2: { label: "熟练", color: "primary" },
-  3: { label: "精通", color: "success" },
+  0: { label: "不会", color: "red" },
+  1: { label: "一般", color: "orange" },
+  2: { label: "熟练", color: "blue" },
+  3: { label: "精通", color: "green" },
 };
 
 const PART_SPEECH_LABELS: Record<number, WordLabel> = {
-  1: { label: "动词", color: "primary" },
-  2: { label: "名词", color: "success" },
-  3: { label: "形容词", color: "warning" },
+  1: { label: "动词", color: "blue" },
+  2: { label: "名词", color: "green" },
+  3: { label: "形容词", color: "orange" },
   4: { label: "副词", color: "default" },
-  5: { label: "代词", color: "danger" },
+  5: { label: "代词", color: "red" },
   6: { label: "介词", color: "default" },
   7: { label: "连词", color: "default" },
   8: { label: "感叹词", color: "default" },
