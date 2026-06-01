@@ -19,9 +19,28 @@ describe("cypress syntax demo", () => {
       data: { user },
     }).as("login");
 
+    cy.intercept("POST", "/api/config/getAll", {
+      code: 200,
+      message: "ok",
+      data: {},
+    }).as("settings");
+
+    cy.intercept("POST", "/api/recite/start", {
+      code: 200,
+      message: "ok",
+      data: {
+        questions: [
+          { wordId: 1, question: "网络摄像头", direction: 0 },
+          { wordId: 2, question: "恶作剧", direction: 0 },
+          { wordId: 3, question: "蛋白质", direction: 0 },
+        ],
+        direction: 0,
+        totalCount: 3,
+      },
+    }).as("startReview");
   });
 
-  it("shows today's review task and takes a manual screenshot", () => {
+  it("shows today's review card and takes a manual screenshot", () => {
     cy.visit("/login");
 
     cy.get('[data-cy="login-username"]').type("tester");
@@ -33,6 +52,11 @@ describe("cypress syntax demo", () => {
 
     cy.contains("今日复习").should("be.visible");
     cy.contains("开始今日复习").should("be.visible");
+    cy.contains("开始今日复习").click();
+    cy.wait("@settings");
+    cy.wait("@startReview");
+    cy.contains("网络摄像头").should("be.visible");
+    cy.contains("第 1 / 3 题").should("be.visible");
     cy.screenshot("today-review-task");
   });
 });

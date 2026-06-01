@@ -49,6 +49,7 @@ import { PracticeDirection } from "../enum";
 import {
   createReviewProgress,
   createReviewResultInsight,
+  createReviewCardState,
 } from "./reviewExperience";
 
 const { Title, Text } = Typography;
@@ -71,6 +72,7 @@ export const RecitePage: React.FC = () => {
   const [expandedSessions, setExpandedSessions] = useState<number[]>([]);
   const [historyPage, setHistoryPage] = useState(1);
   const [historyTotal, setHistoryTotal] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   const answeredCount = questions.filter(
     (question) => answers[question.wordId]?.trim(),
@@ -82,6 +84,11 @@ export const RecitePage: React.FC = () => {
   const resultInsight = results
     ? createReviewResultInsight(results.statistics)
     : null;
+  const currentQuestion = questions[currentIndex];
+  const cardState = createReviewCardState({
+    totalCount: questions.length,
+    currentIndex,
+  });
 
   // 开始默写
   const handleStartRecite = useCallback(async () => {
@@ -107,10 +114,10 @@ export const RecitePage: React.FC = () => {
       setDirection(response.direction);
       setAnswers({});
       setResults(null);
+      setCurrentIndex(0);
       setStatus("practicing");
       form.resetFields();
 
-      message.success("今日复习已开始");
     } catch (error: unknown) {
       console.error("开始默写失败:", error);
       const errorMessage =
@@ -224,7 +231,23 @@ export const RecitePage: React.FC = () => {
     setQuestions([]);
     setAnswers({});
     setResults(null);
+    setCurrentIndex(0);
     form.resetFields();
+  };
+
+  const handleAnswerChange = (wordId: number, value: string) => {
+    setAnswers((prev) => ({
+      ...prev,
+      [wordId]: value,
+    }));
+  };
+
+  const goPrevQuestion = () => {
+    setCurrentIndex((prev) => Math.max(prev - 1, 0));
+  };
+
+  const goNextQuestion = () => {
+    setCurrentIndex((prev) => Math.min(prev + 1, questions.length - 1));
   };
 
   return (
@@ -259,7 +282,7 @@ export const RecitePage: React.FC = () => {
                 </Button>
               </>
             )}
-            {status === "practicing" && (
+            {status === "practicing" && cardState.isLast && (
               <Button
                 type="primary"
                 onClick={handleSubmit}
@@ -283,10 +306,11 @@ export const RecitePage: React.FC = () => {
 
         {/* 练习中 */}
         {status === "practicing" && (
-          <Card>
-            <div className="mb-4 flex items-center justify-between gap-4">
+          <Card className="border border-blue-100 shadow-sm">
+            <div className="mb-5 flex items-center justify-between gap-6">
               <div>
-                <Title level={4} className="mb-1">
+                <Tag color="blue">第 {cardState.displayIndex} / {cardState.totalCount} 题</Tag>
+                <Title level={3} className="mt-3 mb-1">
                   3 分钟短复习
                 </Title>
                 <Text type="secondary">
@@ -296,7 +320,7 @@ export const RecitePage: React.FC = () => {
                   ，先完成今天这一小组。
                 </Text>
               </div>
-              <div className="min-w-[220px]">
+              <div className="min-w-[260px]">
                 <div className="mb-1 flex justify-between text-sm text-gray-500">
                   <span>已完成 {progress.answeredCount}</span>
                   <span>剩余 {progress.remainingCount}</span>
@@ -305,45 +329,71 @@ export const RecitePage: React.FC = () => {
               </div>
             </div>
             <Divider />
-            <Form form={form} layout="vertical">
-              {questions.map((question, index) => (
-                <Form.Item
-                  key={question.wordId}
-                  label={
-                    <Text strong>
-                      第 {index + 1} 题: {question.question}
-                    </Text>
-                  }
-                  name={`answer_${question.wordId}`}
-                >
-                  <Input
-                    placeholder="请输入答案"
-                    size="large"
-                    value={answers[question.wordId] || ""}
-                    onChange={(e) => {
-                      const newAnswers = {
-                        ...answers,
-                        [question.wordId]: e.target.value,
-                      };
-                      setAnswers(newAnswers);
-                    }}
-                    onPressEnter={(e) => {
-                      e.preventDefault();
-                      const currentIndex = questions.findIndex(
-                        (q) => q.wordId === question.wordId
-                      );
-                      if (currentIndex < questions.length - 1) {
-                        const nextQuestion = questions[currentIndex + 1];
-                        const nextInput = document.querySelector(
-                          `input[name="answer_${nextQuestion.wordId}"]`
-                        ) as HTMLInputElement;
-                        nextInput?.focus();
+            {currentQuestion && (
+              <div className="mx-auto max-w-3xl py-4">
+                <Text type="secondary">请回忆答案</Text>
+                <div className="mt-3 mb-8 rounded-lg bg-slate-50 px-8 py-10 text-center">
+                  <Title level={2} className="mb-0">
+                    {currentQuestion.question}
+                  </Title>
+                </div>
+                <Form form={form} layout="vertical">
+                  <Form.Item
+                    label={<Text strong>你的答案</Text>}
+                    name={`answer_${currentQuestion.wordId}`}
+                  >
+                    <Input
+                      key={currentQuestion.wordId}
+                      autoFocus
+                      placeholder="输入后按 Enter 进入下一题"
+                      size="large"
+                      value={answers[currentQuestion.wordId] || ""}
+                      onChange={(e) =>
+                        handleAnswerChange(currentQuestion.wordId, e.target.value)
                       }
-                    }}
-                  />
-                </Form.Item>
-              ))}
-            </Form>
+                      onPressEnter={(e) => {
+                        e.preventDefault();
+                        if (cardState.canGoNext) {
+                          goNextQuestion();
+                        } else {
+                          handleSubmit();
+                        }
+                      }}
+                    />
+                  </Form.Item>
+                </Form>
+                <div className="mt-6 flex items-center justify-between">
+                  <Button
+                    size="large"
+                    disabled={!cardState.canGoPrev}
+                    onClick={goPrevQuestion}
+                  >
+                    上一题
+                  </Button>
+                  <Space>
+                    <Text type="secondary">
+                      {answers[currentQuestion.wordId]?.trim()
+                        ? "已填写"
+                        : "可以先跳过，最后一起提交"}
+                    </Text>
+                    {cardState.canGoNext ? (
+                      <Button type="primary" size="large" onClick={goNextQuestion}>
+                        下一题
+                      </Button>
+                    ) : (
+                      <Button
+                        type="primary"
+                        size="large"
+                        loading={loading}
+                        onClick={handleSubmit}
+                      >
+                        完成复习
+                      </Button>
+                    )}
+                  </Space>
+                </div>
+              </div>
+            )}
           </Card>
         )}
 

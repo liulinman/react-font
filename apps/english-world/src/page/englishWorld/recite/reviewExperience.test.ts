@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  createReviewCardState,
   createReviewProgress,
   createReviewResultInsight,
 } from "./reviewExperience";
@@ -48,5 +49,23 @@ describe("reviewExperience", () => {
         accuracy: 30,
       }).nextAction,
     ).toBe("先别加新词，建议再来一轮短复习。");
+  });
+
+  it("生成单题卡片导航状态", () => {
+    expect(createReviewCardState({ totalCount: 10, currentIndex: 0 })).toEqual({
+      displayIndex: 1,
+      totalCount: 10,
+      canGoPrev: false,
+      canGoNext: true,
+      isLast: false,
+    });
+
+    expect(createReviewCardState({ totalCount: 10, currentIndex: 9 })).toEqual({
+      displayIndex: 10,
+      totalCount: 10,
+      canGoPrev: true,
+      canGoNext: false,
+      isLast: true,
+    });
   });
 });

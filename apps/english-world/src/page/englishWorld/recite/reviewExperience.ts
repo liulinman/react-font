@@ -14,6 +14,14 @@ export type ReviewInsight = {
   nextAction: string;
 };
 
+export type ReviewCardState = {
+  displayIndex: number;
+  totalCount: number;
+  canGoPrev: boolean;
+  canGoNext: boolean;
+  isLast: boolean;
+};
+
 export function createReviewProgress({
   totalCount,
   answeredCount,
@@ -66,5 +74,25 @@ export function createReviewResultInsight(
     title: "今天先把基础拉回来",
     description: `${statistics.errorCount} 个词还不熟，系统已经帮你标出来了。`,
     nextAction: "先别加新词，建议再来一轮短复习。",
+  };
+}
+
+export function createReviewCardState({
+  totalCount,
+  currentIndex,
+}: {
+  totalCount: number;
+  currentIndex: number;
+}): ReviewCardState {
+  const safeTotalCount = Math.max(totalCount, 0);
+  const maxIndex = Math.max(safeTotalCount - 1, 0);
+  const safeIndex = Math.min(Math.max(currentIndex, 0), maxIndex);
+
+  return {
+    displayIndex: safeTotalCount === 0 ? 0 : safeIndex + 1,
+    totalCount: safeTotalCount,
+    canGoPrev: safeIndex > 0,
+    canGoNext: safeIndex < maxIndex,
+    isLast: safeTotalCount === 0 || safeIndex === maxIndex,
   };
 }
