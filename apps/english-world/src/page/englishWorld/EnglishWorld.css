@@ -293,6 +293,17 @@
   color: #1d4ed8;
 }
 
+.word-title-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+}
+
+.british-pronunciation-button.ant-btn {
+  color: #2563eb;
+}
+
 .word-phonetic {
   color: #6b7280;
   font-style: italic;

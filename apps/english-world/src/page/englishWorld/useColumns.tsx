@@ -16,6 +16,7 @@ import {
   getPartSpeechLabel,
   getTypeLabel,
 } from "./utils/wordLabels";
+import { BritishPronunciationButton } from "./component/BritishPronunciationButton";
 
 type Props = {
   handleEdit: (record: WordList) => void;
@@ -73,15 +74,18 @@ export const useColumns = (props: Props) => {
       key: "englishWord",
       // fixed: "left",
       render: (text: string) => (
-        <a
-          href={`https://www.baidu.com/s?wd=${encodeURIComponent(text)}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="word-link"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {text}
-        </a>
+        <span className="word-title-cell">
+          <a
+            href={`https://www.baidu.com/s?wd=${encodeURIComponent(text)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="word-link"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {text}
+          </a>
+          <BritishPronunciationButton word={text} />
+        </span>
       ),
     },
     // ... 音标列

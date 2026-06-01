@@ -51,6 +51,7 @@ import {
   createReviewResultInsight,
   createReviewCardState,
 } from "./reviewExperience";
+import { BritishPronunciationButton } from "../component/BritishPronunciationButton";
 
 const { Title, Text } = Typography;
 
@@ -333,9 +334,17 @@ export const RecitePage: React.FC = () => {
               <div className="mx-auto max-w-3xl py-4">
                 <Text type="secondary">请回忆答案</Text>
                 <div className="mt-3 mb-8 rounded-lg bg-slate-50 px-8 py-10 text-center">
-                  <Title level={2} className="mb-0">
-                    {currentQuestion.question}
-                  </Title>
+                  <div className="flex items-center justify-center gap-2">
+                    <Title level={2} className="mb-0">
+                      {currentQuestion.question}
+                    </Title>
+                    {direction === PracticeDirection.EnglishToChinese && (
+                      <BritishPronunciationButton
+                        word={currentQuestion.question}
+                        size="middle"
+                      />
+                    )}
+                  </div>
                 </div>
                 <Form form={form} layout="vertical">
                   <Form.Item
@@ -482,7 +491,10 @@ export const RecitePage: React.FC = () => {
                   <div className="space-y-1">
                     <div>
                       <Text type="secondary">题目: </Text>
-                      <Text>{result.englishWord}</Text>
+                      <span className="inline-flex items-center gap-1">
+                        <Text>{result.englishWord}</Text>
+                        <BritishPronunciationButton word={result.englishWord} />
+                      </span>
                     </div>
                     <div>
                       <Text type="secondary">正确答案: </Text>
