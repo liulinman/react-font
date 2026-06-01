@@ -7,11 +7,23 @@
     "dev": "turbo run dev",
     "build": "turbo run build",
     "lint": "turbo run lint",
+    "e2e:english-world": "pnpm --filter @font/english-world e2e",
+    "e2e:english-world:open": "pnpm --filter @font/english-world e2e:open",
+    "e2e:english-world:screenshot:auto": "pnpm --filter @font/english-world e2e:screenshot:auto",
+    "e2e:english-world:screenshot:auto:html": "pnpm --filter @font/english-world e2e:screenshot:auto:html",
+    "e2e:english-world:report": "pnpm --filter @font/english-world e2e:report",
+    "e2e:english-world:report:html": "pnpm --filter @font/english-world e2e:report:html",
     "preview:english-world": "pnpm --filter @font/english-world preview",
     "preview:web-utils": "pnpm --filter @font/web-utils preview"
   },
   "devDependencies": {
-    "turbo": "^2.3.0"
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.4.1",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.2",
+    "globals": "^17.6.0",
+    "turbo": "^2.3.0",
+    "typescript-eslint": "^8.60.0"
   },
   "packageManager": "pnpm@10.8.1",
   "engines": {

@@ -10,9 +10,12 @@ import {
   Typography,
 } from "antd";
 import moment from "moment";
-import { TagColor } from "./types";
 import { DeleteFilled, EditFilled } from "@ant-design/icons";
-import { getPartSpeechLabel } from "./utils/wordLabels";
+import {
+  getLevelLabel,
+  getPartSpeechLabel,
+  getTypeLabel,
+} from "./utils/wordLabels";
 
 type Props = {
   handleEdit: (record: WordList) => void;
@@ -60,7 +63,7 @@ export const useColumns = (props: Props) => {
       align: "center",
       render: (_text: number, _record: WordList, index: number) => {
         const serialNumber = (page - 1) * pageSize + index + 1;
-        return <span style={{ color: "#6b7280", fontWeight: 600 }}>{serialNumber}</span>;
+        return <span className="word-index">{serialNumber}</span>;
       },
     },
     {
@@ -192,14 +195,9 @@ export const useColumns = (props: Props) => {
       dataIndex: "englishType",
       key: "englishType",
       align: "center",
-      render: (level: number) => {
-        const types = [
-          { label: "单词", color: "blue" },
-          { label: "短语", color: "green" },
-          { label: "句子", color: "orange" },
-        ];
-        const type = types[level];
-        return <Tag color={type.color}>{type.label}</Tag>;
+      render: (type: number) => {
+        const info = getTypeLabel(type);
+        return <Tag color={info.color}>{info.label}</Tag>;
       },
     },
     {
@@ -233,18 +231,8 @@ export const useColumns = (props: Props) => {
       key: "englishLevel",
       align: "center",
       render: (level: number) => {
-        const levels = [
-          { label: "不会", color: "red" },
-          { label: "一般", color: "orange" },
-          { label: "熟练", color: "blue" },
-          { label: "精通", color: "green" },
-        ];
-        const currentLevel = levels[level];
-        const color = TagColor[level];
-
-        return (
-          <Tag color={color || currentLevel.color}>{currentLevel.label}</Tag>
-        );
+        const info = getLevelLabel(level);
+        return <Tag color={info.color}>{info.label}</Tag>;
       },
     },
     {
@@ -265,13 +253,13 @@ export const useColumns = (props: Props) => {
                 href={text}
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{ color: "#1677ff", textDecoration: "underline" }}
+                className="word-reference-link"
                 onClick={(e) => e.stopPropagation()}
               >
                 {text}
               </a>
             ) : (
-              <span style={{ color: "#666" }}>{text || "-"}</span>
+              <span className="word-reference-text">{text || "-"}</span>
             )}
           </Tooltip>
         );
@@ -284,7 +272,7 @@ export const useColumns = (props: Props) => {
       key: "englishCreateTime",
       render: (utcTime: string) => {
         return (
-          <span style={{ color: "#666", fontSize: "13px" }}>
+          <span className="word-date">
             {moment(utcTime).local().format("YYYY-MM-DD")}
           </span>
         );
@@ -297,7 +285,7 @@ export const useColumns = (props: Props) => {
       key: "englishUpdateTime",
       render: (utcTime: string) => {
         return (
-          <span style={{ color: "#666", fontSize: "13px" }}>
+          <span className="word-date">
             {moment(utcTime).local().format("YYYY-MM-DD")}
           </span>
         );

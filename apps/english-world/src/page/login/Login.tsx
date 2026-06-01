@@ -23,7 +23,9 @@ const Login: React.FC = () => {
   // 如果已登录，跳转到原页面或首页
   useEffect(() => {
     if (isAuthenticated) {
-      const from = (location.state as LocationState | null)?.from?.pathname || "/";
+      const from =
+        (location.state as LocationState | null)?.from?.pathname ||
+        "/englishWorld";
       navigate(from, { replace: true });
     }
   }, [isAuthenticated, navigate, location]);
@@ -94,6 +96,7 @@ const Login: React.FC = () => {
                 ]}
               >
                 <Input
+                  data-cy="login-username"
                   prefix={<UserOutlined />}
                   placeholder="用户名（至少3个字符）"
                 />
@@ -107,6 +110,7 @@ const Login: React.FC = () => {
                 ]}
               >
                 <Input.Password
+                  data-cy="login-password"
                   prefix={<LockOutlined />}
                   placeholder="密码（至少6个字符）"
                 />
@@ -116,6 +120,7 @@ const Login: React.FC = () => {
                 <Button
                   type="primary"
                   htmlType="submit"
+                  data-cy="login-submit"
                   block
                   loading={loading}
                 >
@@ -141,6 +146,7 @@ const Login: React.FC = () => {
                 ]}
               >
                 <Input
+                  data-cy="register-username"
                   prefix={<UserOutlined />}
                   placeholder="用户名（3-20个字符）"
                 />
@@ -154,6 +160,7 @@ const Login: React.FC = () => {
                 ]}
               >
                 <Input.Password
+                  data-cy="register-password"
                   prefix={<LockOutlined />}
                   placeholder="密码（至少6个字符）"
                 />
@@ -175,19 +182,21 @@ const Login: React.FC = () => {
                 ]}
               >
                 <Input.Password
+                  data-cy="register-confirm-password"
                   prefix={<LockOutlined />}
                   placeholder="确认密码"
                 />
               </Form.Item>
 
               <Form.Item name="avatar">
-                <Input placeholder="头像 URL（可选）" />
+                <Input data-cy="register-avatar" placeholder="头像 URL（可选）" />
               </Form.Item>
 
               <Form.Item>
                 <Button
                   type="primary"
                   htmlType="submit"
+                  data-cy="register-submit"
                   block
                   loading={loading}
                 >
