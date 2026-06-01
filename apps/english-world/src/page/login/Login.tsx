@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import "./Login.css";
 
 const { TabPane } = Tabs;
+const DEFAULT_AFTER_LOGIN_PATH = "/englishWorld/recite";
 
 type LocationState = {
   from?: {
@@ -25,7 +26,7 @@ const Login: React.FC = () => {
     if (isAuthenticated) {
       const from =
         (location.state as LocationState | null)?.from?.pathname ||
-        "/englishWorld";
+        DEFAULT_AFTER_LOGIN_PATH;
       navigate(from, { replace: true });
     }
   }, [isAuthenticated, navigate, location]);
@@ -40,7 +41,7 @@ const Login: React.FC = () => {
       await login(values.username, values.password);
       const from =
         (location.state as LocationState | null)?.from?.pathname ||
-        "/englishWorld";
+        DEFAULT_AFTER_LOGIN_PATH;
       navigate(from, { replace: true });
     } catch (error) {
       // 错误已在 AuthContext 中处理

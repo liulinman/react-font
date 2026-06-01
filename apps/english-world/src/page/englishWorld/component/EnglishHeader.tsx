@@ -13,8 +13,8 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
 const navItems = [
+  { key: "recite", icon: <BookFilled />, label: "今日复习" },
   { key: "list", icon: <UnorderedListOutlined />, label: "单词列表" },
-  { key: "recite", icon: <BookFilled />, label: "单词默写" },
   { key: "aiTool", icon: <RobotOutlined />, label: "AI 工具" },
   { key: "stat", icon: <BarChartOutlined />, label: "学习统计" },
   { key: "setting", icon: <SettingOutlined />, label: "系统设置" },

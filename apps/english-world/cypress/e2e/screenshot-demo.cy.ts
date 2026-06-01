@@ -19,26 +19,9 @@ describe("cypress syntax demo", () => {
       data: { user },
     }).as("login");
 
-    cy.intercept("POST", "/api/english/filterWordList", {
-      code: 200,
-      message: "ok",
-      data: {
-        list: [
-          {
-            id: 1,
-            englishWord: "apple",
-            englishChinese: "苹果",
-            englishType: 0,
-            englishLevel: 1,
-          },
-        ],
-        total: 1,
-        totalPages: 1,
-      },
-    }).as("wordList");
   });
 
-  it("shows apple and takes a manual screenshot", () => {
+  it("shows today's review task and takes a manual screenshot", () => {
     cy.visit("/login");
 
     cy.get('[data-cy="login-username"]').type("tester");
@@ -46,11 +29,10 @@ describe("cypress syntax demo", () => {
     cy.get('[data-cy="login-submit"]').click();
 
     cy.wait("@login");
-    cy.location("pathname").should("eq", "/englishWorld");
-    cy.wait("@wordList");
+    cy.location("pathname").should("eq", "/englishWorld/recite");
 
-    cy.contains("单词列表").should("be.visible");
-    cy.contains("apple").should("be.visible");
-    cy.screenshot("apple-is-visible");
+    cy.contains("今日复习").should("be.visible");
+    cy.contains("开始今日复习").should("be.visible");
+    cy.screenshot("today-review-task");
   });
 });

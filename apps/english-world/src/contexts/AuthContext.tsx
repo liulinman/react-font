@@ -75,7 +75,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const { mutateAsync: loginMutation } = useMutation(userLogin, {
     onSuccess: (result: LoginResponse) => {
       setUser(result.user);
-      message.success("登录成功");
     },
     onError: (error: ApiError) => {
       // 错误文案已由 axios 响应拦截器统一展示，此处不再重复 message.error

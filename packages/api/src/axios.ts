@@ -58,7 +58,9 @@ api.interceptors.response.use(
       return { ...response, data: data !== undefined ? data : response.data };
     } else {
       // 业务失败，抛出错误
-      showErrorOnce(msg || "请求失败");
+      if (code !== 4001) {
+        showErrorOnce(msg || "请求失败");
+      }
       return Promise.reject({
         code,
         message: msg,

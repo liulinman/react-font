@@ -15,6 +15,8 @@ import {
   Spin,
   Empty,
   Modal,
+  Progress,
+  Alert,
 } from "antd";
 import {
   CheckOutlined,
@@ -23,6 +25,7 @@ import {
   ReloadOutlined,
   HistoryOutlined,
   BarChartOutlined,
+  ThunderboltOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { EnglishHeader } from "../component/EnglishHeader";
@@ -43,6 +46,10 @@ import {
 } from "@/server/recite/recite";
 import { getSystemSettings } from "../component/SystemSettings";
 import { PracticeDirection } from "../enum";
+import {
+  createReviewProgress,
+  createReviewResultInsight,
+} from "./reviewExperience";
 
 const { Title, Text } = Typography;
 
@@ -64,6 +71,17 @@ export const RecitePage: React.FC = () => {
   const [expandedSessions, setExpandedSessions] = useState<number[]>([]);
   const [historyPage, setHistoryPage] = useState(1);
   const [historyTotal, setHistoryTotal] = useState(0);
+
+  const answeredCount = questions.filter(
+    (question) => answers[question.wordId]?.trim(),
+  ).length;
+  const progress = createReviewProgress({
+    totalCount: questions.length,
+    answeredCount,
+  });
+  const resultInsight = results
+    ? createReviewResultInsight(results.statistics)
+    : null;
 
   // 开始默写
   const handleStartRecite = useCallback(async () => {
@@ -92,11 +110,11 @@ export const RecitePage: React.FC = () => {
       setStatus("practicing");
       form.resetFields();
 
-      message.success("开始默写！");
+      message.success("今日复习已开始");
     } catch (error: unknown) {
       console.error("开始默写失败:", error);
       const errorMessage =
-        error instanceof Error ? error.message : "开始默写失败，请重试";
+        error instanceof Error ? error.message : "今日复习加载失败，请重试";
       message.error(errorMessage);
       setStatus("idle");
     } finally {
@@ -129,12 +147,12 @@ export const RecitePage: React.FC = () => {
       setResults(response);
       setStatus("submitted");
       // 保存会话ID（可选，用于后续功能）
-      console.log("本次默写会话ID:", response.sessionId);
-      message.success("提交成功！");
+      console.log("本次复习会话ID:", response.sessionId);
+      message.success("今日复习完成");
     } catch (error: unknown) {
       console.error("提交答案失败:", error);
       const errorMessage =
-        error instanceof Error ? error.message : "提交答案失败，请重试";
+        error instanceof Error ? error.message : "提交复习结果失败，请重试";
       message.error(errorMessage);
     } finally {
       setLoading(false);
@@ -216,37 +234,30 @@ export const RecitePage: React.FC = () => {
         {/* 标题和操作按钮 */}
         <div className="mb-6 flex items-center justify-between">
           <Title level={2} className="mb-0">
-            单词默写
+            今日复习
           </Title>
           <Space>
-            <Button
-              icon={<HistoryOutlined />}
-              onClick={() => {
-                setShowHistory(true);
-                loadHistory(1);
-              }}
-            >
-              历史记录
-            </Button>
-            <Button
-              icon={<BarChartOutlined />}
-              onClick={() => {
-                setShowStats(true);
-                loadStats();
-              }}
-            >
-              统计信息
-            </Button>
-            {status === "idle" && (
-              <Button
-                type="primary"
-                icon={<PlayCircleOutlined />}
-                onClick={handleStartRecite}
-                loading={loading}
-                size="large"
-              >
-                开始默写
-              </Button>
+            {status !== "idle" && (
+              <>
+                <Button
+                  icon={<HistoryOutlined />}
+                  onClick={() => {
+                    setShowHistory(true);
+                    loadHistory(1);
+                  }}
+                >
+                  历史记录
+                </Button>
+                <Button
+                  icon={<BarChartOutlined />}
+                  onClick={() => {
+                    setShowStats(true);
+                    loadStats();
+                  }}
+                >
+                  统计信息
+                </Button>
+              </>
             )}
             {status === "practicing" && (
               <Button
@@ -255,7 +266,7 @@ export const RecitePage: React.FC = () => {
                 loading={loading}
                 size="large"
               >
-                提交答案
+                完成复习
               </Button>
             )}
             {status === "submitted" && (
@@ -273,16 +284,25 @@ export const RecitePage: React.FC = () => {
         {/* 练习中 */}
         {status === "practicing" && (
           <Card>
-            <div className="mb-4">
-              <Text type="secondary">
-                练习方向:{" "}
-                {direction === PracticeDirection.ChineseToEnglish
-                  ? "中文写英文"
-                  : "英文写中文"}
-              </Text>
-              <Text type="secondary" className="ml-4">
-                共 {questions.length} 题
-              </Text>
+            <div className="mb-4 flex items-center justify-between gap-4">
+              <div>
+                <Title level={4} className="mb-1">
+                  3 分钟短复习
+                </Title>
+                <Text type="secondary">
+                  {direction === PracticeDirection.ChineseToEnglish
+                    ? "看中文，回忆英文"
+                    : "看英文，回忆中文"}
+                  ，先完成今天这一小组。
+                </Text>
+              </div>
+              <div className="min-w-[220px]">
+                <div className="mb-1 flex justify-between text-sm text-gray-500">
+                  <span>已完成 {progress.answeredCount}</span>
+                  <span>剩余 {progress.remainingCount}</span>
+                </div>
+                <Progress percent={progress.percent} size="small" />
+              </div>
             </div>
             <Divider />
             <Form form={form} layout="vertical">
@@ -330,6 +350,20 @@ export const RecitePage: React.FC = () => {
         {/* 提交结果 */}
         {status === "submitted" && results && (
           <Card>
+            {resultInsight && (
+              <Alert
+                className="mb-6"
+                type={resultInsight.tone === "danger" ? "error" : resultInsight.tone}
+                showIcon
+                message={resultInsight.title}
+                description={
+                  <div>
+                    <div>{resultInsight.description}</div>
+                    <div className="mt-1">{resultInsight.nextAction}</div>
+                  </div>
+                }
+              />
+            )}
             <div className="mb-6">
               <Row gutter={16}>
                 <Col span={6}>
@@ -423,11 +457,60 @@ export const RecitePage: React.FC = () => {
 
         {/* 初始状态 */}
         {status === "idle" && (
-          <Card>
-            <Empty
-              description="点击「开始默写」按钮开始练习"
-              image={Empty.PRESENTED_IMAGE_SIMPLE}
-            />
+          <Card className="max-w-4xl border border-blue-100">
+            <div className="flex flex-col gap-6">
+              <div>
+                <Tag color="blue" icon={<ThunderboltOutlined />}>
+                  今日任务
+                </Tag>
+                <Title level={3} className="mt-4 mb-2">
+                  先完成一轮短复习
+                </Title>
+                <Text type="secondary">
+                  系统会按你的配置抽取一组词。目标不是刷很多，而是每天稳定完成一次。
+                </Text>
+              </div>
+              <Row gutter={16}>
+                <Col span={8}>
+                  <Statistic title="建议时长" value={3} suffix="分钟" />
+                </Col>
+                <Col span={8}>
+                  <Statistic title="任务规模" value="短组" />
+                </Col>
+                <Col span={8}>
+                  <Statistic title="完成反馈" value="即时" />
+                </Col>
+              </Row>
+              <Space>
+                <Button
+                  type="primary"
+                  icon={<PlayCircleOutlined />}
+                  onClick={handleStartRecite}
+                  loading={loading}
+                  size="large"
+                >
+                  开始今日复习
+                </Button>
+                <Button
+                  icon={<HistoryOutlined />}
+                  onClick={() => {
+                    setShowHistory(true);
+                    loadHistory(1);
+                  }}
+                >
+                  看历史
+                </Button>
+                <Button
+                  icon={<BarChartOutlined />}
+                  onClick={() => {
+                    setShowStats(true);
+                    loadStats();
+                  }}
+                >
+                  看统计
+                </Button>
+              </Space>
+            </div>
           </Card>
         )}
 
@@ -437,7 +520,7 @@ export const RecitePage: React.FC = () => {
             <div className="text-center py-8">
               <Spin size="large" />
               <div className="mt-4">
-                <Text type="secondary">正在加载题目...</Text>
+                <Text type="secondary">正在准备今日复习...</Text>
               </div>
             </div>
           </Card>
