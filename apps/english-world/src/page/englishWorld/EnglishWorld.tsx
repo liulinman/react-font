@@ -24,7 +24,6 @@ import { DownOutlined, PlusOutlined, UpOutlined } from "@ant-design/icons";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useWordList } from "./hooks/useWordList";
 import { normalizeDesktopWordFilters } from "./utils/wordFilters";
-import { createWordListSummary } from "./utils/wordListSummary";
 import "./EnglishWorld.css";
 const { RangePicker } = DatePicker;
 
@@ -242,13 +241,6 @@ const EnglishWorld: React.FC = () => {
     changePage(page, pageSize);
   };
 
-  const listSummary = createWordListSummary({
-    totalNum,
-    page,
-    pageSize,
-    loadedCount: wordList.length,
-  });
-
   return (
     <div className="english-world-shell">
       <EnglishHeader activeKey={activeNav} onNavClick={handleNavClick} />
@@ -335,15 +327,6 @@ const EnglishWorld: React.FC = () => {
                 </Button>
               </div>
 
-              <div className="english-world-summary" aria-label="词库概览">
-                {listSummary.map((item) => (
-                  <div className="english-world-summary-item" key={item.key}>
-                    <span>{item.label}</span>
-                    <strong>{item.value}</strong>
-                  </div>
-                ))}
-              </div>
-
               <div className="english-world-table-wrap">
                 <Table<WordList>
                   bordered={false}
@@ -352,7 +335,7 @@ const EnglishWorld: React.FC = () => {
                   columns={columns}
                   dataSource={wordList}
                   rowKey="id"
-                  scroll={{ x: 1360, y: "calc(100vh - 360px)" }}
+                  scroll={{ x: 1360, y: "calc(100vh - 300px)" }}
                   pagination={{
                     current: page,
                     total: totalNum,

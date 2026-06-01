@@ -194,38 +194,6 @@
   font-size: 12px;
 }
 
-.english-world-summary {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
-  margin-bottom: 12px;
-}
-
-.english-world-summary-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  min-height: 48px;
-  padding: 0 14px;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  background: #f8fafc;
-}
-
-.english-world-summary-item span {
-  color: #6b7280;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.english-world-summary-item strong {
-  color: #111827;
-  font-size: 18px;
-  font-weight: 800;
-  line-height: 1;
-}
-
 .english-world-table-wrap {
   min-height: 0;
 }
@@ -378,7 +346,4 @@
     padding: 150px 16px 16px;
   }
 
-  .english-world-summary {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
