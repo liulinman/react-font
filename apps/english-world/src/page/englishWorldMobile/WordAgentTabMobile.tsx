@@ -11,6 +11,7 @@ import type {
 import { wordAdd, wordExist } from "@/server/word/word";
 import type { WordList } from "@/server/word/word.type";
 import { EnglishPartSpeech } from "@/page/englishWorld/enum";
+import { MobileBritishPronunciationButton } from "./MobileBritishPronunciationButton";
 
 const STREAM_PATH = "/word-agent/query-stream";
 
@@ -274,16 +275,25 @@ export const WordAgentTabMobile: React.FC = () => {
                 }}
               >
                 <div>
-                  <span
+                  <div
                     style={{
-                      fontSize: 18,
-                      fontWeight: 600,
-                      color: "#667eea",
-                      marginRight: 8,
+                      display: "flex",
+                      alignItems: "center",
+                      flexWrap: "wrap",
+                      gap: 6,
                     }}
                   >
-                    {item.word}
-                  </span>
+                    <span
+                      style={{
+                        fontSize: 18,
+                        fontWeight: 600,
+                        color: "#667eea",
+                      }}
+                    >
+                      {item.word}
+                    </span>
+                    <MobileBritishPronunciationButton word={item.word} />
+                  </div>
                   <span style={{ color: "#64748b", fontSize: 14 }}>
                     {item.phonetic}
                   </span>

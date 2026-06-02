@@ -55,6 +55,7 @@ import {
   getTypeLabel,
 } from "@/page/englishWorld/utils/wordLabels";
 import { normalizeMobileWordFilters } from "@/page/englishWorld/utils/wordFilters";
+import { MobileBritishPronunciationButton } from "./MobileBritishPronunciationButton";
 import "./EnglishWorldMobile.css";
 
 type ListData = {
@@ -616,6 +617,9 @@ const EnglishWorldMobile: React.FC = () => {
                             <span className="word-title">
                               {item.englishWord}
                             </span>
+                            <MobileBritishPronunciationButton
+                              word={item.englishWord}
+                            />
                             {item.englishPhonetic && (
                               <span className="word-phonetic">
                                 [{item.englishPhonetic}]

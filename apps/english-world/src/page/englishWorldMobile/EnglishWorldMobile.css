@@ -41,7 +41,8 @@
 
 .word-card-header {
   display: flex;
-  align-items: baseline;
+  align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
@@ -55,6 +56,20 @@
   font-size: 14px;
   color: #8c8c8c;
   font-style: italic;
+}
+
+.mobile-pronunciation-button.adm-button {
+  --text-color: #1677ff;
+  min-width: 28px;
+  height: 28px;
+  padding: 0;
+  line-height: 1;
+}
+
+.mobile-pronunciation-button .adm-button-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .word-card-body {
@@ -181,4 +196,3 @@
     font-size: 12px;
   }
 }
-
