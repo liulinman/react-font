@@ -11,19 +11,10 @@ import type {
 import { wordAdd, wordExist } from "@/server/word/word";
 import type { WordList } from "@/server/word/word.type";
 import { EnglishPartSpeech } from "@/page/englishWorld/enum";
+import { buildWordAgentRequestBody } from "@/page/englishWorld/utils/wordAgentRequest";
 import { MobileBritishPronunciationButton } from "./MobileBritishPronunciationButton";
 
 const STREAM_PATH = "/word-agent/query-stream";
-
-function buildRequestBody(
-  inputText: string
-): { word?: string; words?: string[] } {
-  const trimmed = inputText.trim();
-  if (!trimmed) return {};
-  const parts = trimmed.split(/[\s,]+/).filter(Boolean);
-  if (parts.length <= 1) return { word: trimmed };
-  return { words: parts };
-}
 
 export const WordAgentTabMobile: React.FC = () => {
   const [input, setInput] = useState("");
@@ -82,7 +73,7 @@ export const WordAgentTabMobile: React.FC = () => {
   };
 
   const handleQuery = async () => {
-    const body = buildRequestBody(input);
+    const body = buildWordAgentRequestBody(input);
     if (!body.word && !body.words?.length) {
       Toast.show({ icon: "fail", content: "请输入要查询的单词" });
       return;
@@ -237,7 +228,7 @@ export const WordAgentTabMobile: React.FC = () => {
           AI 单词查询
         </div>
         <p style={{ margin: "0 0 12px 0", fontSize: 13, color: "#666" }}>
-          输入单词（支持多个，逗号或空格分隔），获取释义、音标等。
+          输入单词或短语（多个请用逗号或换行分隔），获取释义、音标等。
         </p>
         <Input
           value={input}

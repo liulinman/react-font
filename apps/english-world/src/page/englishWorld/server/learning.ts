@@ -3,7 +3,10 @@ import type {
   ContextLabSubmitParams,
   DailyCoachPlan,
   DailyCoachSummary,
+  LearningWord,
   MemoryMapOverview,
+  MemoryMapUpdateLevelParams,
+  MemoryMapWordDetailParams,
 } from "../types/learning";
 import type { ExerciseSubmitResponse } from "@/server/exerciseAgent/exerciseAgent";
 
@@ -53,4 +56,22 @@ export const memoryMapOverview = (data: {
   method: "POST",
   data,
   __responseType: undefined as unknown as MemoryMapOverview,
+});
+
+export const memoryMapWordDetail = (
+  data: MemoryMapWordDetailParams,
+): YTRequest<LearningWord> => ({
+  url: "/memory-map/word-detail",
+  method: "POST",
+  data,
+  __responseType: undefined as unknown as LearningWord,
+});
+
+export const memoryMapUpdateLevel = (
+  data: MemoryMapUpdateLevelParams,
+): YTRequest<boolean> => ({
+  url: "/memory-map/update-level",
+  method: "POST",
+  data,
+  __responseType: undefined as unknown as boolean,
 });

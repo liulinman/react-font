@@ -5,11 +5,15 @@ import type { MouseEvent } from "react";
 import { playBritishPronunciation } from "../utils/pronunciation";
 
 type BritishPronunciationButtonProps = {
+  ariaLabel?: string;
+  title?: string;
   word?: string;
   size?: "small" | "middle" | "large";
 };
 
 export function BritishPronunciationButton({
+  ariaLabel = "播放英式发音",
+  title = "播放英式发音",
   word,
   size = "small",
 }: BritishPronunciationButtonProps) {
@@ -36,9 +40,9 @@ export function BritishPronunciationButton({
   };
 
   return (
-    <Tooltip title="播放英式发音">
+    <Tooltip title={title}>
       <Button
-        aria-label="播放英式发音"
+        aria-label={ariaLabel}
         className="british-pronunciation-button"
         icon={<SoundOutlined />}
         loading={loading}

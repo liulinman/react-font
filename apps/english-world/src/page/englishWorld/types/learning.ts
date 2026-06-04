@@ -4,6 +4,7 @@ export type LearningWord = {
   id: number;
   word: string;
   meaning?: string;
+  phonetic?: string;
   level: LearningLevel;
   accuracy?: number;
   lastPracticedAt?: string | null;
@@ -62,6 +63,15 @@ export type MemoryMapOverview = {
     recentSessions: number;
     recentAccuracy: number;
   };
+};
+
+export type MemoryMapWordDetailParams = {
+  wordId: number;
+};
+
+export type MemoryMapUpdateLevelParams = {
+  wordId: number;
+  level: LearningLevel;
 };
 
 export type ContextLabGenerateParams =

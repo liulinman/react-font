@@ -1,11 +1,220 @@
 import { useEffect, useState } from "react";
-import { Typography } from "antd";
+import { Button, Empty, message, Progress, Tag, Typography } from "antd";
+import {
+  ArrowRightOutlined,
+  BulbOutlined,
+  CheckCircleOutlined,
+  ExperimentOutlined,
+  FieldTimeOutlined,
+  EyeOutlined,
+} from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
 import request from "@font/api";
-import { MemoryMapSummary } from "./MemoryMapSummary";
-import { memoryMapOverview } from "../server/learning";
-import type { MemoryMapOverview } from "../types/learning";
+import {
+  memoryMapOverview,
+  memoryMapUpdateLevel,
+  memoryMapWordDetail,
+} from "../server/learning";
+import { BritishPronunciationButton } from "../component/BritishPronunciationButton";
+import type { LearningWord, MemoryMapOverview } from "../types/learning";
 
 const { Text, Title } = Typography;
+
+type MemoryExample = {
+  sentence: string;
+  translation: string;
+};
+
+const naturalExamplesByWord: Record<string, MemoryExample[]> = {
+  attorney: [
+    {
+      sentence: "The attorney reviewed the contract before we signed it.",
+      translation: "签合同前，律师先审阅了这份合同。",
+    },
+    {
+      sentence: "She called her attorney before answering any questions.",
+      translation: "回答任何问题前，她先给律师打了电话。",
+    },
+  ],
+  anthropic: [
+    {
+      sentence:
+        "The researchers studied how anthropic activity changed the river.",
+      translation: "研究人员研究了人类活动如何改变这条河流。",
+    },
+    {
+      sentence: "The report focused on anthropic effects on the local climate.",
+      translation: "这份报告关注人类活动对当地气候的影响。",
+    },
+  ],
+  chore: [
+    {
+      sentence: "Doing laundry is my least favorite chore on weekends.",
+      translation: "洗衣服是我周末最不喜欢做的家务。",
+    },
+    {
+      sentence:
+        "Taking out the trash is a simple chore, but I always forget it.",
+      translation: "倒垃圾是件简单的家务，但我总是忘记。",
+    },
+  ],
+  debt: [
+    {
+      sentence: "He worked extra hours to pay off his student debt.",
+      translation: "他加班工作来还清学生贷款。",
+    },
+    {
+      sentence: "The company reduced its debt after a strong sales year.",
+      translation: "销售表现强劲的一年后，公司减少了债务。",
+    },
+  ],
+  explode: [
+    {
+      sentence: "The crowd seemed ready to explode with excitement.",
+      translation: "人群兴奋得像要爆发一样。",
+    },
+    {
+      sentence: "The number of messages exploded after the announcement.",
+      translation: "公告发布后，消息数量激增。",
+    },
+  ],
+  flush: [
+    {
+      sentence: "Please flush the glass with clean water before using it.",
+      translation: "使用前，请用清水冲洗这个杯子。",
+    },
+    {
+      sentence: "A quick flush cleared the dust from the pipe.",
+      translation: "快速冲洗一下就把管道里的灰尘清掉了。",
+    },
+  ],
+  fragile: [
+    {
+      sentence: "The box says the glasses inside are fragile.",
+      translation: "盒子上写着里面的玻璃杯易碎。",
+    },
+    {
+      sentence: "Their agreement was fragile and needed careful handling.",
+      translation: "他们的协议很脆弱，需要谨慎处理。",
+    },
+  ],
+  "knock over": [
+    {
+      sentence: "Be careful not to knock over the coffee on your desk.",
+      translation: "小心别把桌上的咖啡碰倒。",
+    },
+    {
+      sentence: "The strong wind knocked over several signs outside the store.",
+      translation: "强风把店外的几个牌子吹倒了。",
+    },
+  ],
+  negative: [
+    {
+      sentence: "Try not to let one negative comment ruin your day.",
+      translation: "别让一句负面评价毁掉你一整天的心情。",
+    },
+    {
+      sentence: "The test result was negative, so she felt relieved.",
+      translation: "检测结果为阴性，所以她松了一口气。",
+    },
+  ],
+  phrase: [
+    {
+      sentence: "I wrote down the phrase so I could use it later.",
+      translation: "我把这个短语记下来，方便以后使用。",
+    },
+    {
+      sentence: "That phrase sounds natural in everyday conversation.",
+      translation: "那个短语在日常对话里听起来很自然。",
+    },
+  ],
+  recession: [
+    {
+      sentence: "Many companies slowed hiring during the recession.",
+      translation: "经济衰退期间，许多公司放慢了招聘速度。",
+    },
+    {
+      sentence: "Families became more careful with money during the recession.",
+      translation: "经济衰退期间，许多家庭花钱更谨慎了。",
+    },
+  ],
+  recover: [
+    {
+      sentence: "She took a few days off to recover from the flu.",
+      translation: "她休息了几天来从流感中恢复过来。",
+    },
+    {
+      sentence: "The team recovered quickly after losing the first game.",
+      translation: "输掉第一场后，团队很快恢复了状态。",
+    },
+  ],
+  resilient: [
+    {
+      sentence: "She stayed resilient even after the project failed.",
+      translation: "即使项目失败了，她依然保持韧性。",
+    },
+    {
+      sentence: "A resilient system can keep working when one part fails.",
+      translation: "有韧性的系统在某个部分失败时仍能继续运行。",
+    },
+  ],
+  telepathic: [
+    {
+      sentence: "The twins joked that their timing felt almost telepathic.",
+      translation: "这对双胞胎开玩笑说，他们的默契几乎像心灵感应。",
+    },
+    {
+      sentence: "He guessed what I wanted with almost telepathic accuracy.",
+      translation: "他几乎像有心灵感应一样准确猜到了我想要什么。",
+    },
+  ],
+  vehicle: [
+    {
+      sentence: "The delivery vehicle stopped outside our building.",
+      translation: "送货车辆停在了我们楼外。",
+    },
+    {
+      sentence: "The app became a vehicle for sharing local news.",
+      translation: "这个应用成了分享本地新闻的媒介。",
+    },
+  ],
+  vibe: [
+    {
+      sentence:
+        "The small cafe had a relaxed vibe, so we stayed there for hours.",
+      translation: "这家小咖啡馆氛围很放松，所以我们在那里待了好几个小时。",
+    },
+    {
+      sentence: "The meeting had a strange vibe after everyone went quiet.",
+      translation: "大家都安静下来后，会议的气氛变得有点奇怪。",
+    },
+  ],
+};
+
+function getPrimaryMeaning(meaning?: string) {
+  return (
+    meaning
+      ?.split(/[;；,，、]/)
+      .map((item) => item.trim())
+      .find(Boolean) || "这个意思"
+  );
+}
+
+function generateMemoryExample(
+  word: LearningWord,
+  exampleIndex: number,
+): MemoryExample {
+  const knownExamples = naturalExamplesByWord[word.word.trim().toLowerCase()];
+  if (knownExamples?.length)
+    return knownExamples[exampleIndex % knownExamples.length];
+
+  const meaning = getPrimaryMeaning(word.meaning);
+
+  return {
+    sentence: `I heard the word "${word.word}" in a conversation and wrote it down.`,
+    translation: `我在一次对话中听到 "${word.word}" 这个词，就把它记了下来。它可以表示：${meaning}。`,
+  };
+}
 
 const demoOverview: MemoryMapOverview = {
   levels: [
@@ -15,13 +224,43 @@ const demoOverview: MemoryMapOverview = {
     { level: 3, count: 30 },
   ],
   dueWords: [
-    { id: 1, word: "resilient", meaning: "有复原力的", level: 0 },
-    { id: 2, word: "recover", meaning: "恢复", level: 1 },
+    {
+      id: 1,
+      word: "resilient",
+      meaning: "有复原力的",
+      phonetic: "/rɪˈzɪliənt/",
+      level: 0,
+    },
+    {
+      id: 2,
+      word: "recover",
+      meaning: "恢复",
+      phonetic: "/rɪˈkʌvə/",
+      level: 1,
+    },
   ],
   weakWords: [
-    { id: 1, word: "resilient", meaning: "有复原力的", level: 0 },
-    { id: 2, word: "recover", meaning: "恢复", level: 1 },
-    { id: 3, word: "fragile", meaning: "脆弱的", level: 0 },
+    {
+      id: 1,
+      word: "resilient",
+      meaning: "有复原力的",
+      phonetic: "/rɪˈzɪliənt/",
+      level: 0,
+    },
+    {
+      id: 2,
+      word: "recover",
+      meaning: "恢复",
+      phonetic: "/rɪˈkʌvə/",
+      level: 1,
+    },
+    {
+      id: 3,
+      word: "fragile",
+      meaning: "脆弱的",
+      phonetic: "/ˈfrædʒaɪl/",
+      level: 0,
+    },
   ],
   recentMistakes: [
     {
@@ -46,17 +285,35 @@ const demoOverview: MemoryMapOverview = {
 };
 
 export function MemoryMapPage() {
+  const navigate = useNavigate();
   const [overview, setOverview] = useState(demoOverview);
+  const [selectedWord, setSelectedWord] = useState<LearningWord | null>(
+    demoOverview.weakWords[0] ?? null,
+  );
+  const [memoryExample, setMemoryExample] = useState<MemoryExample | null>(
+    null,
+  );
+  const [exampleCounts, setExampleCounts] = useState<Record<number, number>>(
+    {},
+  );
+  const [showTranslation, setShowTranslation] = useState(false);
+  const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
     let mounted = true;
 
     void request(memoryMapOverview({ days: 7 }))
       .then((data) => {
-        if (mounted) setOverview(data);
+        if (!mounted) return;
+        setOverview(data);
+        setSelectedWord((current) => current ?? data.weakWords[0] ?? null);
       })
       .catch(() => {
-        if (mounted) setOverview(demoOverview);
+        if (!mounted) return;
+        setOverview(demoOverview);
+        setSelectedWord(
+          (current) => current ?? demoOverview.weakWords[0] ?? null,
+        );
       });
 
     return () => {
@@ -64,16 +321,372 @@ export function MemoryMapPage() {
     };
   }, []);
 
+  const total = overview.levels.reduce((sum, item) => sum + item.count, 0);
+  const mastered = overview.levels
+    .filter((item) => item.level >= 2)
+    .reduce((sum, item) => sum + item.count, 0);
+  const masteryPercent = total ? Math.round((mastered / total) * 100) : 0;
+
+  const handleSelectWord = async (word: LearningWord) => {
+    setSelectedWord(word);
+    setMemoryExample(null);
+    setShowTranslation(false);
+    try {
+      const detail = await request(memoryMapWordDetail({ wordId: word.id }));
+      setSelectedWord(detail);
+    } catch {
+      setSelectedWord(word);
+    }
+  };
+
+  const handleGenerateExample = () => {
+    if (!selectedWord) return;
+
+    const currentCount = exampleCounts[selectedWord.id] ?? 0;
+    setMemoryExample(generateMemoryExample(selectedWord, currentCount));
+    setExampleCounts((current) => ({
+      ...current,
+      [selectedWord.id]: currentCount + 1,
+    }));
+    setShowTranslation(false);
+  };
+
+  const handleMarkMastered = async () => {
+    if (!selectedWord) return;
+    setUpdating(true);
+    try {
+      await request(
+        memoryMapUpdateLevel({
+          wordId: selectedWord.id,
+          level: 3,
+        }),
+      );
+      const masteredWord: LearningWord = { ...selectedWord, level: 3 };
+      setSelectedWord(masteredWord);
+      setOverview((current) => ({
+        ...current,
+        weakWords: current.weakWords.filter(
+          (word) => word.id !== selectedWord.id,
+        ),
+        dueWords: current.dueWords.filter(
+          (word) => word.id !== selectedWord.id,
+        ),
+      }));
+      message.success("已标记为掌握");
+    } catch (error: unknown) {
+      console.error("Update memory level failed:", error);
+    } finally {
+      setUpdating(false);
+    }
+  };
+
   return (
-    <div className="learning-cockpit">
-      <section className="learning-cockpit-hero">
+    <div className="min-h-screen bg-[#f0f2f5] p-6 lg:p-10 text-slate-700">
+      <section className="mb-8">
         <div>
-          <Text className="learning-cockpit-label">C. Memory OS</Text>
-          <Title level={1}>记忆地图</Title>
-          <p>把错词、相似词和掌握路径放在一个学习视图里，帮助你决定下一组要练什么。</p>
+          <Text className="text-blue-500 font-bold tracking-widest uppercase text-[10px] opacity-80">
+            C. Memory OS
+          </Text>
+          <Title level={4} className="!mt-1 !mb-1 !font-black">
+            记忆地图
+          </Title>
+          <p className="text-slate-400 text-xs max-w-2xl font-medium">
+            整合错词关联与掌握路径，可视化你的核心记忆资产。
+          </p>
         </div>
       </section>
-      <MemoryMapSummary overview={overview} />
+
+      <section className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        {[
+          {
+            label: "低掌握词",
+            value: overview.weakWords.length,
+            color: "text-rose-600",
+          },
+          {
+            label: "待处理",
+            value: overview.dueWords.length,
+            color: "text-amber-600",
+          },
+          {
+            label: "近期正确率",
+            value: `${overview.streakLikeStats.recentAccuracy}%`,
+            color: "text-indigo-600",
+          },
+          {
+            label: "掌握路径",
+            value: `${masteryPercent}%`,
+            color: "text-emerald-600",
+            progress: true,
+          },
+        ].map((stat, i) => (
+          <div
+            key={i}
+            className="bg-white p-5 rounded-lg shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow"
+          >
+            <Text className="text-slate-400 text-[11px] mb-2 font-bold uppercase">
+              {stat.label}
+            </Text>
+            <div className="flex items-end justify-between">
+              <strong
+                className={`text-2xl font-black leading-none ${stat.color}`}
+              >
+                {stat.value}
+              </strong>
+              {stat.progress && (
+                <div className="w-16">
+                  <Progress
+                    percent={masteryPercent}
+                    size="small"
+                    strokeWidth={4}
+                    showInfo={true}
+                    strokeColor="#10b981"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </section>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* 左侧：弱词队列 */}
+        <section className="lg:col-span-3 bg-white rounded-lg shadow-sm overflow-hidden h-[650px] flex flex-col border-none">
+          <div className="p-4 border-b border-slate-50 bg-white">
+            <Text className="text-blue-600 font-bold text-[10px] uppercase tracking-widest">
+              Queue
+            </Text>
+            <Title level={5} className="!m-0 !font-bold">
+              弱词队列
+            </Title>
+          </div>
+          <div className="flex-1 overflow-y-auto p-2 space-y-1 bg-slate-50/30">
+            {overview.weakWords.length ? (
+              overview.weakWords.map((word) => (
+                <div
+                  key={word.id}
+                  className={`group relative p-3 rounded-md cursor-pointer transition-all duration-200 border-l-4 ${
+                    selectedWord?.id === word.id
+                      ? "bg-white border-blue-500 shadow-sm"
+                      : "bg-transparent border-transparent hover:bg-white hover:shadow-sm"
+                  }`}
+                  onClick={() => void handleSelectWord(word)}
+                >
+                  <div className="flex flex-col gap-0.5">
+                    <div className="flex items-center justify-between">
+                      <strong
+                        className={`text-[13px] ${selectedWord?.id === word.id ? "text-blue-600 font-bold" : "text-slate-600"}`}
+                      >
+                        {word.word}
+                      </strong>
+                      <Tag className="!m-0 !rounded-full border-none bg-slate-200/50 text-slate-500 text-[9px]">
+                        Lv {word.level}
+                      </Tag>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {word.phonetic ? (
+                        <Text className="text-[11px] text-slate-400 font-mono italic">
+                          {word.phonetic}
+                        </Text>
+                      ) : null}
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                        <BritishPronunciationButton word={word.word} />
+                      </div>
+                    </div>
+                    <Text className="text-[11px] text-slate-400 truncate">
+                      {word.meaning ?? "暂无释义"}
+                    </Text>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <Empty
+                description="暂无低掌握词"
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+              />
+            )}
+          </div>
+        </section>
+
+        {/* 中间：详情面板 */}
+        <section
+          aria-label="当前词详情"
+          className="lg:col-span-6 bg-white rounded-lg shadow-md border-t-4 border-t-blue-500 p-8 min-h-[500px]"
+        >
+          <div className="mb-6">
+            <Text className="text-blue-500 font-bold text-[10px] uppercase tracking-widest">
+              Focus
+            </Text>
+            <Title level={5} className="!m-0 !font-bold">
+              当前词详情
+            </Title>
+          </div>
+
+          {selectedWord ? (
+            <>
+              <div className="flex items-start justify-between mb-8">
+                <div>
+                  <div className="flex items-center gap-3">
+                    <Title
+                      level={2}
+                      className="!m-0 !text-2xl font-black tracking-tighter text-slate-800"
+                    >
+                      {selectedWord.word}
+                    </Title>
+                    <BritishPronunciationButton
+                      word={selectedWord.word.trim()}
+                      size="middle"
+                    />
+                  </div>
+                  {selectedWord.phonetic ? (
+                    <Text className="text-base text-slate-400 font-mono mt-1 block">
+                      {selectedWord.phonetic}
+                    </Text>
+                  ) : null}
+                </div>
+                <Tag
+                  color={selectedWord.level <= 1 ? "volcano" : "green"}
+                  className="!rounded-full px-3 py-0.5 text-[10px] font-bold border-none"
+                >
+                  熟练度 Lv {selectedWord.level}
+                </Tag>
+              </div>
+
+              <p className="text-sm text-slate-500 leading-relaxed mb-8 bg-slate-50 p-5 rounded-md italic border-l-2 border-slate-200">
+                “{" "}
+                {selectedWord.meaning ??
+                  "这个词还没有中文释义，可以先送入语境实验室补练。"}
+              </p>
+
+              <div className="flex flex-wrap gap-2 mb-10">
+                {overview.recentMistakes
+                  .filter((item) => item.wordId === selectedWord.id)
+                  .map((item) => (
+                    <Tag
+                      key={`${item.wordId}-${item.cluster}`}
+                      color="volcano"
+                      className="!rounded-full text-[10px] font-medium"
+                    >
+                      🚨 {item.cluster} · {item.mistakeCount} 次错误
+                    </Tag>
+                  ))}
+              </div>
+
+              <section
+                aria-label="AI 例句练习"
+                className="bg-slate-50/50 rounded-lg p-5 border border-slate-100"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <Text className="text-slate-400 font-black text-[9px] uppercase tracking-widest opacity-70">
+                      AI Sentence Lab
+                    </Text>
+                    <Title level={5} className="!m-0">
+                      AI 例句练习
+                    </Title>
+                  </div>
+                  <Button
+                    aria-label="AI 生成例句"
+                    icon={<BulbOutlined className="text-blue-500" />}
+                    onClick={handleGenerateExample}
+                    className="!rounded-full !text-xs font-bold"
+                    size="small"
+                  >
+                    换一个
+                  </Button>
+                </div>
+                {memoryExample ? (
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3 bg-white p-4 rounded-md shadow-sm">
+                      <p className="text-md text-slate-700 font-medium flex-1 m-0 leading-snug">
+                        {memoryExample.sentence}
+                      </p>
+                      <BritishPronunciationButton
+                        ariaLabel="播放例句发音"
+                        word={memoryExample.sentence}
+                      />
+                    </div>
+                    {showTranslation ? (
+                      <p className="text-sm text-slate-500 animate-in fade-in slide-in-from-top-2 duration-300">
+                        {memoryExample.translation}
+                      </p>
+                    ) : (
+                      <Button
+                        aria-label="查看翻译"
+                        type="link"
+                        icon={<EyeOutlined className="text-[12px]" />}
+                        onClick={() => setShowTranslation(true)}
+                        className="!text-[11px] !p-0 !h-auto !text-slate-400 hover:!text-blue-500"
+                      >
+                        查看翻译
+                      </Button>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-6">
+                    <Text className="text-slate-300 italic text-[11px]">
+                      点击按钮生成基于 AI 的记忆辅助句
+                    </Text>
+                  </div>
+                )}
+              </section>
+            </>
+          ) : (
+            <Empty
+              description="先从左侧选择一个词"
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+            />
+          )}
+        </section>
+
+        {/* 右侧：动作栏 */}
+        <section className="lg:col-span-3 space-y-4">
+          <div className="bg-white rounded-lg shadow-sm p-6 border-none">
+            <div className="mb-4">
+              <Text className="text-slate-400 font-bold text-[10px] uppercase tracking-widest">
+                Next
+              </Text>
+              <Title level={5} className="!m-0 !font-bold">
+                行动中心
+              </Title>
+            </div>
+            <div className="flex flex-col gap-3">
+              <Button
+                className="h-10 !rounded-md !border-slate-100 hover:!border-blue-400 hover:!text-blue-600 transition-all flex items-center justify-start gap-3 text-xs font-bold bg-slate-50/50"
+                icon={<FieldTimeOutlined />}
+                onClick={() => navigate("/englishWorld/recite")}
+              >
+                今日复习
+              </Button>
+              <Button
+                className="h-10 !rounded-md shadow-sm flex items-center justify-start gap-3 text-xs font-bold !bg-blue-600"
+                icon={<ExperimentOutlined />}
+                type="primary"
+                onClick={() => navigate("/englishWorld/context-lab")}
+              >
+                语境实验室
+              </Button>
+              <Button
+                className="h-10 !rounded-md flex items-center justify-start gap-3 text-xs font-bold border-emerald-500 text-emerald-600 hover:!text-emerald-700 hover:!border-emerald-600 bg-emerald-50/30"
+                icon={<CheckCircleOutlined />}
+                loading={updating}
+                onClick={() => void handleMarkMastered()}
+              >
+                标记为已掌握
+              </Button>
+              <Button
+                className="h-10 !rounded-md !text-slate-400 !border-dashed flex items-center justify-start gap-3 text-[11px] font-medium"
+                icon={<ArrowRightOutlined />}
+                onClick={() =>
+                  navigate({ pathname: "/englishWorld", hash: "list" })
+                }
+              >
+                返回单词列表
+              </Button>
+            </div>
+          </div>
+        </section>
+      </div>
     </div>
   );
 }

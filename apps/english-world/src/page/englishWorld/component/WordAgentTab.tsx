@@ -11,17 +11,9 @@ import { wordAdd, wordExist } from "@/server/word/word";
 import type { WordList } from "@/server/word/word.type";
 import { EditAddModal, type AddInitialValues } from "./EditAddModal";
 import { EnglishPartSpeech } from "../enum";
+import { buildWordAgentRequestBody } from "../utils/wordAgentRequest";
 
 const STREAM_PATH = "/word-agent/query-stream";
-
-/** 解析输入为请求体：word（单/多词逗号空格分隔）或 words 数组 */
-function buildRequestBody(inputText: string): { word?: string; words?: string[] } {
-  const trimmed = inputText.trim();
-  if (!trimmed) return {};
-  const parts = trimmed.split(/[\s,]+/).filter(Boolean);
-  if (parts.length <= 1) return { word: trimmed };
-  return { words: parts };
-}
 
 /** 将 AI 查询结果转为「新增单词」弹窗的预填数据 */
 function wordAgentItemToAddInitial(item: WordAgentItem): AddInitialValues {
@@ -104,7 +96,7 @@ export const WordAgentTab: React.FC = () => {
   };
 
   const handleQuery = async () => {
-    const body = buildRequestBody(input);
+    const body = buildWordAgentRequestBody(input);
     if (!body.word && !body.words?.length) {
       message.warning("请输入要查询的单词");
       return;
@@ -302,7 +294,7 @@ export const WordAgentTab: React.FC = () => {
             lineHeight: 1.6,
           }}
         >
-          输入单词（支持多个，用逗号或空格分隔），获取释义、音标、例句与雅思案例。
+          输入单词或短语（多个请用逗号或换行分隔），获取释义、音标、例句与雅思案例。
         </p>
       </div>
 
