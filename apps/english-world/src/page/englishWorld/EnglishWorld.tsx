@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   Button,
   DatePicker,
@@ -8,7 +8,6 @@ import {
   Modal,
   Select,
   Table,
-  Tabs,
 } from "antd";
 import { EditAddModal } from "./component/EditAddModal";
 import request, { useMutation } from "@font/api";
@@ -16,27 +15,33 @@ import { wordAdd, wordDel, wordExist, wordUpdate } from "@/server/word/word";
 import { WordList } from "@/server/word/word.type";
 import { useColumns } from "./useColumns";
 import { EnglishHeader } from "./component/EnglishHeader";
-import { WordAgentTab } from "./component/WordAgentTab";
-import { ExerciseAgentTab } from "./component/ExerciseAgentTab";
 import { FormFieldGroup } from "./component/FormFieldGroup";
 import { EnglishStats } from "./component/EnglishStats";
+import { LearningCockpitPage } from "./cockpit/LearningCockpitPage";
+import { MemoryMapPage } from "./memoryMap/MemoryMapPage";
+import { ContextLabPage } from "./contextLab/ContextLabPage";
 import { DownOutlined, PlusOutlined, UpOutlined } from "@ant-design/icons";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { useWordList } from "./hooks/useWordList";
 import { normalizeDesktopWordFilters } from "./utils/wordFilters";
 import "./EnglishWorld.css";
 const { RangePicker } = DatePicker;
 
 const HASH_TO_NAV: Record<string, string> = {
+  cockpit: "cockpit",
   list: "list",
-  "ai-tool": "aiTool",
-  aitool: "aiTool",
+  "ai-tool": "contextLab",
+  aitool: "contextLab",
+  "context-lab": "contextLab",
+  contextlab: "contextLab",
+  "memory-map": "memoryMap",
+  memorymap: "memoryMap",
   stat: "stat",
 };
 
 function getNavFromHash(hash: string): string {
   const key = hash.replace(/^#\/?/, "").toLowerCase().trim();
-  return HASH_TO_NAV[key] ?? "list";
+  return HASH_TO_NAV[key] ?? "cockpit";
 }
 
 const EnglishWorld: React.FC = () => {
@@ -47,7 +52,6 @@ const EnglishWorld: React.FC = () => {
   const { mutateAsync: mutateWordAdd, isPending: buttonPending } =
     useMutation(wordAdd);
   const location = useLocation();
-  const navigate = useNavigate();
   const activeNav = getNavFromHash(location.hash || "");
   const {
     wordList,
@@ -61,13 +65,6 @@ const EnglishWorld: React.FC = () => {
     refresh,
     changePage,
   } = useWordList(10);
-
-  // 进入页面无 hash 时写入 #list，保证刷新后仍在当前 tab
-  useEffect(() => {
-    if (location.pathname === "/englishWorld" && !location.hash) {
-      navigate({ pathname: "/englishWorld", hash: "list" }, { replace: true });
-    }
-  }, [location.pathname, location.hash, navigate]);
 
   const handleNavClick = () => {
     // 实际跳转已在 EnglishHeader 中通过 navigate + hash 处理
@@ -245,19 +242,12 @@ const EnglishWorld: React.FC = () => {
     <div className="english-world-shell">
       <EnglishHeader activeKey={activeNav} onNavClick={handleNavClick} />
       <main className="english-world-main">
-        {activeNav === "aiTool" ? (
-          <Tabs
-            defaultActiveKey="word"
-            size="large"
-            items={[
-              { key: "word", label: "AI 单词查询", children: <WordAgentTab /> },
-              {
-                key: "exercise",
-                label: "阅读 + 选择题练习",
-                children: <ExerciseAgentTab />,
-              },
-            ]}
-          />
+        {activeNav === "cockpit" ? (
+          <LearningCockpitPage />
+        ) : activeNav === "contextLab" ? (
+          <ContextLabPage />
+        ) : activeNav === "memoryMap" ? (
+          <MemoryMapPage />
         ) : activeNav === "stat" ? (
           <EnglishStats />
         ) : (

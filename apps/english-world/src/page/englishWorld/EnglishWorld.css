@@ -358,3 +358,279 @@
   }
 
 }
+
+.learning-cockpit {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 100%;
+}
+
+.learning-cockpit-hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 4px 2px 2px;
+}
+
+.learning-cockpit-hero h1.ant-typography {
+  margin: 2px 0 8px;
+  color: #111827;
+  font-size: 32px;
+  line-height: 1.16;
+}
+
+.learning-cockpit-hero p {
+  max-width: 680px;
+  margin: 0;
+  color: #4b5563;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.learning-cockpit-hero-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  min-width: 220px;
+}
+
+.learning-cockpit-label {
+  display: block;
+  color: #2563eb;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.learning-cockpit-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.learning-cockpit-stats .ant-statistic {
+  min-height: 88px;
+  padding: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.learning-cockpit-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.65fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.learning-cockpit-main-column,
+.learning-cockpit-side-column {
+  display: grid;
+  gap: 16px;
+}
+
+.learning-cockpit-card {
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.learning-cockpit-card-primary {
+  border-color: #bfdbfe;
+}
+
+.learning-cockpit-context-card {
+  color: #f9fafb;
+  border-color: #111827;
+  background: #111827;
+}
+
+.learning-cockpit-context-card .ant-typography,
+.learning-cockpit-context-card .learning-cockpit-label {
+  color: #f9fafb;
+}
+
+.learning-cockpit-context-card .learning-cockpit-card-copy {
+  color: #d1d5db;
+}
+
+.learning-cockpit-card-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.learning-cockpit-card-heading h3.ant-typography,
+.learning-cockpit-card-heading h4.ant-typography {
+  margin: 4px 0 0;
+}
+
+.learning-cockpit-card-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  color: #2563eb;
+  background: #eff6ff;
+  font-size: 18px;
+}
+
+.learning-cockpit-card-copy {
+  margin: 0 0 14px;
+  color: #4b5563;
+  line-height: 1.7;
+}
+
+.learning-cockpit-progress-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.learning-cockpit-word-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 30px;
+  margin: 14px 0;
+}
+
+.learning-cockpit-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.memory-map-orbit {
+  position: relative;
+  height: 150px;
+  margin-bottom: 14px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.memory-node {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  color: #111827;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.memory-node-weak {
+  left: 24px;
+  top: 34px;
+  width: 72px;
+  height: 72px;
+  background: #fee2e2;
+}
+
+.memory-node-similar {
+  right: 34px;
+  top: 24px;
+  width: 82px;
+  height: 44px;
+  border-radius: 8px;
+  background: #dbeafe;
+}
+
+.memory-node-mastered {
+  right: 60px;
+  bottom: 26px;
+  width: 96px;
+  height: 44px;
+  border-radius: 8px;
+  background: #dcfce7;
+}
+
+.context-lab-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.context-lab-grid {
+  display: grid;
+  grid-template-columns: minmax(320px, 0.85fr) minmax(0, 1.15fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.context-lab-source-panel {
+  min-height: 136px;
+  margin: 16px 0;
+}
+
+.context-lab-stream {
+  min-height: 280px;
+  max-height: 520px;
+  overflow: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.context-lab-stream pre {
+  margin: 0;
+  padding: 16px;
+  white-space: pre-wrap;
+  color: #111827;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.context-lab-stream-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px;
+}
+
+.context-lab-practice-pack {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.context-lab-practice-pack .ant-radio-group {
+  display: grid;
+  gap: 8px;
+}
+
+@media (max-width: 980px) {
+  .learning-cockpit-hero,
+  .learning-cockpit-hero-actions {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .learning-cockpit-grid,
+  .learning-cockpit-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .learning-cockpit-side-column {
+    grid-template-columns: 1fr;
+  }
+
+  .context-lab-grid {
+    grid-template-columns: 1fr;
+  }
+}

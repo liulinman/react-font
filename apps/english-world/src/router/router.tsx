@@ -1,6 +1,9 @@
 import { createBrowserRouter } from "react-router-dom";
 import EnglishWorld from "@/page/englishWorld/EnglishWorld";
 import { SystemSettingsPage } from "@/page/englishWorld/component/SystemSettingsPage";
+import { ContextLabPage } from "@/page/englishWorld/contextLab/ContextLabPage";
+import { EnglishWorldLayout } from "@/page/englishWorld/layout/EnglishWorldLayout";
+import { MemoryMapPage } from "@/page/englishWorld/memoryMap/MemoryMapPage";
 import { RecitePage } from "@/page/englishWorld/recite/RecitePage";
 import EnglishWorldMobile from "@/page/englishWorldMobile/EnglishWorldMobile";
 import Login from "@/page/login/Login";
@@ -38,6 +41,26 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedWrapper>
         <SystemSettingsPage />
+      </ProtectedWrapper>
+    ),
+  },
+  {
+    path: "/englishWorld/context-lab",
+    element: (
+      <ProtectedWrapper>
+        <EnglishWorldLayout activeKey="contextLab">
+          <ContextLabPage />
+        </EnglishWorldLayout>
+      </ProtectedWrapper>
+    ),
+  },
+  {
+    path: "/englishWorld/memory-map",
+    element: (
+      <ProtectedWrapper>
+        <EnglishWorldLayout activeKey="memoryMap">
+          <MemoryMapPage />
+        </EnglishWorldLayout>
       </ProtectedWrapper>
     ),
   },

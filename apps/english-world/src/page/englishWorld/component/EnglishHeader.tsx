@@ -6,6 +6,8 @@ import {
   UserOutlined,
   LogoutOutlined,
   RobotOutlined,
+  DashboardOutlined,
+  NodeIndexOutlined,
 } from "@ant-design/icons";
 import { Button, Dropdown, Modal } from "antd";
 import type { MenuProps } from "antd";
@@ -13,15 +15,17 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
 const navItems = [
+  { key: "cockpit", icon: <DashboardOutlined />, label: "学习座舱" },
   { key: "recite", icon: <BookFilled />, label: "今日复习" },
+  { key: "contextLab", icon: <RobotOutlined />, label: "语境实验室" },
+  { key: "memoryMap", icon: <NodeIndexOutlined />, label: "记忆地图" },
   { key: "list", icon: <UnorderedListOutlined />, label: "单词列表" },
-  { key: "aiTool", icon: <RobotOutlined />, label: "AI 工具" },
   { key: "stat", icon: <BarChartOutlined />, label: "学习统计" },
   { key: "setting", icon: <SettingOutlined />, label: "系统设置" },
 ];
 
 function getHashForNav(key: string): string {
-  return key === "aiTool" ? "ai-tool" : key;
+  return key;
 }
 
 type EnglishHeaderProps = {
@@ -30,7 +34,7 @@ type EnglishHeaderProps = {
 };
 
 export const EnglishHeader = ({
-  activeKey = "list",
+  activeKey = "cockpit",
   onNavClick,
 }: EnglishHeaderProps) => {
   const navigate = useNavigate();
@@ -108,11 +112,17 @@ export const EnglishHeader = ({
               icon={icon}
               className="english-world-nav-button"
               onClick={() => {
-                if (key === "recite") {
+                if (key === "cockpit") {
+                  navigate("/englishWorld");
+                } else if (key === "recite") {
                   navigate("/englishWorld/recite");
+                } else if (key === "contextLab") {
+                  navigate("/englishWorld/context-lab");
+                } else if (key === "memoryMap") {
+                  navigate("/englishWorld/memory-map");
                 } else if (key === "setting") {
                   navigate("/englishWorld/settings");
-                } else if (key === "list" || key === "aiTool" || key === "stat") {
+                } else if (key === "list" || key === "stat") {
                   navigate({ pathname: "/englishWorld", hash: getHashForNav(key) });
                 }
                 onNavClick?.(key);
