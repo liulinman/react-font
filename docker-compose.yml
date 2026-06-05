@@ -6,6 +6,8 @@ services:
       dockerfile: Dockerfile
     container_name: frontend-english-world
     image: frontend-english-world:latest
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "8081:80"
 
