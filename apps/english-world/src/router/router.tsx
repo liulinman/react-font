@@ -37,6 +37,22 @@ export const router = createBrowserRouter([
     ),
   },
   {
+    path: "/englishWorld/words",
+    element: (
+      <ProtectedWrapper>
+        <EnglishWorld />
+      </ProtectedWrapper>
+    ),
+  },
+  {
+    path: "/englishWorld/stats",
+    element: (
+      <ProtectedWrapper>
+        <EnglishWorld />
+      </ProtectedWrapper>
+    ),
+  },
+  {
     path: "/englishWorld/settings",
     element: (
       <ProtectedWrapper>

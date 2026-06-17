@@ -47,6 +47,7 @@ import { enumToOptions, type CommonRecord } from "@font/utils";
 import ReactECharts from "echarts-for-react";
 import { PhotoProvider, PhotoView } from "react-photo-view";
 import "react-photo-view/dist/react-photo-view.css";
+import { useNavigate } from "react-router-dom";
 import { WordAgentTabMobile } from "./WordAgentTabMobile";
 import { ExerciseAgentTabMobile } from "./ExerciseAgentTabMobile";
 import {
@@ -90,6 +91,7 @@ const partSpeechColors: Record<number, string> = {
 };
 
 const EnglishWorldMobile: React.FC = () => {
+  const navigate = useNavigate();
   const [wordList, setWordList] = useState<WordList[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const loadingRef = useRef<boolean>(false);
@@ -113,7 +115,9 @@ const EnglishWorldMobile: React.FC = () => {
   const statsLevelPickerRef = useRef<PickerActions>(null);
   const filterTypePickerRef = useRef<PickerActions>(null);
   const filterLevelPickerRef = useRef<PickerActions>(null);
-  const [activeView, setActiveView] = useState<"list" | "stats" | "aiTool">("list");
+  const [activeView, setActiveView] = useState<
+    "review" | "list" | "stats" | "aiTool"
+  >("review");
 
   // 统计相关状态
   const [selectedLevel, setSelectedLevel] = useState<EnglishAbsorb>(
@@ -236,6 +240,10 @@ const EnglishWorldMobile: React.FC = () => {
   );
 
   useEffect(() => {
+    if (activeView !== "list") {
+      return;
+    }
+
     const timer = window.setTimeout(() => {
       setPage(1);
       setWordList([]);
@@ -243,7 +251,7 @@ const EnglishWorldMobile: React.FC = () => {
     }, 0);
     return () => window.clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [JSON.stringify(filterValues), searchKeyword]);
+  }, [activeView, JSON.stringify(filterValues), searchKeyword]);
 
   // 当切换到统计视图时加载数据
   useEffect(() => {
@@ -518,7 +526,26 @@ const EnglishWorldMobile: React.FC = () => {
         back={null}
         right={
           <Space>
-            {activeView === "list" ? (
+            {activeView === "review" ? (
+              <>
+                <Button
+                  fill="none"
+                  size="small"
+                  onClick={() => setActiveView("aiTool")}
+                  style={{ padding: "4px 8px" }}
+                >
+                  工具
+                </Button>
+                <Button
+                  fill="none"
+                  size="small"
+                  onClick={() => setActiveView("stats")}
+                  style={{ padding: "4px 8px" }}
+                >
+                  统计
+                </Button>
+              </>
+            ) : activeView === "list" ? (
               <>
                 <Button
                   fill="none"
@@ -549,24 +576,77 @@ const EnglishWorldMobile: React.FC = () => {
               <Button
                 fill="none"
                 size="small"
-                onClick={() => setActiveView("list")}
+                onClick={() => setActiveView("review")}
                 style={{ padding: "4px 8px" }}
               >
-                列表
+                今日学习
               </Button>
             )}
           </Space>
         }
       >
-        {activeView === "list"
-          ? "单词管理"
+        {activeView === "review"
+          ? "今日学习"
+          : activeView === "list"
+          ? "词库"
           : activeView === "stats"
-            ? "学习统计"
-            : "AI 工具"}
+          ? "学习统计"
+          : "学习工具"}
       </NavBar>
 
       <div className="mobile-content">
-        {activeView === "aiTool" ? (
+        {activeView === "review" ? (
+          <div className="mobile-study-home">
+            <section className="mobile-study-hero">
+              <div className="mobile-study-eyebrow">今日任务</div>
+              <h1>今日复习</h1>
+              <p>先完成一组短复习，再决定要不要补薄弱词或做语境练习。</p>
+              <Button
+                block
+                color="primary"
+                size="large"
+                onClick={() => navigate("/englishWorld/recite")}
+              >
+                开始今日复习
+              </Button>
+            </section>
+
+            <div className="mobile-study-actions">
+              <Card
+                className="mobile-study-card"
+                onClick={() => setActiveView("list")}
+              >
+                <div className="mobile-study-card-title">词库</div>
+                <div className="mobile-study-card-desc">
+                  查词、补笔记、维护图片和掌握程度
+                </div>
+                <div className="mobile-study-card-meta">
+                  {total > 0 ? `${total} 个词条` : "复习材料入口"}
+                </div>
+              </Card>
+              <Card
+                className="mobile-study-card"
+                onClick={() => setActiveView("aiTool")}
+              >
+                <div className="mobile-study-card-title">语境练习</div>
+                <div className="mobile-study-card-desc">
+                  用阅读和选择题确认单词是否真的会用
+                </div>
+                <div className="mobile-study-card-meta">补弱项优先</div>
+              </Card>
+              <Card
+                className="mobile-study-card"
+                onClick={() => setActiveView("stats")}
+              >
+                <div className="mobile-study-card-title">今日学习数据</div>
+                <div className="mobile-study-card-desc">
+                  看新增、掌握率和词性分布
+                </div>
+                <div className="mobile-study-card-meta">复盘入口</div>
+              </Card>
+            </div>
+          </div>
+        ) : activeView === "aiTool" ? (
           <Tabs
             style={{ "--title-font-size": "14px", "--content-padding": "0" }}
           >

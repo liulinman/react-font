@@ -1,7 +1,7 @@
 import "@testing-library/jest-dom/vitest";
 import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, useLocation } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { MemoryMapPage } from "./MemoryMapPage";
 
@@ -13,6 +13,16 @@ vi.mock("@font/api", () => ({
   default: (requestConfig: unknown) => requestMock(requestConfig),
   getApiBaseUrl: () => "/api",
 }));
+
+function LocationProbe() {
+  const location = useLocation();
+  return (
+    <div data-testid="location">
+      {location.pathname}
+      {location.hash}
+    </div>
+  );
+}
 
 describe("MemoryMapPage", () => {
   afterEach(() => {
@@ -135,5 +145,36 @@ describe("MemoryMapPage", () => {
         __responseType: undefined,
       });
     });
+  });
+
+  it("returns to the real word library path instead of the legacy list hash", async () => {
+    requestMock.mockResolvedValue({
+      levels: [
+        { level: 0, count: 0 },
+        { level: 1, count: 0 },
+        { level: 2, count: 0 },
+        { level: 3, count: 0 },
+      ],
+      dueWords: [],
+      weakWords: [],
+      recentMistakes: [],
+      streakLikeStats: { recentSessions: 0, recentAccuracy: 0 },
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/englishWorld/memory-map"]}>
+        <MemoryMapPage />
+        <LocationProbe />
+      </MemoryRouter>,
+    );
+
+    await userEvent.click(
+      screen.getByRole("button", { name: /返回单词列表/ }),
+    );
+
+    expect(screen.getByTestId("location")).toHaveTextContent(
+      "/englishWorld/words",
+    );
+    expect(screen.getByTestId("location")).not.toHaveTextContent("#list");
   });
 });

@@ -677,9 +677,7 @@ export function MemoryMapPage() {
               <Button
                 className="h-10 !rounded-md !text-slate-400 !border-dashed flex items-center justify-start gap-3 text-[11px] font-medium"
                 icon={<ArrowRightOutlined />}
-                onClick={() =>
-                  navigate({ pathname: "/englishWorld", hash: "list" })
-                }
+                onClick={() => navigate("/englishWorld/words")}
               >
                 返回单词列表
               </Button>

@@ -8,24 +8,74 @@ import {
   RobotOutlined,
   DashboardOutlined,
   NodeIndexOutlined,
+  MoreOutlined,
 } from "@ant-design/icons";
 import { Button, Dropdown, Modal } from "antd";
 import type { MenuProps } from "antd";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
-const navItems = [
-  { key: "cockpit", icon: <DashboardOutlined />, label: "学习座舱" },
+const primaryNavItems = [
   { key: "recite", icon: <BookFilled />, label: "今日复习" },
+  { key: "words", icon: <UnorderedListOutlined />, label: "词库" },
+];
+
+const secondaryNavItems: MenuProps["items"] = [
+  { key: "cockpit", icon: <DashboardOutlined />, label: "今日任务" },
+  { key: "stats", icon: <BarChartOutlined />, label: "学习统计" },
   { key: "contextLab", icon: <RobotOutlined />, label: "语境实验室" },
   { key: "memoryMap", icon: <NodeIndexOutlined />, label: "记忆地图" },
-  { key: "list", icon: <UnorderedListOutlined />, label: "单词列表" },
-  { key: "stat", icon: <BarChartOutlined />, label: "学习统计" },
   { key: "setting", icon: <SettingOutlined />, label: "系统设置" },
 ];
 
-function getHashForNav(key: string): string {
+const secondaryNavKeys = new Set([
+  "cockpit",
+  "stats",
+  "contextLab",
+  "memoryMap",
+  "setting",
+]);
+
+function normalizeActiveKey(key: string): string {
+  if (key === "list") {
+    return "words";
+  }
+
+  if (key === "stat") {
+    return "stats";
+  }
+
   return key;
+}
+
+function getPathForNav(key: string): string {
+  const normalizedKey = normalizeActiveKey(key);
+
+  if (normalizedKey === "recite") {
+    return "/englishWorld/recite";
+  }
+
+  if (normalizedKey === "words") {
+    return "/englishWorld/words";
+  }
+
+  if (normalizedKey === "stats") {
+    return "/englishWorld/stats";
+  }
+
+  if (normalizedKey === "contextLab") {
+    return "/englishWorld/context-lab";
+  }
+
+  if (normalizedKey === "memoryMap") {
+    return "/englishWorld/memory-map";
+  }
+
+  if (normalizedKey === "setting") {
+    return "/englishWorld/settings";
+  }
+
+  return "/englishWorld";
 }
 
 type EnglishHeaderProps = {
@@ -39,6 +89,8 @@ export const EnglishHeader = ({
 }: EnglishHeaderProps) => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const normalizedActiveKey = normalizeActiveKey(activeKey);
+  const isSecondaryActive = secondaryNavKeys.has(normalizedActiveKey);
 
   const handleLogout = () => {
     Modal.confirm({
@@ -90,6 +142,11 @@ export const EnglishHeader = ({
     },
   ];
 
+  const handleNavClick = (key: string) => {
+    navigate(getPathForNav(key));
+    onNavClick?.(normalizeActiveKey(key));
+  };
+
   return (
     <header className="english-world-header">
       <div className="english-world-header-inner">
@@ -105,32 +162,36 @@ export const EnglishHeader = ({
 
         {/* Navigation */}
         <nav className="english-world-nav">
-          {navItems.map(({ key, icon, label }) => (
+          {primaryNavItems.map(({ key, icon, label }) => (
             <Button
               key={key}
-              type={key === activeKey ? "primary" : "text"}
+              type={key === normalizedActiveKey ? "primary" : "text"}
               icon={icon}
               className="english-world-nav-button"
-              onClick={() => {
-                if (key === "cockpit") {
-                  navigate("/englishWorld");
-                } else if (key === "recite") {
-                  navigate("/englishWorld/recite");
-                } else if (key === "contextLab") {
-                  navigate("/englishWorld/context-lab");
-                } else if (key === "memoryMap") {
-                  navigate("/englishWorld/memory-map");
-                } else if (key === "setting") {
-                  navigate("/englishWorld/settings");
-                } else if (key === "list" || key === "stat") {
-                  navigate({ pathname: "/englishWorld", hash: getHashForNav(key) });
-                }
-                onNavClick?.(key);
-              }}
+              onClick={() => handleNavClick(key)}
             >
               {label}
             </Button>
           ))}
+          <Dropdown
+            menu={{
+              items: secondaryNavItems,
+              onClick: ({ key }) => handleNavClick(String(key)),
+              selectedKeys: [normalizedActiveKey],
+            }}
+            placement="bottom"
+            trigger={["click"]}
+          >
+            <Button
+              aria-label="打开更多导航菜单"
+              data-testid="english-world-more-menu-button"
+              type={isSecondaryActive ? "primary" : "text"}
+              icon={<MoreOutlined />}
+              className="english-world-nav-button"
+            >
+              更多
+            </Button>
+          </Dropdown>
         </nav>
 
         {/* User Info */}

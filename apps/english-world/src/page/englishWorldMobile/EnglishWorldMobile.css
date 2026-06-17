@@ -23,6 +23,81 @@
   padding-bottom: 80px;
 }
 
+.mobile-study-home {
+  min-height: 100%;
+  padding: 14px 12px 24px;
+  background: #f7f8fb;
+}
+
+.mobile-study-hero {
+  padding: 22px 18px;
+  border-radius: 16px;
+  color: #102033;
+  background: linear-gradient(135deg, #e8f2ff 0%, #ffffff 58%, #fff4df 100%);
+  border: 1px solid rgba(22, 119, 255, 0.12);
+  box-shadow: 0 8px 24px rgba(16, 32, 51, 0.08);
+}
+
+.mobile-study-eyebrow {
+  width: fit-content;
+  padding: 3px 8px;
+  border-radius: 999px;
+  color: #0f6ecb;
+  background: rgba(22, 119, 255, 0.1);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.mobile-study-hero h1 {
+  margin: 12px 0 8px;
+  font-size: 28px;
+  line-height: 1.2;
+}
+
+.mobile-study-hero p {
+  margin: 0 0 18px;
+  color: #536471;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.mobile-study-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.mobile-study-card {
+  border-radius: 14px;
+  border: 1px solid #edf0f5;
+  box-shadow: 0 2px 10px rgba(16, 32, 51, 0.05);
+}
+
+.mobile-study-card:active {
+  transform: scale(0.99);
+}
+
+.mobile-study-card-title {
+  color: #102033;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.mobile-study-card-desc {
+  margin-top: 5px;
+  color: #5f6f7d;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.mobile-study-card-meta {
+  margin-top: 10px;
+  color: #1677ff;
+  font-size: 13px;
+  font-weight: 600;
+}
+
 .search-section {
   padding: 12px;
   background-color: #fff;

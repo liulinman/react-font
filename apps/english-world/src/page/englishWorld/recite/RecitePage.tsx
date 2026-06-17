@@ -410,18 +410,62 @@ export const RecitePage: React.FC = () => {
         {status === "submitted" && results && (
           <Card>
             {resultInsight && (
-              <Alert
-                className="mb-6"
-                type={resultInsight.tone === "danger" ? "error" : resultInsight.tone}
-                showIcon
-                message={resultInsight.title}
-                description={
+              <div className="mb-6 rounded-xl border border-blue-100 bg-white p-5 shadow-sm">
+                <Alert
+                  className="mb-4"
+                  type={resultInsight.tone === "danger" ? "error" : resultInsight.tone}
+                  showIcon
+                  message={resultInsight.title}
+                  description={
+                    <div>
+                      <div>{resultInsight.description}</div>
+                      <div className="mt-1">{resultInsight.nextAction}</div>
+                    </div>
+                  }
+                />
+                <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <div>{resultInsight.description}</div>
-                    <div className="mt-1">{resultInsight.nextAction}</div>
+                    <Text strong>下一步</Text>
+                    <div className="mt-1 text-sm text-gray-500">
+                      {resultInsight.priority === "repair"
+                        ? "趁记忆还热，再做一组围绕薄弱词的短复习。"
+                        : "今天的复习已经闭环，回到首页查看整体学习节奏。"}
+                    </div>
                   </div>
-                }
-              />
+                  <Space wrap>
+                    <Button
+                      type="primary"
+                      size="large"
+                      danger={resultInsight.priority === "repair"}
+                      icon={
+                        resultInsight.priority === "repair" ? (
+                          <ReloadOutlined />
+                        ) : (
+                          <CheckOutlined />
+                        )
+                      }
+                      onClick={
+                        resultInsight.priority === "repair"
+                          ? handleStartRecite
+                          : () => navigate("/englishWorld")
+                      }
+                      loading={loading}
+                    >
+                      {resultInsight.primaryCtaLabel}
+                    </Button>
+                    <Button
+                      size="large"
+                      onClick={
+                        resultInsight.priority === "repair"
+                          ? () => navigate("/englishWorld/context-lab")
+                          : () => navigate("/englishWorld")
+                      }
+                    >
+                      {resultInsight.secondaryCtaLabel}
+                    </Button>
+                  </Space>
+                </div>
+              </div>
             )}
             <div className="mb-6">
               <Row gutter={16}>

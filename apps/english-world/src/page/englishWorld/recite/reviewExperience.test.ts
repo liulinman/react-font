@@ -36,19 +36,27 @@ describe("reviewExperience", () => {
       tone: "success",
       title: "今天状态不错",
       description: "10 个词完成复习，2 个词需要下次优先巩固。",
-      nextAction: "保持节奏，明天继续复习薄弱词。",
+      nextAction: "保持节奏，完成今日任务，明天继续。",
+      primaryCtaLabel: "完成今日任务",
+      secondaryCtaLabel: "明天继续",
+      priority: "complete",
     });
   });
 
-  it("低正确率时给出降低挫败感的建议", () => {
-    expect(
-      createReviewResultInsight({
-        totalCount: 10,
-        correctCount: 3,
-        errorCount: 7,
-        accuracy: 30,
-      }).nextAction,
-    ).toBe("先别加新词，建议再来一轮短复习。");
+  it("低正确率时把薄弱词短复习作为主要下一步", () => {
+    const insight = createReviewResultInsight({
+      totalCount: 10,
+      correctCount: 3,
+      errorCount: 7,
+      accuracy: 30,
+    });
+
+    expect(insight.nextAction).toBe(
+      "先别加新词，建议再来一组短复习，再用语境练习补一遍。",
+    );
+    expect(insight.primaryCtaLabel).toBe("不稳定词再练一组");
+    expect(insight.secondaryCtaLabel).toBe("语境练习");
+    expect(insight.priority).toBe("repair");
   });
 
   it("生成单题卡片导航状态", () => {

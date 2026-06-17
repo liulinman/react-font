@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Button,
   DatePicker,
@@ -21,7 +21,7 @@ import { LearningCockpitPage } from "./cockpit/LearningCockpitPage";
 import { MemoryMapPage } from "./memoryMap/MemoryMapPage";
 import { ContextLabPage } from "./contextLab/ContextLabPage";
 import { DownOutlined, PlusOutlined, UpOutlined } from "@ant-design/icons";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useWordList } from "./hooks/useWordList";
 import { normalizeDesktopWordFilters } from "./utils/wordFilters";
 import "./EnglishWorld.css";
@@ -29,19 +29,50 @@ const { RangePicker } = DatePicker;
 
 const HASH_TO_NAV: Record<string, string> = {
   cockpit: "cockpit",
-  list: "list",
+  list: "words",
+  words: "words",
   "ai-tool": "contextLab",
   aitool: "contextLab",
   "context-lab": "contextLab",
   contextlab: "contextLab",
   "memory-map": "memoryMap",
   memorymap: "memoryMap",
-  stat: "stat",
+  stat: "stats",
+  stats: "stats",
 };
 
-function getNavFromHash(hash: string): string {
+const PATH_TO_NAV: Record<string, string> = {
+  "/englishworld": "cockpit",
+  "/englishworld/words": "words",
+  "/englishworld/stats": "stats",
+};
+
+const LEGACY_HASH_TO_PATH: Record<string, string> = {
+  list: "/englishWorld/words",
+  stat: "/englishWorld/stats",
+};
+
+function getHashKey(hash: string): string {
+  return hash.replace(/^#\/?/, "").toLowerCase().trim();
+}
+
+function getNavFromLocation(pathname: string, hash: string): string {
+  const navFromPath = PATH_TO_NAV[pathname.toLowerCase()];
+  if (navFromPath && navFromPath !== "cockpit") {
+    return navFromPath;
+  }
+
+  const key = getHashKey(hash);
+  if (key) {
+    return HASH_TO_NAV[key] ?? navFromPath ?? "cockpit";
+  }
+
+  return navFromPath ?? "cockpit";
+}
+
+function getLegacyPathFromHash(hash: string): string | undefined {
   const key = hash.replace(/^#\/?/, "").toLowerCase().trim();
-  return HASH_TO_NAV[key] ?? "cockpit";
+  return LEGACY_HASH_TO_PATH[key];
 }
 
 const EnglishWorld: React.FC = () => {
@@ -52,7 +83,11 @@ const EnglishWorld: React.FC = () => {
   const { mutateAsync: mutateWordAdd, isPending: buttonPending } =
     useMutation(wordAdd);
   const location = useLocation();
-  const activeNav = getNavFromHash(location.hash || "");
+  const navigate = useNavigate();
+  const activeNav = getNavFromLocation(
+    location.pathname,
+    location.hash || "",
+  );
   const {
     wordList,
     loading,
@@ -66,9 +101,18 @@ const EnglishWorld: React.FC = () => {
     changePage,
   } = useWordList(10);
 
-  const handleNavClick = () => {
-    // 实际跳转已在 EnglishHeader 中通过 navigate + hash 处理
-  };
+  useEffect(() => {
+    if (location.pathname !== "/englishWorld") {
+      return;
+    }
+
+    const legacyPath = getLegacyPathFromHash(location.hash || "");
+    if (legacyPath) {
+      navigate(legacyPath, { replace: true });
+    }
+  }, [location.hash, location.pathname, navigate]);
+
+  const handleNavClick = () => {};
 
   const filterFields = [
     {
@@ -248,7 +292,7 @@ const EnglishWorld: React.FC = () => {
           <ContextLabPage />
         ) : activeNav === "memoryMap" ? (
           <MemoryMapPage />
-        ) : activeNav === "stat" ? (
+        ) : activeNav === "stats" ? (
           <EnglishStats />
         ) : (
           <div className="english-world-stack">

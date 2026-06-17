@@ -142,11 +142,7 @@ export function LearningCockpitPage() {
               <Button type="primary" onClick={() => navigate("/englishWorld/context-lab")}>
                 生成练习包
               </Button>
-              <Button
-                onClick={() =>
-                  navigate({ pathname: "/englishWorld", hash: "list" })
-                }
-              >
+              <Button onClick={() => navigate("/englishWorld/words")}>
                 手选词
               </Button>
             </div>
@@ -171,18 +167,12 @@ export function LearningCockpitPage() {
               表格仍保留为维护入口，负责新增、筛选、编辑和批量检查。
             </p>
             <div className="learning-cockpit-action-row">
-              <Button
-                onClick={() =>
-                  navigate({ pathname: "/englishWorld", hash: "list" })
-                }
-              >
+              <Button onClick={() => navigate("/englishWorld/words")}>
                 打开词库
               </Button>
               <Button
                 icon={<BarChartOutlined />}
-                onClick={() =>
-                  navigate({ pathname: "/englishWorld", hash: "stat" })
-                }
+                onClick={() => navigate("/englishWorld/stats")}
               >
                 看统计
               </Button>
