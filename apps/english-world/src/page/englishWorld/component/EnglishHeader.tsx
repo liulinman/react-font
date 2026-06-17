@@ -14,6 +14,11 @@ import { Button, Dropdown, Modal } from "antd";
 import type { MenuProps } from "antd";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import {
+  getPathForNav,
+  normalizeActiveKey,
+  SECONDARY_NAV_KEYS,
+} from "../navigation";
 
 const primaryNavItems = [
   { key: "recite", icon: <BookFilled />, label: "今日复习" },
@@ -28,56 +33,6 @@ const secondaryNavItems: MenuProps["items"] = [
   { key: "setting", icon: <SettingOutlined />, label: "系统设置" },
 ];
 
-const secondaryNavKeys = new Set([
-  "cockpit",
-  "stats",
-  "contextLab",
-  "memoryMap",
-  "setting",
-]);
-
-function normalizeActiveKey(key: string): string {
-  if (key === "list") {
-    return "words";
-  }
-
-  if (key === "stat") {
-    return "stats";
-  }
-
-  return key;
-}
-
-function getPathForNav(key: string): string {
-  const normalizedKey = normalizeActiveKey(key);
-
-  if (normalizedKey === "recite") {
-    return "/englishWorld/recite";
-  }
-
-  if (normalizedKey === "words") {
-    return "/englishWorld/words";
-  }
-
-  if (normalizedKey === "stats") {
-    return "/englishWorld/stats";
-  }
-
-  if (normalizedKey === "contextLab") {
-    return "/englishWorld/context-lab";
-  }
-
-  if (normalizedKey === "memoryMap") {
-    return "/englishWorld/memory-map";
-  }
-
-  if (normalizedKey === "setting") {
-    return "/englishWorld/settings";
-  }
-
-  return "/englishWorld";
-}
-
 type EnglishHeaderProps = {
   activeKey?: string;
   onNavClick?: (key: string) => void;
@@ -90,7 +45,7 @@ export const EnglishHeader = ({
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const normalizedActiveKey = normalizeActiveKey(activeKey);
-  const isSecondaryActive = secondaryNavKeys.has(normalizedActiveKey);
+  const isSecondaryActive = SECONDARY_NAV_KEYS.has(normalizedActiveKey);
 
   const handleLogout = () => {
     Modal.confirm({

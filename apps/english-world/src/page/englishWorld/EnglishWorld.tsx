@@ -24,56 +24,9 @@ import { DownOutlined, PlusOutlined, UpOutlined } from "@ant-design/icons";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useWordList } from "./hooks/useWordList";
 import { normalizeDesktopWordFilters } from "./utils/wordFilters";
+import { getLegacyPathFromHash, getNavFromLocation } from "./navigation";
 import "./EnglishWorld.css";
 const { RangePicker } = DatePicker;
-
-const HASH_TO_NAV: Record<string, string> = {
-  cockpit: "cockpit",
-  list: "words",
-  words: "words",
-  "ai-tool": "contextLab",
-  aitool: "contextLab",
-  "context-lab": "contextLab",
-  contextlab: "contextLab",
-  "memory-map": "memoryMap",
-  memorymap: "memoryMap",
-  stat: "stats",
-  stats: "stats",
-};
-
-const PATH_TO_NAV: Record<string, string> = {
-  "/englishworld": "cockpit",
-  "/englishworld/words": "words",
-  "/englishworld/stats": "stats",
-};
-
-const LEGACY_HASH_TO_PATH: Record<string, string> = {
-  list: "/englishWorld/words",
-  stat: "/englishWorld/stats",
-};
-
-function getHashKey(hash: string): string {
-  return hash.replace(/^#\/?/, "").toLowerCase().trim();
-}
-
-function getNavFromLocation(pathname: string, hash: string): string {
-  const navFromPath = PATH_TO_NAV[pathname.toLowerCase()];
-  if (navFromPath && navFromPath !== "cockpit") {
-    return navFromPath;
-  }
-
-  const key = getHashKey(hash);
-  if (key) {
-    return HASH_TO_NAV[key] ?? navFromPath ?? "cockpit";
-  }
-
-  return navFromPath ?? "cockpit";
-}
-
-function getLegacyPathFromHash(hash: string): string | undefined {
-  const key = hash.replace(/^#\/?/, "").toLowerCase().trim();
-  return LEGACY_HASH_TO_PATH[key];
-}
 
 const EnglishWorld: React.FC = () => {
   const [form] = Form.useForm();

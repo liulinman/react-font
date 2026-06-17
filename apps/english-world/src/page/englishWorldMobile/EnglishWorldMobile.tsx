@@ -42,7 +42,7 @@ import {
   uploadFile,
 } from "@/server/word/word";
 import { WordList, DailyStat } from "@/server/word/word.type";
-import { EnglishAbsorb, EnglishPartSpeech } from "@/page/englishWorld/enum";
+import { EnglishAbsorb } from "@/page/englishWorld/enum";
 import { enumToOptions, type CommonRecord } from "@font/utils";
 import ReactECharts from "echarts-for-react";
 import { PhotoProvider, PhotoView } from "react-photo-view";
@@ -57,37 +57,22 @@ import {
 } from "@/page/englishWorld/utils/wordLabels";
 import { normalizeMobileWordFilters } from "@/page/englishWorld/utils/wordFilters";
 import { MobileBritishPronunciationButton } from "./MobileBritishPronunciationButton";
+import {
+  createDailyStatsBarOption,
+  createPartSpeechData,
+  createPartSpeechPieOption,
+  createSummaryStats,
+  getMobileViewTitle,
+  initialSummaryStats,
+  type PartSpeechData,
+  type SummaryStat,
+} from "./mobileViewModel";
 import "./EnglishWorldMobile.css";
 
 type ListData = {
   list: WordList[];
   total: number;
   totalPages: number;
-};
-
-type SummaryStat = {
-  label: string;
-  value: number | string;
-  color: string;
-};
-
-type PartSpeechData = {
-  value: number;
-  name: string;
-  color: string;
-};
-
-// 词性对应的颜色
-const partSpeechColors: Record<number, string> = {
-  1: "#1677ff", // 动词
-  2: "#52c41a", // 名词
-  3: "#faad14", // 形容词
-  4: "#9254de", // 副词
-  5: "#f5222d", // 代词
-  6: "#13c2c2", // 介词
-  7: "#fa8c16", // 连词
-  8: "#eb2f96", // 感叹词
-  9: "#8c8c8c", // 未分类
 };
 
 const EnglishWorldMobile: React.FC = () => {
@@ -123,11 +108,8 @@ const EnglishWorldMobile: React.FC = () => {
   const [selectedLevel, setSelectedLevel] = useState<EnglishAbsorb>(
     EnglishAbsorb["一般"]
   );
-  const [summaryStats, setSummaryStats] = useState<SummaryStat[]>([
-    { label: "总学习单词", value: 0, color: "#1677ff" },
-    { label: "已掌握单词", value: 0, color: "#52c41a" },
-    { label: "掌握率", value: 0, color: "#faad14" },
-  ]);
+  const [summaryStats, setSummaryStats] =
+    useState<SummaryStat[]>(initialSummaryStats);
   const [dailyStats, setDailyStats] = useState<DailyStat[]>([]);
   const [wordTypeData, setWordTypeData] = useState<PartSpeechData[]>([]);
   const [statsLoading, setStatsLoading] = useState<boolean>(false);
@@ -201,31 +183,14 @@ const EnglishWorldMobile: React.FC = () => {
           partSpeechStatisticalClass,
         } = res;
 
-        setSummaryStats([
-          { label: "总学习单词", value: totalCount, color: "#1677ff" },
-          { label: "已掌握单词", value: levelCount, color: "#52c41a" },
-          {
-            label: "掌握率",
-            value: Number(percentage).toFixed(2),
-            color: "#faad14",
-          },
-        ]);
+        setSummaryStats(
+          createSummaryStats({ totalCount, levelCount, percentage })
+        );
 
         setDailyStats(dailyStats);
-
-        // 处理词性统计数据
-        const partSpeechData: PartSpeechData[] = Object.entries(
-          partSpeechStatisticalClass as CommonRecord
-        ).map(([key, value]) => {
-          const partSpeechKey = Number(key);
-          return {
-            value: value as number,
-            name: EnglishPartSpeech[partSpeechKey],
-            color: partSpeechColors[partSpeechKey] || "#8c8c8c",
-          };
-        });
-
-        setWordTypeData(partSpeechData);
+        setWordTypeData(
+          createPartSpeechData(partSpeechStatisticalClass as CommonRecord)
+        );
       } catch (error) {
         console.error("加载统计数据失败:", error);
         Toast.show({
@@ -424,94 +389,8 @@ const EnglishWorldMobile: React.FC = () => {
   }));
 
   // 统计图表配置
-  const optionBar = {
-    tooltip: {
-      trigger: "axis",
-    },
-    grid: {
-      left: 30,
-      right: 20,
-      top: 20,
-      bottom: 60,
-    },
-    xAxis: {
-      type: "category",
-      data: dailyStats.map((item) => item.date),
-      axisTick: { show: false },
-      axisLabel: {
-        interval: Math.max(0, Math.floor(dailyStats.length / 7) - 1),
-        color: "#666",
-        fontSize: 10,
-        rotate: 45,
-        margin: 12,
-      },
-    },
-    yAxis: {
-      type: "value",
-      name: "新增单词",
-      minInterval: 5,
-    },
-    series: [
-      {
-        data: dailyStats.map((item) => item.count),
-        type: "bar",
-        barWidth: 20,
-        itemStyle: {
-          color: "#1677ff",
-          borderRadius: [4, 4, 0, 0],
-        },
-      },
-    ],
-  };
-
-  const optionPie = {
-    tooltip: {
-      trigger: "item",
-      formatter: "{b}: {c} ({d}%)",
-    },
-    legend: {
-      orient: "horizontal",
-      left: "center",
-      top: 10,
-      itemWidth: 12,
-      itemHeight: 8,
-      itemGap: 16,
-      textStyle: {
-        fontSize: 10,
-      },
-    },
-    series: [
-      {
-        type: "pie",
-        radius: ["40%", "70%"],
-        center: ["50%", "60%"],
-        avoidLabelOverlap: false,
-        label: {
-          formatter: "{b}\n{d}%",
-          color: "#595959",
-          fontSize: 10,
-        },
-        labelLine: {
-          length: 10,
-          length2: 8,
-        },
-        itemStyle: {
-          shadowBlur: 4,
-          shadowColor: "rgba(0,0,0,0.1)",
-          borderColor: "#fff",
-          borderWidth: 1,
-        },
-        data: wordTypeData.map((item, index) => ({
-          value: item.value,
-          name: item.name,
-          itemStyle: {
-            color: item.color,
-            opacity: 0.6 + index * 0.08,
-          },
-        })),
-      },
-    ],
-  };
+  const optionBar = createDailyStatsBarOption(dailyStats);
+  const optionPie = createPartSpeechPieOption(wordTypeData);
 
   const handleLevelChange = async (value: EnglishAbsorb) => {
     if (value) {
@@ -585,13 +464,7 @@ const EnglishWorldMobile: React.FC = () => {
           </Space>
         }
       >
-        {activeView === "review"
-          ? "今日学习"
-          : activeView === "list"
-          ? "词库"
-          : activeView === "stats"
-          ? "学习统计"
-          : "学习工具"}
+        {getMobileViewTitle(activeView)}
       </NavBar>
 
       <div className="mobile-content">

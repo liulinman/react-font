@@ -12,7 +12,6 @@ import {
   Radio,
 } from "antd";
 import { SaveOutlined, EditOutlined } from "@ant-design/icons";
-import { useNavigate } from "react-router-dom";
 import { EnglishHeader } from "./EnglishHeader";
 import {
   getSystemSettings,
@@ -28,26 +27,12 @@ import { enumToOptions } from "@font/utils";
 const { Panel } = Collapse;
 
 export const SystemSettingsPage: React.FC = () => {
-  const navigate = useNavigate();
   const [form] = Form.useForm<SystemSettings>();
   const [loading, setLoading] = useState(false);
   const [activeKey, setActiveKey] = useState<string | string[]>([
     "wordDictation",
     "wordListening",
   ]);
-
-  // 处理导航点击
-  const handleNavClick = (key: string) => {
-    if (key === "setting") {
-      // 已经在设置页面，不需要跳转
-      return;
-    } else if (key === "list") {
-      navigate("/englishWorld");
-    } else if (key === "stat") {
-      navigate("/englishWorld");
-      // 可以通过 URL 参数或状态管理来切换到统计页面
-    }
-  };
 
   // 初始化表单数据
   useEffect(() => {
@@ -132,7 +117,7 @@ export const SystemSettingsPage: React.FC = () => {
 
   return (
     <div style={{ background: "#f5f5f5", minHeight: "100vh" }}>
-      <EnglishHeader activeKey="setting" onNavClick={handleNavClick} />
+      <EnglishHeader activeKey="setting" />
       <div
         style={{
           padding: "24px",

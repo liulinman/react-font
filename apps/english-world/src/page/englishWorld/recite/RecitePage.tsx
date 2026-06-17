@@ -215,17 +215,6 @@ export const RecitePage: React.FC = () => {
     }
   }, []);
 
-  // 处理导航点击
-  const handleNavClick = (key: string) => {
-    if (key === "list") {
-      navigate("/englishWorld");
-    } else if (key === "stat") {
-      navigate("/englishWorld");
-    } else if (key === "setting") {
-      navigate("/englishWorld/settings");
-    }
-  };
-
   // 重新开始
   const handleRestart = () => {
     setStatus("idle");
@@ -253,7 +242,7 @@ export const RecitePage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <EnglishHeader activeKey="recite" onNavClick={handleNavClick} />
+      <EnglishHeader activeKey="recite" />
       <div className="pt-20 px-4 pb-8 max-w-6xl mx-auto">
         {/* 标题和操作按钮 */}
         <div className="mb-6 flex items-center justify-between">
