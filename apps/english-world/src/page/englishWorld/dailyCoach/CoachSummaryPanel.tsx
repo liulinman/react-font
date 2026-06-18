@@ -1,15 +1,23 @@
 import { Button, Progress, Space, Tag, Typography } from "antd";
 import { PlayCircleOutlined, ThunderboltOutlined } from "@ant-design/icons";
-import type { DailyCoachSummary } from "../types/learning";
+import type { DailyCoachAction, DailyCoachSummary } from "../types/learning";
 import { createCoachInsight } from "../utils/coachPlanning";
 
 const { Text, Title } = Typography;
 
 type CoachSummaryPanelProps = {
   summary: DailyCoachSummary;
-  onStartReview?: () => void;
+  onStartReview?: (action?: DailyCoachAction) => void;
   onOpenContextLab?: () => void;
 };
+
+function isReviewAction(action: DailyCoachAction) {
+  return (
+    action.type === "review" ||
+    action.type === "repair" ||
+    action.type === "listening"
+  );
+}
 
 export function CoachSummaryPanel({
   summary,
@@ -24,6 +32,7 @@ export function CoachSummaryPanel({
   const progress = summary.totalWords
     ? Math.round(((summary.totalWords - weakCount) / summary.totalWords) * 100)
     : 0;
+  const actions = summary.suggestedActions ?? [];
 
   return (
     <section className="learning-cockpit-card learning-cockpit-card-primary">
@@ -53,8 +62,34 @@ export function CoachSummaryPanel({
         ))}
       </div>
 
+      <div className="learning-cockpit-task-list" aria-label="今日行动清单">
+        {actions.slice(0, 3).map((action, index) => (
+          <div className="learning-cockpit-task-item" key={`${action.type}-${index}`}>
+            <div className="learning-cockpit-task-index">{index + 1}</div>
+            <div className="learning-cockpit-task-copy">
+              <strong>{action.title}</strong>
+              <span>{action.description}</span>
+            </div>
+            <Tag color={isReviewAction(action) ? "blue" : "purple"}>
+              {action.estimatedMinutes} min
+            </Tag>
+            <Button
+              type={index === 0 ? "primary" : "default"}
+              icon={isReviewAction(action) ? <PlayCircleOutlined /> : undefined}
+              onClick={() =>
+                isReviewAction(action)
+                  ? onStartReview?.(action)
+                  : onOpenContextLab?.()
+              }
+            >
+              {isReviewAction(action) ? "定向复习" : "进入练习"}
+            </Button>
+          </div>
+        ))}
+      </div>
+
       <Space wrap>
-        <Button type="primary" icon={<PlayCircleOutlined />} onClick={onStartReview}>
+        <Button type="primary" icon={<PlayCircleOutlined />} onClick={() => onStartReview?.()}>
           开始今日复习
         </Button>
         <Button onClick={onOpenContextLab}>进入语境练习</Button>

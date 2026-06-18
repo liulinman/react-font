@@ -20,6 +20,7 @@ import { EnglishStats } from "./component/EnglishStats";
 import { LearningCockpitPage } from "./cockpit/LearningCockpitPage";
 import { MemoryMapPage } from "./memoryMap/MemoryMapPage";
 import { ContextLabPage } from "./contextLab/ContextLabPage";
+import { WordAgentTab } from "./component/WordAgentTab";
 import { DownOutlined, PlusOutlined, UpOutlined } from "@ant-design/icons";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useWordList } from "./hooks/useWordList";
@@ -245,6 +246,8 @@ const EnglishWorld: React.FC = () => {
           <ContextLabPage />
         ) : activeNav === "memoryMap" ? (
           <MemoryMapPage />
+        ) : activeNav === "aiWord" ? (
+          <WordAgentTab />
         ) : activeNav === "stats" ? (
           <EnglishStats />
         ) : (

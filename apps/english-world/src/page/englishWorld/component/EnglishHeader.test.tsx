@@ -82,11 +82,11 @@ describe("EnglishHeader ToC navigation", () => {
     expect(moreButton).toHaveClass("ant-btn-primary");
 
     await user.click(moreButton);
-    await user.click(await screen.findByRole("menuitem", { name: /学习统计/ }));
+    await user.click(await screen.findByRole("menuitem", { name: /AI 单词查询/ }));
 
     expect(screen.getByTestId("location")).toHaveTextContent(
-      "/englishWorld/stats",
+      "/englishWorld/ai-word",
     );
-    expect(onNavClick).toHaveBeenCalledWith("stats");
+    expect(onNavClick).toHaveBeenCalledWith("aiWord");
   });
 });

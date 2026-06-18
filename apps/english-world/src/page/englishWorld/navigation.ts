@@ -6,6 +6,10 @@ export const HASH_TO_NAV: Record<string, string> = {
   words: "words",
   "ai-tool": "contextLab",
   aitool: "contextLab",
+  "ai-word": "aiWord",
+  aiword: "aiWord",
+  "word-agent": "aiWord",
+  wordagent: "aiWord",
   "context-lab": "contextLab",
   contextlab: "contextLab",
   "memory-map": "memoryMap",
@@ -18,6 +22,7 @@ export const PATH_TO_NAV: Record<string, string> = {
   "/englishworld": "cockpit",
   "/englishworld/words": "words",
   "/englishworld/stats": "stats",
+  "/englishworld/ai-word": "aiWord",
 };
 
 export const LEGACY_HASH_TO_PATH: Record<string, string> = {
@@ -28,6 +33,7 @@ export const LEGACY_HASH_TO_PATH: Record<string, string> = {
 export const SECONDARY_NAV_KEYS = new Set([
   "cockpit",
   "stats",
+  "aiWord",
   "contextLab",
   "memoryMap",
   "setting",
@@ -80,6 +86,10 @@ export function getPathForNav(key: string): string {
 
   if (normalizedKey === "stats") {
     return "/englishWorld/stats";
+  }
+
+  if (normalizedKey === "aiWord") {
+    return "/englishWorld/ai-word";
   }
 
   if (normalizedKey === "contextLab") {

@@ -9,6 +9,7 @@ import {
   DashboardOutlined,
   NodeIndexOutlined,
   MoreOutlined,
+  TranslationOutlined,
 } from "@ant-design/icons";
 import { Button, Dropdown, Modal } from "antd";
 import type { MenuProps } from "antd";
@@ -28,6 +29,7 @@ const primaryNavItems = [
 const secondaryNavItems: MenuProps["items"] = [
   { key: "cockpit", icon: <DashboardOutlined />, label: "今日任务" },
   { key: "stats", icon: <BarChartOutlined />, label: "学习统计" },
+  { key: "aiWord", icon: <TranslationOutlined />, label: "AI 单词查询" },
   { key: "contextLab", icon: <RobotOutlined />, label: "语境实验室" },
   { key: "memoryMap", icon: <NodeIndexOutlined />, label: "记忆地图" },
   { key: "setting", icon: <SettingOutlined />, label: "系统设置" },

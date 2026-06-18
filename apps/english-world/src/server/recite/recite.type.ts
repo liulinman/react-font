@@ -3,6 +3,7 @@ export interface StartReciteParams {
   proficiencyLevels?: number[];
   types?: number[];
   direction?: number;
+  wordIds?: number[];
 }
 
 export interface Question {

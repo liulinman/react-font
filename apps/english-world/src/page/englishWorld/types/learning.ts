@@ -16,7 +16,7 @@ export type DailyCoachAction = {
   type: LearningActionType;
   title: string;
   description: string;
-  wordIds: number[];
+  wordIds?: number[];
   estimatedMinutes: number;
 };
 
@@ -92,4 +92,49 @@ export type ContextLabGenerateParams =
 export type ContextLabSubmitParams = {
   sessionId: number;
   answers: Array<{ questionId: string; selectedIndex: number }>;
+};
+
+export type ContextLabTaskStatus =
+  | "pending"
+  | "processing"
+  | "succeeded"
+  | "failed";
+
+export type ContextLabQuestion = {
+  id: string;
+  stem: string;
+  options: string[];
+};
+
+export type ContextLabTask = {
+  id: number;
+  taskId: number;
+  taskUid?: string;
+  status: ContextLabTaskStatus;
+  sourceType: ContextLabGenerateParams["sourceType"];
+  words: string[];
+  articleExerciseId?: number;
+  article?: string;
+  questions?: ContextLabQuestion[];
+  errorMessage?: string;
+  createTime?: string;
+  updateTime?: string;
+  completeTime?: string;
+};
+
+export type ContextLabHistoryParams = {
+  page?: number;
+  pageSize?: number;
+  status?: ContextLabTaskStatus;
+};
+
+export type ContextLabHistoryResponse = {
+  list: ContextLabTask[];
+  total: number;
+  page: number;
+  pageSize: number;
+};
+
+export type ContextLabDetailParams = {
+  taskId: number;
 };

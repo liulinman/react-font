@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import {
   Button,
   Card,
@@ -27,7 +27,7 @@ import {
   BarChartOutlined,
   ThunderboltOutlined,
 } from "@ant-design/icons";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { EnglishHeader } from "../component/EnglishHeader";
 import request from "@font/api";
 import {
@@ -52,6 +52,7 @@ import {
   createReviewCardState,
 } from "./reviewExperience";
 import { BritishPronunciationButton } from "../component/BritishPronunciationButton";
+import { parsePlanReviewSearch } from "./planReview";
 
 const { Title, Text } = Typography;
 
@@ -59,6 +60,7 @@ type ReciteStatus = "idle" | "practicing" | "submitted" | "loading";
 
 export const RecitePage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [form] = Form.useForm();
   const [status, setStatus] = useState<ReciteStatus>("idle");
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -90,6 +92,12 @@ export const RecitePage: React.FC = () => {
     totalCount: questions.length,
     currentIndex,
   });
+  const planReview = useMemo(
+    () => parsePlanReviewSearch(location.search),
+    [location.search],
+  );
+  const isPlanReview = planReview.wordIds.length > 0;
+  const displayedPlanWordCount = Math.min(planReview.wordIds.length, 50);
 
   // 开始默写
   const handleStartRecite = useCallback(async () => {
@@ -108,6 +116,8 @@ export const RecitePage: React.FC = () => {
           proficiencyLevels: config.proficiencyLevels,
           types: config.types,
           direction: config.direction,
+          ...(isPlanReview ? { wordIds: planReview.wordIds } : {}),
+          ...(isPlanReview ? { wordCount: planReview.wordIds.length } : {}),
         })
       );
 
@@ -128,7 +138,7 @@ export const RecitePage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [form]);
+  }, [form, isPlanReview, planReview.wordIds]);
 
   // 提交答案
   const handleSubmit = useCallback(async () => {
@@ -562,7 +572,9 @@ export const RecitePage: React.FC = () => {
                   先完成一轮短复习
                 </Title>
                 <Text type="secondary">
-                  系统会按你的配置抽取一组词。目标不是刷很多，而是每天稳定完成一次。
+                  {isPlanReview
+                    ? "这组词来自今日计划，会优先复习刚被标记为薄弱的词。"
+                    : "系统会按你的配置抽取一组词。目标不是刷很多，而是每天稳定完成一次。"}
                 </Text>
               </div>
               <Row gutter={16}>
@@ -570,10 +582,16 @@ export const RecitePage: React.FC = () => {
                   <Statistic title="建议时长" value={3} suffix="分钟" />
                 </Col>
                 <Col span={8}>
-                  <Statistic title="任务规模" value="短组" />
+                  <Statistic
+                    title="任务规模"
+                    value={isPlanReview ? displayedPlanWordCount : "短组"}
+                  />
                 </Col>
                 <Col span={8}>
-                  <Statistic title="完成反馈" value="即时" />
+                  <Statistic
+                    title={isPlanReview ? "计划来源" : "完成反馈"}
+                    value={isPlanReview ? planReview.title ?? "今日计划" : "即时"}
+                  />
                 </Col>
               </Row>
               <Space>

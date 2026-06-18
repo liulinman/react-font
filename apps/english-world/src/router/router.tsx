@@ -5,6 +5,7 @@ import { ContextLabPage } from "@/page/englishWorld/contextLab/ContextLabPage";
 import { EnglishWorldLayout } from "@/page/englishWorld/layout/EnglishWorldLayout";
 import { MemoryMapPage } from "@/page/englishWorld/memoryMap/MemoryMapPage";
 import { RecitePage } from "@/page/englishWorld/recite/RecitePage";
+import { WordAgentTab } from "@/page/englishWorld/component/WordAgentTab";
 import EnglishWorldMobile from "@/page/englishWorldMobile/EnglishWorldMobile";
 import Login from "@/page/login/Login";
 import { ProtectedRoute } from "@font/ui";
@@ -57,6 +58,16 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedWrapper>
         <SystemSettingsPage />
+      </ProtectedWrapper>
+    ),
+  },
+  {
+    path: "/englishWorld/ai-word",
+    element: (
+      <ProtectedWrapper>
+        <EnglishWorldLayout activeKey="aiWord">
+          <WordAgentTab />
+        </EnglishWorldLayout>
       </ProtectedWrapper>
     ),
   },

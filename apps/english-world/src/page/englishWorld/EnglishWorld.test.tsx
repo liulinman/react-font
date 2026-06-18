@@ -33,6 +33,10 @@ vi.mock("./component/EnglishStats", () => ({
   EnglishStats: () => <div>Mock Stats</div>,
 }));
 
+vi.mock("./component/WordAgentTab", () => ({
+  WordAgentTab: () => <div>Mock AI Word Query</div>,
+}));
+
 vi.mock("./contextLab/ContextLabPage", () => ({
   ContextLabPage: () => <div>Mock Context Lab</div>,
 }));
@@ -81,6 +85,17 @@ describe("EnglishWorld ToC routing", () => {
     );
 
     expect(screen.getByText("Mock Stats")).toBeInTheDocument();
+    expect(screen.queryByText("Mock Cockpit")).not.toBeInTheDocument();
+  });
+
+  it("renders AI word query when pathname is /englishWorld/ai-word", () => {
+    render(
+      <MemoryRouter initialEntries={["/englishWorld/ai-word"]}>
+        <EnglishWorld />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByText("Mock AI Word Query")).toBeInTheDocument();
     expect(screen.queryByText("Mock Cockpit")).not.toBeInTheDocument();
   });
 

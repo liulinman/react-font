@@ -16,6 +16,8 @@ import {
   dailyCoachSummary,
   memoryMapOverview,
 } from "../server/learning";
+import { createPlanReviewSearch } from "../recite/planReview";
+import type { DailyCoachAction } from "../types/learning";
 
 const { Text, Title } = Typography;
 
@@ -66,6 +68,14 @@ export function LearningCockpitPage() {
   const navigate = useNavigate();
   const [coachSummary, setCoachSummary] = useState(demoCoachSummary);
   const [memoryOverview, setMemoryOverview] = useState(demoMemoryOverview);
+  const openReview = (action?: DailyCoachAction) => {
+    if (!action?.wordIds?.length) {
+      navigate("/englishWorld/recite");
+      return;
+    }
+
+    navigate(`/englishWorld/recite?${createPlanReviewSearch(action)}`);
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -123,7 +133,7 @@ export function LearningCockpitPage() {
         <div className="learning-cockpit-main-column">
           <CoachSummaryPanel
             summary={coachSummary}
-            onStartReview={() => navigate("/englishWorld/recite")}
+            onStartReview={openReview}
             onOpenContextLab={() => navigate("/englishWorld/context-lab")}
           />
 

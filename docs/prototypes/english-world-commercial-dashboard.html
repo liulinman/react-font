@@ -1,0 +1,1079 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>English World Commercial Prototype</title>
+    <style>
+      :root {
+        --bg: #f4f7fb;
+        --panel: #ffffff;
+        --ink: #172033;
+        --muted: #657086;
+        --line: #dfe6f1;
+        --blue: #2563eb;
+        --blue-2: #1d4ed8;
+        --green: #16a34a;
+        --amber: #d97706;
+        --red: #dc2626;
+        --cyan: #0891b2;
+        --violet: #7c3aed;
+        --shadow: 0 20px 70px rgba(23, 32, 51, 0.12);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family:
+          Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+          "Microsoft YaHei", sans-serif;
+      }
+
+      .frame {
+        width: 1440px;
+        min-height: 1024px;
+        margin: 0 auto;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.75), transparent 250px),
+          var(--bg);
+        overflow: hidden;
+      }
+
+      .shell {
+        display: grid;
+        grid-template-columns: 248px 1fr;
+        min-height: 1024px;
+      }
+
+      .sidebar {
+        padding: 28px 18px;
+        background: #101827;
+        color: #dbe7ff;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 0 12px 28px;
+      }
+
+      .brand-mark {
+        display: grid;
+        place-items: center;
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #2dd4bf, #2563eb);
+        color: #fff;
+        font-weight: 800;
+      }
+
+      .brand strong {
+        display: block;
+        font-size: 18px;
+        color: #fff;
+      }
+
+      .brand span:last-child {
+        font-size: 12px;
+        color: #9fb2d0;
+      }
+
+      .nav-group {
+        margin-top: 14px;
+      }
+
+      .nav-title {
+        padding: 0 12px 8px;
+        font-size: 12px;
+        letter-spacing: 0;
+        color: #8193b4;
+      }
+
+      .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        height: 42px;
+        padding: 0 12px;
+        border-radius: 8px;
+        color: #c7d4ea;
+        font-size: 14px;
+        cursor: pointer;
+        user-select: none;
+      }
+
+      .nav-item.active {
+        background: #2563eb;
+        color: #fff;
+        box-shadow: 0 12px 32px rgba(37, 99, 235, 0.35);
+      }
+
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: currentColor;
+      }
+
+      .main {
+        padding: 26px 32px 36px;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 56px;
+      }
+
+      .page-title h1 {
+        margin: 0;
+        font-size: 28px;
+        line-height: 1.2;
+      }
+
+      .page-title p {
+        margin: 6px 0 0;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .top-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .search {
+        width: 300px;
+        height: 42px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+        color: #8a96aa;
+        padding: 0 14px;
+        display: flex;
+        align-items: center;
+        font-size: 14px;
+      }
+
+      .button {
+        height: 42px;
+        border-radius: 8px;
+        border: 1px solid var(--line);
+        background: #fff;
+        padding: 0 16px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 650;
+        font-size: 14px;
+      }
+
+      .button.primary {
+        border-color: var(--blue);
+        background: var(--blue);
+        color: #fff;
+        box-shadow: 0 12px 28px rgba(37, 99, 235, 0.24);
+      }
+
+      button,
+      .button,
+      .link {
+        cursor: pointer;
+      }
+
+      .view {
+        display: block;
+      }
+
+      .view.hidden {
+        display: none;
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: 1.18fr 0.82fr;
+        gap: 20px;
+        margin-top: 30px;
+      }
+
+      .panel {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        box-shadow: var(--shadow);
+      }
+
+      .learning-panel {
+        padding: 26px;
+        min-height: 248px;
+        background:
+          linear-gradient(110deg, rgba(37, 99, 235, 0.1), transparent 54%),
+          #fff;
+      }
+
+      .kicker {
+        color: var(--blue);
+        font-weight: 800;
+        font-size: 13px;
+        text-transform: uppercase;
+      }
+
+      .learning-panel h2 {
+        margin: 10px 0 8px;
+        font-size: 30px;
+        line-height: 1.18;
+      }
+
+      .learning-panel p {
+        width: 640px;
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.8;
+        font-size: 15px;
+      }
+
+      .primary-row {
+        display: flex;
+        gap: 12px;
+        margin-top: 24px;
+      }
+
+      .status-strip {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin-top: 22px;
+      }
+
+      .metric {
+        padding: 14px;
+        border: 1px solid #e7edf7;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.74);
+      }
+
+      .metric b {
+        display: block;
+        font-size: 24px;
+      }
+
+      .metric span {
+        display: block;
+        margin-top: 5px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .ai-card {
+        padding: 22px;
+      }
+
+      .ai-card h3,
+      .section h3 {
+        margin: 0;
+        font-size: 18px;
+      }
+
+      .query-box {
+        margin-top: 18px;
+        border: 1px solid #cfe0ff;
+        border-radius: 8px;
+        background: #f7fbff;
+        padding: 14px;
+      }
+
+      .query-input {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 46px;
+        border-radius: 7px;
+        background: #fff;
+        border: 1px solid var(--line);
+        padding: 0 12px;
+        font-weight: 700;
+      }
+
+      .chips {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 14px;
+      }
+
+      .chip {
+        border-radius: 7px;
+        border: 1px solid #b8d4ff;
+        background: #eef6ff;
+        color: #1d4ed8;
+        padding: 7px 10px;
+        font-size: 13px;
+        font-weight: 650;
+      }
+
+      .translation {
+        margin-top: 18px;
+        padding: 14px;
+        border-radius: 8px;
+        background: #f8fafc;
+        border: 1px solid #e5ebf4;
+      }
+
+      .translation strong {
+        display: block;
+        margin-bottom: 6px;
+      }
+
+      .translation p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      .content-grid {
+        display: grid;
+        grid-template-columns: 0.92fr 1.08fr;
+        gap: 20px;
+        margin-top: 20px;
+      }
+
+      .section {
+        padding: 22px;
+      }
+
+      .section-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 18px;
+      }
+
+      .link {
+        color: var(--blue);
+        font-weight: 750;
+        font-size: 13px;
+      }
+
+      .task-list {
+        display: grid;
+        gap: 12px;
+      }
+
+      .task {
+        display: grid;
+        grid-template-columns: 42px 1fr auto;
+        align-items: center;
+        gap: 12px;
+        padding: 14px;
+        border: 1px solid #e7edf7;
+        border-radius: 8px;
+        background: #fff;
+      }
+
+      .task-icon {
+        display: grid;
+        place-items: center;
+        width: 42px;
+        height: 42px;
+        border-radius: 8px;
+        color: #fff;
+        font-weight: 850;
+      }
+
+      .task b {
+        display: block;
+        font-size: 15px;
+      }
+
+      .task span {
+        display: block;
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .tag {
+        border-radius: 7px;
+        padding: 6px 9px;
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .tag.green {
+        background: #eaf8ef;
+        color: var(--green);
+      }
+
+      .tag.amber {
+        background: #fff3df;
+        color: var(--amber);
+      }
+
+      .tag.blue {
+        background: #eaf2ff;
+        color: var(--blue);
+      }
+
+      .practice-preview {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+      }
+
+      .reading,
+      .questions {
+        min-height: 364px;
+        border: 1px solid #e2eaf5;
+        border-radius: 8px;
+        overflow: hidden;
+        background: #fff;
+      }
+
+      .column-head {
+        padding: 16px;
+        border-bottom: 1px solid #e2eaf5;
+      }
+
+      .column-head strong {
+        display: block;
+        color: var(--blue);
+        font-size: 13px;
+        margin-bottom: 6px;
+      }
+
+      .column-head b {
+        font-size: 19px;
+      }
+
+      .article {
+        padding: 18px;
+        line-height: 1.9;
+        color: #273244;
+        font-size: 14px;
+      }
+
+      .keywords {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 0 18px 18px;
+      }
+
+      .keyword {
+        border: 1px solid #b9d7ff;
+        background: #eff6ff;
+        color: var(--blue-2);
+        border-radius: 6px;
+        padding: 5px 8px;
+        font-size: 12px;
+      }
+
+      .question-card {
+        margin: 16px;
+        padding: 14px;
+        border: 1px solid #e2eaf5;
+        border-radius: 8px;
+      }
+
+      .option {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 10px;
+        color: #334155;
+        font-size: 14px;
+      }
+
+      .radio {
+        width: 15px;
+        height: 15px;
+        border: 1px solid #b9c5d8;
+        border-radius: 50%;
+      }
+
+      .option.active .radio {
+        border: 5px solid var(--blue);
+      }
+
+      .analysis {
+        margin: 14px 16px 16px;
+        padding: 12px;
+        border-radius: 8px;
+        background: #edf6ff;
+        border: 1px solid #bfdcff;
+        color: #36506f;
+        line-height: 1.7;
+        font-size: 13px;
+      }
+
+      .bottom-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 20px;
+        margin-top: 20px;
+      }
+
+      .mini {
+        padding: 20px;
+      }
+
+      .progress {
+        height: 9px;
+        margin-top: 16px;
+        border-radius: 99px;
+        background: #e7edf7;
+        overflow: hidden;
+      }
+
+      .bar {
+        height: 100%;
+        border-radius: inherit;
+      }
+
+      .history-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 13px 0;
+        border-bottom: 1px solid #edf2f8;
+        font-size: 13px;
+      }
+
+      .history-row:last-child {
+        border-bottom: 0;
+      }
+
+      .pdf-card {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        padding: 14px;
+        margin-top: 14px;
+        border-radius: 8px;
+        background: #f8fafc;
+        border: 1px solid #e2eaf5;
+      }
+
+      .doc {
+        width: 42px;
+        height: 52px;
+        border-radius: 6px;
+        background: linear-gradient(180deg, #fff, #edf2f7);
+        border: 1px solid #cbd5e1;
+        display: grid;
+        place-items: center;
+        color: var(--red);
+        font-weight: 900;
+        font-size: 11px;
+      }
+
+      .small-muted {
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.6;
+      }
+
+      .module-view {
+        margin-top: 30px;
+      }
+
+      .module-hero {
+        display: grid;
+        grid-template-columns: 1fr 320px;
+        gap: 20px;
+      }
+
+      .module-main {
+        padding: 28px;
+      }
+
+      .module-main h2 {
+        margin: 10px 0 8px;
+        font-size: 30px;
+      }
+
+      .module-main p {
+        max-width: 720px;
+        color: var(--muted);
+        line-height: 1.8;
+      }
+
+      .module-side {
+        padding: 22px;
+      }
+
+      .module-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 18px;
+        margin-top: 20px;
+      }
+
+      .feature-tile {
+        min-height: 172px;
+        padding: 20px;
+        border: 1px solid #e3ebf6;
+        border-radius: 8px;
+        background: #fff;
+      }
+
+      .feature-tile b {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 17px;
+      }
+
+      .feature-tile p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.7;
+      }
+
+      .mock-table {
+        margin-top: 20px;
+        border: 1px solid #e3ebf6;
+        border-radius: 8px;
+        overflow: hidden;
+        background: #fff;
+      }
+
+      .mock-row {
+        display: grid;
+        grid-template-columns: 1.1fr 0.8fr 0.8fr auto;
+        gap: 14px;
+        align-items: center;
+        padding: 15px 18px;
+        border-bottom: 1px solid #edf2f8;
+        font-size: 14px;
+      }
+
+      .mock-row:last-child {
+        border-bottom: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="frame">
+      <div class="shell">
+        <aside class="sidebar">
+          <div class="brand">
+            <div class="brand-mark">EW</div>
+            <div>
+              <strong>English World</strong>
+              <span>AI learning workspace</span>
+            </div>
+          </div>
+
+          <div class="nav-group">
+            <div class="nav-title">学习</div>
+            <div class="nav-item active" data-view-target="dashboard"><span class="dot"></span>今日任务</div>
+            <div class="nav-item" data-view-target="recite"><span class="dot"></span>今日复习</div>
+            <div class="nav-item" data-view-target="library"><span class="dot"></span>词库管理</div>
+          </div>
+
+          <div class="nav-group">
+            <div class="nav-title">AI 工具</div>
+            <div class="nav-item" data-view-target="word-agent"><span class="dot"></span>AI 单词查询</div>
+            <div class="nav-item" data-view-target="context-lab"><span class="dot"></span>语境实验室</div>
+            <div class="nav-item" data-view-target="history"><span class="dot"></span>生成历史</div>
+            <div class="nav-item" data-view-target="pdf"><span class="dot"></span>PDF 模板</div>
+          </div>
+
+          <div class="nav-group">
+            <div class="nav-title">洞察</div>
+            <div class="nav-item" data-view-target="memory-map"><span class="dot"></span>记忆地图</div>
+            <div class="nav-item" data-view-target="stats"><span class="dot"></span>学习统计</div>
+            <div class="nav-item" data-view-target="settings"><span class="dot"></span>系统设置</div>
+          </div>
+        </aside>
+
+        <main class="main">
+          <div class="topbar">
+            <div class="page-title">
+              <h1>学习工作台</h1>
+              <p>把查词、复习、AI 生成做题和 PDF 资料统一在一个清晰流程里。</p>
+            </div>
+            <div class="top-actions">
+              <div class="search">搜索单词、短语、文章任务</div>
+              <button class="button" data-view-target="library">导入词库</button>
+              <button class="button primary" data-view-target="context-lab">新建 AI 练习</button>
+            </div>
+          </div>
+
+          <div class="view" data-view="dashboard">
+          <section class="hero">
+            <div class="panel learning-panel">
+              <div class="kicker">Today Focus</div>
+              <h2>先复习薄弱词，再进入语境练习</h2>
+              <p>
+                系统根据遗忘曲线、最近错题和 AI 生成任务状态安排今日学习路径。用户不需要在多个页面之间找入口，打开即知道下一步该做什么。
+              </p>
+              <div class="primary-row">
+                <button class="button primary" data-view-target="recite">开始今日复习</button>
+                <button class="button" data-view-target="word-agent">打开 AI 单词查询</button>
+                <button class="button" data-view-target="pdf">下载练习 PDF</button>
+              </div>
+              <div class="status-strip">
+                <div class="metric"><b>42</b><span>今日待复习</span></div>
+                <div class="metric"><b>86%</b><span>近 7 日正确率</span></div>
+                <div class="metric"><b>12</b><span>AI 生成任务</span></div>
+                <div class="metric"><b>5</b><span>可下载模板</span></div>
+              </div>
+            </div>
+
+            <div class="panel ai-card">
+              <div class="section-head">
+                <h3>AI 单词查询</h3>
+                <span class="link" data-view-target="history">查看历史</span>
+              </div>
+              <div class="query-box">
+                <div class="query-input">
+                  <span>missed my stop</span>
+                  <button class="button primary">查询</button>
+                </div>
+                <div class="chips">
+                  <span class="chip">短语翻译</span>
+                  <span class="chip">例句</span>
+                  <span class="chip">同义表达</span>
+                  <span class="chip">加入词库</span>
+                </div>
+                <div class="translation">
+                  <strong>错过了我的站点</strong>
+                  <p>
+                    常用于公共交通场景，表示因为没注意或反应慢而没有在目标站下车。可直接沉淀为语境题关键词。
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="content-grid">
+            <div class="panel section">
+              <div class="section-head">
+                <h3>今日任务队列</h3>
+                <span class="link" data-view-target="history">全部任务</span>
+              </div>
+              <div class="task-list">
+                <div class="task">
+                  <div class="task-icon" style="background: var(--blue)">R</div>
+                  <div><b>核心词复习</b><span>42 个词，预计 12 分钟</span></div>
+                  <span class="tag blue">进行中</span>
+                </div>
+                <div class="task">
+                  <div class="task-icon" style="background: var(--green)">A</div>
+                  <div><b>AI 语境练习</b><span>交通主题，5 道选择题</span></div>
+                  <span class="tag green">已生成</span>
+                </div>
+                <div class="task">
+                  <div class="task-icon" style="background: var(--amber)">P</div>
+                  <div><b>PDF 模板下载</b><span>学生版、教师解析版</span></div>
+                  <span class="tag amber">待下载</span>
+                </div>
+                <div class="task">
+                  <div class="task-icon" style="background: var(--violet)">M</div>
+                  <div><b>记忆地图回顾</b><span>8 个薄弱词族需要巩固</span></div>
+                  <span class="tag blue">建议</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel section">
+              <div class="section-head">
+                <h3>语境练习预览</h3>
+                <span class="link" data-view-target="context-lab">进入满屏做题</span>
+              </div>
+              <div class="practice-preview">
+                <div class="reading">
+                  <div class="column-head">
+                    <strong>READING</strong>
+                    <b>Navigating Modern Public Transport</b>
+                  </div>
+                  <div class="article">
+                    Modern public transport systems are designed for efficiency,
+                    but travelers can still encounter confusion when they miss a
+                    stop or need to get off at the next station.
+                  </div>
+                  <div class="keywords">
+                    <span class="keyword">missed my stop</span>
+                    <span class="keyword">display board</span>
+                    <span class="keyword">check-in counter</span>
+                  </div>
+                </div>
+                <div class="questions">
+                  <div class="column-head">
+                    <strong>QUESTIONS</strong>
+                    <b>第 1 题</b>
+                  </div>
+                  <div class="question-card">
+                    <b>What does the phrase "missed my stop" mean?</b>
+                    <div class="option"><span class="radio"></span>A. Failed to notice the station</div>
+                    <div class="option active"><span class="radio"></span>B. Deliberately skipped a station</div>
+                    <div class="option"><span class="radio"></span>C. Lost the train schedule</div>
+                  </div>
+                  <div class="analysis">
+                    解析：正确答案为 A。短语强调没有在目标站下车，并非故意跳过站点。
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="bottom-grid">
+            <div class="panel mini">
+              <div class="section-head">
+                <h3>记忆强度</h3>
+                <span class="tag green">健康</span>
+              </div>
+              <p class="small-muted">重点词族正在形成稳定连接，建议继续通过语境题强化短语使用。</p>
+              <div class="progress"><div class="bar" style="width: 74%; background: var(--green)"></div></div>
+            </div>
+
+            <div class="panel mini">
+              <div class="section-head">
+                <h3>生成历史</h3>
+                <span class="link" data-view-target="history">管理</span>
+              </div>
+              <div class="history-row"><span>交通主题阅读</span><span class="tag green">完成</span></div>
+              <div class="history-row"><span>商务邮件词汇</span><span class="tag blue">处理中</span></div>
+              <div class="history-row"><span>旅行口语短语</span><span class="tag amber">待确认</span></div>
+            </div>
+
+            <div class="panel mini">
+              <div class="section-head">
+                <h3>PDF 模板</h3>
+                <span class="link" data-view-target="pdf">下载中心</span>
+              </div>
+              <div class="pdf-card">
+                <div class="doc">PDF</div>
+                <div>
+                  <b>练习卷 + 答案解析</b>
+                  <div class="small-muted">自动去重 ABCD，支持课堂打印</div>
+                </div>
+              </div>
+            </div>
+          </section>
+          </div>
+
+          <div class="view hidden module-view" data-view="recite">
+            <section class="module-hero">
+              <div class="panel module-main">
+                <div class="kicker">Review Session</div>
+                <h2>今日复习</h2>
+                <p>用记忆曲线安排需要马上巩固的单词和短语。商业版重点是减少用户判断成本：直接进入复习、即时反馈、复习后自动沉淀错词。</p>
+                <div class="primary-row">
+                  <button class="button primary">开始 42 个词复习</button>
+                  <button class="button">只看薄弱词</button>
+                </div>
+              </div>
+              <div class="panel module-side">
+                <h3>今日目标</h3>
+                <div class="metric"><b>12 min</b><span>预计完成时间</span></div>
+                <div class="metric" style="margin-top: 12px"><b>18</b><span>高风险遗忘词</span></div>
+              </div>
+            </section>
+            <section class="module-grid">
+              <div class="feature-tile"><b>快速判断</b><p>认识 / 模糊 / 不会三态记录，降低复习摩擦。</p></div>
+              <div class="feature-tile"><b>错词回流</b><p>答错词自动进入 AI 语境练习，避免孤立背诵。</p></div>
+              <div class="feature-tile"><b>完成报告</b><p>复习结束显示正确率、耗时和下一次复习时间。</p></div>
+            </section>
+          </div>
+
+          <div class="view hidden module-view" data-view="library">
+            <section class="module-hero">
+              <div class="panel module-main">
+                <div class="kicker">Vocabulary CRM</div>
+                <h2>词库管理</h2>
+                <p>面向长期学习资产，把单词、短语、句子、掌握程度、来源和 AI 解释组织成可筛选的数据表。</p>
+                <div class="primary-row">
+                  <button class="button primary">新增单词</button>
+                  <button class="button">批量导入</button>
+                  <button class="button" data-view-target="word-agent">AI 查询后加入词库</button>
+                </div>
+              </div>
+              <div class="panel module-side">
+                <h3>词库概览</h3>
+                <div class="metric"><b>2,418</b><span>总词条</span></div>
+                <div class="metric" style="margin-top: 12px"><b>327</b><span>短语和句子</span></div>
+              </div>
+            </section>
+            <div class="mock-table">
+              <div class="mock-row"><b>missed my stop</b><span>短语</span><span>一般</span><span class="tag blue">交通</span></div>
+              <div class="mock-row"><b>display board</b><span>短语</span><span>熟练</span><span class="tag green">场景词</span></div>
+              <div class="mock-row"><b>check-in counter</b><span>短语</span><span>不会</span><span class="tag amber">待复习</span></div>
+            </div>
+          </div>
+
+          <div class="view hidden module-view" data-view="word-agent">
+            <section class="module-hero">
+              <div class="panel module-main">
+                <div class="kicker">AI Translator</div>
+                <h2>AI 单词查询</h2>
+                <p>输入单词或短语后，AI 输出中文释义、语境例句、同义表达、易混辨析，并支持一键加入词库或生成做题材料。</p>
+                <div class="query-box">
+                  <div class="query-input">
+                    <span>get off at the next stop</span>
+                    <button class="button primary">重新查询</button>
+                  </div>
+                  <div class="translation">
+                    <strong>在下一站下车</strong>
+                    <p>公共交通高频短语，可与 miss my stop、backtrack、display board 组成一组语境练习。</p>
+                  </div>
+                </div>
+              </div>
+              <div class="panel module-side">
+                <h3>后续动作</h3>
+                <div class="task-list">
+                  <button class="button primary">加入词库</button>
+                  <button class="button" data-view-target="context-lab">生成语境题</button>
+                  <button class="button" data-view-target="pdf">导出 PDF</button>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <div class="view hidden module-view" data-view="context-lab">
+            <section class="module-hero">
+              <div class="panel module-main">
+                <div class="kicker">Context Lab</div>
+                <h2>语境实验室</h2>
+                <p>选择薄弱词后异步生成阅读文章和选择题。做题区支持满屏、计时、ABCD 选项、提交后解析和历史复盘。</p>
+                <div class="primary-row">
+                  <button class="button primary">生成新练习</button>
+                  <button class="button">打开满屏做题</button>
+                  <button class="button" data-view-target="history">查看生成历史</button>
+                </div>
+              </div>
+              <div class="panel module-side">
+                <h3>任务状态</h3>
+                <div class="history-row"><span>等待 AI 回调</span><span class="tag blue">处理中</span></div>
+                <div class="history-row"><span>去重与校验</span><span class="tag green">通过</span></div>
+                <div class="history-row"><span>PDF 生成</span><span class="tag amber">待执行</span></div>
+              </div>
+            </section>
+          </div>
+
+          <div class="view hidden module-view" data-view="history">
+            <section class="panel module-main">
+              <div class="kicker">Generation History</div>
+              <h2>生成历史</h2>
+              <p>用户可以查询每次 AI 生成任务的状态、来源词、题目数量、PDF 下载状态和错误原因。</p>
+              <div class="mock-table">
+                <div class="mock-row"><b>交通主题阅读</b><span>5 题</span><span>2026-06-18</span><span class="tag green">完成</span></div>
+                <div class="mock-row"><b>商务邮件词汇</b><span>8 题</span><span>2026-06-18</span><span class="tag blue">处理中</span></div>
+                <div class="mock-row"><b>旅行口语短语</b><span>5 题</span><span>2026-06-17</span><span class="tag amber">待确认</span></div>
+              </div>
+            </section>
+          </div>
+
+          <div class="view hidden module-view" data-view="pdf">
+            <section class="module-hero">
+              <div class="panel module-main">
+                <div class="kicker">PDF Center</div>
+                <h2>PDF 模板下载</h2>
+                <p>提供学生练习版、教师答案解析版、课堂打印版。选项统一为 ABCD，避免重复前缀，保证打印质量。</p>
+                <div class="primary-row">
+                  <button class="button primary">下载学生版</button>
+                  <button class="button">下载教师解析版</button>
+                  <button class="button">下载空白模板</button>
+                </div>
+              </div>
+              <div class="panel module-side">
+                <h3>模板预览</h3>
+                <div class="pdf-card">
+                  <div class="doc">PDF</div>
+                  <div><b>练习卷 + 答案解析</b><div class="small-muted">2 页，A4，适合课堂打印</div></div>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <div class="view hidden module-view" data-view="memory-map">
+            <section class="panel module-main">
+              <div class="kicker">Memory Map</div>
+              <h2>记忆地图</h2>
+              <p>把词汇按主题、错题、语境和熟练度形成网络视图，让用户知道薄弱点在哪里。</p>
+              <section class="module-grid">
+                <div class="feature-tile"><b>交通词族</b><p>missed my stop、display board、trolley。</p></div>
+                <div class="feature-tile"><b>商务表达</b><p>follow up、deadline、proposal。</p></div>
+                <div class="feature-tile"><b>易错短语</b><p>get off、take off、turn off。</p></div>
+              </section>
+            </section>
+          </div>
+
+          <div class="view hidden module-view" data-view="stats">
+            <section class="panel module-main">
+              <div class="kicker">Learning Analytics</div>
+              <h2>学习统计</h2>
+              <p>用趋势、正确率、完成率和薄弱词聚合判断学习效果，适合个人复盘和后续商业版报表。</p>
+              <section class="module-grid">
+                <div class="metric"><b>21 天</b><span>连续学习</span></div>
+                <div class="metric"><b>86%</b><span>近 7 日正确率</span></div>
+                <div class="metric"><b>312</b><span>本月新增词条</span></div>
+              </section>
+            </section>
+          </div>
+
+          <div class="view hidden module-view" data-view="settings">
+            <section class="panel module-main">
+              <div class="kicker">Settings</div>
+              <h2>系统设置</h2>
+              <p>管理学习目标、AI 生成偏好、PDF 模板样式、账号和数据导出。</p>
+              <section class="module-grid">
+                <div class="feature-tile"><b>学习目标</b><p>每日词量、复习强度和提醒策略。</p></div>
+                <div class="feature-tile"><b>AI 偏好</b><p>题目难度、文章长度、输出语言和解析风格。</p></div>
+                <div class="feature-tile"><b>导出设置</b><p>PDF 页眉、答案位置和模板版本。</p></div>
+              </section>
+            </section>
+          </div>
+        </main>
+      </div>
+    </div>
+    <script>
+      const navItems = Array.from(document.querySelectorAll("[data-view-target]"));
+      const views = Array.from(document.querySelectorAll("[data-view]"));
+      const title = document.querySelector(".page-title h1");
+      const subtitle = document.querySelector(".page-title p");
+      const copy = {
+        dashboard: ["学习工作台", "把查词、复习、AI 生成做题和 PDF 资料统一在一个清晰流程里。"],
+        recite: ["今日复习", "根据遗忘曲线安排今天最该复习的词和短语。"],
+        library: ["词库管理", "管理单词、短语、句子、掌握程度和来源。"],
+        "word-agent": ["AI 单词查询", "输入单词或短语，获得翻译、例句、辨析并沉淀到词库。"],
+        "context-lab": ["语境实验室", "把薄弱词生成阅读文章和选择题，支持满屏做题和解析复盘。"],
+        history: ["生成历史", "查询 AI 生成任务状态、结果、错误和 PDF 下载记录。"],
+        pdf: ["PDF 模板下载", "下载学生练习版、教师解析版和课堂打印模板。"],
+        "memory-map": ["记忆地图", "用主题网络呈现薄弱词族和长期记忆强度。"],
+        stats: ["学习统计", "查看正确率、连续学习、词库增长和学习趋势。"],
+        settings: ["系统设置", "配置学习目标、AI 偏好、PDF 模板和账号数据。"],
+      };
+
+      function showView(name) {
+        views.forEach((view) => {
+          view.classList.toggle("hidden", view.dataset.view !== name);
+        });
+        document.querySelectorAll(".nav-item").forEach((item) => {
+          item.classList.toggle("active", item.dataset.viewTarget === name);
+        });
+        const [nextTitle, nextSubtitle] = copy[name] || copy.dashboard;
+        title.textContent = nextTitle;
+        subtitle.textContent = nextSubtitle;
+      }
+
+      navItems.forEach((item) => {
+        item.addEventListener("click", () => {
+          const target = item.dataset.viewTarget;
+          if (target) showView(target);
+        });
+      });
+    </script>
+  </body>
+</html>

@@ -2,12 +2,13 @@ import "@testing-library/jest-dom/vitest";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ContextLabPage } from "./ContextLabPage";
+import { ContextLabPage, formatElapsedSeconds } from "./ContextLabPage";
 import { buildContextLabGenerateParams } from "./contextLabPlanning";
 
-const { requestMock, startMock } = vi.hoisted(() => ({
+const { requestMock, downloadMock, downloadTaskMock } = vi.hoisted(() => ({
   requestMock: vi.fn(),
-  startMock: vi.fn(),
+  downloadMock: vi.fn(),
+  downloadTaskMock: vi.fn(),
 }));
 
 vi.mock("@font/api", () => ({
@@ -15,19 +16,25 @@ vi.mock("@font/api", () => ({
   getApiBaseUrl: () => "/api",
 }));
 
-vi.mock("../shared/hooks/useSseStream", () => ({
-  useSseStream: () => ({
-    loading: false,
-    start: startMock,
-    abort: vi.fn(),
-  }),
-}));
+vi.mock("../server/learning", async () => {
+  const actual =
+    await vi.importActual<typeof import("../server/learning")>(
+      "../server/learning",
+    );
+  return {
+    ...actual,
+    downloadContextLabPdfTemplate: () => downloadMock(),
+    downloadContextLabTaskPdf: (taskId: number) => downloadTaskMock(taskId),
+  };
+});
 
 describe("ContextLabPage", () => {
   afterEach(() => {
     cleanup();
     requestMock.mockReset();
-    startMock.mockReset();
+    downloadMock.mockReset();
+    downloadTaskMock.mockReset();
+    vi.useRealTimers();
   });
 
   it("lets the user choose weak words, random words, or custom words", () => {
@@ -36,6 +43,18 @@ describe("ContextLabPage", () => {
     expect(screen.getByText("今日薄弱词")).toBeInTheDocument();
     expect(screen.getByText("随机词")).toBeInTheDocument();
     expect(screen.getByText("手输词")).toBeInTheDocument();
+  });
+
+  it("shows the weak source count instead of fake preview words", () => {
+    requestMock.mockResolvedValue({ list: [], total: 0, page: 1, pageSize: 10 });
+
+    render(<ContextLabPage />);
+
+    expect(screen.getByText("生成数量")).toBeInTheDocument();
+    expect(screen.getByRole("spinbutton")).toHaveValue("8");
+    expect(screen.queryByText("resilient")).not.toBeInTheDocument();
+    expect(screen.queryByText("recover")).not.toBeInTheDocument();
+    expect(screen.queryByText("fragile")).not.toBeInTheDocument();
   });
 
   it("builds the weak word source as a proficiency request", () => {
@@ -65,57 +84,448 @@ describe("ContextLabPage", () => {
     });
   });
 
-  it("starts context generation with the context lab endpoint and weak-word body", async () => {
+  it("formats elapsed answering time", () => {
+    expect(formatElapsedSeconds(0)).toBe("00:00");
+    expect(formatElapsedSeconds(65)).toBe("01:05");
+  });
+
+  it("creates an async generation task and refreshes history", async () => {
+    requestMock.mockImplementation((config) => {
+      if (config.url === "/context-lab/history") {
+        return Promise.resolve({ list: [], total: 0, page: 1, pageSize: 10 });
+      }
+      if (config.url === "/context-lab/generate-task") {
+        return Promise.resolve({
+          id: 12,
+          taskId: 12,
+          status: "pending",
+          sourceType: "proficiency",
+          words: ["fragile", "steady", "recover"],
+        });
+      }
+      return Promise.resolve({});
+    });
+
     render(<ContextLabPage />);
 
     await userEvent.click(screen.getByRole("button", { name: /生成练习包/ }));
 
-    expect(startMock).toHaveBeenCalledWith(
-      "/api/context-lab/generate",
-      {
-        sourceType: "proficiency",
-        proficiencyLevels: [0, 1],
-        count: 8,
-      },
-      expect.objectContaining({
-        onChunk: expect.any(Function),
-        onDone: expect.any(Function),
-        onError: expect.any(Function),
-      }),
+    await waitFor(() => {
+      expect(requestMock).toHaveBeenCalledWith({
+        url: "/context-lab/generate-task",
+        method: "POST",
+        data: {
+          sourceType: "proficiency",
+          proficiencyLevels: [0, 1],
+          count: 8,
+        },
+        __responseType: undefined,
+      });
+    });
+    expect((await screen.findAllByText("等待回调")).length).toBeGreaterThan(0);
+  });
+
+  it("renders succeeded and failed history states", async () => {
+    requestMock.mockResolvedValue({
+      list: [
+        {
+          id: 12,
+          taskId: 12,
+          status: "succeeded",
+          sourceType: "custom",
+          words: ["fragile", "steady", "recover"],
+          articleExerciseId: 88,
+          article: "A short practice article.",
+          questions: [
+            {
+              id: "q1",
+              stem: "What does fragile mean?",
+              options: ["Easy to break", "Very fast"],
+            },
+          ],
+        },
+        {
+          id: 13,
+          taskId: 13,
+          status: "failed",
+          sourceType: "random",
+          words: ["steady", "recover", "repair"],
+          errorMessage: "AI 返回格式异常",
+        },
+      ],
+      total: 2,
+      page: 1,
+      pageSize: 10,
+    });
+
+    render(<ContextLabPage />);
+
+    expect(await screen.findByText("生成完成")).toBeInTheDocument();
+    expect(screen.getByText("生成失败")).toBeInTheDocument();
+    expect(screen.getByText("AI 返回格式异常")).toBeInTheDocument();
+  });
+
+  it("opens a succeeded history item and submits answers", async () => {
+    requestMock.mockImplementation((config) => {
+      if (config.url === "/context-lab/history") {
+        return Promise.resolve({
+          list: [
+            {
+              id: 12,
+              taskId: 12,
+              status: "succeeded",
+              sourceType: "custom",
+              words: ["fragile", "steady", "recover"],
+              articleExerciseId: 88,
+              article: "A short practice article.",
+              questions: [
+                {
+                  id: "q1",
+                  stem: "What does fragile mean?",
+                  options: ["Easy to break", "Very fast"],
+                },
+              ],
+            },
+          ],
+          total: 1,
+          page: 1,
+          pageSize: 10,
+        });
+      }
+      if (config.url === "/context-lab/submit") {
+        return Promise.resolve({
+          results: [
+            {
+              questionId: "q1",
+              correct: true,
+              correctIndex: 0,
+              userSelectedIndex: 0,
+              explanation: "解析：正确答案为0，fragile 表示容易损坏，和文章语境一致。",
+            },
+          ],
+        });
+      }
+      return Promise.resolve({});
+    });
+
+    render(<ContextLabPage />);
+
+    await userEvent.click(await screen.findByRole("button", { name: "开始练习" }));
+    expect(screen.getByRole("dialog", { name: /AI 语境练习/ })).toBeInTheDocument();
+    expect(screen.getByText("A. Easy to break")).toBeInTheDocument();
+    expect(screen.getByText("B. Very fast")).toBeInTheDocument();
+    await userEvent.click(screen.getByText("A. Easy to break"));
+    await userEvent.click(screen.getByRole("button", { name: "提交练习" }));
+
+    await waitFor(() => {
+      expect(requestMock).toHaveBeenCalledWith({
+        url: "/context-lab/submit",
+        method: "POST",
+        data: {
+          sessionId: 88,
+          answers: [{ questionId: "q1", selectedIndex: 0 }],
+        },
+        __responseType: undefined,
+      });
+    });
+    expect(
+      await screen.findByText("解析：正确答案为 A，fragile 表示容易损坏，和文章语境一致。"),
+    ).toBeInTheDocument();
+  });
+
+  it("downloads the PDF template from the toolbar", async () => {
+    requestMock.mockResolvedValue({ list: [], total: 0, page: 1, pageSize: 10 });
+    downloadMock.mockResolvedValue(undefined);
+
+    render(<ContextLabPage />);
+
+    await userEvent.click(
+      screen.getByRole("button", { name: /下载 PDF 模板/ }),
+    );
+
+    expect(downloadMock).toHaveBeenCalled();
+  });
+
+  it("downloads the completed exercise PDF from the current task", async () => {
+    requestMock.mockResolvedValue({
+      list: [
+        {
+          id: 12,
+          taskId: 12,
+          status: "succeeded",
+          sourceType: "custom",
+          words: ["fragile", "steady", "recover"],
+          articleExerciseId: 88,
+          article: "A short practice article.",
+          questions: [
+            {
+              id: "q1",
+              stem: "What does fragile mean?",
+              options: ["Easy to break", "Very fast"],
+            },
+          ],
+        },
+      ],
+      total: 1,
+      page: 1,
+      pageSize: 10,
+    });
+    downloadTaskMock.mockResolvedValue(undefined);
+
+    render(<ContextLabPage />);
+
+    await userEvent.click(await screen.findByRole("button", { name: "开始练习" }));
+    expect(screen.getByRole("dialog", { name: /AI 语境练习/ })).toBeInTheDocument();
+    await userEvent.click(
+      screen.getByRole("button", { name: "下载本次练习 PDF" }),
+    );
+
+    expect(downloadTaskMock).toHaveBeenCalledWith(12);
+  });
+
+  it("renders generated article paragraphs with reading indentation", async () => {
+    requestMock.mockResolvedValue({
+      list: [
+        {
+          id: 12,
+          taskId: 12,
+          status: "succeeded",
+          sourceType: "custom",
+          words: ["fragile", "steady", "recover"],
+          articleExerciseId: 88,
+          article: "First paragraph.\n\nSecond paragraph.",
+          questions: [
+            {
+              id: "q1",
+              stem: "What does fragile mean?",
+              options: ["Easy to break", "Very fast"],
+            },
+          ],
+        },
+      ],
+      total: 1,
+      page: 1,
+      pageSize: 10,
+    });
+
+    render(<ContextLabPage />);
+
+    await userEvent.click(await screen.findByRole("button", { name: "开始练习" }));
+    expect(screen.getByRole("dialog", { name: /AI 语境练习/ })).toBeInTheDocument();
+
+    expect(screen.getByText("First paragraph.")).toHaveClass(
+      "context-lab-article-paragraph",
+    );
+    expect(screen.getByText("Second paragraph.")).toHaveClass(
+      "context-lab-article-paragraph",
     );
   });
 
-  it("submits generated question answers through the context lab submit contract", async () => {
+  it("renders the generated article topic separately from body paragraphs", async () => {
     requestMock.mockResolvedValue({
-      results: [
+      list: [
         {
-          questionId: "q1",
-          correct: true,
-          correctIndex: 0,
-          userSelectedIndex: 0,
-          explanation: "ok",
+          id: 12,
+          taskId: 12,
+          status: "succeeded",
+          sourceType: "custom",
+          words: ["fragile", "steady", "recover"],
+          articleExerciseId: 88,
+          article:
+            "Urban Green Space and Public Trust\n\nFirst body paragraph.\n\nSecond body paragraph.\n\nThird body paragraph.",
+          questions: [
+            {
+              id: "q1",
+              stem: "What does fragile mean?",
+              options: ["Easy to break", "Very fast"],
+            },
+          ],
         },
       ],
-    });
-    startMock.mockImplementation((_url, _body, handlers) => {
-      handlers.onDone({
-        sessionId: 12,
-        article: "A short practice article.",
-        words: ["resilient"],
-        questions: [
-          {
-            id: "q1",
-            stem: "What does resilient mean?",
-            options: ["able to recover", "easy to break"],
-          },
-        ],
-      });
+      total: 1,
+      page: 1,
+      pageSize: 10,
     });
 
     render(<ContextLabPage />);
 
-    await userEvent.click(screen.getByRole("button", { name: /生成练习包/ }));
-    await userEvent.click(screen.getByText("able to recover"));
+    await userEvent.click(await screen.findByRole("button", { name: "开始练习" }));
+    expect(screen.getByRole("dialog", { name: /AI 语境练习/ })).toBeInTheDocument();
+
+    expect(screen.getByText("Urban Green Space and Public Trust")).toHaveClass(
+      "context-lab-article-topic",
+    );
+    expect(screen.getByText("First body paragraph.")).toHaveClass(
+      "context-lab-article-paragraph",
+    );
+    expect(screen.queryByText("文章主题")).toBeInTheDocument();
+  });
+
+  it("renders a two-pane practice workspace with an answering timer", async () => {
+    requestMock.mockResolvedValue({
+      list: [
+        {
+          id: 12,
+          taskId: 12,
+          status: "succeeded",
+          sourceType: "custom",
+          words: ["fragile", "steady", "recover"],
+          articleExerciseId: 88,
+          article:
+            "Urban Green Space and Public Trust\n\nFirst body paragraph.\n\nSecond body paragraph.\n\nThird body paragraph.",
+          questions: [
+            {
+              id: "q1",
+              stem: "What does fragile mean?",
+              options: ["Easy to break", "Very fast"],
+            },
+          ],
+        },
+      ],
+      total: 1,
+      page: 1,
+      pageSize: 10,
+    });
+
+    render(<ContextLabPage />);
+
+    await userEvent.click(await screen.findByRole("button", { name: "开始练习" }));
+    const practiceDialog = screen.getByRole("dialog", { name: /AI 语境练习/ });
+
+    expect(practiceDialog).toHaveClass("context-lab-practice-modal");
+    expect(screen.getByLabelText("文章阅读区")).toHaveClass(
+      "context-lab-reading-pane",
+    );
+    expect(screen.getByLabelText("题目作答区")).toHaveClass(
+      "context-lab-question-pane",
+    );
+    expect(screen.getByText("做题计时")).toBeInTheDocument();
+    expect(screen.getByText("00:00")).toBeInTheDocument();
+    expect(screen.getByText("已答 0/1")).toBeInTheDocument();
+  });
+
+  it("lets the user expand the practice window to fill the screen", async () => {
+    requestMock.mockResolvedValue({
+      list: [
+        {
+          id: 12,
+          taskId: 12,
+          status: "succeeded",
+          sourceType: "custom",
+          words: ["fragile", "steady", "recover"],
+          articleExerciseId: 88,
+          article: "A short practice article.",
+          questions: [
+            {
+              id: "q1",
+              stem: "What does fragile mean?",
+              options: ["Easy to break", "Very fast"],
+            },
+          ],
+        },
+      ],
+      total: 1,
+      page: 1,
+      pageSize: 10,
+    });
+
+    render(<ContextLabPage />);
+
+    await userEvent.click(await screen.findByRole("button", { name: "开始练习" }));
+    const practiceDialog = screen.getByRole("dialog", { name: /AI 语境练习/ });
+
+    await userEvent.click(screen.getByRole("button", { name: "占满屏幕" }));
+
+    expect(practiceDialog).toHaveClass(
+      "context-lab-practice-modal-fullscreen",
+    );
+    expect(
+      screen.getByRole("button", { name: "退出满屏" }),
+    ).toBeInTheDocument();
+  });
+
+  it("keeps the full practice workspace out of the main task card", async () => {
+    requestMock.mockResolvedValue({
+      list: [
+        {
+          id: 12,
+          taskId: 12,
+          status: "succeeded",
+          sourceType: "custom",
+          words: ["fragile", "steady", "recover"],
+          articleExerciseId: 88,
+          article: "A short practice article.",
+          questions: [
+            {
+              id: "q1",
+              stem: "What does fragile mean?",
+              options: ["Easy to break", "Very fast"],
+            },
+          ],
+        },
+      ],
+      total: 1,
+      page: 1,
+      pageSize: 10,
+    });
+
+    const { container } = render(<ContextLabPage />);
+
+    await screen.findByText("生成完成");
+
+    expect(container.querySelector(".context-lab-practice-pack")).toBeNull();
+    await userEvent.click(screen.getByRole("button", { name: "开始练习" }));
+    expect(screen.getByRole("dialog", { name: /AI 语境练习/ })).toBeInTheDocument();
+  });
+
+  it("submits generated question answers through the context lab submit contract", async () => {
+    requestMock.mockImplementation((config) => {
+      if (config.url === "/context-lab/history") {
+        return Promise.resolve({
+          list: [
+            {
+              id: 12,
+              taskId: 12,
+              status: "succeeded",
+              sourceType: "proficiency",
+              words: ["resilient"],
+              articleExerciseId: 12,
+              article: "A short practice article.",
+              questions: [
+                {
+                  id: "q1",
+                  stem: "What does resilient mean?",
+                  options: ["able to recover", "easy to break"],
+                },
+              ],
+            },
+          ],
+          total: 1,
+          page: 1,
+          pageSize: 10,
+        });
+      }
+      if (config.url === "/context-lab/submit") {
+        return Promise.resolve({
+          results: [
+            {
+              questionId: "q1",
+              correct: true,
+              correctIndex: 0,
+              userSelectedIndex: 0,
+              explanation: "ok",
+            },
+          ],
+        });
+      }
+      return Promise.resolve({});
+    });
+
+    render(<ContextLabPage />);
+
+    await userEvent.click(await screen.findByRole("button", { name: "开始练习" }));
+    expect(screen.getByRole("dialog", { name: /AI 语境练习/ })).toBeInTheDocument();
+    await userEvent.click(screen.getByText("A. able to recover"));
     await userEvent.click(screen.getByRole("button", { name: "提交练习" }));
 
     await waitFor(() => {

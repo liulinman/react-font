@@ -106,7 +106,22 @@ describe("english-world ToC routes", () => {
           { level: 2, count: 1 },
           { level: 3, count: 0 },
         ],
-        nextTasks: [],
+        suggestedActions: [
+          {
+            type: "repair",
+            title: "修复薄弱词",
+            description: "按今日计划复习低掌握度单词",
+            wordIds: [101, 102],
+            estimatedMinutes: 4,
+          },
+          {
+            type: "context",
+            title: "进入语境练习",
+            description: "把薄弱词放进短阅读",
+            wordIds: [101, 102],
+            estimatedMinutes: 6,
+          },
+        ],
       },
     });
 
@@ -136,12 +151,21 @@ describe("english-world ToC routes", () => {
     });
   };
 
+  const mockContextLabHistory = () => {
+    cy.intercept("POST", "**/context-lab/history", {
+      code: 200,
+      message: "ok",
+      data: { list: [], total: 0, page: 1, pageSize: 10 },
+    }).as("contextHistoryDefault");
+  };
+
   const mockProtectedEnglishWorld = () => {
     mockCurrentUser(true);
     mockWordList();
     mockStats();
     mockSettings();
     mockCockpitApis();
+    mockContextLabHistory();
   };
 
   const expectWordLibrary = () => {
@@ -276,5 +300,134 @@ describe("english-world ToC routes", () => {
     cy.wait("@getAllConfigs");
     cy.contains("系统设置").should("be.visible");
     cy.contains("单词默写配置").should("be.visible");
+  });
+
+  it("creates an async context lab task and practices from history", () => {
+    mockProtectedEnglishWorld();
+    let historyCalls = 0;
+
+    cy.intercept("POST", "**/context-lab/history", (req) => {
+      historyCalls += 1;
+      req.reply({
+        code: 200,
+        message: "ok",
+        data:
+          historyCalls <= 2
+            ? { list: [], total: 0, page: 1, pageSize: 10 }
+            : {
+                list: [
+                  {
+                    id: 501,
+                    taskId: 501,
+                    status: "succeeded",
+                    sourceType: "proficiency",
+                    words: ["resilient", "steady", "recover"],
+                    articleExerciseId: 901,
+                    article: "A short article about resilient learning.",
+                    questions: [
+                      {
+                        id: "q1",
+                        stem: "What does resilient learning describe?",
+                        options: [
+                          "Recovering after difficulty",
+                          "Never practicing",
+                          "Avoiding all mistakes",
+                          "Forgetting words",
+                        ],
+                      },
+                    ],
+                  },
+                ],
+                total: 1,
+                page: 1,
+                pageSize: 10,
+              },
+      });
+    }).as("contextHistory");
+
+    cy.intercept("POST", "**/context-lab/generate-task", {
+      code: 200,
+      message: "ok",
+      data: {
+        id: 501,
+        taskId: 501,
+        status: "pending",
+        sourceType: "proficiency",
+        words: ["resilient", "steady", "recover"],
+      },
+    }).as("createContextTask");
+
+    cy.intercept("POST", "**/context-lab/submit", (req) => {
+      expect(req.body.sessionId).to.eq(901);
+      req.reply({
+        code: 200,
+        message: "ok",
+        data: {
+          results: [
+            {
+              questionId: "q1",
+              correct: true,
+              correctIndex: 0,
+              userSelectedIndex: 0,
+              explanation: "回答正确。",
+            },
+          ],
+        },
+      });
+    }).as("submitContextExercise");
+
+    cy.visit("/englishWorld/context-lab");
+
+    cy.wait("@currentUser");
+    cy.wait("@contextHistory");
+    cy.contains("button", "生成练习包").click();
+    cy.wait("@createContextTask");
+    cy.contains("等待回调").should("be.visible");
+
+    cy.contains("button", "刷新状态").click();
+    cy.wait("@contextHistory");
+    cy.contains("生成完成").should("be.visible");
+    cy.contains("button", "开始练习").click();
+    cy.contains("A short article about resilient learning.").should(
+      "be.visible",
+    );
+    cy.contains("Recovering after difficulty").click();
+    cy.contains("button", "提交练习").click();
+    cy.wait("@submitContextExercise");
+    cy.contains("正确").should("be.visible");
+  });
+
+  it("starts a targeted review from the daily action list", () => {
+    mockProtectedEnglishWorld();
+    cy.intercept("POST", "/api/recite/start", (req) => {
+      expect(req.body.wordIds).to.deep.equal([101, 102]);
+      req.reply({
+        code: 200,
+        message: "ok",
+        data: {
+          questions: [
+            { wordId: 101, question: "有复原力的", direction: 0 },
+            { wordId: 102, question: "稳定的", direction: 0 },
+          ],
+          direction: 0,
+          totalCount: 2,
+        },
+      });
+    }).as("startTargetedReview");
+
+    cy.visit("/englishWorld");
+
+    cy.wait("@currentUser");
+    cy.get('[aria-label="今日行动清单"]').should("be.visible");
+    cy.contains("修复薄弱词").should("be.visible");
+    cy.contains("button", "定向复习").click();
+
+    cy.location("pathname").should("eq", "/englishWorld/recite");
+    cy.location("search").should("contain", "wordIds=101%2C102");
+    cy.contains("这组词来自今日计划").should("be.visible");
+    cy.contains("button", "开始今日复习").click();
+
+    cy.wait("@startTargetedReview");
+    cy.contains("有复原力的").should("be.visible");
   });
 });
