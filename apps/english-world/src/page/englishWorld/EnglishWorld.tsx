@@ -303,8 +303,8 @@ const EnglishWorld: React.FC = () => {
             <section className="english-world-table-panel">
               <div className="english-world-table-toolbar">
                 <div className="english-world-table-title">
-                  <strong>单词列表</strong>
-                  <span>面向复习、检索和维护的词库工作台</span>
+                  <strong>词库管理</strong>
+                  <span>保留筛选字段、表格列和添加/编辑单词字段</span>
                 </div>
                 <Button
                   type="primary"
@@ -313,7 +313,7 @@ const EnglishWorld: React.FC = () => {
                   loading={buttonPending}
                   icon={<PlusOutlined />}
                 >
-                  新增
+                  添加单词
                 </Button>
               </div>
 

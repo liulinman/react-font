@@ -146,7 +146,7 @@ export function LearningCockpitPage() {
               <ExperimentOutlined className="learning-cockpit-card-icon" />
             </div>
             <p className="learning-cockpit-card-copy">
-              用今日薄弱词生成短阅读、选择题和例句改写，让单词从词表进入真实场景。
+              用今日薄弱词生成雅思阅读、选择题和例句改写，让单词从词表进入真实场景。
             </p>
             <div className="learning-cockpit-action-row">
               <Button type="primary" onClick={() => navigate("/englishWorld/context-lab")}>

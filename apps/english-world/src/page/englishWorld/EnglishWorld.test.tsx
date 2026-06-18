@@ -73,7 +73,16 @@ describe("EnglishWorld ToC routing", () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByText("单词列表")).toBeInTheDocument();
+    expect(screen.getByText("词库管理")).toBeInTheDocument();
+    expect(
+      screen.getByText("保留筛选字段、表格列和添加/编辑单词字段"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("时间范围")).toBeInTheDocument();
+    expect(screen.getByText("中文名")).toBeInTheDocument();
+    expect(screen.getByText("英文名")).toBeInTheDocument();
+    expect(screen.getAllByText("音标").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("类型").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("掌握程度").length).toBeGreaterThan(0);
     expect(screen.queryByText("Mock Cockpit")).not.toBeInTheDocument();
   });
 
@@ -106,7 +115,7 @@ describe("EnglishWorld ToC routing", () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByText("单词列表")).toBeInTheDocument();
+    expect(screen.getByText("词库管理")).toBeInTheDocument();
 
     cleanup();
 

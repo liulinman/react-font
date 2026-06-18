@@ -100,4 +100,14 @@ describe("RecitePage plan review", () => {
 
     expect(await screen.findByText("脆弱的")).toBeInTheDocument();
   });
+
+  it("uses the desktop shell content area so the sidebar does not cover review content", () => {
+    const { container } = render(
+      <MemoryRouter initialEntries={["/englishWorld/recite"]}>
+        <RecitePage />
+      </MemoryRouter>,
+    );
+
+    expect(container.querySelector(".english-world-main")).toBeInTheDocument();
+  });
 });

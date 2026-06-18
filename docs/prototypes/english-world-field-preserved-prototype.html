@@ -1,0 +1,757 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>English World Field Preserved Prototype</title>
+    <style>
+      :root {
+        --bg: #f5f7fb;
+        --panel: #fff;
+        --ink: #182235;
+        --muted: #68758a;
+        --line: #dfe7f2;
+        --blue: #2563eb;
+        --green: #16a34a;
+        --amber: #d97706;
+        --red: #dc2626;
+        --purple: #7c3aed;
+        --shadow: 0 18px 58px rgba(24, 34, 53, 0.1);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family:
+          Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+          "Microsoft YaHei", sans-serif;
+      }
+
+      .frame {
+        width: 1440px;
+        min-height: 1040px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 236px 1fr;
+        background: var(--bg);
+      }
+
+      .sidebar {
+        min-height: 1040px;
+        padding: 24px 16px;
+        background: #111827;
+        color: #cbd5e1;
+      }
+
+      .brand {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        padding: 4px 10px 26px;
+      }
+
+      .brand-mark {
+        display: grid;
+        place-items: center;
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #1d4ed8, #14b8a6);
+        color: #fff;
+        font-weight: 900;
+      }
+
+      .brand b {
+        display: block;
+        color: #fff;
+        font-size: 17px;
+      }
+
+      .brand span {
+        display: block;
+        margin-top: 3px;
+        color: #94a3b8;
+        font-size: 12px;
+      }
+
+      .nav-title {
+        padding: 18px 12px 8px;
+        color: #7f8da4;
+        font-size: 12px;
+      }
+
+      .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        height: 40px;
+        margin: 2px 0;
+        padding: 0 12px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+      }
+
+      .nav-item::before {
+        content: "";
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: currentColor;
+        opacity: 0.75;
+      }
+
+      .nav-item.active {
+        background: var(--blue);
+        color: #fff;
+        box-shadow: 0 14px 28px rgba(37, 99, 235, 0.3);
+      }
+
+      .main {
+        padding: 26px 30px 38px;
+      }
+
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 20px;
+      }
+
+      .title h1 {
+        margin: 0;
+        font-size: 28px;
+        line-height: 1.2;
+      }
+
+      .title p {
+        margin: 6px 0 0;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .actions,
+      .row,
+      .toolbar,
+      .chips {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .button {
+        height: 38px;
+        padding: 0 14px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+        color: var(--ink);
+        font-weight: 650;
+        cursor: pointer;
+      }
+
+      .button.primary {
+        border-color: var(--blue);
+        background: var(--blue);
+        color: #fff;
+        box-shadow: 0 12px 24px rgba(37, 99, 235, 0.23);
+      }
+
+      .view {
+        display: block;
+        margin-top: 24px;
+      }
+
+      .view.hidden {
+        display: none;
+      }
+
+      .panel {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        box-shadow: var(--shadow);
+      }
+
+      .panel.pad {
+        padding: 22px;
+      }
+
+      .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px;
+      }
+
+      .grid-3 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 18px;
+      }
+
+      .grid-4 {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+      }
+
+      .section-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+      }
+
+      .section-head h2,
+      .section-head h3 {
+        margin: 0;
+      }
+
+      .kicker {
+        color: var(--blue);
+        font-size: 12px;
+        font-weight: 850;
+        text-transform: uppercase;
+      }
+
+      .muted {
+        color: var(--muted);
+      }
+
+      .field-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+      }
+
+      .field,
+      .input,
+      .textarea {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+      }
+
+      .field {
+        min-height: 66px;
+        padding: 10px 12px;
+      }
+
+      .field label {
+        display: block;
+        margin-bottom: 8px;
+        color: #475569;
+        font-size: 12px;
+        font-weight: 750;
+      }
+
+      .field .value {
+        color: #9aa6b8;
+        font-size: 14px;
+      }
+
+      .textarea {
+        min-height: 96px;
+        padding: 12px;
+        color: #9aa6b8;
+      }
+
+      .table-wrap {
+        margin-top: 18px;
+        overflow: hidden;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+
+      th {
+        padding: 12px 10px;
+        border-bottom: 1px solid var(--line);
+        background: #f8fafc;
+        color: #475569;
+        text-align: left;
+        white-space: nowrap;
+      }
+
+      td {
+        padding: 13px 10px;
+        border-bottom: 1px solid #edf2f8;
+        color: #243044;
+        vertical-align: top;
+      }
+
+      tr:last-child td {
+        border-bottom: 0;
+      }
+
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        min-height: 24px;
+        padding: 3px 8px;
+        border-radius: 7px;
+        font-size: 12px;
+        font-weight: 750;
+      }
+
+      .tag.blue {
+        background: #eaf2ff;
+        color: var(--blue);
+      }
+
+      .tag.green {
+        background: #e9f8ef;
+        color: var(--green);
+      }
+
+      .tag.amber {
+        background: #fff3df;
+        color: var(--amber);
+      }
+
+      .tag.red {
+        background: #ffecec;
+        color: var(--red);
+      }
+
+      .tag.purple {
+        background: #f2eaff;
+        color: var(--purple);
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: 1.18fr 0.82fr;
+        gap: 18px;
+      }
+
+      .hero h2 {
+        margin: 8px 0 10px;
+        font-size: 28px;
+      }
+
+      .hero p {
+        max-width: 700px;
+        color: var(--muted);
+        line-height: 1.75;
+      }
+
+      .metric {
+        padding: 14px;
+        border: 1px solid #e6edf7;
+        border-radius: 8px;
+        background: #fff;
+      }
+
+      .metric b {
+        display: block;
+        font-size: 24px;
+      }
+
+      .metric span {
+        display: block;
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .agent-card {
+        padding: 18px;
+        border: 1px solid #e6edf7;
+        border-radius: 8px;
+        background: #fbfdff;
+      }
+
+      .agent-card h3 {
+        margin: 0 0 12px;
+      }
+
+      .result-word {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #edf2f8;
+      }
+
+      .result-word b {
+        color: var(--blue);
+        font-size: 20px;
+      }
+
+      .example {
+        padding: 10px 0;
+        border-bottom: 1px solid #edf2f8;
+      }
+
+      .example:last-child {
+        border-bottom: 0;
+      }
+
+      .modal {
+        margin-top: 18px;
+        border: 1px solid #c8d8f0;
+        border-radius: 8px;
+        background: #fff;
+        box-shadow: 0 18px 48px rgba(24, 34, 53, 0.16);
+      }
+
+      .modal-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 14px 18px;
+        border-bottom: 1px solid var(--line);
+        font-weight: 850;
+      }
+
+      .modal-body {
+        padding: 18px;
+      }
+
+      .source-tabs {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        padding: 4px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #f8fafc;
+      }
+
+      .source-tabs span {
+        padding: 10px;
+        border-radius: 7px;
+        text-align: center;
+        font-weight: 750;
+      }
+
+      .source-tabs .active {
+        background: var(--blue);
+        color: #fff;
+      }
+
+      .task {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding: 14px;
+        border: 1px solid #e6edf7;
+        border-radius: 8px;
+      }
+
+      .task + .task {
+        margin-top: 10px;
+      }
+
+      .practice {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+      }
+
+      .practice-pane {
+        min-height: 420px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+        overflow: hidden;
+      }
+
+      .pane-head {
+        padding: 16px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .pane-body {
+        padding: 16px;
+        line-height: 1.85;
+      }
+
+      .option {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 10px;
+      }
+
+      .radio {
+        width: 15px;
+        height: 15px;
+        border: 1px solid #b7c3d5;
+        border-radius: 50%;
+      }
+
+      .selected .radio {
+        border: 5px solid var(--blue);
+      }
+
+      .analysis {
+        margin-top: 14px;
+        padding: 12px;
+        border: 1px solid #b7d5ff;
+        border-radius: 8px;
+        background: #edf6ff;
+      }
+
+      .setting-card {
+        padding: 18px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="frame">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">EW</div>
+          <div><b>English World</b><span>字段保留版商业原型</span></div>
+        </div>
+        <div class="nav-title">主流程</div>
+        <div class="nav-item active" data-target="dashboard">学习工作台</div>
+        <div class="nav-item" data-target="library">词库管理</div>
+        <div class="nav-item" data-target="word-agent">AI 单词查询</div>
+        <div class="nav-item" data-target="context-lab">AI 语境实验室</div>
+        <div class="nav-item" data-target="practice">AI 语境练习</div>
+        <div class="nav-title">学习</div>
+        <div class="nav-item" data-target="recite">今日复习</div>
+        <div class="nav-item" data-target="memory-map">记忆地图</div>
+        <div class="nav-item" data-target="stats">学习统计</div>
+        <div class="nav-title">配置</div>
+        <div class="nav-item" data-target="settings">系统设置</div>
+      </aside>
+
+      <main class="main">
+        <div class="topbar">
+          <div class="title">
+            <h1 id="page-title">学习工作台</h1>
+            <p id="page-subtitle">不删功能、不改字段，只把现有能力组织成更商业化的桌面端体验。</p>
+          </div>
+          <div class="actions">
+            <button class="button" data-target="library">添加单词</button>
+            <button class="button" data-target="word-agent">AI 单词查询</button>
+            <button class="button primary" data-target="context-lab">生成练习包</button>
+          </div>
+        </div>
+
+        <section class="view" data-view="dashboard">
+          <div class="hero">
+            <div class="panel pad">
+              <div class="kicker">Today</div>
+              <h2>保留现有入口的商业级学习工作台</h2>
+              <p>核心入口仍然是词库、AI 单词查询、AI 语境实验室、今日复习、记忆地图、学习统计和系统设置。视觉升级只服务于更快找到功能，不替换你的字段模型。</p>
+              <div class="toolbar">
+                <button class="button primary" data-target="recite">开始今日复习</button>
+                <button class="button" data-target="library">管理词库字段</button>
+                <button class="button" data-target="context-lab">下载 PDF 模板</button>
+              </div>
+              <div class="grid-4" style="margin-top: 18px">
+                <div class="metric"><b>42</b><span>今日待复习</span></div>
+                <div class="metric"><b>86%</b><span>复习正确率</span></div>
+                <div class="metric"><b>12</b><span>生成任务</span></div>
+                <div class="metric"><b>5</b><span>PDF 下载</span></div>
+              </div>
+            </div>
+            <div class="panel pad">
+              <div class="section-head"><h3>真实字段清单</h3><span class="tag green">必须保留</span></div>
+              <div class="chips">
+                <span class="tag blue">单词名</span><span class="tag blue">掌握程度</span>
+                <span class="tag blue">类型</span><span class="tag blue">音标</span>
+                <span class="tag blue">词性</span><span class="tag blue">中文</span>
+                <span class="tag blue">图片</span><span class="tag blue">笔记</span>
+                <span class="tag blue">引用</span><span class="tag blue">创建时间</span>
+                <span class="tag blue">更新时间</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="view hidden" data-view="library">
+          <div class="panel pad">
+            <div class="section-head">
+              <div><div class="kicker">Word Library</div><h2>词库管理</h2></div>
+              <div class="toolbar"><button class="button">查询</button><button class="button">重置</button><button class="button primary">添加单词</button></div>
+            </div>
+            <div class="field-grid">
+              <div class="field"><label>时间范围</label><div class="value">开始时间 - 结束时间</div></div>
+              <div class="field"><label>中文名</label><div class="value">请输入中文名</div></div>
+              <div class="field"><label>英文名</label><div class="value">请输入英文名</div></div>
+              <div class="field"><label>音标</label><div class="value">请输入音标</div></div>
+              <div class="field"><label>类型</label><div class="value">单词 / 短语 / 句子</div></div>
+              <div class="field"><label>掌握程度</label><div class="value">不会 / 一般 / 熟练 / 精通</div></div>
+            </div>
+            <div class="table-wrap panel">
+              <table>
+                <thead>
+                  <tr>
+                    <th>序号</th><th>单词</th><th>音标</th><th>词性</th><th>中文释义</th><th>图片</th><th>类型</th><th>笔记</th><th>掌握程度</th><th>引用</th><th>创建时间</th><th>更新时间</th><th>操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>1</td><td>missed my stop</td><td>/mɪst/</td><td><span class="tag green">动词</span></td><td>错过了我的站点</td><td>-</td><td><span class="tag amber">短语</span></td><td>查看笔记</td><td><span class="tag red">不会</span></td><td>https://example.com</td><td>2026-06-18</td><td>2026-06-18</td><td>编辑 / 删除</td>
+                  </tr>
+                  <tr>
+                    <td>2</td><td>display board</td><td>-</td><td><span class="tag green">名词</span></td><td>显示板</td><td>-</td><td><span class="tag amber">短语</span></td><td>无</td><td><span class="tag blue">熟练</span></td><td>-</td><td>2026-06-17</td><td>2026-06-18</td><td>编辑 / 删除</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal">
+              <div class="modal-title">添加单词 / 编辑单词 <span class="muted">宽度 800</span></div>
+              <div class="modal-body">
+                <div class="field-grid">
+                  <div class="field"><label>单词名</label><div class="value">请输入单词名</div></div>
+                  <div class="field"><label>掌握程度</label><div class="value">不会 / 一般 / 熟练 / 精通</div></div>
+                  <div class="field"><label>类型</label><div class="value">单词 / 短语 / 句子</div></div>
+                  <div class="field"><label>音标</label><div class="value">请输入音标</div></div>
+                </div>
+                <div class="field" style="margin-top: 12px"><label>词性</label><div class="chips"><span class="tag blue">动词</span><span class="tag green">名词</span><span class="tag amber">形容词</span><span class="tag purple">副词</span><span class="tag red">代词</span><span class="tag blue">介词</span><span class="tag amber">连词</span><span class="tag purple">感叹词</span><span class="tag">未分类</span></div></div>
+                <div class="grid-2" style="margin-top: 12px">
+                  <div class="field"><label>中文</label><div class="value">中文释义 TextArea rows=2</div></div>
+                  <div class="field"><label>图片</label><div class="value">点击上传</div></div>
+                </div>
+                <div class="grid-2" style="margin-top: 12px">
+                  <div class="field"><label>笔记</label><div class="value">笔记 TextArea rows=4</div></div>
+                  <div class="field"><label>引用</label><div class="value">请输入引用链接</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="view hidden" data-view="word-agent">
+          <div class="grid-2">
+            <div class="panel pad">
+              <div class="kicker">AI 单词查询</div>
+              <h2>输入单词或短语</h2>
+              <p class="muted">多个请用逗号或换行分隔，获取释义、音标、例句与雅思案例。</p>
+              <div class="textarea">例如：confront 或 confront, reluctant, habitat</div>
+              <div class="toolbar" style="margin-top: 12px"><button class="button primary">查询</button><span class="muted">AI 正在查询（流式返回）...</span></div>
+            </div>
+            <div class="panel pad">
+              <div class="section-head"><h3>查询结果字段</h3><button class="button primary">新增单词</button></div>
+              <div class="agent-card">
+                <div class="result-word"><div><b>confront</b> <span class="muted">/kənˈfrʌnt/</span></div><span class="tag blue">动词</span></div>
+                <p><b>释义：</b>面对；处理；使面临</p>
+                <div><b>例句</b><div class="example">We must confront the problem directly.<br><span class="muted">我们必须直接面对这个问题。</span></div></div>
+                <div style="margin-top: 12px"><b>雅思案例</b><div class="analysis">source / question / questionZh / sentence / sentenceZh 原样保留。</div></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="view hidden" data-view="context-lab">
+          <div class="grid-2">
+            <div class="panel pad">
+              <div class="kicker">B. Context Lab</div>
+              <h2>AI 语境实验室</h2>
+              <p class="muted">把薄弱词、随机词或手输词生成短阅读、选择题和例句改写。</p>
+              <div class="source-tabs"><span class="active">今日薄弱词</span><span>随机词</span><span>手输词</span></div>
+              <div class="grid-2" style="margin-top: 14px">
+                <div class="field"><label>生成数量</label><div class="value">3 - 20</div></div>
+                <div class="field"><label>手输词</label><div class="value">输入单词，用空格、英文逗号或中文逗号分隔</div></div>
+              </div>
+              <div class="toolbar" style="margin-top: 14px"><button class="button primary">生成练习包</button><button class="button">下载 PDF 模板</button></div>
+            </div>
+            <div class="panel pad">
+              <div class="section-head"><h3>生成任务</h3><button class="button">刷新状态</button></div>
+              <div class="task"><div><span class="tag amber">等待回调</span> missed my stop / display board<p class="muted">pending：任务已提交，等待 AI 回调。</p></div><button class="button">刷新</button></div>
+              <div class="task"><div><span class="tag blue">处理中</span> trolley / check-in counter<p class="muted">processing：AI 正在生成语境练习。</p></div><button class="button">刷新</button></div>
+              <div class="task"><div><span class="tag green">生成完成</span> public transport<p class="muted">succeeded：可以开始练习和下载练习 PDF。</p></div><div class="toolbar"><button class="button">开始练习</button><button class="button">下载练习 PDF</button></div></div>
+              <div class="task"><div><span class="tag red">生成失败</span> error case<p class="muted">生成失败，请查看原因后重新提交。</p></div><button class="button">重试</button></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="view hidden" data-view="practice">
+          <div class="panel pad">
+            <div class="section-head"><div><div class="kicker">AI 语境练习</div><h2>做题 Modal / 满屏模式</h2></div><div class="toolbar"><button class="button">占满屏幕</button><button class="button">退出满屏</button></div></div>
+            <div class="practice">
+              <div class="practice-pane">
+                <div class="pane-head"><div class="kicker">READING</div><h3>短阅读</h3><b>文章主题：Navigating Modern Public Transport</b></div>
+                <div class="pane-body">Modern public transport systems are designed for efficiency, but travelers can still encounter confusion...<div class="chips" style="margin-top: 16px"><span class="tag blue">missed my stop</span><span class="tag blue">get off at the next stop</span><span class="tag blue">display board</span></div></div>
+              </div>
+              <div class="practice-pane">
+                <div class="pane-head"><div class="kicker">QUESTIONS</div><h3>题目</h3><span class="tag blue">做题计时 00:29</span> <span class="tag blue">已答 5/5</span></div>
+                <div class="pane-body"><b>第 1 题</b><p>What does the phrase "missed my stop" most likely mean?</p><div class="option"><span class="radio"></span>A. Failed to notice the station name</div><div class="option selected"><span class="radio"></span>B. Deliberately skipped a station</div><div class="option"><span class="radio"></span>C. Lost the train schedule</div><div class="option"><span class="radio"></span>D. Forgotten to buy a ticket</div><div class="analysis"><b>解析</b><br>正确答案为 A。选项必须显示 ABCD，不重复 A. A.。</div><button class="button primary" style="margin-top: 14px">提交练习</button></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="view hidden" data-view="recite">
+          <div class="panel pad">
+            <div class="section-head"><div><div class="kicker">Recite</div><h2>今日复习</h2></div><span class="tag blue">第 1 / 42 题</span></div>
+            <div class="grid-2">
+              <div class="panel pad"><h3>3 分钟短复习</h3><p class="muted">看中文，回忆英文 / 看英文，回忆中文。</p><div class="field"><label>请回忆答案</label><div class="value">错过了我的站点</div></div><div class="field" style="margin-top: 12px"><label>你的答案</label><div class="value">输入后按 Enter 进入下一题</div></div></div>
+              <div class="panel pad"><h3>进度</h3><div class="grid-2"><div class="metric"><b>12</b><span>已完成</span></div><div class="metric"><b>30</b><span>剩余</span></div></div><div class="toolbar" style="margin-top: 16px"><button class="button">上一题</button><button class="button primary">下一题</button><button class="button">提交</button><button class="button">重新开始</button></div></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="view hidden" data-view="memory-map">
+          <div class="panel pad"><div class="section-head"><h2>记忆地图</h2><button class="button">AI 生成例句</button></div><div class="grid-3"><div class="metric"><b>dueWords</b><span>待复习词</span></div><div class="metric"><b>weakWords</b><span>薄弱词</span></div><div class="metric"><b>recentMistakes</b><span>最近错误</span></div></div><div class="chips" style="margin-top: 18px"><span class="tag blue">similar</span><span class="tag amber">low-mastery</span><span class="tag red">recent-error</span></div></div>
+        </section>
+
+        <section class="view hidden" data-view="stats">
+          <div class="panel pad"><div class="section-head"><h2>学习统计</h2><span class="tag green">recentAccuracy</span></div><div class="grid-4"><div class="metric"><b>totalWords</b><span>总词数</span></div><div class="metric"><b>todayNewWords</b><span>今日新增</span></div><div class="metric"><b>reciteAccuracy</b><span>默写正确率</span></div><div class="metric"><b>recentSessions</b><span>最近练习</span></div></div></div>
+        </section>
+
+        <section class="view hidden" data-view="settings">
+          <div class="panel pad">
+            <div class="section-head"><div><div class="kicker">System Settings</div><h2>系统设置</h2></div><button class="button primary">保存设置</button></div>
+            <div class="setting-card">
+              <h3>单词默写配置</h3>
+              <div class="grid-2">
+                <div class="field"><label>单词默写数量</label><div class="value">请输入单词默写数量，范围 1-100</div></div>
+                <div class="field"><label>单词个数</label><div class="value">请输入单词个数，范围 1-500</div></div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+    <script>
+      const title = document.getElementById("page-title");
+      const subtitle = document.getElementById("page-subtitle");
+      const copy = {
+        dashboard: ["学习工作台", "不删功能、不改字段，只把现有能力组织成更商业化的桌面端体验。"],
+        library: ["词库管理", "保留筛选字段、表格列和添加/编辑单词字段。"],
+        "word-agent": ["AI 单词查询", "保留输入方式、流式查询、释义、音标、例句、雅思案例和新增单词。"],
+        "context-lab": ["AI 语境实验室", "保留来源、生成数量、生成任务、刷新状态、PDF 模板和任务 PDF。"],
+        practice: ["AI 语境练习", "保留阅读区、题目区、做题计时、ABCD、解析、提交和满屏按钮。"],
+        recite: ["今日复习", "保留你的答案、Enter 下一题、进度、提交和重新开始。"],
+        "memory-map": ["记忆地图", "保留 dueWords、weakWords、recentMistakes 和 AI 生成例句入口。"],
+        stats: ["学习统计", "保留 totalWords、todayNewWords、reciteAccuracy 等统计语义。"],
+        settings: ["系统设置", "保留单词默写数量和单词个数配置。"],
+      };
+      function show(name) {
+        document.querySelectorAll("[data-view]").forEach((view) => {
+          view.classList.toggle("hidden", view.dataset.view !== name);
+        });
+        document.querySelectorAll(".nav-item").forEach((item) => {
+          item.classList.toggle("active", item.dataset.target === name);
+        });
+        const [nextTitle, nextSubtitle] = copy[name] || copy.dashboard;
+        title.textContent = nextTitle;
+        subtitle.textContent = nextSubtitle;
+      }
+      document.querySelectorAll("[data-target]").forEach((item) => {
+        item.addEventListener("click", () => show(item.dataset.target));
+      });
+    </script>
+  </body>
+</html>

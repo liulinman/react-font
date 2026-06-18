@@ -8,31 +8,38 @@ import {
   RobotOutlined,
   DashboardOutlined,
   NodeIndexOutlined,
-  MoreOutlined,
   TranslationOutlined,
 } from "@ant-design/icons";
 import { Button, Dropdown, Modal } from "antd";
 import type { MenuProps } from "antd";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import {
-  getPathForNav,
-  normalizeActiveKey,
-  SECONDARY_NAV_KEYS,
-} from "../navigation";
+import { getPathForNav, normalizeActiveKey } from "../navigation";
 
-const primaryNavItems = [
-  { key: "recite", icon: <BookFilled />, label: "今日复习" },
-  { key: "words", icon: <UnorderedListOutlined />, label: "词库" },
-];
-
-const secondaryNavItems: MenuProps["items"] = [
-  { key: "cockpit", icon: <DashboardOutlined />, label: "今日任务" },
-  { key: "stats", icon: <BarChartOutlined />, label: "学习统计" },
-  { key: "aiWord", icon: <TranslationOutlined />, label: "AI 单词查询" },
-  { key: "contextLab", icon: <RobotOutlined />, label: "语境实验室" },
-  { key: "memoryMap", icon: <NodeIndexOutlined />, label: "记忆地图" },
-  { key: "setting", icon: <SettingOutlined />, label: "系统设置" },
+const navGroups = [
+  {
+    title: "主流程",
+    items: [
+      { key: "cockpit", icon: <DashboardOutlined />, label: "今日任务" },
+      { key: "words", icon: <UnorderedListOutlined />, label: "词库" },
+      { key: "aiWord", icon: <TranslationOutlined />, label: "AI 单词查询" },
+      { key: "contextLab", icon: <RobotOutlined />, label: "语境实验室" },
+    ],
+  },
+  {
+    title: "学习",
+    items: [
+      { key: "recite", icon: <BookFilled />, label: "今日复习" },
+      { key: "memoryMap", icon: <NodeIndexOutlined />, label: "记忆地图" },
+      { key: "stats", icon: <BarChartOutlined />, label: "学习统计" },
+    ],
+  },
+  {
+    title: "配置",
+    items: [
+      { key: "setting", icon: <SettingOutlined />, label: "系统设置" },
+    ],
+  },
 ];
 
 type EnglishHeaderProps = {
@@ -47,7 +54,6 @@ export const EnglishHeader = ({
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const normalizedActiveKey = normalizeActiveKey(activeKey);
-  const isSecondaryActive = SECONDARY_NAV_KEYS.has(normalizedActiveKey);
 
   const handleLogout = () => {
     Modal.confirm({
@@ -105,54 +111,41 @@ export const EnglishHeader = ({
   };
 
   return (
-    <header className="english-world-header">
+    <aside className="english-world-header">
       <div className="english-world-header-inner">
         {/* Logo */}
         <div className="english-world-brand">
           <span className="english-world-brand-mark">
-            <BookFilled />
+            EW
           </span>
-          <span className="english-world-brand-title">
-            English World · AI 单词
+          <span className="english-world-brand-copy">
+            <span className="english-world-brand-title">English World</span>
+            <span className="english-world-brand-subtitle">字段保留版</span>
           </span>
         </div>
 
         {/* Navigation */}
         <nav className="english-world-nav">
-          {primaryNavItems.map(({ key, icon, label }) => (
-            <Button
-              key={key}
-              type={key === normalizedActiveKey ? "primary" : "text"}
-              icon={icon}
-              className="english-world-nav-button"
-              onClick={() => handleNavClick(key)}
-            >
-              {label}
-            </Button>
+          {navGroups.map((group) => (
+            <div className="english-world-nav-group" key={group.title}>
+              <div className="english-world-nav-title">{group.title}</div>
+              {group.items.map(({ key, icon, label }) => (
+                <Button
+                  key={key}
+                  type={key === normalizedActiveKey ? "primary" : "text"}
+                  icon={icon}
+                  className="english-world-nav-button"
+                  onClick={() => handleNavClick(key)}
+                >
+                  {label}
+                </Button>
+              ))}
+            </div>
           ))}
-          <Dropdown
-            menu={{
-              items: secondaryNavItems,
-              onClick: ({ key }) => handleNavClick(String(key)),
-              selectedKeys: [normalizedActiveKey],
-            }}
-            placement="bottom"
-            trigger={["click"]}
-          >
-            <Button
-              aria-label="打开更多导航菜单"
-              data-testid="english-world-more-menu-button"
-              type={isSecondaryActive ? "primary" : "text"}
-              icon={<MoreOutlined />}
-              className="english-world-nav-button"
-            >
-              更多
-            </Button>
-          </Dropdown>
         </nav>
 
         {/* User Info */}
-        <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
+        <Dropdown menu={{ items: userMenuItems }} placement="topLeft">
           <div className="english-world-user">
             <div className="english-world-user-avatar">
               <UserOutlined />
@@ -163,6 +156,6 @@ export const EnglishHeader = ({
           </div>
         </Dropdown>
       </div>
-    </header>
+    </aside>
   );
 };

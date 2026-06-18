@@ -36,7 +36,7 @@ export function createFallbackCoachSummary({
       {
         type: "context",
         title: "把薄弱词放进语境练习",
-        description: "用这些词生成短阅读和选择题，避免只背中文释义。",
+        description: "用这些词生成雅思阅读和选择题，避免只背中文释义。",
         wordIds: wordIds.slice(0, 8),
         estimatedMinutes: 6,
       },

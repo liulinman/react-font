@@ -312,6 +312,8 @@ describe("ContextLabPage", () => {
 
     await userEvent.click(await screen.findByRole("button", { name: "开始练习" }));
     expect(screen.getByRole("dialog", { name: /AI 语境练习/ })).toBeInTheDocument();
+    expect(screen.getByText("雅思阅读")).toBeInTheDocument();
+    expect(screen.queryByText("短阅读")).not.toBeInTheDocument();
 
     expect(screen.getByText("First paragraph.")).toHaveClass(
       "context-lab-article-paragraph",

@@ -27,7 +27,7 @@ export function getContextLabStatusTone(status: ContextLabTaskStatus) {
 export function getContextLabStatusDescription(status: ContextLabTaskStatus) {
   const descriptions: Record<ContextLabTaskStatus, string> = {
     pending: "任务已创建，正在等待 AI 服务回调。",
-    processing: "AI 正在整理短文、题目和练习数据。",
+    processing: "AI 正在整理雅思阅读、题目和练习数据。",
     succeeded: "练习包已准备好，可以开始做题。",
     failed: "生成失败，请查看原因后重新提交。",
   };

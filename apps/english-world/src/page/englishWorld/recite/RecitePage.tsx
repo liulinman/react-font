@@ -251,9 +251,10 @@ export const RecitePage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="english-world-shell">
       <EnglishHeader activeKey="recite" />
-      <div className="pt-20 px-4 pb-8 max-w-6xl mx-auto">
+      <main className="english-world-main">
+      <div className="max-w-6xl">
         {/* 标题和操作按钮 */}
         <div className="mb-6 flex items-center justify-between">
           <Title level={2} className="mb-0">
@@ -947,6 +948,7 @@ export const RecitePage: React.FC = () => {
           </Spin>
         </Modal>
       </div>
+      </main>
     </div>
   );
 };

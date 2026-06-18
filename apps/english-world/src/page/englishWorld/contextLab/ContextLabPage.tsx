@@ -308,27 +308,29 @@ export function ContextLabPage() {
       <div className="context-lab-practice-pack">
         <div className="context-lab-practice-workspace">
           <section aria-label="文章阅读区" className="context-lab-reading-pane">
-            <div className="context-lab-pane-heading">
-              <div>
-                <Text className="learning-cockpit-label">Reading</Text>
-                <Title level={4}>短阅读</Title>
-              </div>
-            </div>
             <div className="context-lab-article">
               {(() => {
                 const articleContent = parseArticleContent(currentTask.article);
                 return (
                   <>
-                    {articleContent.topic && (
-                      <div className="context-lab-article-topic-wrap">
-                        <Text className="learning-cockpit-label">
-                          文章主题
-                        </Text>
-                        <h4 className="context-lab-article-topic">
-                          {articleContent.topic}
-                        </h4>
-                      </div>
-                    )}
+                    <div className="context-lab-article-topic-wrap">
+                      <Text className="learning-cockpit-label">
+                        雅思阅读
+                      </Text>
+                      {articleContent.topic && (
+                        <>
+                          <Text className="context-lab-topic-label">
+                            文章主题
+                          </Text>
+                          <span aria-hidden="true" className="context-lab-topic-divider">
+                            /
+                          </span>
+                          <h4 className="context-lab-article-topic">
+                            {articleContent.topic}
+                          </h4>
+                        </>
+                      )}
+                    </div>
                     {articleContent.paragraphs.map((paragraph, index) => (
                       <p
                         className="context-lab-article-paragraph"
@@ -433,7 +435,7 @@ export function ContextLabPage() {
             <Text className="learning-cockpit-label">B. Context Lab</Text>
             <Title level={1}>AI 语境实验室</Title>
             <p>
-              把薄弱词、随机词或手输词生成短阅读、选择题和例句改写，让词库变成可练习的场景。
+              把薄弱词、随机词或手输词生成雅思长度阅读、选择题和例句改写，让词库变成可练习的场景。
             </p>
           </div>
           <Tag icon={<ExperimentOutlined />} color="purple">

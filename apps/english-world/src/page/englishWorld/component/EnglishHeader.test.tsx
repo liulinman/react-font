@@ -27,26 +27,31 @@ describe("EnglishHeader ToC navigation", () => {
     cleanup();
   });
 
-  it("keeps primary navigation focused on today's review and word library", () => {
+  it("renders the field-preserved commercial sidebar entries", () => {
     render(
       <MemoryRouter initialEntries={["/englishWorld/words"]}>
         <EnglishHeader activeKey="words" />
       </MemoryRouter>,
     );
 
+    expect(screen.getByText("字段保留版")).toBeInTheDocument();
+    expect(screen.getByText("主流程")).toBeInTheDocument();
+    expect(screen.getByText("学习")).toBeInTheDocument();
+    expect(screen.getByText("配置")).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /今日复习/ }),
     ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /词库/ })).toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: /语境实验室/ }),
-    ).not.toBeInTheDocument();
+      screen.getByRole("button", { name: /AI 单词查询/ }),
+    ).toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: /记忆地图/ }),
-    ).not.toBeInTheDocument();
+      screen.getByRole("button", { name: /语境实验室/ }),
+    ).toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: /学习统计/ }),
-    ).not.toBeInTheDocument();
+      screen.getByRole("button", { name: /记忆地图/ }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /学习统计/ })).toBeInTheDocument();
   });
 
   it("uses real paths for primary navigation instead of hash routes", async () => {
@@ -66,7 +71,7 @@ describe("EnglishHeader ToC navigation", () => {
     );
   });
 
-  it("keeps secondary navigation active and clickable through the more menu", async () => {
+  it("keeps secondary navigation active and directly clickable", async () => {
     const user = userEvent.setup();
     const onNavClick = vi.fn();
 
@@ -77,12 +82,10 @@ describe("EnglishHeader ToC navigation", () => {
       </MemoryRouter>,
     );
 
-    const moreButton = screen.getByTestId("english-world-more-menu-button");
-    expect(moreButton).toHaveTextContent("更多");
-    expect(moreButton).toHaveClass("ant-btn-primary");
-
-    await user.click(moreButton);
-    await user.click(await screen.findByRole("menuitem", { name: /AI 单词查询/ }));
+    expect(screen.getByRole("button", { name: /记忆地图/ })).toHaveClass(
+      "ant-btn-primary",
+    );
+    await user.click(screen.getByRole("button", { name: /AI 单词查询/ }));
 
     expect(screen.getByTestId("location")).toHaveTextContent(
       "/englishWorld/ai-word",
