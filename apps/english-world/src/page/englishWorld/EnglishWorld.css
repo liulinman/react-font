@@ -176,7 +176,7 @@
 }
 
 .english-world-filter-panel {
-  padding: 16px 18px 14px;
+  padding: 12px 16px 12px;
 }
 
 .english-world-filter-form-compact .ant-form-item {
@@ -184,7 +184,7 @@
 }
 
 .english-world-filter-form-compact .ant-form-item-label {
-  padding-bottom: 5px;
+  padding-bottom: 4px;
   line-height: 1;
   font-size: 12px;
   font-weight: 700;
@@ -197,13 +197,13 @@
 }
 
 .english-world-filter-grid-row {
-  row-gap: 10px;
+  row-gap: 8px;
 }
 
 .english-world-filter-form-compact .ant-input,
 .english-world-filter-form-compact .ant-select-selector,
 .english-world-filter-form-compact .ant-picker {
-  min-height: 36px;
+  min-height: 32px;
   border-color: #d8e1ee;
   border-radius: 7px;
   background: #fbfdff;
@@ -238,7 +238,7 @@
 
 .english-world-filter-action-line {
   align-items: center;
-  min-height: 36px;
+  min-height: 32px;
 }
 
 .english-world-filter-actions {
@@ -248,7 +248,7 @@
 }
 
 .english-world-filter-actions .ant-btn {
-  height: 36px;
+  height: 32px;
   border-radius: 7px;
   font-weight: 600;
 }
