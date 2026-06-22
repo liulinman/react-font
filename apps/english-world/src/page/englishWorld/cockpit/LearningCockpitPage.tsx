@@ -68,6 +68,19 @@ export function LearningCockpitPage() {
   const navigate = useNavigate();
   const [coachSummary, setCoachSummary] = useState(demoCoachSummary);
   const [memoryOverview, setMemoryOverview] = useState(demoMemoryOverview);
+  const [coachUnavailable, setCoachUnavailable] = useState(false);
+
+  const openContextLab = () => {
+    const words = coachSummary.weakWords
+      .map((word) => word.word)
+      .filter(Boolean)
+      .slice(0, 8);
+    const suffix = words.length
+      ? `?source=cockpit&words=${encodeURIComponent(words.join(","))}`
+      : "";
+    navigate(`/englishWorld/context-lab${suffix}`);
+  };
+
   const openReview = (action?: DailyCoachAction) => {
     if (!action?.wordIds?.length) {
       navigate("/englishWorld/recite");
@@ -85,7 +98,7 @@ export function LearningCockpitPage() {
         if (mounted) setCoachSummary(data);
       })
       .catch(() => {
-        if (mounted) setCoachSummary(demoCoachSummary);
+        if (mounted) setCoachUnavailable(true);
       });
 
     void request(memoryMapOverview({ days: 7 }))
@@ -112,12 +125,28 @@ export function LearningCockpitPage() {
           </p>
         </div>
         <div className="learning-cockpit-hero-actions">
-          <Tag icon={<FieldTimeOutlined />} color="blue">
-            Day 8 streak
-          </Tag>
-          <Tag color="green">Mastery 63%</Tag>
+          {!coachUnavailable ? (
+            <>
+              <Tag icon={<FieldTimeOutlined />} color="blue">
+                Day 8 streak
+              </Tag>
+              <Tag color="green">Mastery 63%</Tag>
+            </>
+          ) : (
+            <Tag color="orange">学习数据暂不可用</Tag>
+          )}
         </div>
       </section>
+
+      {coachUnavailable && (
+        <section className="learning-cockpit-card learning-cockpit-unavailable">
+          <Title level={3}>今日任务暂不可用</Title>
+          <p>
+            学习数据加载失败。你仍然可以打开词库、复习或手动进入语境实验室。
+          </p>
+          <Button onClick={() => window.location.reload()}>重试</Button>
+        </section>
+      )}
 
       <section className="learning-cockpit-stats">
         <Statistic title="词库总量" value={coachSummary.totalWords} />
@@ -134,7 +163,7 @@ export function LearningCockpitPage() {
           <CoachSummaryPanel
             summary={coachSummary}
             onStartReview={openReview}
-            onOpenContextLab={() => navigate("/englishWorld/context-lab")}
+            onOpenContextLab={openContextLab}
           />
 
           <section className="learning-cockpit-card learning-cockpit-context-card">
@@ -149,7 +178,7 @@ export function LearningCockpitPage() {
               用今日薄弱词生成雅思阅读、选择题和例句改写，让单词从词表进入真实场景。
             </p>
             <div className="learning-cockpit-action-row">
-              <Button type="primary" onClick={() => navigate("/englishWorld/context-lab")}>
+              <Button type="primary" onClick={openContextLab}>
                 生成练习包
               </Button>
               <Button onClick={() => navigate("/englishWorld/words")}>

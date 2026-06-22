@@ -45,6 +45,7 @@ import {
   buildContextLabGenerateParams,
   type ContextLabSourceMode,
 } from "./contextLabPlanning";
+import { useInRouterContext, useLocation } from "react-router-dom";
 import {
   getContextLabStatusDescription,
   getContextLabStatusLabel,
@@ -125,6 +126,10 @@ export function formatElapsedSeconds(totalSeconds: number) {
 }
 
 export function ContextLabPage() {
+  const inRouterContext = useInRouterContext();
+  const location = inRouterContext ? useLocation() : null;
+  const initialSearch =
+    location?.search ?? (typeof window !== "undefined" ? window.location.search : "");
   const [sourceMode, setSourceMode] = useState<ContextLabSourceMode>("weak");
   const [count, setCount] = useState(8);
   const [customWords, setCustomWords] = useState("");
@@ -200,6 +205,20 @@ export function ContextLabPage() {
   useEffect(() => {
     void loadHistory();
   }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(initialSearch);
+    const words = (params.get("words") ?? "")
+      .split(",")
+      .map((word) => word.trim())
+      .filter(Boolean)
+      .slice(0, 20);
+
+    if (params.get("source") === "cockpit" && words.length >= 3) {
+      setSourceMode("custom");
+      setCustomWords(words.join(", "));
+    }
+  }, [initialSearch]);
 
   useEffect(() => {
     if (!hasActiveTask) return;

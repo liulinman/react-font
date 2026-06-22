@@ -474,6 +474,11 @@
   background: #fff;
 }
 
+.learning-cockpit-unavailable {
+  border-color: #fed7aa;
+  background: #fff7ed;
+}
+
 .learning-cockpit-card-primary {
   border-color: #bfdbfe;
 }

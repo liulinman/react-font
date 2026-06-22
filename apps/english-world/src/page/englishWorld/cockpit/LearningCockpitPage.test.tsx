@@ -112,4 +112,71 @@ describe("LearningCockpitPage", () => {
     );
     expect(screen.getByTestId("location")).not.toHaveTextContent("wordIds=");
   });
+
+  it("opens Context Lab with weak words from the daily context action", async () => {
+    const user = userEvent.setup();
+    requestMock.mockImplementation((requestConfig: unknown) => {
+      const config = requestConfig as { url?: string };
+      if (config.url === "/daily-coach/summary") {
+        return Promise.resolve({
+          totalWords: 2,
+          todayNewWords: 0,
+          reciteAccuracy: 50,
+          levelDistribution: [],
+          weakWords: [
+            { id: 1, word: "fragile", level: 0 },
+            { id: 2, word: "resilient", level: 1 },
+          ],
+          suggestedActions: [
+            {
+              type: "context",
+              title: "进入语境练习",
+              description: "用薄弱词生成练习",
+              wordIds: [1, 2],
+              estimatedMinutes: 8,
+            },
+          ],
+        } as never);
+      }
+      if (config.url === "/memory-map/overview") {
+        return Promise.resolve({
+          levels: [],
+          dueWords: [],
+          weakWords: [],
+          recentMistakes: [],
+          streakLikeStats: { recentSessions: 0, recentAccuracy: 0 },
+        } as never);
+      }
+      return Promise.reject(new Error("offline"));
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/englishWorld"]}>
+        <LearningCockpitPage />
+        <LocationProbe />
+      </MemoryRouter>,
+    );
+
+    await screen.findByText("进入语境练习");
+
+    await user.click(screen.getByRole("button", { name: "进入练习" }));
+
+    expect(screen.getByTestId("location")).toHaveTextContent(
+      "/englishWorld/context-lab?source=cockpit&words=fragile%2Cresilient",
+    );
+  });
+
+  it("shows a retryable unavailable state instead of demo metrics when coach loading fails", async () => {
+    requestMock.mockRejectedValue(new Error("network down"));
+
+    render(
+      <MemoryRouter>
+        <LearningCockpitPage />
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByText("今日任务暂不可用")).toBeInTheDocument();
+    expect(screen.queryByText("Day 8 streak")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /重\s*试/ })).toBeInTheDocument();
+  });
 });
