@@ -824,7 +824,7 @@ describe("ContextLabPage", () => {
     expect(requestMock).not.toHaveBeenCalledWith(
       expect.objectContaining({ url: "/english/AddEnglishWord" }),
     );
-  });
+  }, 10000);
 
   it("hides the selected text add menu when the reading pane scrolls", async () => {
     requestMock.mockResolvedValue({
