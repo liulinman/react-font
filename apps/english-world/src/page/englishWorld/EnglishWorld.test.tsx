@@ -4,6 +4,30 @@ import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import EnglishWorld from "./EnglishWorld";
 
+const { tablePropsMock } = vi.hoisted(() => ({
+  tablePropsMock: vi.fn(),
+}));
+
+vi.mock("antd", async () => {
+  const actual = await vi.importActual<typeof import("antd")>("antd");
+  return {
+    ...actual,
+    Table: (props: Record<string, unknown>) => {
+      tablePropsMock(props);
+      const columns = (props.columns ?? []) as Array<{ title?: unknown }>;
+      return (
+        <div data-testid="word-table">
+          {columns.map((column, index) =>
+            typeof column.title === "string" ? (
+              <span key={`${column.title}-${index}`}>{column.title}</span>
+            ) : null,
+          )}
+        </div>
+      );
+    },
+  };
+});
+
 vi.mock("@font/api", () => ({
   default: vi.fn(() =>
     Promise.resolve({
@@ -104,6 +128,26 @@ describe("EnglishWorld ToC routing", () => {
     expect(
       container.querySelector(".english-world-filter-actions"),
     ).toBeInTheDocument();
+  });
+
+  it("uses virtual table rendering for large page sizes", () => {
+    render(
+      <MemoryRouter initialEntries={["/englishWorld/words"]}>
+        <EnglishWorld />
+      </MemoryRouter>,
+    );
+
+    const tableProps = tablePropsMock.mock.calls.at(-1)?.[0] as {
+      virtual?: boolean;
+      scroll?: { x?: number; y?: number | string };
+      pagination?: { pageSizeOptions?: string[] };
+    };
+
+    expect(tableProps.virtual).toBe(true);
+    expect(tableProps.scroll).toEqual(
+      expect.objectContaining({ x: 1360, y: expect.any(Number) }),
+    );
+    expect(tableProps.pagination?.pageSizeOptions).toContain("500");
   });
 
   it("renders stats when pathname is /englishWorld/stats", () => {

@@ -28,6 +28,7 @@ import { normalizeDesktopWordFilters } from "./utils/wordFilters";
 import { getLegacyPathFromHash, getNavFromLocation } from "./navigation";
 import "./EnglishWorld.css";
 const { RangePicker } = DatePicker;
+const WORD_TABLE_SCROLL_Y = 620;
 
 const EnglishWorld: React.FC = () => {
   const [form] = Form.useForm();
@@ -332,7 +333,8 @@ const EnglishWorld: React.FC = () => {
                   columns={columns}
                   dataSource={wordList}
                   rowKey="id"
-                  scroll={{ x: 1360, y: "calc(100vh - 300px)" }}
+                  virtual
+                  scroll={{ x: 1360, y: WORD_TABLE_SCROLL_Y }}
                   pagination={{
                     current: page,
                     total: totalNum,
