@@ -1154,6 +1154,55 @@
   backdrop-filter: blur(10px);
 }
 
+.context-lab-selection-menu {
+  position: fixed;
+  z-index: 1200;
+  padding: 4px;
+  min-width: 204px;
+  max-width: 320px;
+  border: 1px solid #dbeafe;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.16);
+}
+
+.context-lab-selection-menu-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.context-lab-selection-menu .ant-btn {
+  color: #1d4ed8;
+  font-weight: 700;
+}
+
+.context-lab-selection-translation {
+  margin-top: 4px;
+  padding: 8px 10px;
+  border-top: 1px solid #e5e7eb;
+  color: #111827;
+  line-height: 1.45;
+}
+
+.context-lab-selection-translation strong {
+  display: block;
+  font-size: 14px;
+}
+
+.context-lab-selection-translation span {
+  display: block;
+  margin-top: 2px;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.context-lab-selection-translation p {
+  margin: 4px 0 0;
+  color: #1f2937;
+  font-size: 13px;
+}
+
 .context-lab-practice-modal {
   max-width: calc(100vw - 32px);
   top: 24px;

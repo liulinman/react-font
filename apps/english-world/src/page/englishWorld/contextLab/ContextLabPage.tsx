@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type MouseEvent } from "react";
 import {
   Button,
   Empty,
@@ -23,6 +23,12 @@ import {
 } from "@ant-design/icons";
 import request from "@font/api";
 import {
+  wordAgentQuery,
+  type WordAgentItem,
+} from "@/server/wordAgent/wordAgent";
+import { wordAdd, wordExist } from "@/server/word/word";
+import type { WordList } from "@/server/word/word.type";
+import {
   contextLabCreateTask,
   contextLabHistory,
   contextLabSubmit,
@@ -41,6 +47,7 @@ import {
   getContextLabStatusTone,
   isContextLabTaskActive,
 } from "./contextLabTask";
+import { EditAddModal, type AddInitialValues } from "../component/EditAddModal";
 
 const { Text, Title } = Typography;
 const { TextArea } = Input;
@@ -59,6 +66,28 @@ function formatExplanationText(explanation: string, correctIndex: number) {
   return explanation
     .replace(/正确答案为\s*[0-3]/g, `正确答案为 ${letter}`)
     .replace(/正确答案是\s*[0-3]/g, `正确答案是 ${letter}`);
+}
+
+function cleanSelectedVocabularyText(text: string) {
+  return text
+    .replace(/\s+/g, " ")
+    .replace(/^[\s"'“‘([{]+|[\s"'”’)\]}.,;:!?]+$/g, "")
+    .trim();
+}
+
+function wordAgentItemToAddInitial(
+  item: WordAgentItem,
+  fallbackWord: string,
+): AddInitialValues {
+  const englishWord = cleanSelectedVocabularyText(item.word || fallbackWord);
+  return {
+    englishWord,
+    englishPhonetic: item.phonetic,
+    englishChinese: item.meaning,
+    englishPartSpeech: item.partOfSpeech?.length ? item.partOfSpeech : undefined,
+    englishLevel: 0,
+    englishType: englishWord.includes(" ") ? 1 : 0,
+  };
 }
 
 function splitArticleParagraphs(article: string) {
@@ -109,6 +138,24 @@ export function ContextLabPage() {
   );
   const [practiceModalOpen, setPracticeModalOpen] = useState(false);
   const [practiceFullscreen, setPracticeFullscreen] = useState(false);
+  const [selectedVocabulary, setSelectedVocabulary] = useState("");
+  const [selectionMenu, setSelectionMenu] = useState<{
+    open: boolean;
+    x: number;
+    y: number;
+  }>({ open: false, x: 0, y: 0 });
+  const [addingSelectedWord, setAddingSelectedWord] = useState(false);
+  const [translatingSelectedWord, setTranslatingSelectedWord] = useState(false);
+  const [translationResult, setTranslationResult] =
+    useState<WordAgentItem | null>(null);
+  const [addModalVisible, setAddModalVisible] = useState(false);
+  const [addInitialValues, setAddInitialValues] =
+    useState<AddInitialValues | null>(null);
+
+  const closeSelectionMenu = () => {
+    setSelectionMenu((prev) => ({ ...prev, open: false }));
+    setTranslationResult(null);
+  };
 
   const requestBody = useMemo<ContextLabGenerateParams>(() => {
     return buildContextLabGenerateParams({ sourceMode, count, customWords });
@@ -268,6 +315,130 @@ export function ContextLabPage() {
     }
   };
 
+  const handleReadingContextMenu = (event: MouseEvent<HTMLElement>) => {
+    const text = cleanSelectedVocabularyText(
+      window.getSelection()?.toString() || "",
+    );
+    if (!text) return;
+    event.preventDefault();
+    setSelectedVocabulary(text);
+    setTranslationResult(null);
+    setSelectionMenu({
+      open: true,
+      x: event.clientX,
+      y: event.clientY,
+    });
+  };
+
+  useEffect(() => {
+    if (!selectionMenu.open) return;
+
+    const handlePointerDown = () => closeSelectionMenu();
+    window.addEventListener("pointerdown", handlePointerDown);
+
+    return () => {
+      window.removeEventListener("pointerdown", handlePointerDown);
+    };
+  }, [selectionMenu.open]);
+
+  const querySelectedVocabulary = async (text: string) => {
+    const data = await request<{ words: WordAgentItem[] }>(
+      wordAgentQuery({ word: text }),
+    );
+    return data?.words?.[0] ?? null;
+  };
+
+  const handleTranslateSelectedVocabulary = async () => {
+    const text = cleanSelectedVocabularyText(selectedVocabulary);
+    if (!text) {
+      message.warning("请先选中单词或短语");
+      return;
+    }
+    setTranslatingSelectedWord(true);
+    try {
+      const item = await querySelectedVocabulary(text);
+      if (!item) {
+        message.warning("AI 没有返回翻译结果");
+        return;
+      }
+      setTranslationResult(item);
+    } catch (error: unknown) {
+      message.error(error instanceof Error ? error.message : "翻译失败");
+    } finally {
+      setTranslatingSelectedWord(false);
+    }
+  };
+
+  const handleAddSelectedVocabulary = async () => {
+    const text = cleanSelectedVocabularyText(selectedVocabulary);
+    if (!text) {
+      message.warning("请先选中单词或短语");
+      return;
+    }
+    setAddingSelectedWord(true);
+    try {
+      const item = await querySelectedVocabulary(text);
+      if (!item) {
+        message.warning("AI 没有返回可添加的词条");
+        return;
+      }
+      setAddInitialValues(wordAgentItemToAddInitial(item, text));
+      setAddModalVisible(true);
+      setSelectionMenu((prev) => ({ ...prev, open: false }));
+      window.getSelection()?.removeAllRanges();
+    } catch (error: unknown) {
+      message.error(error instanceof Error ? error.message : "AI 补全失败");
+    } finally {
+      setAddingSelectedWord(false);
+    }
+  };
+
+  const handleAddModalOk = async (
+    data: WordList,
+    type: "edit" | "add",
+  ): Promise<boolean> => {
+    if (type !== "add") return false;
+    const englishWord = (data.englishWord ?? "").trim();
+    if (!englishWord) {
+      message.warning("请输入单词名");
+      return false;
+    }
+    try {
+      const exists = await request<boolean>(wordExist({ englishWord }));
+      if (exists) {
+        message.warning("该词已在词库，无需重复添加");
+        setAddInitialValues((prev) =>
+          prev ??
+          wordAgentItemToAddInitial(
+            {
+              word: englishWord,
+              phonetic: data.englishPhonetic ?? "",
+              meaning: data.englishChinese ?? "",
+              partOfSpeech: data.englishPartSpeech,
+              examples: [],
+              ieltsCase: null,
+            },
+            englishWord,
+          ),
+        );
+        return false;
+      }
+      await request(wordAdd(data));
+      message.success("已保存到单词本");
+      setAddModalVisible(false);
+      setAddInitialValues(null);
+      return true;
+    } catch (error: unknown) {
+      message.error(error instanceof Error ? error.message : "保存失败");
+      return false;
+    }
+  };
+
+  const handleAddModalCancel = () => {
+    setAddModalVisible(false);
+    setAddInitialValues(null);
+  };
+
   const renderTaskStatus = (task: ContextLabTask) => (
     <div className="context-lab-task-status">
       <div>
@@ -307,8 +478,15 @@ export function ContextLabPage() {
     return (
       <div className="context-lab-practice-pack">
         <div className="context-lab-practice-workspace">
-          <section aria-label="文章阅读区" className="context-lab-reading-pane">
-            <div className="context-lab-article">
+          <section
+            aria-label="文章阅读区"
+            className="context-lab-reading-pane"
+            onScroll={closeSelectionMenu}
+          >
+            <div
+              className="context-lab-article"
+              onContextMenu={handleReadingContextMenu}
+            >
               {(() => {
                 const articleContent = parseArticleContent(currentTask.article);
                 return (
@@ -322,7 +500,10 @@ export function ContextLabPage() {
                           <Text className="context-lab-topic-label">
                             文章主题
                           </Text>
-                          <span aria-hidden="true" className="context-lab-topic-divider">
+                          <span
+                            aria-hidden="true"
+                            className="context-lab-topic-divider"
+                          >
                             /
                           </span>
                           <h4 className="context-lab-article-topic">
@@ -350,6 +531,41 @@ export function ContextLabPage() {
                 </Tag>
               ))}
             </div>
+            {selectionMenu.open && (
+              <div
+                className="context-lab-selection-menu"
+                onPointerDown={(event) => event.stopPropagation()}
+                style={{ left: selectionMenu.x, top: selectionMenu.y }}
+              >
+                <div className="context-lab-selection-menu-actions">
+                  <Button
+                    loading={translatingSelectedWord}
+                    size="small"
+                    type="text"
+                    onClick={handleTranslateSelectedVocabulary}
+                  >
+                    翻译
+                  </Button>
+                  <Button
+                    loading={addingSelectedWord}
+                    size="small"
+                    type="text"
+                    onClick={handleAddSelectedVocabulary}
+                  >
+                    一键添加到词库
+                  </Button>
+                </div>
+                {translationResult && (
+                  <div className="context-lab-selection-translation">
+                    <strong>{translationResult.word || selectedVocabulary}</strong>
+                    {translationResult.phonetic && (
+                      <span>{translationResult.phonetic}</span>
+                    )}
+                    <p>{translationResult.meaning || "暂无释义"}</p>
+                  </div>
+                )}
+              </div>
+            )}
           </section>
 
           <section aria-label="题目作答区" className="context-lab-question-pane">
@@ -616,10 +832,24 @@ export function ContextLabPage() {
           </div>
         }
         width={practiceFullscreen ? "100vw" : "min(1280px, 96vw)"}
-        onCancel={() => setPracticeModalOpen(false)}
+        onCancel={() => {
+          closeSelectionMenu();
+          setPracticeModalOpen(false);
+        }}
       >
         {renderPracticeWorkspace()}
       </Modal>
+
+      {addModalVisible && (
+        <EditAddModal
+          addInitialValues={addInitialValues}
+          currentRecord={null}
+          isModalVisible={addModalVisible}
+          type="add"
+          onCancel={handleAddModalCancel}
+          onOk={handleAddModalOk}
+        />
+      )}
     </>
   );
 }

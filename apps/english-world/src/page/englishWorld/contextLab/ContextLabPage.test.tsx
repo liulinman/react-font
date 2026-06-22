@@ -1,7 +1,7 @@
 import "@testing-library/jest-dom/vitest";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ContextLabPage, formatElapsedSeconds } from "./ContextLabPage";
 import { buildContextLabGenerateParams } from "./contextLabPlanning";
 
@@ -29,11 +29,28 @@ vi.mock("../server/learning", async () => {
 });
 
 describe("ContextLabPage", () => {
+  beforeEach(() => {
+    Object.defineProperty(window, "matchMedia", {
+      writable: true,
+      value: vi.fn().mockImplementation((query: string) => ({
+        matches: false,
+        media: query,
+        onchange: null,
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      })),
+    });
+  });
+
   afterEach(() => {
     cleanup();
     requestMock.mockReset();
     downloadMock.mockReset();
     downloadTaskMock.mockReset();
+    vi.restoreAllMocks();
     vi.useRealTimers();
   });
 
@@ -541,5 +558,306 @@ describe("ContextLabPage", () => {
         __responseType: undefined,
       });
     });
+  });
+
+  it("adds selected article text to the word library through AI completion", async () => {
+    requestMock.mockImplementation((config) => {
+      if (config.url === "/context-lab/history") {
+        return Promise.resolve({
+          list: [
+            {
+              id: 12,
+              taskId: 12,
+              status: "succeeded",
+              sourceType: "custom",
+              words: ["urban farming"],
+              articleExerciseId: 88,
+              article:
+                "Urban Farming\n\nUrban farming improves local food supply.",
+              questions: [
+                {
+                  id: "q1",
+                  stem: "What is the passage about?",
+                  options: ["Urban farming", "Space travel"],
+                },
+              ],
+            },
+          ],
+          total: 1,
+          page: 1,
+          pageSize: 10,
+        });
+      }
+      if (config.url === "/word-agent/query") {
+        return Promise.resolve({
+          words: [
+            {
+              word: "urban farming",
+              phonetic: "/ˈɜːbən ˈfɑːmɪŋ/",
+              meaning: "城市农业；都市农耕",
+              partOfSpeech: [2],
+              examples: [],
+              ieltsCase: null,
+            },
+          ],
+        });
+      }
+      if (config.url === "/english/existEnglishWord") {
+        return Promise.resolve(false);
+      }
+      if (config.url === "/english/AddEnglishWord") {
+        return Promise.resolve({ success: true });
+      }
+      return Promise.resolve({});
+    });
+
+    const user = userEvent.setup();
+    render(<ContextLabPage />);
+
+    await user.click(await screen.findByRole("button", { name: "开始练习" }));
+    const paragraph = await screen.findByText(
+      "Urban farming improves local food supply.",
+    );
+    const selection = {
+      toString: () => "urban farming",
+      rangeCount: 1,
+      removeAllRanges: vi.fn(),
+    };
+    vi.spyOn(window, "getSelection").mockReturnValue(
+      selection as unknown as Selection,
+    );
+
+    await user.pointer({ target: paragraph, keys: "[MouseRight]" });
+    await user.click(await screen.findByText("一键添加到词库"));
+
+    await waitFor(() => {
+      expect(requestMock).toHaveBeenCalledWith({
+        url: "/word-agent/query",
+        method: "POST",
+        data: { word: "urban farming" },
+        __responseType: undefined,
+      });
+    });
+    expect(await screen.findByText("添加单词")).toBeInTheDocument();
+    expect(screen.getByLabelText("单词名")).toHaveValue("urban farming");
+    expect(screen.getByLabelText("音标")).toHaveValue("/ˈɜːbən ˈfɑːmɪŋ/");
+    expect(screen.getByLabelText("中文")).toHaveValue("城市农业；都市农耕");
+
+    await user.click(screen.getByRole("button", { name: /确\s*认/ }));
+
+    await waitFor(() => {
+      expect(requestMock).toHaveBeenCalledWith({
+        url: "/english/AddEnglishWord",
+        method: "POST",
+        data: expect.objectContaining({
+          englishWord: "urban farming",
+          englishPhonetic: "/ˈɜːbən ˈfɑːmɪŋ/",
+          englishChinese: "城市农业；都市农耕",
+          englishPartSpeech: [2],
+          englishLevel: 0,
+          englishType: 1,
+        }),
+      });
+    });
+  });
+
+  it("keeps the add modal open and does not save when the selected word already exists", async () => {
+    requestMock.mockImplementation((config) => {
+      if (config.url === "/context-lab/history") {
+        return Promise.resolve({
+          list: [
+            {
+              id: 12,
+              taskId: 12,
+              status: "succeeded",
+              sourceType: "custom",
+              words: ["urban farming"],
+              articleExerciseId: 88,
+              article:
+                "Urban Farming\n\nUrban farming improves local food supply.",
+              questions: [
+                {
+                  id: "q1",
+                  stem: "What is the passage about?",
+                  options: ["Urban farming", "Space travel"],
+                },
+              ],
+            },
+          ],
+          total: 1,
+          page: 1,
+          pageSize: 10,
+        });
+      }
+      if (config.url === "/word-agent/query") {
+        return Promise.resolve({
+          words: [
+            {
+              word: "urban farming",
+              phonetic: "/ˈɜːbən ˈfɑːmɪŋ/",
+              meaning: "城市农业；都市农耕",
+              partOfSpeech: [2],
+              examples: [],
+              ieltsCase: null,
+            },
+          ],
+        });
+      }
+      if (config.url === "/english/existEnglishWord") {
+        return Promise.resolve(true);
+      }
+      if (config.url === "/english/AddEnglishWord") {
+        throw new Error("wordAdd should not be called for duplicate words");
+      }
+      return Promise.resolve({});
+    });
+
+    const user = userEvent.setup();
+    render(<ContextLabPage />);
+
+    await user.click(await screen.findByRole("button", { name: "开始练习" }));
+    const paragraph = await screen.findByText(
+      "Urban farming improves local food supply.",
+    );
+    vi.spyOn(window, "getSelection").mockReturnValue({
+      toString: () => "  “urban farming,” ",
+      rangeCount: 1,
+      removeAllRanges: vi.fn(),
+    } as unknown as Selection);
+
+    await user.pointer({ target: paragraph, keys: "[MouseRight]" });
+    await user.click(await screen.findByText("一键添加到词库"));
+    expect(await screen.findByText("添加单词")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /确\s*认/ }));
+
+    expect(screen.getByLabelText("单词名")).toHaveValue("urban farming");
+    expect(requestMock).not.toHaveBeenCalledWith(
+      expect.objectContaining({ url: "/english/AddEnglishWord" }),
+    );
+  });
+
+  it("hides the selected text add menu when the reading pane scrolls", async () => {
+    requestMock.mockResolvedValue({
+      list: [
+        {
+          id: 12,
+          taskId: 12,
+          status: "succeeded",
+          sourceType: "custom",
+          words: ["urban farming"],
+          articleExerciseId: 88,
+          article:
+            "Urban Farming\n\nUrban farming improves local food supply.",
+          questions: [
+            {
+              id: "q1",
+              stem: "What is the passage about?",
+              options: ["Urban farming", "Space travel"],
+            },
+          ],
+        },
+      ],
+      total: 1,
+      page: 1,
+      pageSize: 10,
+    });
+
+    const user = userEvent.setup();
+    render(<ContextLabPage />);
+
+    await user.click(await screen.findByRole("button", { name: "开始练习" }));
+    const paragraph = await screen.findByText(
+      "Urban farming improves local food supply.",
+    );
+    vi.spyOn(window, "getSelection").mockReturnValue({
+      toString: () => "urban farming",
+      rangeCount: 1,
+      removeAllRanges: vi.fn(),
+    } as unknown as Selection);
+
+    await user.pointer({ target: paragraph, keys: "[MouseRight]" });
+    expect(await screen.findByText("一键添加到词库")).toBeInTheDocument();
+
+    screen.getByLabelText("文章阅读区").dispatchEvent(
+      new Event("scroll", { bubbles: true }),
+    );
+
+    await waitFor(() => {
+      expect(screen.queryByText("一键添加到词库")).not.toBeInTheDocument();
+    });
+  });
+
+  it("translates selected article text from the context menu", async () => {
+    requestMock.mockImplementation((config) => {
+      if (config.url === "/context-lab/history") {
+        return Promise.resolve({
+          list: [
+            {
+              id: 12,
+              taskId: 12,
+              status: "succeeded",
+              sourceType: "custom",
+              words: ["urban farming"],
+              articleExerciseId: 88,
+              article:
+                "Urban Farming\n\nUrban farming improves local food supply.",
+              questions: [
+                {
+                  id: "q1",
+                  stem: "What is the passage about?",
+                  options: ["Urban farming", "Space travel"],
+                },
+              ],
+            },
+          ],
+          total: 1,
+          page: 1,
+          pageSize: 10,
+        });
+      }
+      if (config.url === "/word-agent/query") {
+        return Promise.resolve({
+          words: [
+            {
+              word: "urban farming",
+              phonetic: "/ˈɜːbən ˈfɑːmɪŋ/",
+              meaning: "城市农业；都市农耕",
+              partOfSpeech: [2],
+              examples: [],
+              ieltsCase: null,
+            },
+          ],
+        });
+      }
+      return Promise.resolve({});
+    });
+
+    const user = userEvent.setup();
+    render(<ContextLabPage />);
+
+    await user.click(await screen.findByRole("button", { name: "开始练习" }));
+    const paragraph = await screen.findByText(
+      "Urban farming improves local food supply.",
+    );
+    vi.spyOn(window, "getSelection").mockReturnValue({
+      toString: () => "urban farming",
+      rangeCount: 1,
+      removeAllRanges: vi.fn(),
+    } as unknown as Selection);
+
+    await user.pointer({ target: paragraph, keys: "[MouseRight]" });
+    await user.click(await screen.findByText("翻译"));
+
+    await waitFor(() => {
+      expect(requestMock).toHaveBeenCalledWith({
+        url: "/word-agent/query",
+        method: "POST",
+        data: { word: "urban farming" },
+        __responseType: undefined,
+      });
+    });
+    expect(await screen.findByText("城市农业；都市农耕")).toBeInTheDocument();
+    expect(screen.getByText("/ˈɜːbən ˈfɑːmɪŋ/")).toBeInTheDocument();
+    expect(screen.queryByText("添加单词")).not.toBeInTheDocument();
   });
 });
