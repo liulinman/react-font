@@ -100,58 +100,87 @@ export function LearningCockpitPage() {
         </div>
       </section>
 
-      {coachUnavailable && (
-        <section className="learning-cockpit-card learning-cockpit-unavailable">
-          <Title level={3}>今日任务暂不可用</Title>
-          <p>
-            学习数据加载失败。你仍然可以打开词库、复习或手动进入语境实验室。
-          </p>
-          <Button onClick={() => window.location.reload()}>重试</Button>
-        </section>
-      )}
-
-      {!coachUnavailable && coachSummary && (
+      {(coachUnavailable || coachSummary) && (
         <>
-          <section className="learning-cockpit-stats">
-            <Statistic title="词库总量" value={coachSummary.totalWords} />
-            <Statistic title="今日新增" value={coachSummary.todayNewWords} />
-            <Statistic
-              title="近期正确率"
-              value={coachSummary.reciteAccuracy}
-              suffix="%"
-            />
-          </section>
+          {coachSummary && (
+            <section className="learning-cockpit-stats">
+              <Statistic title="词库总量" value={coachSummary.totalWords} />
+              <Statistic title="今日新增" value={coachSummary.todayNewWords} />
+              <Statistic
+                title="近期正确率"
+                value={coachSummary.reciteAccuracy}
+                suffix="%"
+              />
+            </section>
+          )}
 
           <div className="learning-cockpit-grid">
             <div className="learning-cockpit-main-column">
-              <CoachSummaryPanel
-                summary={coachSummary}
-                onStartReview={openReview}
-                onOpenContextLab={openContextLab}
-              />
+              {coachSummary ? (
+                <>
+                  <CoachSummaryPanel
+                    summary={coachSummary}
+                    onStartReview={openReview}
+                    onOpenContextLab={openContextLab}
+                  />
 
-              <section className="learning-cockpit-card learning-cockpit-context-card">
-                <div className="learning-cockpit-card-heading">
-                  <div>
-                    <Text className="learning-cockpit-label">
-                      B. Context Lab
-                    </Text>
-                    <Title level={3}>AI 语境实验室</Title>
+                  <section className="learning-cockpit-card learning-cockpit-context-card">
+                    <div className="learning-cockpit-card-heading">
+                      <div>
+                        <Text className="learning-cockpit-label">
+                          B. Context Lab
+                        </Text>
+                        <Title level={3}>AI 语境实验室</Title>
+                      </div>
+                      <ExperimentOutlined className="learning-cockpit-card-icon" />
+                    </div>
+                    <p className="learning-cockpit-card-copy">
+                      用今日薄弱词生成雅思阅读、选择题和例句改写，让单词从词表进入真实场景。
+                    </p>
+                    <div className="learning-cockpit-action-row">
+                      <Button type="primary" onClick={openContextLab}>
+                        生成练习包
+                      </Button>
+                      <Button onClick={() => navigate("/englishWorld/words")}>
+                        手选词
+                      </Button>
+                    </div>
+                  </section>
+                </>
+              ) : (
+                <section className="learning-cockpit-card learning-cockpit-unavailable">
+                  <div className="learning-cockpit-card-heading">
+                    <div>
+                      <Text className="learning-cockpit-label">
+                        A. Daily Coach
+                      </Text>
+                      <Title level={3}>今日任务暂不可用</Title>
+                    </div>
+                    <ExperimentOutlined className="learning-cockpit-card-icon" />
                   </div>
-                  <ExperimentOutlined className="learning-cockpit-card-icon" />
-                </div>
-                <p className="learning-cockpit-card-copy">
-                  用今日薄弱词生成雅思阅读、选择题和例句改写，让单词从词表进入真实场景。
-                </p>
-                <div className="learning-cockpit-action-row">
-                  <Button type="primary" onClick={openContextLab}>
-                    生成练习包
-                  </Button>
-                  <Button onClick={() => navigate("/englishWorld/words")}>
-                    手选词
-                  </Button>
-                </div>
-              </section>
+                  <p className="learning-cockpit-card-copy">
+                    学习数据加载失败。你仍然可以打开词库、复习或手动进入语境实验室。
+                  </p>
+                  <div className="learning-cockpit-action-row">
+                    <Button type="primary" onClick={openContextLab}>
+                      生成练习包
+                    </Button>
+                    <Button onClick={() => navigate("/englishWorld/words")}>
+                      打开词库
+                    </Button>
+                    <Button
+                      icon={<BarChartOutlined />}
+                      onClick={() => navigate("/englishWorld/stats")}
+                    >
+                      看统计
+                    </Button>
+                    <Button onClick={() => navigate("/englishWorld/recite")}>
+                      开始今日复习
+                    </Button>
+                    <Button onClick={() => window.location.reload()}>重试</Button>
+                  </div>
+                </section>
+              )}
             </div>
 
             <aside className="learning-cockpit-side-column">

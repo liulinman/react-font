@@ -227,20 +227,57 @@ describe("LearningCockpitPage", () => {
   });
 
   it("shows a retryable unavailable state instead of demo metrics when coach loading fails", async () => {
-    requestMock.mockRejectedValue(new Error("network down"));
+    const user = userEvent.setup();
+    requestMock.mockImplementation((requestConfig: unknown) => {
+      const config = requestConfig as { url?: string };
+      if (config.url === "/daily-coach/summary") {
+        return Promise.reject(new Error("network down"));
+      }
+      if (config.url === "/memory-map/overview") {
+        return Promise.resolve({
+          levels: [],
+          dueWords: [],
+          weakWords: [],
+          recentMistakes: [],
+          streakLikeStats: { recentSessions: 0, recentAccuracy: 0 },
+        } as never);
+      }
+      return Promise.reject(new Error("offline"));
+    });
 
     render(
-      <MemoryRouter>
+      <MemoryRouter initialEntries={["/englishWorld"]}>
         <LearningCockpitPage />
+        <LocationProbe />
       </MemoryRouter>,
     );
 
     expect(await screen.findByText("今日任务暂不可用")).toBeInTheDocument();
     expect(screen.queryByText("Day 8 streak")).not.toBeInTheDocument();
     expect(screen.queryByText("词库总量")).not.toBeInTheDocument();
-    expect(screen.queryByText("AI 语境实验室")).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "生成练习包" })).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /重\s*试/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "生成练习包" })).toBeInTheDocument();
+    const openLibraryButtons = screen.getAllByRole("button", {
+      name: "打开词库",
+    });
+    const statsButtons = screen.getAllByRole("button", { name: /看统计/ });
+    expect(openLibraryButtons.length).toBeGreaterThan(0);
+    expect(statsButtons.length).toBeGreaterThan(0);
+    expect(screen.getByRole("button", { name: "开始今日复习" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "生成练习包" }));
+    expect(screen.getByTestId("location")).toHaveTextContent(
+      "/englishWorld/context-lab",
+    );
+    expect(screen.getByTestId("location")).not.toHaveTextContent("words=");
+
+    await user.click(openLibraryButtons[0]);
+    expect(screen.getByTestId("location")).toHaveTextContent("/englishWorld/words");
+
+    await user.click(statsButtons[0]);
+    expect(screen.getByTestId("location")).toHaveTextContent("/englishWorld/stats");
+
+    await user.click(screen.getByRole("button", { name: "开始今日复习" }));
+    expect(screen.getByTestId("location")).toHaveTextContent("/englishWorld/recite");
   });
 
   it("shows a memory unavailable card instead of demo memory stats when memory loading fails", async () => {
