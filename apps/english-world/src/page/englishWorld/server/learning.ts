@@ -2,6 +2,7 @@ import type { YTRequest } from "@font/api";
 import type {
   ContextLabDetailParams,
   ContextLabSubmitParams,
+  ContextLabSubmitResult,
   ContextLabGenerateParams,
   ContextLabHistoryParams,
   ContextLabHistoryResponse,
@@ -13,7 +14,6 @@ import type {
   MemoryMapUpdateLevelParams,
   MemoryMapWordDetailParams,
 } from "../types/learning";
-import type { ExerciseSubmitResponse } from "@/server/exerciseAgent/exerciseAgent";
 import { getApiBaseUrl } from "@font/api";
 
 export const dailyCoachSummary = (data: {
@@ -38,21 +38,11 @@ export const dailyCoachPlan = (data: {
 
 export const contextLabSubmit = (
   data: ContextLabSubmitParams,
-): YTRequest<
-  ExerciseSubmitResponse & {
-    score?: number;
-    weakWords?: string[];
-    nextSuggestions?: string[];
-  }
-> => ({
+): YTRequest<ContextLabSubmitResult> => ({
   url: "/context-lab/submit",
   method: "POST",
   data,
-  __responseType: undefined as unknown as ExerciseSubmitResponse & {
-    score?: number;
-    weakWords?: string[];
-    nextSuggestions?: string[];
-  },
+  __responseType: undefined as unknown as ContextLabSubmitResult,
 });
 
 export const contextLabCreateTask = (

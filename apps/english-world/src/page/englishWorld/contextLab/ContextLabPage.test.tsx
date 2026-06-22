@@ -1,5 +1,11 @@
 import "@testing-library/jest-dom/vitest";
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import {
+  cleanup,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ContextLabPage, formatElapsedSeconds } from "./ContextLabPage";
@@ -247,6 +253,71 @@ describe("ContextLabPage", () => {
     });
     expect(
       await screen.findByText("解析：正确答案为 A，fragile 表示容易损坏，和文章语境一致。"),
+    ).toBeInTheDocument();
+  });
+
+  it("shows a result review with weak-word next actions after submitting answers", async () => {
+    requestMock.mockImplementation((config) => {
+      if (config.url === "/context-lab/history") {
+        return Promise.resolve({
+          list: [
+            {
+              id: 12,
+              taskId: 12,
+              status: "succeeded",
+              sourceType: "custom",
+              words: ["urban farming", "resilient"],
+              articleExerciseId: 88,
+              article: "Urban Farming\n\nUrban farming improves local food supply.",
+              questions: [
+                {
+                  id: "q1",
+                  stem: "What is the passage about?",
+                  options: ["Urban farming", "Space travel"],
+                },
+              ],
+            },
+          ],
+          total: 1,
+          page: 1,
+          pageSize: 10,
+        });
+      }
+      if (config.url === "/context-lab/submit") {
+        return Promise.resolve({
+          results: [
+            {
+              questionId: "q1",
+              correct: false,
+              correctIndex: 0,
+              userSelectedIndex: 1,
+              explanation: "错题解析",
+            },
+          ],
+          score: 0,
+          correctCount: 0,
+          wrongCount: 1,
+          weakWords: ["urban farming"],
+          nextSuggestions: ["把薄弱词加入今日复习再练一轮"],
+        });
+      }
+      return Promise.resolve({});
+    });
+
+    const user = userEvent.setup();
+    render(<ContextLabPage />);
+
+    await user.click(await screen.findByRole("button", { name: "开始练习" }));
+    await user.click(await screen.findByLabelText("B. Space travel"));
+    await user.click(screen.getByRole("button", { name: "提交练习" }));
+
+    const review = await screen.findByLabelText("结果复盘");
+    expect(within(review).getByText("结果复盘")).toBeInTheDocument();
+    expect(screen.getByText("0")).toBeInTheDocument();
+    expect(screen.getByText("错题 1")).toBeInTheDocument();
+    expect(within(review).getByText("urban farming")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "用薄弱词再练一套" }),
     ).toBeInTheDocument();
   });
 

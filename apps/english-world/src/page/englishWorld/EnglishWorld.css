@@ -1142,6 +1142,34 @@
   gap: 6px;
 }
 
+.context-lab-result-review {
+  display: grid;
+  gap: 12px;
+  margin: 0 14px 10px;
+  padding: 16px;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  background: #eff6ff;
+}
+
+.context-lab-result-metrics {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.context-lab-result-metrics strong {
+  color: #1d4ed8;
+  font-size: 28px;
+  line-height: 1;
+}
+
+.context-lab-result-review ul {
+  margin: 0;
+  padding-left: 18px;
+  color: #334155;
+}
+
 .context-lab-question-actions {
   position: sticky;
   bottom: 0;

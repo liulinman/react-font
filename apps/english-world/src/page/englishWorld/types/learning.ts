@@ -1,3 +1,5 @@
+import type { ExerciseResultItem } from "@/server/exerciseAgent/exerciseAgent";
+
 export type LearningLevel = 0 | 1 | 2 | 3;
 
 export type LearningWord = {
@@ -92,6 +94,15 @@ export type ContextLabGenerateParams =
 export type ContextLabSubmitParams = {
   sessionId: number;
   answers: Array<{ questionId: string; selectedIndex: number }>;
+};
+
+export type ContextLabSubmitResult = {
+  results: ExerciseResultItem[];
+  score: number;
+  correctCount: number;
+  wrongCount: number;
+  weakWords: string[];
+  nextSuggestions: string[];
 };
 
 export type ContextLabTaskStatus =

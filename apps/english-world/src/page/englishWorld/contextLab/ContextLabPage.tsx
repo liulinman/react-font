@@ -35,7 +35,11 @@ import {
   downloadContextLabPdfTemplate,
   downloadContextLabTaskPdf,
 } from "../server/learning";
-import type { ContextLabGenerateParams, ContextLabTask } from "../types/learning";
+import type {
+  ContextLabGenerateParams,
+  ContextLabSubmitResult,
+  ContextLabTask,
+} from "../types/learning";
 import type { ExerciseResultItem } from "@/server/exerciseAgent/exerciseAgent";
 import {
   buildContextLabGenerateParams,
@@ -130,6 +134,8 @@ export function ContextLabPage() {
   const [currentTask, setCurrentTask] = useState<ContextLabTask | null>(null);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [results, setResults] = useState<ExerciseResultItem[]>([]);
+  const [submitSummary, setSubmitSummary] =
+    useState<ContextLabSubmitResult | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [downloading, setDownloading] = useState(false);
@@ -230,6 +236,7 @@ export function ContextLabPage() {
     setCurrentTask(null);
     setAnswers({});
     setResults([]);
+    setSubmitSummary(null);
     setElapsedSeconds(0);
     try {
       const task = await request(contextLabCreateTask(requestBody));
@@ -275,6 +282,7 @@ export function ContextLabPage() {
     setCurrentTask(task);
     setAnswers({});
     setResults([]);
+    setSubmitSummary(null);
     setElapsedSeconds(0);
     setPracticeFullscreen(false);
     setPracticeModalOpen(true);
@@ -307,6 +315,7 @@ export function ContextLabPage() {
         }),
       );
       setResults(response.results ?? []);
+      setSubmitSummary(response);
       message.success("练习已提交");
     } catch (error: unknown) {
       message.error(error instanceof Error ? error.message : "提交失败");
@@ -465,6 +474,59 @@ export function ContextLabPage() {
       </Space>
     </div>
   );
+
+  const renderResultReview = () => {
+    if (!submitSummary) return null;
+    const weakWords = submitSummary.weakWords ?? [];
+    const nextSuggestions = submitSummary.nextSuggestions ?? [];
+
+    return (
+      <section
+        aria-label="结果复盘"
+        className="context-lab-result-review"
+      >
+        <div>
+          <Text className="learning-cockpit-label">Result</Text>
+          <Title level={4}>结果复盘</Title>
+        </div>
+        <div className="context-lab-result-metrics">
+          <strong>{submitSummary.score ?? 0}</strong>
+          <span>得分</span>
+          <Tag color={(submitSummary.wrongCount ?? 0) > 0 ? "orange" : "green"}>
+            错题 {submitSummary.wrongCount ?? 0}
+          </Tag>
+        </div>
+        {weakWords.length > 0 && (
+          <div className="learning-cockpit-word-strip">
+            {weakWords.map((word) => (
+              <Tag key={word} color="red">
+                {word}
+              </Tag>
+            ))}
+          </div>
+        )}
+        <ul>
+          {nextSuggestions.map((suggestion) => (
+            <li key={suggestion}>{suggestion}</li>
+          ))}
+        </ul>
+        <Space wrap>
+          <Button
+            onClick={() => {
+              setSourceMode("custom");
+              setCustomWords(weakWords.join(", "));
+              setPracticeModalOpen(false);
+            }}
+          >
+            用薄弱词再练一套
+          </Button>
+          <Button onClick={() => window.location.assign("/englishWorld/words")}>
+            打开词库
+          </Button>
+        </Space>
+      </section>
+    );
+  };
 
   const renderPracticeWorkspace = () => {
     if (
@@ -631,6 +693,8 @@ export function ContextLabPage() {
                 );
               })}
             </div>
+
+            {renderResultReview()}
 
             <div className="context-lab-question-actions">
               <Button type="primary" loading={submitting} onClick={handleSubmit}>
