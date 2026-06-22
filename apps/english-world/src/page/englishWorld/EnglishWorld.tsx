@@ -265,7 +265,7 @@ const EnglishWorld: React.FC = () => {
               >
                 <FormFieldGroup
                   items={filterFields}
-                  columnsPerRow={6}
+                  columnsPerRow={4}
                   collapsedRows={1}
                   className="english-world-filter-grid"
                   gridClassName="english-world-filter-grid-row"

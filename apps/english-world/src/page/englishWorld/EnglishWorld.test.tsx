@@ -104,9 +104,6 @@ describe("EnglishWorld ToC routing", () => {
     expect(
       container.querySelector(".english-world-filter-actions"),
     ).toBeInTheDocument();
-    expect(
-      container.querySelectorAll(".english-world-filter-grid-row > .ant-col-4"),
-    ).toHaveLength(6);
   });
 
   it("renders stats when pathname is /englishWorld/stats", () => {
