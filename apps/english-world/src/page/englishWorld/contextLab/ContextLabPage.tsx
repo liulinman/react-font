@@ -125,11 +125,11 @@ export function formatElapsedSeconds(totalSeconds: number) {
   )}`;
 }
 
-export function ContextLabPage() {
-  const inRouterContext = useInRouterContext();
-  const location = inRouterContext ? useLocation() : null;
-  const initialSearch =
-    location?.search ?? (typeof window !== "undefined" ? window.location.search : "");
+function ContextLabPageContent({
+  initialSearch,
+}: {
+  initialSearch: string;
+}) {
   const [sourceMode, setSourceMode] = useState<ContextLabSourceMode>("weak");
   const [count, setCount] = useState(8);
   const [customWords, setCustomWords] = useState("");
@@ -935,4 +935,22 @@ export function ContextLabPage() {
       )}
     </>
   );
+}
+
+function ContextLabPageRouter() {
+  const location = useLocation();
+  return <ContextLabPageContent initialSearch={location.search} />;
+}
+
+export function ContextLabPage() {
+  const inRouterContext = useInRouterContext();
+
+  if (inRouterContext) {
+    return <ContextLabPageRouter />;
+  }
+
+  const initialSearch =
+    typeof window !== "undefined" ? window.location.search : "";
+
+  return <ContextLabPageContent initialSearch={initialSearch} />;
 }

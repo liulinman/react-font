@@ -8,6 +8,7 @@ import {
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { MemoryRouter } from "react-router-dom";
 import { ContextLabPage, formatElapsedSeconds } from "./ContextLabPage";
 import { buildContextLabGenerateParams } from "./contextLabPlanning";
 
@@ -66,6 +67,24 @@ describe("ContextLabPage", () => {
     expect(screen.getByText("今日薄弱词")).toBeInTheDocument();
     expect(screen.getByText("随机词")).toBeInTheDocument();
     expect(screen.getByText("手输词")).toBeInTheDocument();
+  });
+
+  it("prefills cockpit custom words from a router query", async () => {
+    requestMock.mockResolvedValue({ list: [], total: 0, page: 1, pageSize: 10 });
+
+    render(
+      <MemoryRouter
+        initialEntries={[
+          "/englishWorld/context-lab?source=cockpit&words=fragile,resilient,steady",
+        ]}
+      >
+        <ContextLabPage />
+      </MemoryRouter>,
+    );
+
+    expect(
+      await screen.findByDisplayValue("fragile, resilient, steady"),
+    ).toBeInTheDocument();
   });
 
   it("shows the weak source count instead of fake preview words", () => {

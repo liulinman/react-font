@@ -25,7 +25,31 @@ describe("LearningCockpitPage", () => {
     requestMock.mockClear();
   });
 
-  it("renders the AI learning cockpit with all three MVP pillars", () => {
+  it("renders the AI learning cockpit with all three MVP pillars", async () => {
+    requestMock.mockImplementation((requestConfig: unknown) => {
+      const config = requestConfig as { url?: string };
+      if (config.url === "/daily-coach/summary") {
+        return Promise.resolve({
+          totalWords: 2,
+          todayNewWords: 0,
+          reciteAccuracy: 50,
+          levelDistribution: [],
+          weakWords: [],
+          suggestedActions: [],
+        } as never);
+      }
+      if (config.url === "/memory-map/overview") {
+        return Promise.resolve({
+          levels: [],
+          dueWords: [],
+          weakWords: [],
+          recentMistakes: [],
+          streakLikeStats: { recentSessions: 0, recentAccuracy: 0 },
+        } as never);
+      }
+      return Promise.reject(new Error("offline"));
+    });
+
     render(
       <MemoryRouter>
         <LearningCockpitPage />
@@ -33,9 +57,9 @@ describe("LearningCockpitPage", () => {
     );
 
     expect(screen.getByText("AI Learning Cockpit")).toBeInTheDocument();
-    expect(screen.getByText("今日 AI 任务")).toBeInTheDocument();
-    expect(screen.getByText("AI 语境实验室")).toBeInTheDocument();
-    expect(screen.getByText("记忆地图")).toBeInTheDocument();
+    expect(await screen.findByText("今日 AI 任务")).toBeInTheDocument();
+    expect(await screen.findByText("AI 语境实验室")).toBeInTheDocument();
+    expect(await screen.findByText("记忆地图")).toBeInTheDocument();
   });
 
   it("requests cockpit data from the learning API contracts", () => {
@@ -55,6 +79,42 @@ describe("LearningCockpitPage", () => {
 
   it("opens a plan review with the weak word ids from the daily action", async () => {
     const user = userEvent.setup();
+    requestMock.mockImplementation((requestConfig: unknown) => {
+      const config = requestConfig as { url?: string };
+      if (config.url === "/daily-coach/summary") {
+        return Promise.resolve({
+          totalWords: 4,
+          todayNewWords: 1,
+          reciteAccuracy: 75,
+          levelDistribution: [{ level: 0, count: 2 }],
+          weakWords: [
+            { id: 1, word: "fragile", level: 0 },
+            { id: 2, word: "resilient", level: 1 },
+            { id: 3, word: "recover", level: 0 },
+            { id: 4, word: "steady", level: 1 },
+          ],
+          suggestedActions: [
+            {
+              type: "review",
+              title: "定向复习",
+              description: "用当前薄弱词做一轮复习",
+              wordIds: [1, 2, 3, 4],
+              estimatedMinutes: 6,
+            },
+          ],
+        } as never);
+      }
+      if (config.url === "/memory-map/overview") {
+        return Promise.resolve({
+          levels: [],
+          dueWords: [],
+          weakWords: [],
+          recentMistakes: [],
+          streakLikeStats: { recentSessions: 0, recentAccuracy: 0 },
+        } as never);
+      }
+      return Promise.reject(new Error("offline"));
+    });
 
     render(
       <MemoryRouter initialEntries={["/englishWorld"]}>
@@ -63,7 +123,7 @@ describe("LearningCockpitPage", () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByLabelText("今日行动清单")).toBeInTheDocument();
+    expect(await screen.findByLabelText("今日行动清单")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /定向复习/ }));
 
@@ -157,7 +217,7 @@ describe("LearningCockpitPage", () => {
       </MemoryRouter>,
     );
 
-    await screen.findByText("进入语境练习");
+    await screen.findByRole("button", { name: "进入练习" });
 
     await user.click(screen.getByRole("button", { name: "进入练习" }));
 
@@ -177,6 +237,39 @@ describe("LearningCockpitPage", () => {
 
     expect(await screen.findByText("今日任务暂不可用")).toBeInTheDocument();
     expect(screen.queryByText("Day 8 streak")).not.toBeInTheDocument();
+    expect(screen.queryByText("词库总量")).not.toBeInTheDocument();
+    expect(screen.queryByText("AI 语境实验室")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "生成练习包" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: /重\s*试/ })).toBeInTheDocument();
+  });
+
+  it("shows a memory unavailable card instead of demo memory stats when memory loading fails", async () => {
+    requestMock.mockImplementation((requestConfig: unknown) => {
+      const config = requestConfig as { url?: string };
+      if (config.url === "/daily-coach/summary") {
+        return Promise.resolve({
+          totalWords: 4,
+          todayNewWords: 1,
+          reciteAccuracy: 75,
+          levelDistribution: [{ level: 0, count: 2 }],
+          weakWords: [],
+          suggestedActions: [],
+        } as never);
+      }
+      if (config.url === "/memory-map/overview") {
+        return Promise.reject(new Error("memory down"));
+      }
+      return Promise.reject(new Error("offline"));
+    });
+
+    render(
+      <MemoryRouter>
+        <LearningCockpitPage />
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByText("记忆地图暂不可用")).toBeInTheDocument();
+    expect(screen.queryByText("掌握路径")).not.toBeInTheDocument();
+    expect(screen.queryByText("weak")).not.toBeInTheDocument();
   });
 });
