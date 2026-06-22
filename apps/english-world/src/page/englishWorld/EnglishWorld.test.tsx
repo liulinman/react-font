@@ -86,6 +86,26 @@ describe("EnglishWorld ToC routing", () => {
     expect(screen.queryByText("Mock Cockpit")).not.toBeInTheDocument();
   });
 
+  it("renders the word filters as a compact management toolbar", () => {
+    const { container } = render(
+      <MemoryRouter initialEntries={["/englishWorld/words"]}>
+        <EnglishWorld />
+      </MemoryRouter>,
+    );
+
+    const filterPanel = screen.getByLabelText("词库筛选");
+    const filterForm = container.querySelector(".english-world-filter-form");
+
+    expect(filterPanel).toHaveClass("english-world-filter-panel");
+    expect(filterForm).toHaveClass("english-world-filter-form-compact");
+    expect(
+      container.querySelector(".english-world-filter-grid"),
+    ).toBeInTheDocument();
+    expect(
+      container.querySelector(".english-world-filter-actions"),
+    ).toBeInTheDocument();
+  });
+
   it("renders stats when pathname is /englishWorld/stats", () => {
     render(
       <MemoryRouter initialEntries={["/englishWorld/stats"]}>

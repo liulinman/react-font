@@ -31,6 +31,9 @@ type FormFieldGroupProps = {
     toggle: () => void;
     shouldShowToggle: boolean;
   }) => ReactNode;
+  className?: string;
+  gridClassName?: string;
+  actionsClassName?: string;
 };
 
 export const FormFieldGroup = ({
@@ -40,6 +43,9 @@ export const FormFieldGroup = ({
   gutter = 16,
   defaultExpanded = false,
   renderActions,
+  className,
+  gridClassName,
+  actionsClassName,
 }: FormFieldGroupProps) => {
   const [expanded, setExpanded] = useState(defaultExpanded);
   const colSpan = Math.floor(24 / columnsPerRow);
@@ -49,8 +55,8 @@ export const FormFieldGroup = ({
   const toggle = () => setExpanded((prev) => !prev);
 
   return (
-    <div>
-      <Row gutter={gutter}>
+    <div className={className}>
+      <Row className={gridClassName} gutter={gutter}>
         {visibleItems.map((item) => (
           <Col span={colSpan} key={item.key}>
             {item.node}
@@ -58,6 +64,7 @@ export const FormFieldGroup = ({
         ))}
       </Row>
       <div
+        className={actionsClassName}
         style={{
           display: "flex",
           justifyContent: "flex-end",

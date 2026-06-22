@@ -176,30 +176,81 @@
 }
 
 .english-world-filter-panel {
-  padding: 20px 22px 12px;
+  padding: 16px 18px 14px;
 }
 
-.english-world-filter-form .ant-form-item {
-  margin-bottom: 8px;
+.english-world-filter-form-compact .ant-form-item {
+  margin-bottom: 0;
 }
 
-.english-world-filter-form .ant-form-item-label {
-  padding-bottom: 0;
-  font-weight: 600;
+.english-world-filter-form-compact .ant-form-item-label {
+  padding-bottom: 5px;
+  line-height: 1;
+  font-size: 12px;
+  font-weight: 700;
+  color: #334155;
 }
 
-.english-world-filter-form .ant-input,
-.english-world-filter-form .ant-select-selector,
-.english-world-filter-form .ant-picker {
-  min-height: 38px;
-  border-color: #dfe7f2;
-  border-radius: 8px;
+.english-world-filter-form-compact .ant-form-item-label > label {
+  height: auto;
+  color: inherit;
+}
+
+.english-world-filter-grid-row {
+  row-gap: 10px;
+}
+
+.english-world-filter-form-compact .ant-input,
+.english-world-filter-form-compact .ant-select-selector,
+.english-world-filter-form-compact .ant-picker {
+  min-height: 36px;
+  border-color: #d8e1ee;
+  border-radius: 7px;
+  background: #fbfdff;
+  box-shadow: none;
+}
+
+.english-world-filter-form-compact .ant-input:hover,
+.english-world-filter-form-compact .ant-select-selector:hover,
+.english-world-filter-form-compact .ant-picker:hover {
+  border-color: #b9c7da;
+  background: #fff;
+}
+
+.english-world-filter-form-compact .ant-input:focus,
+.english-world-filter-form-compact .ant-picker-focused,
+.english-world-filter-form-compact .ant-select-focused .ant-select-selector {
+  border-color: #1677ff;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(22, 119, 255, 0.08);
+}
+
+.english-world-filter-form-compact .ant-select-selector {
+  display: flex;
+  align-items: center;
+}
+
+.english-world-filter-form-compact .ant-picker-input > input,
+.english-world-filter-form-compact .ant-select-selection-placeholder,
+.english-world-filter-form-compact .ant-input::placeholder {
+  color: #98a2b3;
+}
+
+.english-world-filter-action-line {
+  align-items: center;
+  min-height: 36px;
 }
 
 .english-world-filter-actions {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+}
+
+.english-world-filter-actions .ant-btn {
+  height: 36px;
+  border-radius: 7px;
+  font-weight: 600;
 }
 
 .english-world-table-panel {

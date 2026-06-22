@@ -73,7 +73,11 @@ const EnglishWorld: React.FC = () => {
       key: "time",
       node: (
         <Form.Item label="时间范围" name="time">
-          <RangePicker allowClear placeholder={["开始时间", "结束时间"]} />
+          <RangePicker
+            allowClear
+            placeholder={["开始时间", "结束时间"]}
+            style={{ width: "100%" }}
+          />
         </Form.Item>
       ),
     },
@@ -252,17 +256,20 @@ const EnglishWorld: React.FC = () => {
           <EnglishStats />
         ) : (
           <div className="english-world-stack">
-            <section className="english-world-filter-panel">
+            <section className="english-world-filter-panel" aria-label="词库筛选">
               <Form
                 form={form}
-                className="english-world-filter-form"
-                layout="horizontal"
-                colon={false} // 去掉冒号，更简洁
+                className="english-world-filter-form english-world-filter-form-compact"
+                layout="vertical"
+                colon={false}
               >
                 <FormFieldGroup
                   items={filterFields}
                   columnsPerRow={4}
                   collapsedRows={1}
+                  className="english-world-filter-grid"
+                  gridClassName="english-world-filter-grid-row"
+                  actionsClassName="english-world-filter-action-line"
                   renderActions={({ toggle, expanded, shouldShowToggle }) => (
                     <div className="english-world-filter-actions">
                       <Button
