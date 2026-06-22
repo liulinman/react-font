@@ -105,6 +105,11 @@ export type ContextLabSubmitResult = {
   nextSuggestions: string[];
 };
 
+export type ContextLabInitialSource = {
+  source?: "cockpit" | "result";
+  words: string[];
+};
+
 export type ContextLabTaskStatus =
   | "pending"
   | "processing"
