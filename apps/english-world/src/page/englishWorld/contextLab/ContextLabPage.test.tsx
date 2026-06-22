@@ -8,7 +8,7 @@ import {
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, useLocation } from "react-router-dom";
 import { ContextLabPage, formatElapsedSeconds } from "./ContextLabPage";
 import { buildContextLabGenerateParams } from "./contextLabPlanning";
 
@@ -17,6 +17,11 @@ const { requestMock, downloadMock, downloadTaskMock } = vi.hoisted(() => ({
   downloadMock: vi.fn(),
   downloadTaskMock: vi.fn(),
 }));
+
+function LocationProbe() {
+  const location = useLocation();
+  return <div data-testid="location">{`${location.pathname}${location.search}`}</div>;
+}
 
 vi.mock("@font/api", () => ({
   default: (requestConfig: unknown) => requestMock(requestConfig),
@@ -75,7 +80,7 @@ describe("ContextLabPage", () => {
     render(
       <MemoryRouter
         initialEntries={[
-          "/englishWorld/context-lab?source=cockpit&words=fragile,resilient,steady",
+          "/englishWorld/context-lab?source=cockpit&words=fragile,resilient",
         ]}
       >
         <ContextLabPage />
@@ -83,7 +88,7 @@ describe("ContextLabPage", () => {
     );
 
     expect(
-      await screen.findByDisplayValue("fragile, resilient, steady"),
+      await screen.findByDisplayValue("fragile, resilient"),
     ).toBeInTheDocument();
   });
 
@@ -338,6 +343,70 @@ describe("ContextLabPage", () => {
     expect(
       screen.getByRole("button", { name: "用薄弱词再练一套" }),
     ).toBeInTheDocument();
+  });
+
+  it("routes result review to the word library without a full reload inside the app", async () => {
+    requestMock.mockImplementation((requestConfig: unknown) => {
+      const config = requestConfig as { url?: string };
+      if (config.url === "/context-lab/history") {
+        return Promise.resolve({
+          list: [
+            {
+              id: 12,
+              taskId: 12,
+              status: "succeeded",
+              sourceType: "custom",
+              words: ["urban", "farming"],
+              article: "Topic\n\nParagraph one.\n\nParagraph two.\n\nParagraph three.",
+              questions: [
+                {
+                  id: "q-1",
+                  question: "Which topic is mentioned?",
+                  options: ["Space travel", "Urban farming", "Deep sea"],
+                  correctAnswer: 1,
+                },
+              ],
+            },
+          ],
+          total: 1,
+          page: 1,
+          pageSize: 10,
+        });
+      }
+      if (config.url === "/context-lab/submit") {
+        return Promise.resolve({
+          results: [{ isCorrect: true, explanation: "答对了" }],
+          score: 100,
+          correctCount: 1,
+          wrongCount: 0,
+          weakWords: [],
+          nextSuggestions: ["继续保持"],
+        });
+      }
+      return Promise.resolve({});
+    });
+
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter initialEntries={["/englishWorld/context-lab"]}>
+        <ContextLabPage />
+        <LocationProbe />
+      </MemoryRouter>,
+    );
+
+    await user.click(await screen.findByRole("button", { name: "开始练习" }));
+    await user.click(await screen.findByLabelText("B. Urban farming"));
+    await user.click(screen.getByRole("button", { name: "提交练习" }));
+
+    const review = await screen.findByLabelText("结果复盘");
+    expect(
+      within(review).queryByRole("button", { name: "用薄弱词再练一套" }),
+    ).not.toBeInTheDocument();
+    await user.click(within(review).getByRole("button", { name: "打开词库" }));
+
+    expect(screen.getByTestId("location")).toHaveTextContent(
+      "/englishWorld/words",
+    );
   });
 
   it("downloads the PDF template from the toolbar", async () => {

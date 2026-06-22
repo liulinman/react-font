@@ -30,8 +30,13 @@ export function LearningCockpitPage() {
   const [coachUnavailable, setCoachUnavailable] = useState(false);
   const [memoryUnavailable, setMemoryUnavailable] = useState(false);
 
-  const openContextLab = () => {
-    const words = (coachSummary?.weakWords ?? [])
+  const openContextLab = (action?: DailyCoachAction) => {
+    const weakWords = coachSummary?.weakWords ?? [];
+    const actionWordIds = new Set(action?.wordIds ?? []);
+    const scopedWords = actionWordIds.size
+      ? weakWords.filter((word) => actionWordIds.has(word.id))
+      : weakWords;
+    const words = scopedWords
       .map((word) => word.word)
       .filter(Boolean)
       .slice(0, 8);
@@ -138,7 +143,7 @@ export function LearningCockpitPage() {
                       用今日薄弱词生成雅思阅读、选择题和例句改写，让单词从词表进入真实场景。
                     </p>
                     <div className="learning-cockpit-action-row">
-                      <Button type="primary" onClick={openContextLab}>
+                      <Button type="primary" onClick={() => openContextLab()}>
                         生成练习包
                       </Button>
                       <Button onClick={() => navigate("/englishWorld/words")}>
@@ -162,7 +167,7 @@ export function LearningCockpitPage() {
                     学习数据加载失败。你仍然可以打开词库、复习或手动进入语境实验室。
                   </p>
                   <div className="learning-cockpit-action-row">
-                    <Button type="primary" onClick={openContextLab}>
+                    <Button type="primary" onClick={() => openContextLab()}>
                       生成练习包
                     </Button>
                     <Button onClick={() => navigate("/englishWorld/words")}>

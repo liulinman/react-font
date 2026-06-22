@@ -226,6 +226,60 @@ describe("LearningCockpitPage", () => {
     );
   });
 
+  it("opens Context Lab with the clicked context action word subset", async () => {
+    const user = userEvent.setup();
+    requestMock.mockImplementation((requestConfig: unknown) => {
+      const config = requestConfig as { url?: string };
+      if (config.url === "/daily-coach/summary") {
+        return Promise.resolve({
+          totalWords: 3,
+          todayNewWords: 0,
+          reciteAccuracy: 58,
+          levelDistribution: [],
+          weakWords: [
+            { id: 1, word: "fragile", level: 0 },
+            { id: 2, word: "resilient", level: 1 },
+            { id: 3, word: "steady", level: 0 },
+          ],
+          suggestedActions: [
+            {
+              type: "context",
+              title: "只练一个词",
+              description: "用指定薄弱词生成练习",
+              wordIds: [2],
+              estimatedMinutes: 5,
+            },
+          ],
+        } as never);
+      }
+      if (config.url === "/memory-map/overview") {
+        return Promise.resolve({
+          levels: [],
+          dueWords: [],
+          weakWords: [],
+          recentMistakes: [],
+          streakLikeStats: { recentSessions: 0, recentAccuracy: 0 },
+        } as never);
+      }
+      return Promise.reject(new Error("offline"));
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/englishWorld"]}>
+        <LearningCockpitPage />
+        <LocationProbe />
+      </MemoryRouter>,
+    );
+
+    await screen.findByText("只练一个词");
+
+    await user.click(screen.getByRole("button", { name: "进入练习" }));
+
+    expect(screen.getByTestId("location")).toHaveTextContent(
+      "/englishWorld/context-lab?source=cockpit&words=resilient",
+    );
+  });
+
   it("shows a retryable unavailable state instead of demo metrics when coach loading fails", async () => {
     const user = userEvent.setup();
     requestMock.mockImplementation((requestConfig: unknown) => {

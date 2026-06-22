@@ -45,7 +45,7 @@ import {
   buildContextLabGenerateParams,
   type ContextLabSourceMode,
 } from "./contextLabPlanning";
-import { useInRouterContext, useLocation } from "react-router-dom";
+import { useInRouterContext, useLocation, useNavigate } from "react-router-dom";
 import {
   getContextLabStatusDescription,
   getContextLabStatusLabel,
@@ -127,8 +127,10 @@ export function formatElapsedSeconds(totalSeconds: number) {
 
 function ContextLabPageContent({
   initialSearch,
+  onOpenWordLibrary,
 }: {
   initialSearch: string;
+  onOpenWordLibrary?: () => void;
 }) {
   const [sourceMode, setSourceMode] = useState<ContextLabSourceMode>("weak");
   const [count, setCount] = useState(8);
@@ -214,7 +216,7 @@ function ContextLabPageContent({
       .filter(Boolean)
       .slice(0, 20);
 
-    if (params.get("source") === "cockpit" && words.length >= 3) {
+    if (params.get("source") === "cockpit" && words.length > 0) {
       setSourceMode("custom");
       setCustomWords(words.join(", "));
     }
@@ -530,16 +532,18 @@ function ContextLabPageContent({
           ))}
         </ul>
         <Space wrap>
-          <Button
-            onClick={() => {
-              setSourceMode("custom");
-              setCustomWords(weakWords.join(", "));
-              setPracticeModalOpen(false);
-            }}
-          >
-            用薄弱词再练一套
-          </Button>
-          <Button onClick={() => window.location.assign("/englishWorld/words")}>
+          {weakWords.length > 0 && (
+            <Button
+              onClick={() => {
+                setSourceMode("custom");
+                setCustomWords(weakWords.join(", "));
+                setPracticeModalOpen(false);
+              }}
+            >
+              用薄弱词再练一套
+            </Button>
+          )}
+          <Button onClick={onOpenWordLibrary}>
             打开词库
           </Button>
         </Space>
@@ -939,7 +943,13 @@ function ContextLabPageContent({
 
 function ContextLabPageRouter() {
   const location = useLocation();
-  return <ContextLabPageContent initialSearch={location.search} />;
+  const navigate = useNavigate();
+  return (
+    <ContextLabPageContent
+      initialSearch={location.search}
+      onOpenWordLibrary={() => navigate("/englishWorld/words")}
+    />
+  );
 }
 
 export function ContextLabPage() {
@@ -952,5 +962,10 @@ export function ContextLabPage() {
   const initialSearch =
     typeof window !== "undefined" ? window.location.search : "";
 
-  return <ContextLabPageContent initialSearch={initialSearch} />;
+  return (
+    <ContextLabPageContent
+      initialSearch={initialSearch}
+      onOpenWordLibrary={() => window.location.assign("/englishWorld/words")}
+    />
+  );
 }

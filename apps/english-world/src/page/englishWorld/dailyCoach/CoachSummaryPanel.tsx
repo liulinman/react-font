@@ -8,7 +8,7 @@ const { Text, Title } = Typography;
 type CoachSummaryPanelProps = {
   summary: DailyCoachSummary;
   onStartReview?: (action?: DailyCoachAction) => void;
-  onOpenContextLab?: () => void;
+  onOpenContextLab?: (action?: DailyCoachAction) => void;
 };
 
 function isReviewAction(action: DailyCoachAction) {
@@ -79,7 +79,7 @@ export function CoachSummaryPanel({
               onClick={() =>
                 isReviewAction(action)
                   ? onStartReview?.(action)
-                  : onOpenContextLab?.()
+                  : onOpenContextLab?.(action)
               }
             >
               {isReviewAction(action) ? "定向复习" : "进入练习"}
@@ -92,7 +92,7 @@ export function CoachSummaryPanel({
         <Button type="primary" icon={<PlayCircleOutlined />} onClick={() => onStartReview?.()}>
           开始今日复习
         </Button>
-        <Button onClick={onOpenContextLab}>进入语境练习</Button>
+        <Button onClick={() => onOpenContextLab?.()}>进入语境练习</Button>
       </Space>
     </section>
   );
