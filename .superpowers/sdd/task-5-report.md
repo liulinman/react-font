@@ -4,9 +4,12 @@ Status: DONE_WITH_CONCERNS
 
 ## Commits Made
 
+- Backend: `ef9ef1e` `fix: guard active context lab deletes`
 - Frontend: `656dae2` `docs: align context lab records design`
-- Backend: none
-- Follow-up frontend test config: pending local commit from coordinator
+- Frontend: `5773baa` `test: stabilize english world ui tests`
+- Frontend: `07e5145` `fix: block active context lab package delete`
+- Frontend: `26aeb6e` `style: polish context lab record cards`
+- Frontend: `b6a8690` `test: stabilize context lab record assertions`
 
 ## Commands Run
 
@@ -15,7 +18,7 @@ Status: DONE_WITH_CONCERNS
     - PASS
   - `pnpm test --runInBand`
     - PASS
-    - Summary: `Test Suites: 20 passed, 20 total`, `Tests: 58 passed, 58 total`
+    - Summary: `Test Suites: 20 passed, 20 total`, `Tests: 62 passed, 62 total`
   - `pnpm build`
     - PASS
 
@@ -24,10 +27,10 @@ Status: DONE_WITH_CONCERNS
     - PASS
   - `pnpm --filter @font/english-world test -- --run`
     - PASS after raising the English World Vitest `testTimeout` to `30000`
-    - Summary: `Test Files: 21 passed (21)`, `Tests: 88 passed (88)`
+    - Summary: `Test Files: 21 passed (21)`, `Tests: 89 passed (89)`
   - `pnpm --filter @font/english-world build`
     - PASS
-    - Warning: Vite large chunk warning for `dist/assets/index-u9Y83wn-.js`
+    - Warning: Vite large chunk warning for `dist/assets/index-Cr36dejx.js` / latest equivalent bundle name
 
 - Frontend targeted feature verification
   - `pnpm exec vitest run src/page/englishWorld/contextLab/contextLabTask.test.ts`
@@ -48,11 +51,11 @@ Status: DONE_WITH_CONCERNS
 
 Updated `/Users/liulin/Desktop/font/english/react-font/docs/superpowers/specs/2026-06-23-context-lab-practice-records-design.md` to match shipped behavior:
 
-- package list section remains labeled `生成任务`
+- package list section ships as `练习包队列`
 - package cards show attempt count plus latest score/wrong count, but not latest attempt time
 - action labels are `删除练习包` and `删除记录`
 - empty package state copy is `还没有生成记录。先提交一组词。`
-- backend delete-task behavior deletes the linked owned exercise row without an extra shared-record guard
+- backend delete-task behavior blocks active tasks and hard-deletes attempts, the linked owned exercise row, and the task transactionally
 
 ## Manual QA Checklist
 
@@ -108,9 +111,9 @@ Status: automated/proxy verified, not manually run in browser.
     - PASS
   - `pnpm --filter @font/english-world exec vitest run src/page/englishWorld/contextLab/ContextLabPage.test.tsx -t "deletes a practice package after confirmation" --testTimeout 30000`
     - PASS
-  - `pnpm --filter @font/english-world exec vitest run`
-    - FAIL
-    - Result: the broader suite surfaced additional `ContextLabPage.test.tsx` expectation/time-out failures outside the two delete regressions fixed here.
+  - `pnpm --filter @font/english-world test -- --run`
+    - PASS after the final assertion stabilization
+    - Summary: `Test Files: 21 passed (21)`, `Tests: 89 passed (89)`
   - `pnpm --filter @font/english-world build`
     - PASS
-    - Warning: Vite reported the existing large-chunk warning for `dist/assets/index-BbPwkXoZ.js`
+    - Warning: Vite reported the existing large-chunk warning
