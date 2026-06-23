@@ -925,23 +925,66 @@
 .context-lab-page {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
+}
+
+.context-lab-hero {
+  padding-top: 0;
+}
+
+.context-lab-hero h1.ant-typography {
+  margin-bottom: 4px;
+  font-size: 30px;
+}
+
+.context-lab-hero p {
+  max-width: 760px;
+}
+
+.context-lab-hero-tag.ant-tag {
+  margin-top: 6px;
+  border-color: #bfdbfe;
+  color: #1d4ed8;
+  background: #eff6ff;
 }
 
 .context-lab-grid {
   display: grid;
-  grid-template-columns: minmax(320px, 0.85fr) minmax(0, 1.15fr);
+  grid-template-columns: minmax(320px, 0.72fr) minmax(0, 1.28fr);
   gap: 16px;
   align-items: start;
 }
 
 .context-lab-source-panel {
-  min-height: 136px;
-  margin: 16px 0;
+  margin: 14px 0;
 }
 
-.context-lab-page .learning-cockpit-card > .ant-btn + .ant-btn {
-  margin-left: 8px;
+.context-lab-generator-card {
+  position: sticky;
+  top: 20px;
+}
+
+.context-lab-generator-card .learning-cockpit-card-heading {
+  margin-bottom: 14px;
+}
+
+.context-lab-generator-card .learning-cockpit-card-heading h3.ant-typography,
+.context-lab-queue-card .learning-cockpit-card-heading h3.ant-typography {
+  margin-bottom: 4px;
+}
+
+.context-lab-generator-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.context-lab-generator-actions .ant-btn-primary {
+  min-width: 148px;
+}
+
+.context-lab-generator-actions .ant-btn-link {
+  padding-inline: 4px;
 }
 
 .context-lab-task-status {
@@ -971,25 +1014,117 @@
 
 .context-lab-history-list {
   display: grid;
-  gap: 10px;
+  gap: 12px;
   margin-top: 14px;
 }
 
 .context-lab-history-item {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 12px;
-  border: 1px solid #e5e7eb;
+  padding: 16px;
+  border: 1px solid #dfe7f2;
   border-radius: 8px;
   background: #fff;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.04);
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
 }
 
-.context-lab-history-item p {
-  margin: 6px 0 0;
+.context-lab-history-item:hover {
+  border-color: #bfdbfe;
+  box-shadow: 0 16px 32px rgba(37, 99, 235, 0.08);
+  transform: translateY(-1px);
+}
+
+.context-lab-history-item-failed {
+  border-color: #fecaca;
+  background: #fffafa;
+}
+
+.context-lab-history-main {
+  display: grid;
+  min-width: 0;
+  gap: 8px;
+}
+
+.context-lab-history-kicker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
   color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.context-lab-history-title {
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: #111827;
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.context-lab-history-words {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.context-lab-history-words span {
+  padding: 4px 8px;
+  border: 1px solid #dbeafe;
+  border-radius: 999px;
+  color: #1d4ed8;
+  background: #eff6ff;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.context-lab-history-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: #475569;
   font-size: 13px;
+  line-height: 1.5;
+}
+
+.context-lab-history-metrics span {
+  display: inline-flex;
+  align-items: center;
+}
+
+.context-lab-history-metrics span + span::before {
+  width: 4px;
+  height: 4px;
+  margin-right: 8px;
+  border-radius: 999px;
+  background: #cbd5e1;
+  content: "";
+}
+
+.context-lab-history-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  max-width: 260px;
+}
+
+.context-lab-history-actions .ant-btn-primary {
+  min-width: 98px;
+  font-weight: 700;
+}
+
+.context-lab-history-actions .ant-btn-text.ant-btn-dangerous {
+  color: #ef4444;
 }
 
 .context-lab-attempt-list {
@@ -1408,6 +1543,14 @@
     grid-template-columns: 1fr;
   }
 
+  .context-lab-queue-card {
+    order: -1;
+  }
+
+  .context-lab-generator-card {
+    position: static;
+  }
+
   .context-lab-practice-workspace {
     grid-template-columns: 1fr;
   }
@@ -1419,7 +1562,16 @@
     overflow: auto;
   }
 
-  .context-lab-history-item,
+  .context-lab-history-item {
+    grid-template-columns: 1fr;
+    align-items: flex-start;
+  }
+
+  .context-lab-history-actions {
+    justify-content: flex-start;
+    max-width: none;
+  }
+
   .context-lab-task-status {
     flex-direction: column;
     align-items: flex-start;
