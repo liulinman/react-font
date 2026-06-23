@@ -35,13 +35,12 @@ Context Lab will have two explicit concepts:
 2. **Practice Attempt**
    A single submitted answer run against an exercise package. One package can have multiple attempts.
 
-The right panel should be renamed from "生成任务" to a record-oriented area such as "练习记录". Each package card should show:
+The current right-side package list remains under the existing "生成任务" section, but each package card now includes practice-record summary data. Each package card shows:
 
 - Generated words summary.
 - Generation status.
 - Practice count.
 - Latest score and wrong count when attempts exist.
-- Latest practice time when attempts exist.
 - Actions: start practice, view records, download PDF, delete package.
 
 Viewing records opens a right-side drawer that lists attempts newest first. Each attempt row shows:
@@ -64,7 +63,7 @@ Deleting an exercise package permanently removes:
 
 - All attempts for the package.
 - The generated task row.
-- The linked generated exercise row, if present and not shared with another task.
+- The linked generated exercise row when it is owned by the current user.
 
 The UI must show a confirmation modal before deletion with clear irreversible language:
 
@@ -145,17 +144,17 @@ Update `server/learning.ts` with request builders for the new endpoints.
 
 Update `ContextLabPage`:
 
-- Rename the history section copy from generated tasks to practice records.
+- Keep the existing "生成任务" section shell, but enrich each task card with practice-record summary data.
 - Show package-level latest attempt summary on each package card.
 - Add "查看记录" action for succeeded packages.
-- Add "删除" action for packages and attempts.
+- Add "删除练习包" and "删除记录" actions for packages and attempts.
 - Add a right-side drawer for attempt history.
 - Refresh package history after submit, attempt delete, and package delete.
 - Store `attemptId` from submit result in state when available.
 
 Failure and empty states:
 
-- No packages: "还没有练习包。先生成一组词。"
+- No packages: "还没有生成记录。先提交一组词。"
 - Package has no attempts: "还没有提交记录，开始练习后会出现在这里。"
 - Deleted package disappears from the list.
 - Deleted attempt disappears from the record drawer.
