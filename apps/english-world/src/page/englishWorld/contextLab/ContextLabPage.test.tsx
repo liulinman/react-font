@@ -7,7 +7,7 @@ import {
   within,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { Modal } from "antd";
+import { message, Modal } from "antd";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter, useLocation } from "react-router-dom";
 import { ContextLabPage, formatElapsedSeconds } from "./ContextLabPage";
@@ -183,6 +183,9 @@ describe("ContextLabPage", () => {
           status: "succeeded",
           sourceType: "custom",
           words: ["fragile", "steady", "recover"],
+          attemptCount: 2,
+          latestScore: 86,
+          latestWrongCount: 1,
           articleExerciseId: 88,
           article: "A short practice article.",
           questions: [
@@ -210,6 +213,10 @@ describe("ContextLabPage", () => {
     render(<ContextLabPage />);
 
     expect(await screen.findByText("生成完成")).toBeInTheDocument();
+    expect(screen.getByText("手输词组")).toBeInTheDocument();
+    expect(screen.getAllByText("3 个词").length).toBeGreaterThan(0);
+    expect(screen.getByText("练习 2 次")).toBeInTheDocument();
+    expect(screen.getByText("最近 86 分")).toBeInTheDocument();
     expect(screen.getByText("生成失败")).toBeInTheDocument();
     expect(screen.getByText("AI 返回格式异常")).toBeInTheDocument();
   });
@@ -604,7 +611,9 @@ describe("ContextLabPage", () => {
     const user = userEvent.setup();
     render(<ContextLabPage />);
 
-    await user.click(await screen.findByRole("button", { name: "删除练习包" }));
+    expect(await screen.findByText("生成完成")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /删除/ }));
     await user.click(await screen.findByRole("button", { name: "确认删除" }));
 
     await waitFor(() => {
@@ -615,11 +624,52 @@ describe("ContextLabPage", () => {
         }),
       );
     });
-    await waitFor(() => {
-      expect(
-        screen.queryByRole("button", { name: "确认删除" }),
-      ).not.toBeInTheDocument();
+  });
+
+  it("blocks deleting a pending practice package and explains why", async () => {
+    requestMock.mockImplementation((config) => {
+      if (config.url === "/context-lab/history") {
+        return Promise.resolve({
+          list: [
+            {
+              id: 12,
+              taskId: 12,
+              status: "pending",
+              sourceType: "custom",
+              words: ["vibe"],
+              articleExerciseId: null,
+              article: "",
+              questions: [],
+            },
+          ],
+          total: 1,
+          page: 1,
+          pageSize: 10,
+        });
+      }
+      return Promise.resolve({});
     });
+    const warningSpy = vi.spyOn(message, "warning").mockImplementation(() => {
+      const hide = () => undefined;
+      return hide as unknown as ReturnType<typeof message.warning>;
+    });
+
+    const user = userEvent.setup();
+    render(<ContextLabPage />);
+
+    expect(await screen.findByText("等待回调")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /删除/ }));
+
+    expect(warningSpy).toHaveBeenCalledWith(
+      "生成中的练习包暂不支持删除，请等待任务完成或失败后再操作",
+    );
+    expect(requestMock).not.toHaveBeenCalledWith(
+      expect.objectContaining({ url: "/context-lab/delete-task" }),
+    );
+    expect(
+      screen.queryByRole("button", { name: "确认删除" }),
+    ).not.toBeInTheDocument();
   });
 
   it("routes result review to the word library without a full reload inside the app", async () => {

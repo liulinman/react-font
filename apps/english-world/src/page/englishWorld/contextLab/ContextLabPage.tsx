@@ -15,10 +15,14 @@ import {
   Input,
 } from "antd";
 import {
+  DeleteOutlined,
   DownloadOutlined,
   ExperimentOutlined,
+  FilePdfOutlined,
   FullscreenExitOutlined,
   FullscreenOutlined,
+  HistoryOutlined,
+  PlayCircleOutlined,
   ReloadOutlined,
   SendOutlined,
 } from "@ant-design/icons";
@@ -63,6 +67,8 @@ import { EditAddModal, type AddInitialValues } from "../component/EditAddModal";
 const { Text, Title } = Typography;
 const { TextArea } = Input;
 const ANSWER_LETTERS = ["A", "B", "C", "D"];
+const ACTIVE_TASK_DELETE_MESSAGE =
+  "生成中的练习包暂不支持删除，请等待任务完成或失败后再操作";
 
 function getAnswerLetter(index: number) {
   return ANSWER_LETTERS[index] ?? String(index);
@@ -124,6 +130,15 @@ function parseArticleContent(article: string) {
 
 function getContextLabQuestionLabel(task: ContextLabTask | null, questionId: string) {
   return task?.questions?.find((question) => question.id === questionId);
+}
+
+function getContextLabSourceLabel(sourceType: ContextLabTask["sourceType"]) {
+  const labels: Record<ContextLabTask["sourceType"], string> = {
+    custom: "手输词组",
+    proficiency: "薄弱词",
+    random: "随机词",
+  };
+  return labels[sourceType] ?? "练习包";
 }
 
 export function formatElapsedSeconds(totalSeconds: number) {
@@ -408,31 +423,40 @@ function ContextLabPageContent({
   };
 
   const handleDeleteTask = (task: ContextLabTask) => {
+    if (isContextLabTaskActive(task.status)) {
+      message.warning(ACTIVE_TASK_DELETE_MESSAGE);
+      return;
+    }
+
     Modal.confirm({
       title: "确认删除练习包",
       content: "删除后不可恢复，本练习包及其所有练习记录将永久移除。",
       okText: "确认删除",
       cancelText: "取消",
       okButtonProps: { danger: true },
-      onOk: async () => {
-        try {
-          await request(contextLabDeleteTask({ taskId: task.taskId }));
-          message.success("练习包已删除");
-          if (currentTask?.taskId === task.taskId) {
-            setCurrentTask(null);
-            setPracticeModalOpen(false);
+      transitionName: "",
+      maskTransitionName: "",
+      onOk: () => {
+        void (async () => {
+          try {
+            await request(contextLabDeleteTask({ taskId: task.taskId }));
+            message.success("练习包已删除");
+            if (currentTask?.taskId === task.taskId) {
+              setCurrentTask(null);
+              setPracticeModalOpen(false);
+            }
+            if (attemptTask?.taskId === task.taskId) {
+              setAttemptDrawerOpen(false);
+              setAttemptTask(null);
+              setAttempts([]);
+              setAttemptDetails({});
+              setSelectedAttemptId(null);
+            }
+            await loadHistory();
+          } catch (error: unknown) {
+            message.error(error instanceof Error ? error.message : "练习包删除失败");
           }
-          if (attemptTask?.taskId === task.taskId) {
-            setAttemptDrawerOpen(false);
-            setAttemptTask(null);
-            setAttempts([]);
-            setAttemptDetails({});
-            setSelectedAttemptId(null);
-          }
-          await loadHistory();
-        } catch (error: unknown) {
-          message.error(error instanceof Error ? error.message : "练习包删除失败");
-        }
+        })();
       },
     });
   };
@@ -625,6 +649,28 @@ function ContextLabPageContent({
       </Space>
     </div>
   );
+
+  const renderTaskMetrics = (task: ContextLabTask) => {
+    if (task.attemptCount) {
+      return (
+        <>
+          <span>练习 {task.attemptCount} 次</span>
+          <span>最近得分 {task.latestScore ?? 0}</span>
+          <span>错题 {task.latestWrongCount ?? 0}</span>
+        </>
+      );
+    }
+
+    if (task.status === "failed") {
+      return <span>{task.errorMessage || "生成失败，换一组词再试试"}</span>;
+    }
+
+    if (isContextLabTaskActive(task.status)) {
+      return <span>{getContextLabStatusDescription(task.status)}</span>;
+    }
+
+    return <span>还没有提交记录，开始练习后会出现在这里。</span>;
+  };
 
   const renderResultReview = () => {
     if (!submitSummary) return null;
@@ -863,7 +909,7 @@ function ContextLabPageContent({
   return (
     <>
       <div className="context-lab-page">
-        <section className="learning-cockpit-hero">
+        <section className="learning-cockpit-hero context-lab-hero">
           <div>
             <Text className="learning-cockpit-label">B. Context Lab</Text>
             <Title level={1}>AI 语境实验室</Title>
@@ -871,17 +917,20 @@ function ContextLabPageContent({
               把薄弱词、随机词或手输词生成雅思长度阅读、选择题和例句改写，让词库变成可练习的场景。
             </p>
           </div>
-          <Tag icon={<ExperimentOutlined />} color="purple">
-            AI generated
+          <Tag className="context-lab-hero-tag" icon={<ExperimentOutlined />}>
+            语境化练习
           </Tag>
         </section>
 
         <div className="context-lab-grid">
-        <section className="learning-cockpit-card">
+        <section className="learning-cockpit-card context-lab-generator-card">
           <div className="learning-cockpit-card-heading">
             <div>
-              <Text className="learning-cockpit-label">Source</Text>
-              <Title level={3}>选择练习来源</Title>
+              <Text className="learning-cockpit-label">Create</Text>
+              <Title level={3}>生成练习</Title>
+              <Text type="secondary">
+                选择一组词，生成一套可阅读、可做题、可复盘的练习包。
+              </Text>
             </div>
           </div>
 
@@ -931,31 +980,34 @@ function ContextLabPageContent({
             )}
           </div>
 
-          <Button
-            type="primary"
-            icon={<SendOutlined />}
-            loading={creating}
-            onClick={handleGenerate}
-          >
-            生成练习包
-          </Button>
-          <Button
-            icon={<DownloadOutlined />}
-            loading={downloading}
-            onClick={handleDownloadTemplate}
-          >
-            下载 PDF 模板
-          </Button>
+          <div className="context-lab-generator-actions">
+            <Button
+              type="primary"
+              icon={<SendOutlined />}
+              loading={creating}
+              onClick={handleGenerate}
+            >
+              生成练习包
+            </Button>
+            <Button
+              type="link"
+              icon={<DownloadOutlined aria-hidden="true" />}
+              loading={downloading}
+              onClick={handleDownloadTemplate}
+            >
+              下载 PDF 模板
+            </Button>
+          </div>
         </section>
 
-        <section className="learning-cockpit-card">
+        <section className="learning-cockpit-card context-lab-queue-card">
           <div className="learning-cockpit-card-heading">
             <div>
               <Text className="learning-cockpit-label">Tasks</Text>
-              <Title level={3}>生成任务</Title>
+              <Title level={3}>练习包队列</Title>
             </div>
             <Button
-              icon={<ReloadOutlined />}
+              icon={<ReloadOutlined aria-hidden="true" />}
               loading={historyLoading}
               onClick={loadHistory}
             >
@@ -978,63 +1030,83 @@ function ContextLabPageContent({
 
           <div className="context-lab-history-list">
             {history.map((task) => (
-              <div className="context-lab-history-item" key={task.taskId}>
-                <div>
-                  <Space wrap>
+              <article
+                className={`context-lab-history-item context-lab-history-item-${task.status}`}
+                key={task.taskId}
+              >
+                <div className="context-lab-history-main">
+                  <div className="context-lab-history-kicker">
                     <Tag color={getContextLabStatusTone(task.status)}>
                       {getContextLabStatusLabel(task.status)}
                     </Tag>
-                    <Text strong>{task.words.slice(0, 4).join(" / ")}</Text>
-                  </Space>
-                  {task.attemptCount ? (
-                    <p>
-                      练习 {task.attemptCount} 次 · 最近得分 {task.latestScore ?? 0}
-                      {" "}· 错题 {task.latestWrongCount ?? 0}
-                    </p>
-                  ) : (
-                    <p>
-                      {task.errorMessage ||
-                        "还没有提交记录，开始练习后会出现在这里。"}
-                    </p>
-                  )}
+                    <span>{getContextLabSourceLabel(task.sourceType)}</span>
+                    <span>{task.words.length} 个词</span>
+                  </div>
+                  <h4 className="context-lab-history-title">
+                    {task.words.slice(0, 6).join(" / ")}
+                  </h4>
+                  <div className="context-lab-history-words">
+                    {task.words.slice(0, 8).map((word) => (
+                      <span key={word}>{word}</span>
+                    ))}
+                  </div>
+                  <div className="context-lab-history-metrics">
+                    {renderTaskMetrics(task)}
+                  </div>
                 </div>
-                <Space>
+                <div className="context-lab-history-actions">
                   {isContextLabTaskActive(task.status) && (
-                    <Button size="small" onClick={loadHistory}>
+                    <Button
+                      size="small"
+                      icon={<ReloadOutlined aria-hidden="true" />}
+                      onClick={loadHistory}
+                    >
                       刷新
                     </Button>
                   )}
                   {task.status === "succeeded" && (
                     <>
-                      <Button size="small" onClick={() => handleOpenTask(task)}>
+                      <Button
+                        type="primary"
+                        size="small"
+                        icon={<PlayCircleOutlined aria-hidden="true" />}
+                        onClick={() => handleOpenTask(task)}
+                      >
                         开始练习
                       </Button>
-                      <Button size="small" onClick={() => void loadAttempts(task)}>
+                      <Button
+                        size="small"
+                        icon={<HistoryOutlined aria-hidden="true" />}
+                        onClick={() => void loadAttempts(task)}
+                      >
                         查看记录
                       </Button>
                       <Button
                         aria-label="下载练习 PDF"
+                        icon={<FilePdfOutlined aria-hidden="true" />}
                         size="small"
                         onClick={() => handleDownloadTaskPdf(task)}
                       >
-                        下载练习 PDF
+                        PDF
                       </Button>
                     </>
                   )}
                   {task.status === "failed" && (
-                    <Button size="small" onClick={handleGenerate}>
-                      重试
+                    <Button size="small" type="primary" onClick={handleGenerate}>
+                      重新生成
                     </Button>
                   )}
                   <Button
                     danger
                     size="small"
+                    type="text"
+                    icon={<DeleteOutlined aria-hidden="true" />}
                     onClick={() => handleDeleteTask(task)}
                   >
-                    删除练习包
+                    删除
                   </Button>
-                </Space>
-              </div>
+                </div>
+              </article>
             ))}
           </div>
         </section>
