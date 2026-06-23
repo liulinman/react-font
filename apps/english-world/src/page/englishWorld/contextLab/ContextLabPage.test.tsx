@@ -428,9 +428,12 @@ describe("ContextLabPage", () => {
     ).toBeInTheDocument();
   });
 
-  it("opens practice record drawer and deletes an attempt after confirmation", async () => {
+  it("opens historical attempt details and removes a deleted attempt from the open drawer", async () => {
+    let historyRequests = 0;
+    let attemptHistoryRequests = 0;
     requestMock.mockImplementation((config) => {
       if (config.url === "/context-lab/history") {
+        historyRequests += 1;
         return Promise.resolve({
           list: [
             {
@@ -441,12 +444,19 @@ describe("ContextLabPage", () => {
               words: ["vibe"],
               articleExerciseId: 88,
               article: "Topic\n\nParagraph.",
-              questions: [],
-              attemptCount: 1,
-              latestAttemptId: 501,
-              latestScore: 50,
-              latestWrongCount: 1,
-              latestAttemptTime: "2026-06-23T08:00:00Z",
+              questions: [
+                {
+                  id: "q1",
+                  stem: "Which answer matches the paragraph?",
+                  options: ["It celebrates speed", "It describes mood"],
+                },
+              ],
+              attemptCount: historyRequests > 1 ? 0 : 1,
+              latestAttemptId: historyRequests > 1 ? undefined : 501,
+              latestScore: historyRequests > 1 ? undefined : 50,
+              latestWrongCount: historyRequests > 1 ? undefined : 1,
+              latestAttemptTime:
+                historyRequests > 1 ? undefined : "2026-06-23T08:00:00Z",
             },
           ],
           total: 1,
@@ -455,27 +465,56 @@ describe("ContextLabPage", () => {
         });
       }
       if (config.url === "/context-lab/attempt-history") {
+        attemptHistoryRequests += 1;
         return Promise.resolve({
-          list: [
-            {
-              id: 501,
-              attemptId: 501,
-              taskId: 12,
-              articleExerciseId: 88,
-              score: 50,
-              correctCount: 1,
-              wrongCount: 1,
-              weakWords: ["vibe"],
-              nextSuggestions: ["复盘错题解析"],
-              answers: [],
-              results: [],
-              elapsedSeconds: 42,
-              createTime: "2026-06-23T08:00:00Z",
-            },
-          ],
+          list:
+            attemptHistoryRequests > 1
+              ? []
+              : [
+                  {
+                    id: 501,
+                    attemptId: 501,
+                    taskId: 12,
+                    articleExerciseId: 88,
+                    score: 50,
+                    correctCount: 0,
+                    wrongCount: 1,
+                    weakWords: ["vibe"],
+                    nextSuggestions: ["复盘错题解析"],
+                    answers: [{ questionId: "q1", selectedIndex: 0 }],
+                    results: [],
+                    elapsedSeconds: 42,
+                    createTime: "2026-06-23T08:00:00Z",
+                  },
+                ],
           total: 1,
           page: 1,
           pageSize: 10,
+        });
+      }
+      if (config.url === "/context-lab/attempt-detail") {
+        return Promise.resolve({
+          id: 501,
+          attemptId: 501,
+          taskId: 12,
+          articleExerciseId: 88,
+          score: 50,
+          correctCount: 0,
+          wrongCount: 1,
+          weakWords: ["vibe"],
+          nextSuggestions: ["复盘错题解析", "回看解析后再练一轮"],
+          answers: [{ questionId: "q1", selectedIndex: 0 }],
+          results: [
+            {
+              questionId: "q1",
+              correct: false,
+              correctIndex: 1,
+              userSelectedIndex: 0,
+              explanation: "段落强调的是情绪氛围，不是速度。",
+            },
+          ],
+          elapsedSeconds: 42,
+          createTime: "2026-06-23T08:00:00Z",
         });
       }
       if (config.url === "/context-lab/delete-attempt") {
@@ -492,6 +531,25 @@ describe("ContextLabPage", () => {
       await screen.findByRole("dialog", { name: "练习记录" }),
     ).toBeInTheDocument();
     expect(screen.getByText("得分 50")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "查看详情" }));
+
+    await waitFor(() => {
+      expect(requestMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          url: "/context-lab/attempt-detail",
+          data: { attemptId: 501 },
+        }),
+      );
+    });
+    expect(
+      await screen.findByText("Which answer matches the paragraph?"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("你的作答 A. It celebrates speed")).toBeInTheDocument();
+    expect(screen.getByText("正确答案 B. It describes mood")).toBeInTheDocument();
+    expect(
+      screen.getByText("段落强调的是情绪氛围，不是速度。"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("回看解析后再练一轮")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "删除记录" }));
     await user.click(await screen.findByRole("button", { name: "确认删除" }));
@@ -506,8 +564,13 @@ describe("ContextLabPage", () => {
     });
     await waitFor(() => {
       expect(
-        screen.queryByRole("button", { name: "确认删除" }),
+        screen.queryByText("Which answer matches the paragraph?"),
       ).not.toBeInTheDocument();
+    });
+    await waitFor(() => {
+      expect(
+        screen.getAllByText("还没有提交记录，开始练习后会出现在这里。"),
+      ).toHaveLength(2);
     });
   });
 

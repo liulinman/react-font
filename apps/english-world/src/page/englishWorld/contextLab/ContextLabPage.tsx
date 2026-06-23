@@ -35,6 +35,7 @@ import {
   contextLabDeleteTask,
   contextLabHistory,
   contextLabAttemptHistory,
+  contextLabAttemptDetail,
   contextLabSubmit,
   downloadContextLabPdfTemplate,
   downloadContextLabTaskPdf,
@@ -121,6 +122,10 @@ function parseArticleContent(article: string) {
   };
 }
 
+function getContextLabQuestionLabel(task: ContextLabTask | null, questionId: string) {
+  return task?.questions?.find((question) => question.id === questionId);
+}
+
 export function formatElapsedSeconds(totalSeconds: number) {
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
@@ -160,6 +165,13 @@ function ContextLabPageContent({
   const [attemptTask, setAttemptTask] = useState<ContextLabTask | null>(null);
   const [attempts, setAttempts] = useState<ContextLabAttempt[]>([]);
   const [attemptsLoading, setAttemptsLoading] = useState(false);
+  const [selectedAttemptId, setSelectedAttemptId] = useState<number | null>(null);
+  const [attemptDetails, setAttemptDetails] = useState<
+    Record<number, ContextLabAttempt>
+  >({});
+  const [attemptDetailLoadingId, setAttemptDetailLoadingId] = useState<
+    number | null
+  >(null);
   const [selectedVocabulary, setSelectedVocabulary] = useState("");
   const [selectionMenu, setSelectionMenu] = useState<{
     open: boolean;
@@ -217,15 +229,46 @@ function ContextLabPageContent({
     setAttemptTask(task);
     setAttemptDrawerOpen(true);
     setAttemptsLoading(true);
+    setSelectedAttemptId(null);
+    setAttemptDetails({});
     try {
       const response = await request(
         contextLabAttemptHistory({ taskId: task.taskId, page: 1, pageSize: 20 }),
       );
-      setAttempts(response.list ?? []);
+      const nextAttempts = response.list ?? [];
+      setAttempts(nextAttempts);
+      setSelectedAttemptId((prev) =>
+        nextAttempts.some((attempt) => attempt.attemptId === prev) ? prev : null,
+      );
     } catch (error: unknown) {
       message.error(error instanceof Error ? error.message : "练习记录加载失败");
     } finally {
       setAttemptsLoading(false);
+    }
+  };
+
+  const handleOpenAttemptDetail = async (attempt: ContextLabAttempt) => {
+    if (attemptDetails[attempt.attemptId]) {
+      setSelectedAttemptId(attempt.attemptId);
+      return;
+    }
+
+    setSelectedAttemptId(attempt.attemptId);
+    setAttemptDetailLoadingId(attempt.attemptId);
+    try {
+      const detail = await request(
+        contextLabAttemptDetail({ attemptId: attempt.attemptId }),
+      );
+      setAttemptDetails((prev) => ({
+        ...prev,
+        [attempt.attemptId]: detail,
+      }));
+    } catch (error: unknown) {
+      message.error(error instanceof Error ? error.message : "练习详情加载失败");
+    } finally {
+      setAttemptDetailLoadingId((current) =>
+        current === attempt.attemptId ? null : current,
+      );
     }
   };
 
@@ -348,6 +391,14 @@ function ContextLabPageContent({
           if (attemptTask) {
             await loadAttempts(attemptTask);
           }
+          setAttemptDetails((prev) => {
+            const nextDetails = { ...prev };
+            delete nextDetails[attempt.attemptId];
+            return nextDetails;
+          });
+          setSelectedAttemptId((current) =>
+            current === attempt.attemptId ? null : current,
+          );
           await loadHistory();
         } catch (error: unknown) {
           message.error(error instanceof Error ? error.message : "练习记录删除失败");
@@ -375,6 +426,8 @@ function ContextLabPageContent({
             setAttemptDrawerOpen(false);
             setAttemptTask(null);
             setAttempts([]);
+            setAttemptDetails({});
+            setSelectedAttemptId(null);
           }
           await loadHistory();
         } catch (error: unknown) {
@@ -1007,10 +1060,7 @@ function ContextLabPageContent({
         ) : (
           <div className="context-lab-attempt-list">
             {attempts.map((attempt) => (
-              <section
-                className="context-lab-attempt-item"
-                key={attempt.attemptId}
-              >
+              <section className="context-lab-attempt-item" key={attempt.attemptId}>
                 <Space wrap>
                   <Tag color={attempt.wrongCount > 0 ? "orange" : "green"}>
                     得分 {attempt.score}
@@ -1032,13 +1082,124 @@ function ContextLabPageContent({
                     ))}
                   </div>
                 )}
-                <Button
-                  danger
-                  size="small"
-                  onClick={() => handleDeleteAttempt(attempt)}
-                >
-                  删除记录
-                </Button>
+                <Space wrap>
+                  <Button
+                    size="small"
+                    onClick={() => void handleOpenAttemptDetail(attempt)}
+                  >
+                    查看详情
+                  </Button>
+                  <Button
+                    danger
+                    size="small"
+                    onClick={() => handleDeleteAttempt(attempt)}
+                  >
+                    删除记录
+                  </Button>
+                </Space>
+                {selectedAttemptId === attempt.attemptId && (
+                  <div className="context-lab-attempt-detail">
+                    {attemptDetailLoadingId === attempt.attemptId &&
+                    !attemptDetails[attempt.attemptId] ? (
+                      <Space>
+                        <Spin size="small" />
+                        <Text type="secondary">正在读取本次练习详情...</Text>
+                      </Space>
+                    ) : (
+                      (() => {
+                        const detail = attemptDetails[attempt.attemptId];
+                        if (!detail) return null;
+
+                        return (
+                          <>
+                            {detail.nextSuggestions.length > 0 && (
+                              <div>
+                                <Text className="learning-cockpit-label">
+                                  Next
+                                </Text>
+                                <ul className="context-lab-attempt-suggestions">
+                                  {detail.nextSuggestions.map((suggestion) => (
+                                    <li key={suggestion}>{suggestion}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                            <div className="context-lab-attempt-question-list">
+                              {detail.answers.map((answer, index) => {
+                                const question = getContextLabQuestionLabel(
+                                  attemptTask,
+                                  answer.questionId,
+                                );
+                                const result = detail.results.find(
+                                  (item) => item.questionId === answer.questionId,
+                                );
+                                const selectedLabel =
+                                  question?.options?.[answer.selectedIndex];
+                                const correctLabel =
+                                  result?.correctIndex != null
+                                    ? question?.options?.[result.correctIndex]
+                                    : undefined;
+
+                                return (
+                                  <section
+                                    className="context-lab-attempt-question"
+                                    key={answer.questionId || index}
+                                  >
+                                    <Text strong>
+                                      {question?.stem || `第 ${index + 1} 题`}
+                                    </Text>
+                                    <div>
+                                      <Text>
+                                        你的作答{" "}
+                                        {selectedLabel
+                                          ? formatOptionLabel(
+                                              selectedLabel,
+                                              answer.selectedIndex,
+                                            )
+                                          : answer.selectedIndex + 1}
+                                      </Text>
+                                    </div>
+                                    {result && (
+                                      <>
+                                        <Tag color={result.correct ? "green" : "red"}>
+                                          {result.correct ? "回答正确" : "回答错误"}
+                                        </Tag>
+                                        {correctLabel && (
+                                          <div>
+                                            <Text>
+                                              正确答案{" "}
+                                              {formatOptionLabel(
+                                                correctLabel,
+                                                result.correctIndex,
+                                              )}
+                                            </Text>
+                                          </div>
+                                        )}
+                                        {result.explanation && (
+                                          <div className="context-lab-question-explanation">
+                                            <Text className="learning-cockpit-label">
+                                              解析
+                                            </Text>
+                                            <p>
+                                              {formatExplanationText(
+                                                result.explanation,
+                                                result.correctIndex,
+                                              )}
+                                            </p>
+                                          </div>
+                                        )}
+                                      </>
+                                    )}
+                                  </section>
+                                );
+                              })}
+                            </div>
+                          </>
+                        );
+                      })()
+                    )}
+                  </div>
+                )}
               </section>
             ))}
           </div>

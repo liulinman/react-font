@@ -1007,6 +1007,31 @@
   background: #fff;
 }
 
+.context-lab-attempt-detail {
+  display: grid;
+  gap: 12px;
+  padding-top: 4px;
+}
+
+.context-lab-attempt-suggestions {
+  margin: 8px 0 0;
+  padding-left: 18px;
+}
+
+.context-lab-attempt-question-list {
+  display: grid;
+  gap: 10px;
+}
+
+.context-lab-attempt-question {
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
 .context-lab-stream {
   min-height: 280px;
   max-height: 520px;
