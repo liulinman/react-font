@@ -678,6 +678,22 @@ function ContextLabPageContent({
     return <span>还没有提交记录，开始练习后会出现在这里。</span>;
   };
 
+  const renderTaskWordChips = (task: ContextLabTask) => {
+    const visibleWords = task.words.slice(0, 5);
+    const hiddenCount = Math.max(0, task.words.length - visibleWords.length);
+
+    return (
+      <>
+        {visibleWords.map((word) => (
+          <span key={word}>{word}</span>
+        ))}
+        {hiddenCount > 0 && (
+          <span className="context-lab-history-word-more">+{hiddenCount}</span>
+        )}
+      </>
+    );
+  };
+
   const renderResultReview = () => {
     if (!submitSummary) return null;
     const weakWords = submitSummary.weakWords ?? [];
@@ -976,9 +992,9 @@ function ContextLabPageContent({
               </Space>
             )}
 
-            {sourceMode === "custom" && (
-              <TextArea
-                rows={5}
+          {sourceMode === "custom" && (
+            <TextArea
+                rows={4}
                 value={customWords}
                 onChange={(event) => setCustomWords(event.target.value)}
                 placeholder="输入单词，用空格、英文逗号或中文逗号分隔"
@@ -1010,7 +1026,7 @@ function ContextLabPageContent({
           <div className="learning-cockpit-card-heading">
             <div>
               <Text className="learning-cockpit-label">Tasks</Text>
-              <Title level={3}>练习包队列</Title>
+              <Title level={3}>练习包</Title>
             </div>
             <Button
               icon={<ReloadOutlined aria-hidden="true" />}
@@ -1049,12 +1065,11 @@ function ContextLabPageContent({
                     <span>{task.words.length} 个词</span>
                   </div>
                   <h4 className="context-lab-history-title">
-                    {task.words.slice(0, 6).join(" / ")}
+                    {task.words.slice(0, 5).join(" / ")}
+                    {task.words.length > 5 ? " / ..." : ""}
                   </h4>
                   <div className="context-lab-history-words">
-                    {task.words.slice(0, 8).map((word) => (
-                      <span key={word}>{word}</span>
-                    ))}
+                    {renderTaskWordChips(task)}
                   </div>
                   <div className="context-lab-history-metrics">
                     {renderTaskMetrics(task)}
@@ -1082,13 +1097,14 @@ function ContextLabPageContent({
                       </Button>
                       <Button
                         size="small"
+                        aria-label="查看记录"
                         icon={<HistoryOutlined aria-hidden="true" />}
                         onClick={() => void loadAttempts(task)}
                       >
-                        查看记录
+                        记录
                       </Button>
                       <Button
-                        aria-label="下载练习 PDF"
+                        aria-label="下载练习包 PDF"
                         icon={<FilePdfOutlined aria-hidden="true" />}
                         size="small"
                         onClick={() => handleDownloadTaskPdf(task)}
@@ -1104,12 +1120,13 @@ function ContextLabPageContent({
                   )}
                   <Button
                     danger
+                    aria-label="删除练习包"
                     size="small"
                     type="text"
                     icon={<DeleteOutlined aria-hidden="true" />}
                     onClick={() => handleDeleteTask(task)}
                   >
-                    删除练习包
+                    删除
                   </Button>
                 </div>
               </article>

@@ -925,7 +925,7 @@
 .context-lab-page {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
 }
 
 .context-lab-hero {
@@ -934,7 +934,7 @@
 
 .context-lab-hero h1.ant-typography {
   margin-bottom: 4px;
-  font-size: 30px;
+  font-size: 28px;
 }
 
 .context-lab-hero p {
@@ -950,13 +950,13 @@
 
 .context-lab-grid {
   display: grid;
-  grid-template-columns: minmax(320px, 0.72fr) minmax(0, 1.28fr);
+  grid-template-columns: minmax(300px, 0.56fr) minmax(0, 1.44fr);
   gap: 16px;
   align-items: start;
 }
 
 .context-lab-source-panel {
-  margin: 14px 0;
+  margin: 12px 0;
 }
 
 .context-lab-generator-card {
@@ -965,7 +965,7 @@
 }
 
 .context-lab-generator-card .learning-cockpit-card-heading {
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
 .context-lab-generator-card .learning-cockpit-card-heading h3.ant-typography,
@@ -980,7 +980,7 @@
 }
 
 .context-lab-generator-actions .ant-btn-primary {
-  min-width: 148px;
+  min-width: 140px;
 }
 
 .context-lab-generator-actions .ant-btn-link {
@@ -1014,30 +1014,29 @@
 
 .context-lab-history-list {
   display: grid;
-  gap: 12px;
-  margin-top: 14px;
+  gap: 8px;
+  margin-top: 12px;
 }
 
 .context-lab-history-item {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 16px;
+  grid-template-columns: minmax(0, 1fr) max-content;
+  gap: 14px;
   align-items: center;
-  padding: 16px;
-  border: 1px solid #dfe7f2;
+  min-height: 118px;
+  padding: 13px 14px;
+  border: 1px solid #e3e8f0;
   border-radius: 8px;
-  background: #fff;
-  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.04);
+  background: #ffffff;
+  box-shadow: none;
   transition:
     border-color 0.18s ease,
-    box-shadow 0.18s ease,
-    transform 0.18s ease;
+    background-color 0.18s ease;
 }
 
 .context-lab-history-item:hover {
   border-color: #bfdbfe;
-  box-shadow: 0 16px 32px rgba(37, 99, 235, 0.08);
-  transform: translateY(-1px);
+  background: #fbfdff;
 }
 
 .context-lab-history-item-failed {
@@ -1048,51 +1047,63 @@
 .context-lab-history-main {
   display: grid;
   min-width: 0;
-  gap: 8px;
+  gap: 7px;
 }
 
 .context-lab-history-kicker {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
   color: #64748b;
   font-size: 12px;
+  font-weight: 600;
+}
+
+.context-lab-history-kicker .ant-tag {
+  margin-inline-end: 0;
+  border-radius: 6px;
   font-weight: 700;
 }
 
 .context-lab-history-title {
   margin: 0;
+  max-width: 720px;
   overflow-wrap: anywhere;
-  color: #111827;
-  font-size: 18px;
-  font-weight: 800;
-  line-height: 1.35;
+  color: #0f172a;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.45;
 }
 
 .context-lab-history-words {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 5px;
 }
 
 .context-lab-history-words span {
-  padding: 4px 8px;
-  border: 1px solid #dbeafe;
-  border-radius: 999px;
-  color: #1d4ed8;
-  background: #eff6ff;
+  padding: 2px 7px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  color: #2563eb;
+  background: #f8fafc;
   font-size: 12px;
-  font-weight: 700;
-  line-height: 1.2;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.context-lab-history-words .context-lab-history-word-more {
+  color: #64748b;
+  background: #f1f5f9;
 }
 
 .context-lab-history-metrics {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  color: #475569;
-  font-size: 13px;
+  gap: 7px;
+  color: #64748b;
+  font-size: 12px;
   line-height: 1.5;
 }
 
@@ -1115,25 +1126,31 @@
 }
 
 .context-lab-history-metrics span + span::before {
-  width: 4px;
-  height: 4px;
-  margin-right: 8px;
+  width: 3px;
+  height: 3px;
+  margin-right: 7px;
   border-radius: 999px;
   background: #cbd5e1;
   content: "";
 }
 
 .context-lab-history-actions {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(2, max-content);
   justify-content: flex-end;
-  gap: 8px;
-  max-width: 260px;
+  gap: 7px;
+  min-width: 188px;
 }
 
 .context-lab-history-actions .ant-btn-primary {
-  min-width: 98px;
+  grid-column: 1 / -1;
+  width: 100%;
+  min-width: 124px;
   font-weight: 700;
+}
+
+.context-lab-history-actions .ant-btn:not(.ant-btn-primary) {
+  min-width: 58px;
 }
 
 .context-lab-history-actions .ant-btn-text.ant-btn-dangerous {
@@ -1581,8 +1598,14 @@
   }
 
   .context-lab-history-actions {
+    grid-template-columns: repeat(3, max-content);
     justify-content: flex-start;
-    max-width: none;
+    min-width: 0;
+  }
+
+  .context-lab-history-actions .ant-btn-primary {
+    grid-column: auto;
+    width: auto;
   }
 
   .context-lab-task-status {
