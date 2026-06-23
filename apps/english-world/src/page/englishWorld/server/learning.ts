@@ -1,5 +1,12 @@
 import type { YTRequest } from "@font/api";
 import type {
+  ContextLabAttempt,
+  ContextLabAttemptDetailParams,
+  ContextLabAttemptHistoryParams,
+  ContextLabAttemptHistoryResponse,
+  ContextLabDeleteAttemptParams,
+  ContextLabDeleteResponse,
+  ContextLabDeleteTaskParams,
   ContextLabDetailParams,
   ContextLabSubmitParams,
   ContextLabSubmitResult,
@@ -70,6 +77,42 @@ export const contextLabDetail = (
   method: "POST",
   data,
   __responseType: undefined as unknown as ContextLabTask,
+});
+
+export const contextLabAttemptHistory = (
+  data: ContextLabAttemptHistoryParams,
+): YTRequest<ContextLabAttemptHistoryResponse> => ({
+  url: "/context-lab/attempt-history",
+  method: "POST",
+  data,
+  __responseType: undefined as unknown as ContextLabAttemptHistoryResponse,
+});
+
+export const contextLabAttemptDetail = (
+  data: ContextLabAttemptDetailParams,
+): YTRequest<ContextLabAttempt> => ({
+  url: "/context-lab/attempt-detail",
+  method: "POST",
+  data,
+  __responseType: undefined as unknown as ContextLabAttempt,
+});
+
+export const contextLabDeleteAttempt = (
+  data: ContextLabDeleteAttemptParams,
+): YTRequest<ContextLabDeleteResponse> => ({
+  url: "/context-lab/delete-attempt",
+  method: "POST",
+  data,
+  __responseType: undefined as unknown as ContextLabDeleteResponse,
+});
+
+export const contextLabDeleteTask = (
+  data: ContextLabDeleteTaskParams,
+): YTRequest<ContextLabDeleteResponse> => ({
+  url: "/context-lab/delete-task",
+  method: "POST",
+  data,
+  __responseType: undefined as unknown as ContextLabDeleteResponse,
 });
 
 export async function downloadContextLabPdfTemplate() {

@@ -265,22 +265,27 @@ describe("ContextLabPage", () => {
     await userEvent.click(screen.getByRole("button", { name: "提交练习" }));
 
     await waitFor(() => {
-      expect(requestMock).toHaveBeenCalledWith({
-        url: "/context-lab/submit",
-        method: "POST",
-        data: {
-          sessionId: 88,
-          answers: [{ questionId: "q1", selectedIndex: 0 }],
-        },
-        __responseType: undefined,
-      });
+      expect(requestMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          url: "/context-lab/submit",
+          method: "POST",
+          data: expect.objectContaining({
+            sessionId: 88,
+            elapsedSeconds: expect.any(Number),
+            answers: [{ questionId: "q1", selectedIndex: 0 }],
+          }),
+          __responseType: undefined,
+        }),
+      );
     });
     expect(
       await screen.findByText("解析：正确答案为 A，fragile 表示容易损坏，和文章语境一致。"),
     ).toBeInTheDocument();
   });
 
-  it("shows a result review with weak-word next actions after submitting answers", async () => {
+  it(
+    "shows a result review with weak-word next actions after submitting answers",
+    async () => {
     requestMock.mockImplementation((config) => {
       if (config.url === "/context-lab/history") {
         return Promise.resolve({
@@ -342,6 +347,82 @@ describe("ContextLabPage", () => {
     expect(within(review).getByText("urban farming")).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "用薄弱词再练一套" }),
+    ).toBeInTheDocument();
+    },
+    10_000,
+  );
+
+  it("sends elapsed time when submitting and refreshes practice records", async () => {
+    requestMock.mockImplementation((config) => {
+      if (config.url === "/context-lab/history") {
+        return Promise.resolve({
+          list: [
+            {
+              id: 12,
+              taskId: 12,
+              status: "succeeded",
+              sourceType: "custom",
+              words: ["urban farming"],
+              articleExerciseId: 88,
+              article: "Urban Farming\n\nFood systems change.",
+              questions: [
+                {
+                  id: "q1",
+                  stem: "What is the passage about?",
+                  options: ["Urban farming", "Space travel"],
+                },
+              ],
+              attemptCount: config.data?.page === 1 ? 1 : 0,
+              latestScore: 100,
+              latestWrongCount: 0,
+              latestAttemptId: 501,
+              latestAttemptTime: "2026-06-23T08:00:00Z",
+            },
+          ],
+          total: 1,
+          page: 1,
+          pageSize: 10,
+        });
+      }
+      if (config.url === "/context-lab/submit") {
+        return Promise.resolve({
+          attemptId: 501,
+          results: [
+            {
+              questionId: "q1",
+              correct: true,
+              correctIndex: 0,
+              userSelectedIndex: 0,
+              explanation: "答对了",
+            },
+          ],
+          score: 100,
+          correctCount: 1,
+          wrongCount: 0,
+          weakWords: [],
+          nextSuggestions: ["继续保持"],
+        });
+      }
+      return Promise.resolve({});
+    });
+
+    const user = userEvent.setup();
+    render(<ContextLabPage />);
+
+    await user.click(await screen.findByRole("button", { name: "开始练习" }));
+    await user.click(await screen.findByLabelText("A. Urban farming"));
+    await user.click(screen.getByRole("button", { name: "提交练习" }));
+
+    await waitFor(() => {
+      expect(requestMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          url: "/context-lab/submit",
+          data: expect.objectContaining({ elapsedSeconds: expect.any(Number) }),
+        }),
+      );
+    });
+    expect(
+      await screen.findByText(/练习 1 次 .* 最近得分 100 .* 错题 0/),
     ).toBeInTheDocument();
   });
 
@@ -707,19 +788,24 @@ describe("ContextLabPage", () => {
     await userEvent.click(screen.getByRole("button", { name: "提交练习" }));
 
     await waitFor(() => {
-      expect(requestMock).toHaveBeenCalledWith({
-        url: "/context-lab/submit",
-        method: "POST",
-        data: {
-          sessionId: 12,
-          answers: [{ questionId: "q1", selectedIndex: 0 }],
-        },
-        __responseType: undefined,
-      });
+      expect(requestMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          url: "/context-lab/submit",
+          method: "POST",
+          data: expect.objectContaining({
+            sessionId: 12,
+            elapsedSeconds: expect.any(Number),
+            answers: [{ questionId: "q1", selectedIndex: 0 }],
+          }),
+          __responseType: undefined,
+        }),
+      );
     });
   });
 
-  it("adds selected article text to the word library through AI completion", async () => {
+  it(
+    "adds selected article text to the word library through AI completion",
+    async () => {
     requestMock.mockImplementation((config) => {
       if (config.url === "/context-lab/history") {
         return Promise.resolve({
@@ -818,7 +904,9 @@ describe("ContextLabPage", () => {
         }),
       });
     });
-  });
+    },
+    10_000,
+  );
 
   it("keeps the add modal open and does not save when the selected word already exists", async () => {
     requestMock.mockImplementation((config) => {

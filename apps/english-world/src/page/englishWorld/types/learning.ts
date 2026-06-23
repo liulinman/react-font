@@ -93,10 +93,58 @@ export type ContextLabGenerateParams =
 
 export type ContextLabSubmitParams = {
   sessionId: number;
+  elapsedSeconds?: number;
   answers: Array<{ questionId: string; selectedIndex: number }>;
 };
 
+export type ContextLabAttempt = {
+  id: number;
+  attemptId: number;
+  taskId: number;
+  articleExerciseId: number;
+  score: number;
+  correctCount: number;
+  wrongCount: number;
+  weakWords: string[];
+  nextSuggestions: string[];
+  answers: Array<{ questionId: string; selectedIndex: number }>;
+  results: ExerciseResultItem[];
+  elapsedSeconds?: number | null;
+  createTime?: string;
+};
+
+export type ContextLabAttemptHistoryParams = {
+  taskId?: number;
+  articleExerciseId?: number;
+  page?: number;
+  pageSize?: number;
+};
+
+export type ContextLabAttemptHistoryResponse = {
+  list: ContextLabAttempt[];
+  total: number;
+  page: number;
+  pageSize: number;
+};
+
+export type ContextLabAttemptDetailParams = {
+  attemptId: number;
+};
+
+export type ContextLabDeleteAttemptParams = {
+  attemptId: number;
+};
+
+export type ContextLabDeleteTaskParams = {
+  taskId: number;
+};
+
+export type ContextLabDeleteResponse = {
+  deleted: boolean;
+};
+
 export type ContextLabSubmitResult = {
+  attemptId?: number;
   results: ExerciseResultItem[];
   score: number;
   correctCount: number;
@@ -132,6 +180,11 @@ export type ContextLabTask = {
   articleExerciseId?: number;
   article?: string;
   questions?: ContextLabQuestion[];
+  attemptCount?: number;
+  latestAttemptId?: number;
+  latestScore?: number;
+  latestWrongCount?: number;
+  latestAttemptTime?: string;
   errorMessage?: string;
   createTime?: string;
   updateTime?: string;

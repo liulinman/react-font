@@ -326,6 +326,7 @@ function ContextLabPageContent({
       const response = await request(
         contextLabSubmit({
           sessionId,
+          elapsedSeconds,
           answers: currentTask.questions.map((question, index) => {
             const key = question.id || `q-${index}`;
             return {
@@ -337,6 +338,7 @@ function ContextLabPageContent({
       );
       setResults(response.results ?? []);
       setSubmitSummary(response);
+      await loadHistory();
       message.success("练习已提交");
     } catch (error: unknown) {
       message.error(error instanceof Error ? error.message : "提交失败");
@@ -856,7 +858,17 @@ function ContextLabPageContent({
                     </Tag>
                     <Text strong>{task.words.slice(0, 4).join(" / ")}</Text>
                   </Space>
-                  <p>{task.errorMessage || `${task.words.length} 个词`}</p>
+                  {task.attemptCount ? (
+                    <p>
+                      练习 {task.attemptCount} 次 · 最近得分 {task.latestScore ?? 0}
+                      {" "}· 错题 {task.latestWrongCount ?? 0}
+                    </p>
+                  ) : (
+                    <p>
+                      {task.errorMessage ||
+                        "还没有提交记录，开始练习后会出现在这里。"}
+                    </p>
+                  )}
                 </div>
                 <Space>
                   {isContextLabTaskActive(task.status) && (
