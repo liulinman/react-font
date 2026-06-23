@@ -78,6 +78,13 @@ function formatOptionLabel(option: string, optionIndex: number) {
   return `${getAnswerLetter(optionIndex)}. ${option}`;
 }
 
+function normalizeOptionIndex(value: unknown) {
+  if (value === null || value === undefined || value === "") return undefined;
+
+  const index = Number(value);
+  return Number.isInteger(index) && index >= 0 ? index : undefined;
+}
+
 function formatExplanationText(explanation: string, correctIndex: number) {
   const letter = getAnswerLetter(correctIndex);
   return explanation
@@ -1220,25 +1227,48 @@ function ContextLabPageContent({
                               </div>
                             )}
                             <div className="context-lab-attempt-question-list">
-                              {detail.answers.map((answer, index) => {
+                              {(detail.results.length > detail.answers.length
+                                ? detail.results
+                                : detail.answers
+                              ).map((item, index) => {
+                                const isResultItem = "correct" in item;
+                                const result = isResultItem
+                                  ? item
+                                  : detail.results.find(
+                                      (resultItem) =>
+                                        resultItem.questionId === item.questionId,
+                                    ) || detail.results[index];
+                                const answer = isResultItem
+                                  ? detail.answers.find(
+                                      (answerItem) =>
+                                        answerItem.questionId === item.questionId,
+                                    ) || detail.answers[index]
+                                  : item;
+                                const questionId =
+                                  answer?.questionId || result?.questionId || "";
+                                const selectedIndex =
+                                  normalizeOptionIndex(answer?.selectedIndex) ??
+                                  normalizeOptionIndex(result?.userSelectedIndex);
+                                const correctIndex = normalizeOptionIndex(
+                                  result?.correctIndex,
+                                );
                                 const question = getContextLabQuestionLabel(
                                   attemptTask,
-                                  answer.questionId,
-                                );
-                                const result = detail.results.find(
-                                  (item) => item.questionId === answer.questionId,
+                                  questionId,
                                 );
                                 const selectedLabel =
-                                  question?.options?.[answer.selectedIndex];
+                                  selectedIndex !== undefined
+                                    ? question?.options?.[selectedIndex]
+                                    : undefined;
                                 const correctLabel =
-                                  result?.correctIndex != null
-                                    ? question?.options?.[result.correctIndex]
+                                  correctIndex !== undefined
+                                    ? question?.options?.[correctIndex]
                                     : undefined;
 
                                 return (
                                   <section
                                     className="context-lab-attempt-question"
-                                    key={answer.questionId || index}
+                                    key={questionId || index}
                                   >
                                     <Text strong>
                                       {question?.stem || `第 ${index + 1} 题`}
@@ -1246,12 +1276,14 @@ function ContextLabPageContent({
                                     <div>
                                       <Text>
                                         你的作答{" "}
-                                        {selectedLabel
+                                        {selectedIndex !== undefined && selectedLabel
                                           ? formatOptionLabel(
                                               selectedLabel,
-                                              answer.selectedIndex,
+                                              selectedIndex,
                                             )
-                                          : answer.selectedIndex + 1}
+                                          : selectedIndex !== undefined
+                                            ? getAnswerLetter(selectedIndex)
+                                            : "未作答"}
                                       </Text>
                                     </div>
                                     {result && (
@@ -1259,13 +1291,13 @@ function ContextLabPageContent({
                                         <Tag color={result.correct ? "green" : "red"}>
                                           {result.correct ? "回答正确" : "回答错误"}
                                         </Tag>
-                                        {correctLabel && (
+                                        {correctIndex !== undefined && correctLabel && (
                                           <div>
                                             <Text>
                                               正确答案{" "}
                                               {formatOptionLabel(
                                                 correctLabel,
-                                                result.correctIndex,
+                                                correctIndex,
                                               )}
                                             </Text>
                                           </div>
@@ -1276,10 +1308,12 @@ function ContextLabPageContent({
                                               解析
                                             </Text>
                                             <p>
-                                              {formatExplanationText(
-                                                result.explanation,
-                                                result.correctIndex,
-                                              )}
+                                              {correctIndex !== undefined
+                                                ? formatExplanationText(
+                                                    result.explanation,
+                                                    correctIndex,
+                                                  )
+                                                : result.explanation}
                                             </p>
                                           </div>
                                         )}

@@ -510,7 +510,7 @@ describe("ContextLabPage", () => {
           wrongCount: 1,
           weakWords: ["vibe"],
           nextSuggestions: ["复盘错题解析", "回看解析后再练一轮"],
-          answers: [{ questionId: "q1", selectedIndex: 0 }],
+          answers: [{ questionId: "q1" }],
           results: [
             {
               questionId: "q1",
@@ -552,6 +552,7 @@ describe("ContextLabPage", () => {
       await screen.findByText("Which answer matches the paragraph?"),
     ).toBeInTheDocument();
     expect(screen.getByText("你的作答 A. It celebrates speed")).toBeInTheDocument();
+    expect(screen.queryByText(/NaN/)).not.toBeInTheDocument();
     expect(screen.getByText("正确答案 B. It describes mood")).toBeInTheDocument();
     expect(
       screen.getByText("段落强调的是情绪氛围，不是速度。"),
