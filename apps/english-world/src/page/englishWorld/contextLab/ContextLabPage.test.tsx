@@ -7,6 +7,7 @@ import {
   within,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { Modal } from "antd";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter, useLocation } from "react-router-dom";
 import { ContextLabPage, formatElapsedSeconds } from "./ContextLabPage";
@@ -58,6 +59,7 @@ describe("ContextLabPage", () => {
   });
 
   afterEach(() => {
+    Modal.destroyAll();
     cleanup();
     requestMock.mockReset();
     downloadMock.mockReset();
@@ -424,6 +426,137 @@ describe("ContextLabPage", () => {
     expect(
       await screen.findByText(/练习 1 次 .* 最近得分 100 .* 错题 0/),
     ).toBeInTheDocument();
+  });
+
+  it("opens practice record drawer and deletes an attempt after confirmation", async () => {
+    requestMock.mockImplementation((config) => {
+      if (config.url === "/context-lab/history") {
+        return Promise.resolve({
+          list: [
+            {
+              id: 12,
+              taskId: 12,
+              status: "succeeded",
+              sourceType: "custom",
+              words: ["vibe"],
+              articleExerciseId: 88,
+              article: "Topic\n\nParagraph.",
+              questions: [],
+              attemptCount: 1,
+              latestAttemptId: 501,
+              latestScore: 50,
+              latestWrongCount: 1,
+              latestAttemptTime: "2026-06-23T08:00:00Z",
+            },
+          ],
+          total: 1,
+          page: 1,
+          pageSize: 10,
+        });
+      }
+      if (config.url === "/context-lab/attempt-history") {
+        return Promise.resolve({
+          list: [
+            {
+              id: 501,
+              attemptId: 501,
+              taskId: 12,
+              articleExerciseId: 88,
+              score: 50,
+              correctCount: 1,
+              wrongCount: 1,
+              weakWords: ["vibe"],
+              nextSuggestions: ["复盘错题解析"],
+              answers: [],
+              results: [],
+              elapsedSeconds: 42,
+              createTime: "2026-06-23T08:00:00Z",
+            },
+          ],
+          total: 1,
+          page: 1,
+          pageSize: 10,
+        });
+      }
+      if (config.url === "/context-lab/delete-attempt") {
+        return Promise.resolve({ deleted: true });
+      }
+      return Promise.resolve({});
+    });
+
+    const user = userEvent.setup();
+    render(<ContextLabPage />);
+
+    await user.click(await screen.findByRole("button", { name: "查看记录" }));
+    expect(
+      await screen.findByRole("dialog", { name: "练习记录" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("得分 50")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "删除记录" }));
+    await user.click(await screen.findByRole("button", { name: "确认删除" }));
+
+    await waitFor(() => {
+      expect(requestMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          url: "/context-lab/delete-attempt",
+          data: { attemptId: 501 },
+        }),
+      );
+    });
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("button", { name: "确认删除" }),
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  it("deletes a practice package after confirmation", async () => {
+    requestMock.mockImplementation((config) => {
+      if (config.url === "/context-lab/history") {
+        return Promise.resolve({
+          list: [
+            {
+              id: 12,
+              taskId: 12,
+              status: "succeeded",
+              sourceType: "custom",
+              words: ["vibe"],
+              articleExerciseId: 88,
+              article: "Topic\n\nParagraph.",
+              questions: [],
+            },
+          ],
+          total: 1,
+          page: 1,
+          pageSize: 10,
+        });
+      }
+      if (config.url === "/context-lab/delete-task") {
+        return Promise.resolve({ deleted: true });
+      }
+      return Promise.resolve({});
+    });
+
+    const user = userEvent.setup();
+    render(<ContextLabPage />);
+
+    await user.click(await screen.findByRole("button", { name: "删除练习包" }));
+    await user.click(await screen.findByRole("button", { name: "确认删除" }));
+
+    await waitFor(() => {
+      expect(requestMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          url: "/context-lab/delete-task",
+          data: { taskId: 12 },
+        }),
+      );
+    });
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("button", { name: "确认删除" }),
+      ).not.toBeInTheDocument();
+    });
   });
 
   it("routes result review to the word library without a full reload inside the app", async () => {
@@ -888,7 +1021,14 @@ describe("ContextLabPage", () => {
     expect(screen.getByLabelText("音标")).toHaveValue("/ˈɜːbən ˈfɑːmɪŋ/");
     expect(screen.getByLabelText("中文")).toHaveValue("城市农业；都市农耕");
 
-    await user.click(screen.getByRole("button", { name: /确\s*认/ }));
+    const addWordModalTitle = screen.getByText("添加单词");
+    const addWordModal = addWordModalTitle.closest(".ant-modal");
+    expect(addWordModal).not.toBeNull();
+    await user.click(
+      within(addWordModal as HTMLElement).getByRole("button", {
+        name: /确\s*认/,
+      }),
+    );
 
     await waitFor(() => {
       expect(requestMock).toHaveBeenCalledWith({
@@ -975,7 +1115,14 @@ describe("ContextLabPage", () => {
     await user.pointer({ target: paragraph, keys: "[MouseRight]" });
     await user.click(await screen.findByText("一键添加到词库"));
     expect(await screen.findByText("添加单词")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: /确\s*认/ }));
+    const addWordModalTitle = screen.getByText("添加单词");
+    const addWordModal = addWordModalTitle.closest(".ant-modal");
+    expect(addWordModal).not.toBeNull();
+    await user.click(
+      within(addWordModal as HTMLElement).getByRole("button", {
+        name: /确\s*认/,
+      }),
+    );
 
     expect(screen.getByLabelText("单词名")).toHaveValue("urban farming");
     expect(requestMock).not.toHaveBeenCalledWith(

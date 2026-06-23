@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type MouseEvent } from "react";
 import {
   Button,
+  Drawer,
   Empty,
   InputNumber,
   message,
@@ -30,7 +31,10 @@ import { wordAdd, wordExist } from "@/server/word/word";
 import type { WordList } from "@/server/word/word.type";
 import {
   contextLabCreateTask,
+  contextLabDeleteAttempt,
+  contextLabDeleteTask,
   contextLabHistory,
+  contextLabAttemptHistory,
   contextLabSubmit,
   downloadContextLabPdfTemplate,
   downloadContextLabTaskPdf,
@@ -38,6 +42,7 @@ import {
 import type {
   ContextLabGenerateParams,
   ContextLabSubmitResult,
+  ContextLabAttempt,
   ContextLabTask,
 } from "../types/learning";
 import type { ExerciseResultItem } from "@/server/exerciseAgent/exerciseAgent";
@@ -151,6 +156,10 @@ function ContextLabPageContent({
   );
   const [practiceModalOpen, setPracticeModalOpen] = useState(false);
   const [practiceFullscreen, setPracticeFullscreen] = useState(false);
+  const [attemptDrawerOpen, setAttemptDrawerOpen] = useState(false);
+  const [attemptTask, setAttemptTask] = useState<ContextLabTask | null>(null);
+  const [attempts, setAttempts] = useState<ContextLabAttempt[]>([]);
+  const [attemptsLoading, setAttemptsLoading] = useState(false);
   const [selectedVocabulary, setSelectedVocabulary] = useState("");
   const [selectionMenu, setSelectionMenu] = useState<{
     open: boolean;
@@ -201,6 +210,22 @@ function ContextLabPageContent({
       message.error(error instanceof Error ? error.message : "历史记录加载失败");
     } finally {
       setHistoryLoading(false);
+    }
+  };
+
+  const loadAttempts = async (task: ContextLabTask) => {
+    setAttemptTask(task);
+    setAttemptDrawerOpen(true);
+    setAttemptsLoading(true);
+    try {
+      const response = await request(
+        contextLabAttemptHistory({ taskId: task.taskId, page: 1, pageSize: 20 }),
+      );
+      setAttempts(response.list ?? []);
+    } catch (error: unknown) {
+      message.error(error instanceof Error ? error.message : "练习记录加载失败");
+    } finally {
+      setAttemptsLoading(false);
     }
   };
 
@@ -307,6 +332,56 @@ function ContextLabPageContent({
     setElapsedSeconds(0);
     setPracticeFullscreen(false);
     setPracticeModalOpen(true);
+  };
+
+  const handleDeleteAttempt = (attempt: ContextLabAttempt) => {
+    Modal.confirm({
+      title: "确认删除练习记录",
+      content: "删除后不可恢复，本次练习记录将永久移除。",
+      okText: "确认删除",
+      cancelText: "取消",
+      okButtonProps: { danger: true },
+      onOk: async () => {
+        try {
+          await request(contextLabDeleteAttempt({ attemptId: attempt.attemptId }));
+          message.success("练习记录已删除");
+          if (attemptTask) {
+            await loadAttempts(attemptTask);
+          }
+          await loadHistory();
+        } catch (error: unknown) {
+          message.error(error instanceof Error ? error.message : "练习记录删除失败");
+        }
+      },
+    });
+  };
+
+  const handleDeleteTask = (task: ContextLabTask) => {
+    Modal.confirm({
+      title: "确认删除练习包",
+      content: "删除后不可恢复，本练习包及其所有练习记录将永久移除。",
+      okText: "确认删除",
+      cancelText: "取消",
+      okButtonProps: { danger: true },
+      onOk: async () => {
+        try {
+          await request(contextLabDeleteTask({ taskId: task.taskId }));
+          message.success("练习包已删除");
+          if (currentTask?.taskId === task.taskId) {
+            setCurrentTask(null);
+            setPracticeModalOpen(false);
+          }
+          if (attemptTask?.taskId === task.taskId) {
+            setAttemptDrawerOpen(false);
+            setAttemptTask(null);
+            setAttempts([]);
+          }
+          await loadHistory();
+        } catch (error: unknown) {
+          message.error(error instanceof Error ? error.message : "练习包删除失败");
+        }
+      },
+    });
   };
 
   const handleSubmit = async () => {
@@ -881,6 +956,9 @@ function ContextLabPageContent({
                       <Button size="small" onClick={() => handleOpenTask(task)}>
                         开始练习
                       </Button>
+                      <Button size="small" onClick={() => void loadAttempts(task)}>
+                        查看记录
+                      </Button>
                       <Button
                         aria-label="下载练习 PDF"
                         size="small"
@@ -895,6 +973,13 @@ function ContextLabPageContent({
                       重试
                     </Button>
                   )}
+                  <Button
+                    danger
+                    size="small"
+                    onClick={() => handleDeleteTask(task)}
+                  >
+                    删除练习包
+                  </Button>
                 </Space>
               </div>
             ))}
@@ -902,6 +987,63 @@ function ContextLabPageContent({
         </section>
       </div>
       </div>
+
+      <Drawer
+        aria-label="练习记录"
+        destroyOnHidden
+        open={attemptDrawerOpen}
+        placement="right"
+        title="练习记录"
+        width={520}
+        onClose={() => setAttemptDrawerOpen(false)}
+      >
+        {attemptsLoading ? (
+          <div className="context-lab-history-empty">
+            <Spin />
+            <Text type="secondary">正在读取练习记录...</Text>
+          </div>
+        ) : attempts.length === 0 ? (
+          <Empty description="还没有提交记录，开始练习后会出现在这里。" />
+        ) : (
+          <div className="context-lab-attempt-list">
+            {attempts.map((attempt) => (
+              <section
+                className="context-lab-attempt-item"
+                key={attempt.attemptId}
+              >
+                <Space wrap>
+                  <Tag color={attempt.wrongCount > 0 ? "orange" : "green"}>
+                    得分 {attempt.score}
+                  </Tag>
+                  <Text>错题 {attempt.wrongCount}</Text>
+                  {attempt.elapsedSeconds != null && (
+                    <Text type="secondary">
+                      用时 {formatElapsedSeconds(attempt.elapsedSeconds)}
+                    </Text>
+                  )}
+                  {attempt.createTime && (
+                    <Text type="secondary">{attempt.createTime}</Text>
+                  )}
+                </Space>
+                {attempt.weakWords.length > 0 && (
+                  <div className="learning-cockpit-word-strip">
+                    {attempt.weakWords.map((word) => (
+                      <Tag key={word}>{word}</Tag>
+                    ))}
+                  </div>
+                )}
+                <Button
+                  danger
+                  size="small"
+                  onClick={() => handleDeleteAttempt(attempt)}
+                >
+                  删除记录
+                </Button>
+              </section>
+            ))}
+          </div>
+        )}
+      </Drawer>
 
       <Modal
         className={`context-lab-practice-modal${
