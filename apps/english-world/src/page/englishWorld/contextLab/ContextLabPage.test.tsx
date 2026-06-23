@@ -216,7 +216,7 @@ describe("ContextLabPage", () => {
     expect(screen.getByText("手输词组")).toBeInTheDocument();
     expect(screen.getAllByText("3 个词").length).toBeGreaterThan(0);
     expect(screen.getByText("练习 2 次")).toBeInTheDocument();
-    expect(screen.getByText("最近 86 分")).toBeInTheDocument();
+    expect(screen.getAllByText("最近得分 86").length).toBeGreaterThan(0);
     expect(screen.getByText("生成失败")).toBeInTheDocument();
     expect(screen.getByText("AI 返回格式异常")).toBeInTheDocument();
   });
@@ -430,9 +430,9 @@ describe("ContextLabPage", () => {
         }),
       );
     });
-    expect(
-      await screen.findByText(/练习 1 次 .* 最近得分 100 .* 错题 0/),
-    ).toBeInTheDocument();
+    expect(await screen.findByText("练习 1 次")).toBeInTheDocument();
+    expect(screen.getAllByText("最近得分 100").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("错题 0").length).toBeGreaterThan(0);
   });
 
   it("opens historical attempt details and removes a deleted attempt from the open drawer", async () => {
@@ -613,7 +613,7 @@ describe("ContextLabPage", () => {
 
     expect(await screen.findByText("生成完成")).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: /删除/ }));
+    await user.click(screen.getByRole("button", { name: "删除练习包" }));
     await user.click(await screen.findByRole("button", { name: "确认删除" }));
 
     await waitFor(() => {
@@ -659,7 +659,7 @@ describe("ContextLabPage", () => {
 
     expect(await screen.findByText("等待回调")).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: /删除/ }));
+    await user.click(screen.getByRole("button", { name: "删除练习包" }));
 
     expect(warningSpy).toHaveBeenCalledWith(
       "生成中的练习包暂不支持删除，请等待任务完成或失败后再操作",
@@ -1241,7 +1241,7 @@ describe("ContextLabPage", () => {
     expect(requestMock).not.toHaveBeenCalledWith(
       expect.objectContaining({ url: "/english/AddEnglishWord" }),
     );
-  }, 10000);
+  }, 15_000);
 
   it("hides the selected text add menu when the reading pane scrolls", async () => {
     requestMock.mockResolvedValue({

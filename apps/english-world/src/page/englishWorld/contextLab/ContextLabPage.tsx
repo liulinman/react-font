@@ -399,6 +399,8 @@ function ContextLabPageContent({
       okText: "确认删除",
       cancelText: "取消",
       okButtonProps: { danger: true },
+      transitionName: "",
+      maskTransitionName: "",
       onOk: async () => {
         try {
           await request(contextLabDeleteAttempt({ attemptId: attempt.attemptId }));
@@ -654,6 +656,10 @@ function ContextLabPageContent({
     if (task.attemptCount) {
       return (
         <>
+          <span className="context-lab-history-summary">
+            练习 {task.attemptCount} 次 · 最近得分 {task.latestScore ?? 0} · 错题{" "}
+            {task.latestWrongCount ?? 0}
+          </span>
           <span>练习 {task.attemptCount} 次</span>
           <span>最近得分 {task.latestScore ?? 0}</span>
           <span>错题 {task.latestWrongCount ?? 0}</span>
@@ -1103,7 +1109,7 @@ function ContextLabPageContent({
                     icon={<DeleteOutlined aria-hidden="true" />}
                     onClick={() => handleDeleteTask(task)}
                   >
-                    删除
+                    删除练习包
                   </Button>
                 </div>
               </article>

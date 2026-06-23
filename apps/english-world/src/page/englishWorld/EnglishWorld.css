@@ -1101,6 +1101,19 @@
   align-items: center;
 }
 
+.context-lab-history-metrics .context-lab-history-summary {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.context-lab-history-metrics .context-lab-history-summary + span::before {
+  content: none;
+}
+
 .context-lab-history-metrics span + span::before {
   width: 4px;
   height: 4px;
