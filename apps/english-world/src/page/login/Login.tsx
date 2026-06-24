@@ -3,15 +3,29 @@ import { Form, Input, Button, Card, Tabs, message } from "antd";
 import { UserOutlined, LockOutlined } from "@ant-design/icons";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import loginStarryVocabulary from "@/assets/login-starry-vocabulary.png";
 import "./Login.css";
 
 const { TabPane } = Tabs;
 const DEFAULT_AFTER_LOGIN_PATH = "/englishWorld/recite";
 
+const AMBIENT_WORDS = [
+  { word: "memory", tone: "cyan" },
+  { word: "context", tone: "violet" },
+  { word: "review", tone: "green" },
+  { word: "fluent", tone: "blue" },
+  { word: "listen", tone: "cyan" },
+];
+
 type LocationState = {
   from?: {
     pathname?: string;
   };
+};
+
+type LoginContainerStyle = React.CSSProperties & {
+  "--login-parallax-x": string;
+  "--login-parallax-y": string;
 };
 
 const Login: React.FC = () => {
@@ -20,6 +34,7 @@ const Login: React.FC = () => {
   const { login, register, isAuthenticated } = useAuth();
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<string>("login");
+  const [parallax, setParallax] = useState({ x: 0, y: 0 });
 
   // 如果已登录，跳转到原页面或首页
   useEffect(() => {
@@ -77,137 +92,194 @@ const Login: React.FC = () => {
     }
   };
 
+  const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = (event.clientX - rect.left) / rect.width - 0.5;
+    const y = (event.clientY - rect.top) / rect.height - 0.5;
+    setParallax({ x: Number(x.toFixed(3)), y: Number(y.toFixed(3)) });
+  };
+
+  const handlePointerLeave = () => {
+    setParallax({ x: 0, y: 0 });
+  };
+
+  const loginContainerStyle: LoginContainerStyle = {
+    "--login-parallax-x": `${parallax.x * 18}px`,
+    "--login-parallax-y": `${parallax.y * 18}px`,
+    backgroundImage: `linear-gradient(135deg, rgba(3, 7, 18, 0.72), rgba(15, 23, 42, 0.58)), url(${loginStarryVocabulary})`,
+  };
+
   return (
-    <div className="login-container">
-      <Card className="login-card" title="英语世界 · AI 单词">
-        <Tabs activeKey={activeTab} onChange={setActiveTab} centered>
-          <TabPane tab="登录" key="login">
-            <Form
-              name="login"
-              onFinish={handleLogin}
-              autoComplete="off"
-              layout="vertical"
-              size="large"
-            >
-              <Form.Item
-                name="username"
-                rules={[
-                  { required: true, message: "请输入用户名" },
-                  { min: 3, message: "用户名至少3个字符" },
-                ]}
+    <div
+      className="login-container"
+      style={loginContainerStyle}
+      onPointerMove={handlePointerMove}
+      onPointerLeave={handlePointerLeave}
+    >
+      <div className="login-starfield" aria-hidden="true" />
+      <div className="login-orbit" aria-hidden="true" />
+      <section className="login-hero" aria-label="英语世界登录">
+        <div className="login-copy">
+          <div className="login-kicker">AI vocabulary constellation</div>
+          <h1>把每个单词点亮成星图</h1>
+          <p>登录后进入今日复习、AI 语境实验室和记忆地图，让单词不再散落。</p>
+          <div className="login-word-cloud" aria-hidden="true">
+            {AMBIENT_WORDS.map((item) => (
+              <span
+                key={item.word}
+                className={`login-word-chip login-word-chip-${item.tone}`}
               >
-                <Input
-                  data-cy="login-username"
-                  prefix={<UserOutlined />}
-                  placeholder="用户名（至少3个字符）"
-                />
-              </Form.Item>
+                {item.word}
+              </span>
+            ))}
+          </div>
+        </div>
 
-              <Form.Item
-                name="password"
-                rules={[
-                  { required: true, message: "请输入密码" },
-                  { min: 6, message: "密码至少6个字符" },
-                ]}
+        <Card className="login-card">
+          <div className="login-card-header">
+            <span className="login-card-mark" />
+            <div>
+              <div className="login-title">英语世界 · AI 单词</div>
+              <div className="login-subtitle">进入你的词汇星域</div>
+            </div>
+          </div>
+          <div className="login-status-strip">
+            <span>今日复习</span>
+            <strong>Ready</strong>
+            <span>记忆地图同步</span>
+          </div>
+          <Tabs activeKey={activeTab} onChange={setActiveTab} centered>
+            <TabPane tab="登录" key="login">
+              <Form
+                name="login"
+                onFinish={handleLogin}
+                autoComplete="off"
+                layout="vertical"
+                size="large"
               >
-                <Input.Password
-                  data-cy="login-password"
-                  prefix={<LockOutlined />}
-                  placeholder="密码（至少6个字符）"
-                />
-              </Form.Item>
-
-              <Form.Item>
-                <Button
-                  type="primary"
-                  htmlType="submit"
-                  data-cy="login-submit"
-                  block
-                  loading={loading}
+                <Form.Item
+                  name="username"
+                  rules={[
+                    { required: true, message: "请输入用户名" },
+                    { min: 3, message: "用户名至少3个字符" },
+                  ]}
                 >
-                  登录
-                </Button>
-              </Form.Item>
-            </Form>
-          </TabPane>
+                  <Input
+                    data-cy="login-username"
+                    prefix={<UserOutlined />}
+                    placeholder="用户名（至少3个字符）"
+                  />
+                </Form.Item>
 
-          <TabPane tab="注册" key="register">
-            <Form
-              name="register"
-              onFinish={handleRegister}
-              autoComplete="off"
-              layout="vertical"
-              size="large"
-            >
-              <Form.Item
-                name="username"
-                rules={[
-                  { required: true, message: "请输入用户名" },
-                  { min: 3, max: 20, message: "用户名长度为3-20个字符" },
-                ]}
-              >
-                <Input
-                  data-cy="register-username"
-                  prefix={<UserOutlined />}
-                  placeholder="用户名（3-20个字符）"
-                />
-              </Form.Item>
-
-              <Form.Item
-                name="password"
-                rules={[
-                  { required: true, message: "请输入密码" },
-                  { min: 6, message: "密码至少6个字符" },
-                ]}
-              >
-                <Input.Password
-                  data-cy="register-password"
-                  prefix={<LockOutlined />}
-                  placeholder="密码（至少6个字符）"
-                />
-              </Form.Item>
-
-              <Form.Item
-                name="confirmPassword"
-                dependencies={["password"]}
-                rules={[
-                  { required: true, message: "请确认密码" },
-                  ({ getFieldValue }) => ({
-                    validator(_, value) {
-                      if (!value || getFieldValue("password") === value) {
-                        return Promise.resolve();
-                      }
-                      return Promise.reject(new Error("两次输入的密码不一致"));
-                    },
-                  }),
-                ]}
-              >
-                <Input.Password
-                  data-cy="register-confirm-password"
-                  prefix={<LockOutlined />}
-                  placeholder="确认密码"
-                />
-              </Form.Item>
-
-              <Form.Item name="avatar">
-                <Input data-cy="register-avatar" placeholder="头像 URL（可选）" />
-              </Form.Item>
-
-              <Form.Item>
-                <Button
-                  type="primary"
-                  htmlType="submit"
-                  data-cy="register-submit"
-                  block
-                  loading={loading}
+                <Form.Item
+                  name="password"
+                  rules={[
+                    { required: true, message: "请输入密码" },
+                    { min: 6, message: "密码至少6个字符" },
+                  ]}
                 >
-                  注册
-                </Button>
-              </Form.Item>
-            </Form>
-          </TabPane>
-        </Tabs>
-      </Card>
+                  <Input.Password
+                    data-cy="login-password"
+                    prefix={<LockOutlined />}
+                    placeholder="密码（至少6个字符）"
+                  />
+                </Form.Item>
+
+                <Form.Item>
+                  <Button
+                    type="primary"
+                    htmlType="submit"
+                    data-cy="login-submit"
+                    block
+                    loading={loading}
+                  >
+                    进入词汇星域
+                  </Button>
+                </Form.Item>
+              </Form>
+            </TabPane>
+
+            <TabPane tab="注册" key="register">
+              <Form
+                name="register"
+                onFinish={handleRegister}
+                autoComplete="off"
+                layout="vertical"
+                size="large"
+              >
+                <Form.Item
+                  name="username"
+                  rules={[
+                    { required: true, message: "请输入用户名" },
+                    { min: 3, max: 20, message: "用户名长度为3-20个字符" },
+                  ]}
+                >
+                  <Input
+                    data-cy="register-username"
+                    prefix={<UserOutlined />}
+                    placeholder="用户名（3-20个字符）"
+                  />
+                </Form.Item>
+
+                <Form.Item
+                  name="password"
+                  rules={[
+                    { required: true, message: "请输入密码" },
+                    { min: 6, message: "密码至少6个字符" },
+                  ]}
+                >
+                  <Input.Password
+                    data-cy="register-password"
+                    prefix={<LockOutlined />}
+                    placeholder="密码（至少6个字符）"
+                  />
+                </Form.Item>
+
+                <Form.Item
+                  name="confirmPassword"
+                  dependencies={["password"]}
+                  rules={[
+                    { required: true, message: "请确认密码" },
+                    ({ getFieldValue }) => ({
+                      validator(_, value) {
+                        if (!value || getFieldValue("password") === value) {
+                          return Promise.resolve();
+                        }
+                        return Promise.reject(new Error("两次输入的密码不一致"));
+                      },
+                    }),
+                  ]}
+                >
+                  <Input.Password
+                    data-cy="register-confirm-password"
+                    prefix={<LockOutlined />}
+                    placeholder="确认密码"
+                  />
+                </Form.Item>
+
+                <Form.Item name="avatar">
+                  <Input
+                    data-cy="register-avatar"
+                    placeholder="头像 URL（可选）"
+                  />
+                </Form.Item>
+
+                <Form.Item>
+                  <Button
+                    type="primary"
+                    htmlType="submit"
+                    data-cy="register-submit"
+                    block
+                    loading={loading}
+                  >
+                    创建星域账号
+                  </Button>
+                </Form.Item>
+              </Form>
+            </TabPane>
+          </Tabs>
+        </Card>
+      </section>
     </div>
   );
 };

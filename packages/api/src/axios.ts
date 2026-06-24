@@ -88,7 +88,8 @@ api.interceptors.response.use(
 
     const errorData = error.response?.data;
     const msg = errorData?.message ?? error.message;
-    if (msg) showErrorOnce(typeof msg === "string" ? msg : String(msg));
+    if (errorData?.code !== 4001 && msg)
+      showErrorOnce(typeof msg === "string" ? msg : String(msg));
 
     // 返回错误，可以根据需求抛出或处理
     return Promise.reject(errorData || error);
