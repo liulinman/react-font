@@ -1,10 +1,12 @@
 import "@testing-library/jest-dom/vitest";
 import { cleanup, render, screen } from "@testing-library/react";
-import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import userEvent from "@testing-library/user-event";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import EnglishWorld from "./EnglishWorld";
 
-const { tablePropsMock } = vi.hoisted(() => ({
+const { requestMock, tablePropsMock } = vi.hoisted(() => ({
+  requestMock: vi.fn(),
   tablePropsMock: vi.fn(),
 }));
 
@@ -29,13 +31,7 @@ vi.mock("antd", async () => {
 });
 
 vi.mock("@font/api", () => ({
-  default: vi.fn(() =>
-    Promise.resolve({
-      list: [],
-      total: 0,
-      totalPages: 0,
-    }),
-  ),
+  default: requestMock,
   useMutation: () => ({
     mutateAsync: vi.fn(() => Promise.resolve(false)),
     isPending: false,
@@ -70,6 +66,15 @@ vi.mock("./memoryMap/MemoryMapPage", () => ({
 }));
 
 describe("EnglishWorld ToC routing", () => {
+  beforeEach(() => {
+    requestMock.mockResolvedValue({
+      list: [],
+      total: 0,
+      totalPages: 0,
+    });
+    tablePropsMock.mockClear();
+  });
+
   beforeAll(() => {
     Object.defineProperty(window, "matchMedia", {
       writable: true,
@@ -148,6 +153,54 @@ describe("EnglishWorld ToC routing", () => {
       expect.objectContaining({ x: 1360, y: expect.any(Number) }),
     );
     expect(tableProps.pagination?.pageSizeOptions).toContain("500");
+  });
+
+  it("switches the word library between list and card views", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter initialEntries={["/englishWorld/words"]}>
+        <EnglishWorld />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByLabelText("词库列表视图")).toBeInTheDocument();
+    expect(screen.queryByLabelText("词库卡片视图")).not.toBeInTheDocument();
+
+    await user.click(screen.getByText("卡片"));
+
+    expect(screen.queryByLabelText("词库列表视图")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("词库卡片视图")).toBeInTheDocument();
+  });
+
+  it("only renders an image area in card view when a word has an image", async () => {
+    const user = userEvent.setup();
+    requestMock.mockResolvedValue({
+      list: [
+        {
+          id: 1,
+          englishWord: "memorable",
+          englishPhonetic: "/ˈmem.ər.ə.bəl/",
+          englishChinese: "难忘的、值得纪念的",
+          englishType: 0,
+          englishLevel: 0,
+          englishPartSpeech: [3],
+        },
+      ],
+      total: 1,
+      totalPages: 1,
+    });
+    const { container } = render(
+      <MemoryRouter initialEntries={["/englishWorld/words"]}>
+        <EnglishWorld />
+      </MemoryRouter>,
+    );
+
+    await user.click(screen.getByText("卡片"));
+    await screen.findByText("memorable");
+
+    expect(screen.getByLabelText("词库卡片视图")).toBeInTheDocument();
+    expect(container.querySelector(".word-card-image-placeholder")).toBeNull();
   });
 
   it("renders stats when pathname is /englishWorld/stats", () => {

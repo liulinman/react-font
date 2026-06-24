@@ -2,12 +2,18 @@ import React, { useEffect, useState } from "react";
 import {
   Button,
   DatePicker,
+  Empty,
   Form,
+  Image,
   Input,
   message,
   Modal,
+  Pagination,
+  Segmented,
   Select,
+  Space,
   Table,
+  Tag,
 } from "antd";
 import { EditAddModal } from "./component/EditAddModal";
 import request, { useMutation } from "@font/api";
@@ -21,20 +27,36 @@ import { LearningCockpitPage } from "./cockpit/LearningCockpitPage";
 import { MemoryMapPage } from "./memoryMap/MemoryMapPage";
 import { ContextLabPage } from "./contextLab/ContextLabPage";
 import { WordAgentTab } from "./component/WordAgentTab";
-import { DownOutlined, PlusOutlined, UpOutlined } from "@ant-design/icons";
+import {
+  AppstoreOutlined,
+  BarsOutlined,
+  DeleteFilled,
+  DownOutlined,
+  EditFilled,
+  PlusOutlined,
+  UpOutlined,
+} from "@ant-design/icons";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useWordList } from "./hooks/useWordList";
 import { normalizeDesktopWordFilters } from "./utils/wordFilters";
 import { getLegacyPathFromHash, getNavFromLocation } from "./navigation";
+import {
+  getLevelLabel,
+  getPartSpeechLabel,
+  getTypeLabel,
+} from "./utils/wordLabels";
+import { BritishPronunciationButton } from "./component/BritishPronunciationButton";
 import "./EnglishWorld.css";
 const { RangePicker } = DatePicker;
 const WORD_TABLE_SCROLL_Y = 620;
+type WordLibraryView = "list" | "card";
 
 const EnglishWorld: React.FC = () => {
   const [form] = Form.useForm();
   const [type, setType] = useState<"edit" | "add">("add");
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [wordRecord, setWordRecord] = useState<WordList>();
+  const [libraryView, setLibraryView] = useState<WordLibraryView>("list");
   const { mutateAsync: mutateWordAdd, isPending: buttonPending } =
     useMutation(wordAdd);
   const location = useLocation();
@@ -241,6 +263,104 @@ const EnglishWorld: React.FC = () => {
     changePage(page, pageSize);
   };
 
+  const renderWordCard = (record: WordList, index: number) => {
+    const serialNumber = (page - 1) * pageSize + index + 1;
+    const typeInfo = getTypeLabel(record.englishType);
+    const levelInfo = getLevelLabel(record.englishLevel);
+    const partSpeechList = record.englishPartSpeech ?? [];
+
+    return (
+      <article className="word-card" key={record.id}>
+        <div className="word-card-head">
+          <span className="word-index">#{serialNumber}</span>
+          <Space size={6} wrap>
+            <Tag color={typeInfo.color}>{typeInfo.label}</Tag>
+            <Tag color={levelInfo.color}>{levelInfo.label}</Tag>
+          </Space>
+        </div>
+
+        <div className="word-card-main">
+          {record.englishImg && (
+            <Image
+              src={record.englishImg}
+              width={58}
+              height={58}
+              alt={record.englishWord}
+              className="word-card-image"
+            />
+          )}
+
+          <div className="word-card-copy">
+            <span className="word-title-cell">
+              <a
+                href={`https://www.baidu.com/s?wd=${encodeURIComponent(
+                  record.englishWord,
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="word-link"
+                onClick={(event) => event.stopPropagation()}
+              >
+                {record.englishWord}
+              </a>
+              <BritishPronunciationButton word={record.englishWord} />
+            </span>
+            <span className="word-phonetic">
+              {record.englishPhonetic || "-"}
+            </span>
+          </div>
+        </div>
+
+        <p className="word-card-meaning">{record.englishChinese || "-"}</p>
+
+        <div className="word-card-tag-row">
+          {partSpeechList.length > 0 ? (
+            partSpeechList.slice(0, 4).map((partSpeech) => {
+              const info = getPartSpeechLabel(partSpeech);
+              return (
+                <Tag key={partSpeech} color={info.color}>
+                  {info.label}
+                </Tag>
+              );
+            })
+          ) : (
+            <span className="word-muted">暂无词性</span>
+          )}
+          {partSpeechList.length > 4 && (
+            <Tag color="default">+{partSpeechList.length - 4}</Tag>
+          )}
+        </div>
+
+        <div className="word-card-meta">
+          <span>{record.englishNote ? "有笔记" : "无笔记"}</span>
+          <span>{record.englishReference ? "有引用" : "无引用"}</span>
+        </div>
+
+        <div className="word-card-actions">
+          <Button
+            type="text"
+            size="small"
+            onClick={() => handleEdit(record)}
+            icon={<EditFilled />}
+            className="word-action-button"
+          >
+            编辑
+          </Button>
+          <Button
+            type="text"
+            danger
+            size="small"
+            onClick={() => handleDelete(record.id)}
+            icon={<DeleteFilled />}
+            className="word-action-button"
+          >
+            删除
+          </Button>
+        </div>
+      </article>
+    );
+  };
+
   return (
     <div className="english-world-shell">
       <EnglishHeader activeKey={activeNav} onNavClick={handleNavClick} />
@@ -314,39 +434,85 @@ const EnglishWorld: React.FC = () => {
                   <strong>词库管理</strong>
                   <span>保留筛选字段、表格列和添加/编辑单词字段</span>
                 </div>
-                <Button
-                  type="primary"
-                  onClick={handleAdd}
-                  size="middle"
-                  loading={buttonPending}
-                  icon={<PlusOutlined />}
-                >
-                  添加单词
-                </Button>
+                <div className="english-world-table-tools">
+                  <Segmented<WordLibraryView>
+                    value={libraryView}
+                    onChange={setLibraryView}
+                    options={[
+                      {
+                        label: "列表",
+                        value: "list",
+                        icon: <BarsOutlined />,
+                      },
+                      {
+                        label: "卡片",
+                        value: "card",
+                        icon: <AppstoreOutlined />,
+                      },
+                    ]}
+                  />
+                  <Button
+                    type="primary"
+                    onClick={handleAdd}
+                    size="middle"
+                    loading={buttonPending}
+                    icon={<PlusOutlined />}
+                  >
+                    添加单词
+                  </Button>
+                </div>
               </div>
 
-              <div className="english-world-table-wrap">
-                <Table<WordList>
-                  bordered={false}
-                  size="middle"
-                  loading={loading}
-                  columns={columns}
-                  dataSource={wordList}
-                  rowKey="id"
-                  virtual
-                  scroll={{ x: 1360, y: WORD_TABLE_SCROLL_Y }}
-                  pagination={{
-                    current: page,
-                    total: totalNum,
-                    pageSizeOptions: ["10", "20", "50", "100", "200", "500"],
-                    showSizeChanger: true,
-                    showTotal: (total: number) => `共 ${total} 条数据`,
-                    pageSize: pageSize,
-                    onChange: handlePageChange,
-                    showQuickJumper: true,
-                  }}
-                />
-              </div>
+              {libraryView === "list" ? (
+                <div
+                  className="english-world-table-wrap"
+                  aria-label="词库列表视图"
+                >
+                  <Table<WordList>
+                    bordered={false}
+                    size="middle"
+                    loading={loading}
+                    columns={columns}
+                    dataSource={wordList}
+                    rowKey="id"
+                    virtual
+                    scroll={{ x: 1360, y: WORD_TABLE_SCROLL_Y }}
+                    pagination={{
+                      current: page,
+                      total: totalNum,
+                      pageSizeOptions: ["10", "20", "50", "100", "200", "500"],
+                      showSizeChanger: true,
+                      showTotal: (total: number) => `共 ${total} 条数据`,
+                      pageSize: pageSize,
+                      onChange: handlePageChange,
+                      showQuickJumper: true,
+                    }}
+                  />
+                </div>
+              ) : (
+                <div
+                  className="english-world-card-view"
+                  aria-label="词库卡片视图"
+                >
+                  {wordList.length > 0 ? (
+                    <div className="english-world-card-grid">
+                      {wordList.map(renderWordCard)}
+                    </div>
+                  ) : (
+                    <Empty description="暂无单词" />
+                  )}
+                  <Pagination
+                    current={page}
+                    total={totalNum}
+                    pageSize={pageSize}
+                    pageSizeOptions={["10", "20", "50", "100", "200", "500"]}
+                    showSizeChanger
+                    showQuickJumper
+                    showTotal={(total: number) => `共 ${total} 条数据`}
+                    onChange={handlePageChange}
+                  />
+                </div>
+              )}
             </section>
             {/* 编辑模态框 */}
             <EditAddModal

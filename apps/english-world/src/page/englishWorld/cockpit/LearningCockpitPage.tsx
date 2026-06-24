@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Button, Statistic, Tag, Typography } from "antd";
+import { Button, Tag, Typography } from "antd";
 import {
   BarChartOutlined,
   ExperimentOutlined,
@@ -92,10 +92,10 @@ export function LearningCockpitPage() {
     <div className="learning-cockpit">
       <section className="learning-cockpit-hero">
         <div>
-          <Text className="learning-cockpit-label">English World</Text>
-          <Title level={1}>AI Learning Cockpit</Title>
+          <Text className="learning-cockpit-label">Today Route</Text>
+          <Title level={1}>今日学习路线</Title>
           <p>
-            每天先完成一组短任务，再把薄弱词送进语境练习，最后沉淀到你的个人记忆地图。
+            按路线完成一轮短复习，再把薄弱词放进语境练习。
           </p>
         </div>
         <div className="learning-cockpit-hero-actions">
@@ -108,18 +108,26 @@ export function LearningCockpitPage() {
       {(coachUnavailable || coachSummary) && (
         <>
           {coachSummary && (
-            <section className="learning-cockpit-stats">
-              <Statistic title="词库总量" value={coachSummary.totalWords} />
-              <Statistic title="今日新增" value={coachSummary.todayNewWords} />
-              <Statistic
-                title="近期正确率"
-                value={coachSummary.reciteAccuracy}
-                suffix="%"
-              />
+            <section
+              className="learning-cockpit-status-strip learning-cockpit-status-compact"
+              aria-label="今日学习状态"
+            >
+              <div className="learning-cockpit-status-item">
+                <span>词库总量</span>
+                <strong>{coachSummary.totalWords}</strong>
+              </div>
+              <div className="learning-cockpit-status-item">
+                <span>今日新增</span>
+                <strong>{coachSummary.todayNewWords}</strong>
+              </div>
+              <div className="learning-cockpit-status-item">
+                <span>近期正确率</span>
+                <strong>{coachSummary.reciteAccuracy}%</strong>
+              </div>
             </section>
           )}
 
-          <div className="learning-cockpit-grid">
+          <div className="learning-cockpit-grid learning-cockpit-route-board">
             <div className="learning-cockpit-main-column">
               {coachSummary ? (
                 <>
@@ -140,11 +148,11 @@ export function LearningCockpitPage() {
                       <ExperimentOutlined className="learning-cockpit-card-icon" />
                     </div>
                     <p className="learning-cockpit-card-copy">
-                      用今日薄弱词生成雅思阅读、选择题和例句改写，让单词从词表进入真实场景。
+                      用刚才处理过的薄弱词生成阅读、选择题和例句改写，把记忆推进到使用。
                     </p>
                     <div className="learning-cockpit-action-row">
-                      <Button type="primary" onClick={() => openContextLab()}>
-                        生成练习包
+                      <Button onClick={() => openContextLab()}>
+                        准备练习
                       </Button>
                       <Button onClick={() => navigate("/englishWorld/words")}>
                         手选词
@@ -188,7 +196,7 @@ export function LearningCockpitPage() {
               )}
             </div>
 
-            <aside className="learning-cockpit-side-column">
+            <aside className="learning-cockpit-side-column learning-cockpit-side-quiet">
               {memoryUnavailable ? (
                 <section className="learning-cockpit-card learning-cockpit-unavailable">
                   <Title level={4}>记忆地图暂不可用</Title>
@@ -204,23 +212,23 @@ export function LearningCockpitPage() {
               <section className="learning-cockpit-card">
                 <div className="learning-cockpit-card-heading">
                   <div>
-                    <Text className="learning-cockpit-label">Library</Text>
-                    <Title level={4}>词库工作台</Title>
+                    <Text className="learning-cockpit-label">Tools</Text>
+                    <Title level={4}>常用工具</Title>
                   </div>
                   <UnorderedListOutlined className="learning-cockpit-card-icon" />
                 </div>
                 <p className="learning-cockpit-card-copy">
-                  表格仍保留为维护入口，负责新增、筛选、编辑和批量检查。
+                  需要维护数据或复盘趋势时再打开，不打断今天的学习路线。
                 </p>
                 <div className="learning-cockpit-action-row">
                   <Button onClick={() => navigate("/englishWorld/words")}>
-                    打开词库
+                    词库工作台
                   </Button>
                   <Button
                     icon={<BarChartOutlined />}
                     onClick={() => navigate("/englishWorld/stats")}
                   >
-                    看统计
+                    学习统计
                   </Button>
                 </div>
               </section>

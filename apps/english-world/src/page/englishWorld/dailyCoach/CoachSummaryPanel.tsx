@@ -1,4 +1,4 @@
-import { Button, Progress, Space, Tag, Typography } from "antd";
+import { Button, Progress, Tag, Typography } from "antd";
 import { PlayCircleOutlined, ThunderboltOutlined } from "@ant-design/icons";
 import type { DailyCoachAction, DailyCoachSummary } from "../types/learning";
 import { createCoachInsight } from "../utils/coachPlanning";
@@ -38,28 +38,34 @@ export function CoachSummaryPanel({
     <section className="learning-cockpit-card learning-cockpit-card-primary">
       <div className="learning-cockpit-card-heading">
         <div>
-          <Text className="learning-cockpit-label">A. Daily Coach</Text>
-          <Title level={3}>今日 AI 任务</Title>
+          <Text className="learning-cockpit-label">A. Review</Text>
+          <Title level={3}>今天先做这一步</Title>
         </div>
         <Tag icon={<ThunderboltOutlined />} color="blue">
           {summary.suggestedActions[0]?.estimatedMinutes ?? 8} min
         </Tag>
       </div>
 
-      <p className="learning-cockpit-card-copy">{insight.description}</p>
+      <p className="learning-cockpit-card-copy learning-cockpit-route-copy">
+        {insight.description}
+      </p>
 
       <div className="learning-cockpit-progress-row">
-        <Text type="secondary">掌握稳定度</Text>
+        <Text type="secondary">复习稳定度</Text>
         <strong>{progress}%</strong>
       </div>
       <Progress percent={progress} size="small" />
 
-      <div className="learning-cockpit-word-strip">
-        {summary.weakWords.slice(0, 6).map((word) => (
-          <Tag key={word.id} color={word.level === 0 ? "red" : "orange"}>
-            {word.word}
-          </Tag>
-        ))}
+      <div className="learning-cockpit-focus-row">
+        <span>今日薄弱词</span>
+        <div className="learning-cockpit-word-strip">
+          {summary.weakWords.slice(0, 6).map((word) => (
+            <Tag key={word.id} color={word.level === 0 ? "red" : "orange"}>
+              {word.word}
+            </Tag>
+          ))}
+          {!summary.weakWords.length ? <Tag color="green">状态稳定</Tag> : null}
+        </div>
       </div>
 
       <div className="learning-cockpit-task-list" aria-label="今日行动清单">
@@ -88,12 +94,17 @@ export function CoachSummaryPanel({
         ))}
       </div>
 
-      <Space wrap>
-        <Button type="primary" icon={<PlayCircleOutlined />} onClick={() => onStartReview?.()}>
-          开始今日复习
-        </Button>
-        <Button onClick={() => onOpenContextLab?.()}>进入语境练习</Button>
-      </Space>
+      {!actions.length ? (
+        <div className="learning-cockpit-action-row">
+          <Button
+            type="primary"
+            icon={<PlayCircleOutlined />}
+            onClick={() => onStartReview?.()}
+          >
+            开始今日复习
+          </Button>
+        </div>
+      ) : null}
     </section>
   );
 }

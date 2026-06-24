@@ -56,10 +56,69 @@ describe("LearningCockpitPage", () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByText("AI Learning Cockpit")).toBeInTheDocument();
-    expect(await screen.findByText("今日 AI 任务")).toBeInTheDocument();
+    expect(screen.getByText("今日学习路线")).toBeInTheDocument();
+    expect(await screen.findByLabelText("今日学习状态")).toBeInTheDocument();
+    expect(document.querySelector(".learning-cockpit-stats")).not.toBeInTheDocument();
+    expect(await screen.findByText("今天先做这一步")).toBeInTheDocument();
     expect(await screen.findByText("AI 语境实验室")).toBeInTheDocument();
     expect(await screen.findByText("记忆地图")).toBeInTheDocument();
+  });
+
+  it("presents the cockpit as a route-first learning page", async () => {
+    requestMock.mockImplementation((requestConfig: unknown) => {
+      const config = requestConfig as { url?: string };
+      if (config.url === "/daily-coach/summary") {
+        return Promise.resolve({
+          totalWords: 513,
+          todayNewWords: 4,
+          reciteAccuracy: 0,
+          levelDistribution: [],
+          weakWords: [
+            { id: 1, word: "memorable", level: 0 },
+            { id: 2, word: "gradient", level: 1 },
+          ],
+          suggestedActions: [
+            {
+              type: "review",
+              title: "开始今日复习",
+              description: "优先处理低掌握度单词，完成一轮短复习。",
+              wordIds: [1, 2],
+              estimatedMinutes: 4,
+            },
+            {
+              type: "context",
+              title: "进入语境练习",
+              description: "把薄弱词放入短阅读和选择题里练一遍。",
+              wordIds: [1, 2],
+              estimatedMinutes: 8,
+            },
+          ],
+        } as never);
+      }
+      if (config.url === "/memory-map/overview") {
+        return Promise.resolve({
+          levels: [],
+          dueWords: [],
+          weakWords: [],
+          recentMistakes: [],
+          streakLikeStats: { recentSessions: 0, recentAccuracy: 0 },
+        } as never);
+      }
+      return Promise.reject(new Error("offline"));
+    });
+    const { container } = render(
+      <MemoryRouter>
+        <LearningCockpitPage />
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByText("今天先做这一步")).toBeInTheDocument();
+    expect(await screen.findByText("A. Review")).toBeInTheDocument();
+    expect(await screen.findByText("B. Context Lab")).toBeInTheDocument();
+    expect(container.querySelector(".learning-cockpit-route-board")).toBeInTheDocument();
+    expect(container.querySelector(".learning-cockpit-status-compact")).toBeInTheDocument();
+    expect(container.querySelectorAll(".learning-cockpit-status-item")).toHaveLength(3);
+    expect(container.querySelector(".learning-cockpit-side-quiet")).toBeInTheDocument();
   });
 
   it("requests cockpit data from the learning API contracts", () => {
