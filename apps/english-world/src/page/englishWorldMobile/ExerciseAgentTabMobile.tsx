@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   Button,
   Card,
@@ -32,7 +32,28 @@ function getQuestionKey(q: ExerciseQuestion, idx: number) {
     : `q-${idx}`;
 }
 
-/**j */
+function parseMobileArticleContent(article: string) {
+  const blocks = article
+    .split(/\n{2,}/)
+    .map((block) => block.trim())
+    .filter(Boolean);
+
+  if (blocks.length <= 1) {
+    return {
+      topic: "",
+      paragraphs: article
+        .split(/\n+/)
+        .map((paragraph) => paragraph.trim())
+        .filter(Boolean),
+    };
+  }
+
+  return {
+    topic: blocks[0],
+    paragraphs: blocks.slice(1),
+  };
+}
+
 export const ExerciseAgentTabMobile: React.FC = () => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
@@ -271,18 +292,29 @@ export const ExerciseAgentTabMobile: React.FC = () => {
   const getResult = (questionId: string) =>
     results?.find((r) => r.questionId === questionId);
 
+  const articleContent = useMemo(
+    () => parseMobileArticleContent(article),
+    [article],
+  );
+  const answeredCount = questions.reduce((total, question, index) => {
+    const key = getQuestionKey(question, index);
+    return answers[key] === undefined || answers[key] === null
+      ? total
+      : total + 1;
+  }, 0);
+  const hasPractice = !loading && (article || questions.length > 0);
+
   return (
-    <div style={{ padding: "16px", paddingBottom: 24 }}>
-      <Card style={{ borderRadius: 12, marginBottom: 16 }}>
-        <div style={{ marginBottom: 8, color: "#667eea", fontWeight: 600 }}>
-          阅读 + 选择题练习
-        </div>
-        <p style={{ margin: 0, fontSize: 13, color: "#666" }}>
+    <div className="mobile-exercise-page">
+      <Card className="mobile-exercise-hero">
+        <div className="mobile-exercise-eyebrow">Context Practice</div>
+        <h2>阅读 + 选择题练习</h2>
+        <p>
           按熟练度/随机/自定义单词生成短文与单选题，提交后查看解析。
         </p>
       </Card>
 
-      <Card style={{ borderRadius: 12, marginBottom: 16 }}>
+      <Card className="mobile-exercise-generator">
         <Form
           form={form}
           layout="vertical"
@@ -405,7 +437,7 @@ export const ExerciseAgentTabMobile: React.FC = () => {
               color="primary"
               onClick={handleGenerate}
               loading={loading}
-              style={{ borderRadius: 10 }}
+              className="mobile-exercise-generate-button"
             >
               生成练习
             </Button>
@@ -413,68 +445,68 @@ export const ExerciseAgentTabMobile: React.FC = () => {
         </Form>
 
         {loading && !streamingChunk && (
-          <div style={{ textAlign: "center", padding: 24, color: "#999" }}>
+          <div className="mobile-exercise-loading">
             AI 正在生成短文与题目…
           </div>
         )}
 
         {loading && streamingChunk && (
-          <div
-            style={{
-              padding: 16,
-              background: "#fafbff",
-              borderRadius: 10,
-              border: "1px dashed #c7d2fe",
-            }}
-          >
-            <div style={{ marginBottom: 8, color: "#667eea", fontWeight: 600 }}>
-              AI 正在生成…
-            </div>
-            <pre
-              style={{
-                margin: 0,
-                whiteSpace: "pre-wrap",
-                wordBreak: "break-word",
-                fontSize: 13,
-                color: "#334155",
-              }}
-            >
+          <div className="mobile-exercise-stream">
+            <div>AI 正在生成…</div>
+            <pre>
               {streamingChunk || "\u00A0"}
             </pre>
           </div>
         )}
       </Card>
 
-      {!loading && (article || questions.length > 0) && (
-        <>
+      {hasPractice && (
+        <div className="mobile-exercise-workflow">
+          <section aria-label="练习概览" className="mobile-exercise-overview">
+            <div>
+              <strong>{words.length}</strong>
+              <span>词汇</span>
+            </div>
+            <div>
+              <strong>{questions.length}</strong>
+              <span>题目</span>
+            </div>
+            <div>
+              <strong>{answeredCount}</strong>
+              <span>已答</span>
+            </div>
+          </section>
+
           {article ? (
-            <Card
-              title="阅读短文"
-              style={{ borderRadius: 12, marginBottom: 16 }}
-            >
-              <div
-                style={{
-                  whiteSpace: "pre-wrap",
-                  lineHeight: 1.8,
-                  color: "#475569",
-                  fontSize: 14,
-                }}
-              >
-                {article}
+            <article aria-label="阅读材料" className="mobile-exercise-reading">
+              <div className="mobile-exercise-section-heading">
+                <span>Reading</span>
+                <h3>阅读材料</h3>
+              </div>
+              {articleContent.topic && (
+                <h4 className="mobile-exercise-reading-topic">
+                  {articleContent.topic}
+                </h4>
+              )}
+              <div className="mobile-exercise-reading-body">
+                {articleContent.paragraphs.map((paragraph, index) => (
+                  <p key={`${paragraph}-${index}`}>{paragraph}</p>
+                ))}
               </div>
               {words.length > 0 && (
-                <div style={{ marginTop: 12, fontSize: 13, color: "#64748b" }}>
-                  涉及词汇：{words.join("、")}
+                <div className="mobile-exercise-word-strip">
+                  {words.map((word) => (
+                    <span key={word}>{word}</span>
+                  ))}
                 </div>
               )}
-            </Card>
+            </article>
           ) : null}
 
-          <div style={{ marginBottom: 16 }}>
-            <div
-              style={{ fontWeight: 600, marginBottom: 12, color: "#334155" }}
-            >
-              选择题
+          <section aria-label="选择题作答区" className="mobile-exercise-questions">
+            <div className="mobile-exercise-section-heading">
+              <span>Questions</span>
+              <h3>选择题</h3>
             </div>
             {questions.map((q, idx) => {
               const qKey = getQuestionKey(q, idx);
@@ -482,98 +514,81 @@ export const ExerciseAgentTabMobile: React.FC = () => {
               return (
                 <Card
                   key={qKey}
-                  style={{
-                    marginBottom: 12,
-                    borderRadius: 12,
-                    borderColor: result
-                      ? result.correct
-                        ? "#52c41a"
-                        : "#ff4d4f"
-                      : undefined,
-                    borderWidth: result ? 2 : 1,
-                  }}
+                  className={`mobile-exercise-question-card${
+                    result ? (result.correct ? " is-correct" : " is-wrong") : ""
+                  }`}
                 >
-                  <div style={{ marginBottom: 10 }}>
-                    <span style={{ color: "#64748b", marginRight: 6 }}>
-                      {idx + 1}.
-                    </span>
+                  <div className="mobile-exercise-question-title">
+                    <span>第 {idx + 1} 题</span>
                     {result && (
-                      <span style={{ marginRight: 6 }}>
-                        {result.correct ? (
-                          <CheckCircleOutline
-                            style={{ color: "#52c41a", fontSize: 16 }}
-                          />
-                        ) : (
-                          <CloseCircleOutline
-                            style={{ color: "#ff4d4f", fontSize: 16 }}
-                          />
-                        )}
-                      </span>
+                      result.correct ? (
+                        <CheckCircleOutline className="mobile-exercise-result-icon is-correct" />
+                      ) : (
+                        <CloseCircleOutline className="mobile-exercise-result-icon is-wrong" />
+                      )
                     )}
-                    <span style={{ color: "#334155", fontSize: 14 }}>
-                      {q.stem}
-                    </span>
+                    <p>{q.stem}</p>
                   </div>
-                  <Radio.Group
-                    value={answers[qKey]}
-                    onChange={(val) => {
-                      setAnswers((prev) => ({
-                        ...prev,
-                        [qKey]: typeof val === "number" ? val : Number(val),
-                      }));
-                    }}
-                    disabled={results != null}
-                  >
-                    {q.options.map((opt, i) => (
-                      <Radio
-                        key={i}
-                        value={i}
-                        style={{ display: "block", marginBottom: 8 }}
-                      >
-                        {OPTION_LABELS[i]}. {opt}
-                        {result &&
-                          result.correctIndex === i &&
-                          result.userSelectedIndex !== i && (
-                            <span style={{ color: "#52c41a", marginLeft: 6 }}>
-                              （正确答案）
-                            </span>
-                          )}
-                      </Radio>
-                    ))}
-                  </Radio.Group>
-                  {result?.explanation && (
-                    <div
-                      style={{
-                        marginTop: 12,
-                        padding: 10,
-                        background: "#f6ffed",
-                        borderRadius: 8,
-                        fontSize: 13,
-                        color: "#475569",
+                  <div className="mobile-exercise-option-group">
+                    <Radio.Group
+                      value={answers[qKey]}
+                      onChange={(val) => {
+                        setAnswers((prev) => ({
+                          ...prev,
+                          [qKey]: typeof val === "number" ? val : Number(val),
+                        }));
                       }}
+                      disabled={results != null}
                     >
+                      {q.options.map((opt, i) => (
+                        <Radio
+                          key={i}
+                          value={i}
+                          className="mobile-exercise-option"
+                        >
+                          <span className="mobile-exercise-option-letter">
+                            {OPTION_LABELS[i]}
+                          </span>
+                          <span>{opt}</span>
+                          {result &&
+                            result.correctIndex === i &&
+                            result.userSelectedIndex !== i && (
+                              <span className="mobile-exercise-correct-answer">
+                                正确答案
+                              </span>
+                            )}
+                        </Radio>
+                      ))}
+                    </Radio.Group>
+                  </div>
+                  {result?.explanation && (
+                    <div className="mobile-exercise-explanation">
                       {result.explanation}
                     </div>
                   )}
                 </Card>
               );
             })}
-          </div>
+          </section>
 
           {results == null && (
-            <Button
-              block
-              color="primary"
-              size="large"
-              onClick={handleSubmit}
-              loading={submitting}
-              disabled={sessionId == null || questions.length === 0}
-              style={{ borderRadius: 10 }}
-            >
-              提交答案
-            </Button>
+            <div className="mobile-exercise-submit-bar">
+              <div>
+                <span>已答 {answeredCount}/{questions.length}</span>
+                <small>阅读后完成选择题</small>
+              </div>
+              <Button
+                color="primary"
+                size="large"
+                onClick={handleSubmit}
+                loading={submitting}
+                disabled={sessionId == null || questions.length === 0}
+              >
+                提交答案
+              </Button>
+            </div>
           )}
-        </>
+        </div>
       )}
     </div>
   );
