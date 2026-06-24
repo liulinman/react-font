@@ -2,7 +2,10 @@ import "@testing-library/jest-dom/vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import LoginStarfieldCanvas, {
+  ACCRETION_PARTICLE_COUNT,
   BLACK_HOLE_GRAVITY,
+  createAccretionParticles,
+  getAccretionParticlePosition,
 } from "./LoginStarfieldCanvas";
 
 describe("LoginStarfieldCanvas", () => {
@@ -76,5 +79,18 @@ describe("LoginStarfieldCanvas", () => {
 
   it("exposes a non-zero accretion disk rotation speed", () => {
     expect(BLACK_HOLE_GRAVITY.rotationSpeed).toBeGreaterThan(0);
+  });
+
+  it("creates enough accretion particles for a fluid disk", () => {
+    expect(createAccretionParticles()).toHaveLength(ACCRETION_PARTICLE_COUNT);
+  });
+
+  it("moves accretion particles along the disk over time", () => {
+    const particle = createAccretionParticles()[0];
+    const first = getAccretionParticlePosition(particle, 0);
+    const later = getAccretionParticlePosition(particle, 2400);
+
+    expect(later.x).not.toBeCloseTo(first.x, 4);
+    expect(later.y).not.toBeCloseTo(first.y, 4);
   });
 });

@@ -22,9 +22,19 @@ type Ripple = {
   age: number;
 };
 
+type AccretionParticle = {
+  radius: number;
+  phase: number;
+  speed: number;
+  size: number;
+  alpha: number;
+  warmth: number;
+};
+
 const LINK_DISTANCE = 142;
 const POINTER_RANGE = 190;
 const RIPPLE_LIFE = 54;
+export const ACCRETION_PARTICLE_COUNT = 86;
 
 export const BLACK_HOLE_GRAVITY = {
   xRatio: 0.36,
@@ -33,6 +43,40 @@ export const BLACK_HOLE_GRAVITY = {
   pull: 0.24,
   rotationSpeed: 0.00022,
 };
+
+export function createAccretionParticles(): AccretionParticle[] {
+  return Array.from({ length: ACCRETION_PARTICLE_COUNT }, (_, index) => {
+    const seed = index + 1;
+    const band = seed % 4;
+
+    return {
+      radius: 92 + band * 32 + ((seed * 17) % 26),
+      phase: ((seed * 137) % 628) / 100,
+      speed:
+        (seed % 2 === 0 ? 1 : -0.78) *
+        (0.00016 + ((seed * 11) % 9) / 100000),
+      size: 0.9 + ((seed * 19) % 18) / 10,
+      alpha: 0.18 + ((seed * 23) % 26) / 100,
+      warmth: ((seed * 31) % 100) / 100,
+    };
+  });
+}
+
+export function getAccretionParticlePosition(
+  particle: AccretionParticle,
+  timestamp: number,
+) {
+  const angle = particle.phase + timestamp * particle.speed;
+  const diskX = Math.cos(angle) * particle.radius * 1.72;
+  const diskY = Math.sin(angle) * particle.radius * 0.45;
+  const tilt = -0.2;
+
+  return {
+    x: diskX * Math.cos(tilt) - diskY * Math.sin(tilt),
+    y: diskX * Math.sin(tilt) + diskY * Math.cos(tilt),
+    depth: (Math.sin(angle) + 1) / 2,
+  };
+}
 
 function createStars(width: number, height: number): Star[] {
   const area = width * height;
@@ -95,6 +139,8 @@ function drawAccretionDisk(
   x: number,
   y: number,
   timestamp: number,
+  particles: AccretionParticle[],
+  pointer: PointerState,
 ) {
   const rotation = timestamp * BLACK_HOLE_GRAVITY.rotationSpeed;
   const rings = [
@@ -125,12 +171,55 @@ function drawAccretionDisk(
       context.restore();
     }
   });
+
+  [...particles]
+    .map((particle) => ({
+      particle,
+      current: getAccretionParticlePosition(particle, timestamp),
+      previous: getAccretionParticlePosition(particle, timestamp - 520),
+    }))
+    .sort((a, b) => a.current.depth - b.current.depth)
+    .forEach(({ particle, current, previous }) => {
+      const worldX = x + current.x;
+      const worldY = y + current.y;
+      const pointerBoost = pointer.active
+        ? Math.max(
+            0,
+            1 - Math.hypot(pointer.x - worldX, pointer.y - worldY) / 240,
+          )
+        : 0;
+      const depthGlow = 0.58 + current.depth * 0.72;
+      const hue = particle.warmth > 0.62 ? "253, 224, 138" : "251, 146, 60";
+      const alpha = Math.min(0.72, particle.alpha * depthGlow + pointerBoost * 0.18);
+
+      context.beginPath();
+      context.moveTo(x + previous.x, y + previous.y);
+      context.lineTo(worldX, worldY);
+      context.strokeStyle = `rgba(${hue}, ${alpha * 0.7})`;
+      context.lineWidth = particle.size * (0.72 + current.depth * 0.7);
+      context.stroke();
+
+      context.beginPath();
+      context.arc(
+        worldX,
+        worldY,
+        particle.size * (0.8 + current.depth * 1.05 + pointerBoost),
+        0,
+        Math.PI * 2,
+      );
+      context.fillStyle = `rgba(${hue}, ${alpha})`;
+      context.shadowColor = `rgba(${hue}, ${0.24 + current.depth * 0.16})`;
+      context.shadowBlur = 10 + current.depth * 14 + pointerBoost * 10;
+      context.fill();
+      context.shadowBlur = 0;
+    });
 }
 
 const LoginStarfieldCanvas: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const frameRef = useRef<number | null>(null);
   const starsRef = useRef<Star[]>([]);
+  const accretionParticlesRef = useRef<AccretionParticle[]>(createAccretionParticles());
   const pointerRef = useRef<PointerState>({ active: false, x: 0, y: 0 });
   const ripplesRef = useRef<Ripple[]>([]);
   const reducedMotionRef = useRef(false);
@@ -181,7 +270,14 @@ const LoginStarfieldCanvas: React.FC = () => {
       context.fillStyle = accretionGlow;
       context.fillRect(0, 0, width, height);
 
-      drawAccretionDisk(context, gravity.x, gravity.y, timestamp);
+      drawAccretionDisk(
+        context,
+        gravity.x,
+        gravity.y,
+        timestamp,
+        accretionParticlesRef.current,
+        pointer,
+      );
       drawGravityWave(context, gravity.x, gravity.y, 132, 0.16);
       drawGravityWave(context, gravity.x, gravity.y, 196, 0.1);
 
