@@ -256,7 +256,7 @@ describe("ContextLabPage", () => {
               correct: true,
               correctIndex: 0,
               userSelectedIndex: 0,
-              explanation: "解析：正确答案为0，fragile 表示容易损坏，和文章语境一致。",
+              explanation: "解析：正确答案为0，你选0，fragile 表示容易损坏，和文章语境一致。",
             },
           ],
         });
@@ -288,7 +288,7 @@ describe("ContextLabPage", () => {
       );
     });
     expect(
-      await screen.findByText("解析：正确答案为 A，fragile 表示容易损坏，和文章语境一致。"),
+      await screen.findByText("解析：正确答案为 A，你选 A，fragile 表示容易损坏，和文章语境一致。"),
     ).toBeInTheDocument();
   });
 
@@ -558,6 +558,15 @@ describe("ContextLabPage", () => {
       screen.getByText("段落强调的是情绪氛围，不是速度。"),
     ).toBeInTheDocument();
     expect(screen.getByText("回看解析后再练一轮")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "收起详情" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "收起详情" }));
+    await waitFor(() => {
+      expect(
+        screen.queryByText("Which answer matches the paragraph?"),
+      ).not.toBeInTheDocument();
+    });
+    expect(screen.getByRole("button", { name: "查看详情" })).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "删除记录" }));
     await user.click(await screen.findByRole("button", { name: "确认删除" }));
@@ -580,6 +589,94 @@ describe("ContextLabPage", () => {
         screen.getAllByText("还没有提交记录，开始练习后会出现在这里。"),
       ).toHaveLength(2);
     });
+  });
+
+  it("keeps the attempt detail drawer stable when legacy answer rows are strings", async () => {
+    requestMock.mockImplementation((config) => {
+      if (config.url === "/context-lab/history") {
+        return Promise.resolve({
+          list: [
+            {
+              id: 12,
+              taskId: 12,
+              status: "succeeded",
+              sourceType: "custom",
+              words: ["vibe"],
+              articleExerciseId: 88,
+              article: "Topic\n\nParagraph.",
+              questions: [
+                {
+                  id: "q1",
+                  stem: "Which answer matches the paragraph?",
+                  options: ["It celebrates speed", "It describes mood"],
+                },
+              ],
+              attemptCount: 1,
+              latestAttemptId: 501,
+              latestScore: 50,
+              latestWrongCount: 1,
+              latestAttemptTime: "2026-06-23T08:00:00Z",
+            },
+          ],
+          total: 1,
+          page: 1,
+          pageSize: 10,
+        });
+      }
+      if (config.url === "/context-lab/attempt-history") {
+        return Promise.resolve({
+          list: [
+            {
+              id: 501,
+              attemptId: 501,
+              taskId: 12,
+              articleExerciseId: 88,
+              score: 50,
+              correctCount: 0,
+              wrongCount: 1,
+              weakWords: [],
+              nextSuggestions: [],
+              answers: [],
+              results: [],
+              elapsedSeconds: 42,
+              createTime: "2026-06-23T08:00:00Z",
+            },
+          ],
+          total: 1,
+          page: 1,
+          pageSize: 10,
+        });
+      }
+      if (config.url === "/context-lab/attempt-detail") {
+        return Promise.resolve({
+          id: 501,
+          attemptId: 501,
+          taskId: 12,
+          articleExerciseId: 88,
+          score: 50,
+          correctCount: 0,
+          wrongCount: 1,
+          weakWords: [],
+          nextSuggestions: [],
+          answers: ["[object Object]"],
+          results: ["[object Object]"],
+          elapsedSeconds: 42,
+          createTime: "2026-06-23T08:00:00Z",
+        });
+      }
+      return Promise.resolve({});
+    });
+
+    const user = userEvent.setup();
+    render(<ContextLabPage />);
+
+    await user.click(await screen.findByRole("button", { name: "查看记录" }));
+    await user.click(await screen.findByRole("button", { name: "查看详情" }));
+
+    expect(
+      await screen.findByText("暂无可展示的作答详情"),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: "练习记录" })).toBeInTheDocument();
   });
 
   it("deletes a practice package after confirmation", async () => {

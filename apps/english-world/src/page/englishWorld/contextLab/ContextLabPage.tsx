@@ -85,11 +85,36 @@ function normalizeOptionIndex(value: unknown) {
   return Number.isInteger(index) && index >= 0 ? index : undefined;
 }
 
+type ContextLabAnswerItem = {
+  questionId: string;
+  selectedIndex?: unknown;
+};
+
+function isPlainRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isContextLabAnswerItem(value: unknown): value is ContextLabAnswerItem {
+  return isPlainRecord(value) && typeof value.questionId === "string";
+}
+
+function isContextLabResultItem(value: unknown): value is ExerciseResultItem {
+  return (
+    isPlainRecord(value) &&
+    typeof value.questionId === "string" &&
+    typeof value.correct === "boolean"
+  );
+}
+
 function formatExplanationText(explanation: string, correctIndex: number) {
   const letter = getAnswerLetter(correctIndex);
+  const toAnswerLetter = (_match: string, prefix: string, optionIndex: string) =>
+    `${prefix} ${getAnswerLetter(Number(optionIndex))}`;
+
   return explanation
     .replace(/正确答案为\s*[0-3]/g, `正确答案为 ${letter}`)
-    .replace(/正确答案是\s*[0-3]/g, `正确答案是 ${letter}`);
+    .replace(/正确答案是\s*[0-3]/g, `正确答案是 ${letter}`)
+    .replace(/(你选(?:了)?)[\s：:]*([0-3])\b/g, toAnswerLetter);
 }
 
 function cleanSelectedVocabularyText(text: string) {
@@ -270,6 +295,11 @@ function ContextLabPageContent({
   };
 
   const handleOpenAttemptDetail = async (attempt: ContextLabAttempt) => {
+    if (selectedAttemptId === attempt.attemptId) {
+      setSelectedAttemptId(null);
+      return;
+    }
+
     if (attemptDetails[attempt.attemptId]) {
       setSelectedAttemptId(attempt.attemptId);
       return;
@@ -1161,7 +1191,11 @@ function ContextLabPageContent({
           <Empty description="还没有提交记录，开始练习后会出现在这里。" />
         ) : (
           <div className="context-lab-attempt-list">
-            {attempts.map((attempt) => (
+            {attempts.map((attempt) => {
+              const isAttemptDetailOpen =
+                selectedAttemptId === attempt.attemptId;
+
+              return (
               <section className="context-lab-attempt-item" key={attempt.attemptId}>
                 <Space wrap>
                   <Tag color={attempt.wrongCount > 0 ? "orange" : "green"}>
@@ -1189,7 +1223,7 @@ function ContextLabPageContent({
                     size="small"
                     onClick={() => void handleOpenAttemptDetail(attempt)}
                   >
-                    查看详情
+                    {isAttemptDetailOpen ? "收起详情" : "查看详情"}
                   </Button>
                   <Button
                     danger
@@ -1199,7 +1233,7 @@ function ContextLabPageContent({
                     删除记录
                   </Button>
                 </Space>
-                {selectedAttemptId === attempt.attemptId && (
+                {isAttemptDetailOpen && (
                   <div className="context-lab-attempt-detail">
                     {attemptDetailLoadingId === attempt.attemptId &&
                     !attemptDetails[attempt.attemptId] ? (
@@ -1211,6 +1245,14 @@ function ContextLabPageContent({
                       (() => {
                         const detail = attemptDetails[attempt.attemptId];
                         if (!detail) return null;
+                        const resultItems =
+                          detail.results.filter(isContextLabResultItem);
+                        const answerItems =
+                          detail.answers.filter(isContextLabAnswerItem);
+                        const detailItems =
+                          resultItems.length > answerItems.length
+                            ? resultItems
+                            : answerItems;
 
                         return (
                           <>
@@ -1227,22 +1269,25 @@ function ContextLabPageContent({
                               </div>
                             )}
                             <div className="context-lab-attempt-question-list">
-                              {(detail.results.length > detail.answers.length
-                                ? detail.results
-                                : detail.answers
-                              ).map((item, index) => {
-                                const isResultItem = "correct" in item;
+                              {detailItems.length === 0 ? (
+                                <Empty
+                                  image={Empty.PRESENTED_IMAGE_SIMPLE}
+                                  description="暂无可展示的作答详情"
+                                />
+                              ) : detailItems.map((item, index) => {
+                                const isResultItem =
+                                  isContextLabResultItem(item);
                                 const result = isResultItem
                                   ? item
-                                  : detail.results.find(
+                                  : resultItems.find(
                                       (resultItem) =>
                                         resultItem.questionId === item.questionId,
-                                    ) || detail.results[index];
+                                    ) || resultItems[index];
                                 const answer = isResultItem
-                                  ? detail.answers.find(
+                                  ? answerItems.find(
                                       (answerItem) =>
                                         answerItem.questionId === item.questionId,
-                                    ) || detail.answers[index]
+                                    ) || answerItems[index]
                                   : item;
                                 const questionId =
                                   answer?.questionId || result?.questionId || "";
@@ -1330,7 +1375,8 @@ function ContextLabPageContent({
                   </div>
                 )}
               </section>
-            ))}
+              );
+            })}
           </div>
         )}
       </Drawer>
