@@ -73,4 +73,8 @@ describe("LoginStarfieldCanvas", () => {
     expect(BLACK_HOLE_GRAVITY.yRatio).toBeLessThan(0.62);
     expect(BLACK_HOLE_GRAVITY.radius).toBeGreaterThan(220);
   });
+
+  it("exposes a non-zero accretion disk rotation speed", () => {
+    expect(BLACK_HOLE_GRAVITY.rotationSpeed).toBeGreaterThan(0);
+  });
 });

@@ -31,6 +31,7 @@ export const BLACK_HOLE_GRAVITY = {
   yRatio: 0.48,
   radius: 310,
   pull: 0.24,
+  rotationSpeed: 0.00022,
 };
 
 function createStars(width: number, height: number): Star[] {
@@ -89,6 +90,43 @@ function drawGravityWave(
   context.restore();
 }
 
+function drawAccretionDisk(
+  context: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  timestamp: number,
+) {
+  const rotation = timestamp * BLACK_HOLE_GRAVITY.rotationSpeed;
+  const rings = [
+    { radius: 118, alpha: 0.22, width: 2.4, offset: 0 },
+    { radius: 158, alpha: 0.18, width: 1.7, offset: 1.7 },
+    { radius: 210, alpha: 0.12, width: 1.2, offset: 3.2 },
+  ];
+
+  rings.forEach((ring, ringIndex) => {
+    for (let segment = 0; segment < 3; segment += 1) {
+      const start =
+        rotation * (ringIndex % 2 === 0 ? 1 : -0.72) +
+        ring.offset +
+        segment * 2.08;
+      const end = start + 0.82 + ringIndex * 0.08;
+
+      context.save();
+      context.translate(x, y);
+      context.rotate(-0.2 + rotation * 0.12);
+      context.scale(1.72, 0.45);
+      context.beginPath();
+      context.arc(0, 0, ring.radius, start, end);
+      context.strokeStyle = `rgba(251, 191, 36, ${ring.alpha})`;
+      context.lineWidth = ring.width;
+      context.shadowColor = "rgba(251, 191, 36, 0.28)";
+      context.shadowBlur = 12;
+      context.stroke();
+      context.restore();
+    }
+  });
+}
+
 const LoginStarfieldCanvas: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const frameRef = useRef<number | null>(null);
@@ -119,6 +157,7 @@ const LoginStarfieldCanvas: React.FC = () => {
       const { width, height } = getCanvasSize(canvas);
       const pointer = pointerRef.current;
       const stars = starsRef.current;
+      const timestamp = reducedMotionRef.current ? 0 : performance.now();
       const gravity = {
         x: width * BLACK_HOLE_GRAVITY.xRatio,
         y: height * BLACK_HOLE_GRAVITY.yRatio,
@@ -142,6 +181,7 @@ const LoginStarfieldCanvas: React.FC = () => {
       context.fillStyle = accretionGlow;
       context.fillRect(0, 0, width, height);
 
+      drawAccretionDisk(context, gravity.x, gravity.y, timestamp);
       drawGravityWave(context, gravity.x, gravity.y, 132, 0.16);
       drawGravityWave(context, gravity.x, gravity.y, 196, 0.1);
 
@@ -243,7 +283,7 @@ const LoginStarfieldCanvas: React.FC = () => {
         );
         const pulse = reducedMotionRef.current
           ? 0.45
-          : 0.45 + Math.sin(performance.now() / 700 + star.phase * 6.28) * 0.22;
+          : 0.45 + Math.sin(timestamp / 700 + star.phase * 6.28) * 0.22;
 
         context.beginPath();
         context.arc(
