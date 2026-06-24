@@ -1,6 +1,6 @@
 import React, { useRef, useState } from "react";
 import { Button, Input, message, Spin } from "antd";
-import { PlusOutlined, RobotOutlined, SearchOutlined } from "@ant-design/icons";
+import { PlusOutlined, SearchOutlined } from "@ant-design/icons";
 import request, { getApiBaseUrl } from "@font/api";
 import { wordAgentQuery } from "@/server/wordAgent/wordAgent";
 import type {
@@ -14,6 +14,7 @@ import { EnglishPartSpeech } from "../enum";
 import { buildWordAgentRequestBody } from "../utils/wordAgentRequest";
 
 const STREAM_PATH = "/word-agent/query-stream";
+const EXAMPLE_WORDS = ["confront", "reluctant", "habitat", "knock over"];
 
 /** 将 AI 查询结果转为「新增单词」弹窗的预填数据 */
 function wordAgentItemToAddInitial(item: WordAgentItem): AddInitialValues {
@@ -236,290 +237,119 @@ export const WordAgentTab: React.FC = () => {
     }
   };
 
+  const handleExampleWord = (word: string) => {
+    setInput((current) => {
+      const trimmed = current.trim();
+      if (!trimmed) return word;
+      return `${trimmed}, ${word}`;
+    });
+  };
+
   return (
-    <div style={{ maxWidth: 920, margin: "0 auto", padding: "0 16px" }}>
-      <div
-        style={{
-          background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-          borderRadius: 16,
-          padding: "28px 32px",
-          boxShadow: "0 10px 40px rgba(102, 126, 234, 0.35)",
-          marginBottom: 24,
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            marginBottom: 10,
-          }}
-        >
-          <span
-            style={{
-              width: 44,
-              height: 44,
-              borderRadius: 12,
-              background: "rgba(255,255,255,0.2)",
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 22,
-              color: "#fff",
-            }}
-          >
-            <RobotOutlined />
-          </span>
-          <div>
-            <h1
-              style={{
-                margin: 0,
-                fontSize: 22,
-                fontWeight: 600,
-                color: "#fff",
+    <div className="word-agent-page">
+      <section className="word-agent-hero" aria-label="AI 单词查询">
+        <span className="word-agent-kicker">AI 单词查询</span>
+        <h1>查词</h1>
+        <p>
+          输入单词、短语或一组薄弱词，返回释义、音标、例句和雅思语境。
+        </p>
+      </section>
+
+      <section className="word-agent-workspace">
+        <div className="word-agent-query-panel">
+          <label className="word-agent-input-label" htmlFor="word-agent-input">
+            单词或短语
+          </label>
+          <div className="word-agent-search-row">
+            <Input.TextArea
+              id="word-agent-input"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="例如：confront 或 confront, reluctant, habitat"
+              autoSize={{ minRows: 3, maxRows: 5 }}
+              onPressEnter={(e) => {
+                if (!e.shiftKey) {
+                  e.preventDefault();
+                  handleQuery();
+                }
               }}
+            />
+            <Button
+              type="primary"
+              icon={<SearchOutlined />}
+              onClick={handleQuery}
+              loading={loading}
+              className="word-agent-query-button"
             >
-              AI 单词查询
-            </h1>
-            <span
-              style={{ fontSize: 13, color: "rgba(255,255,255,0.85)" }}
-            ></span>
+              查询
+            </Button>
+          </div>
+
+          <div className="word-agent-helper-row">
+            <span>逗号或换行可批量查询，Shift + Enter 换行。</span>
+            <div className="word-agent-suggestions" aria-label="示例词">
+              {EXAMPLE_WORDS.map((word) => (
+                <Button
+                  key={word}
+                  type="text"
+                  size="small"
+                  onClick={() => handleExampleWord(word)}
+                >
+                  {word}
+                </Button>
+              ))}
+            </div>
           </div>
         </div>
-        <p
-          style={{
-            margin: 0,
-            color: "rgba(255,255,255,0.9)",
-            fontSize: 14,
-            lineHeight: 1.6,
-          }}
-        >
-          输入单词或短语（多个请用逗号或换行分隔），获取释义、音标、例句与雅思案例。
-        </p>
-      </div>
+      </section>
 
-      <div
-        style={{
-          background: "#fff",
-          borderRadius: 16,
-          padding: 24,
-          boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
-          border: "1px solid rgba(0,0,0,0.04)",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            gap: 12,
-            alignItems: "flex-end",
-            flexWrap: "wrap",
-          }}
-        >
-          <Input.TextArea
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="例如：confront 或 confront, reluctant, habitat"
-            autoSize={{ minRows: 2, maxRows: 4 }}
-            style={{
-              flex: "1 1 280px",
-              borderRadius: 12,
-              border: "1px solid #e8e8e8",
-              fontSize: 15,
-            }}
-            onPressEnter={(e) => {
-              if (!e.shiftKey) {
-                e.preventDefault();
-                handleQuery();
-              }
-            }}
-          />
-          <Button
-            type="primary"
-            icon={<SearchOutlined />}
-            onClick={handleQuery}
-            loading={loading}
-            size="large"
-            style={{
-              height: 44,
-              paddingLeft: 24,
-              paddingRight: 24,
-              borderRadius: 12,
-              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-              border: "none",
-              fontWeight: 500,
-              boxShadow: "0 4px 14px rgba(102, 126, 234, 0.4)",
-            }}
-          >
-            查询
-          </Button>
-        </div>
-
-        {loading && words.length === 0 && (
-          <div
-            style={{
-              textAlign: "center",
-              padding: "48px 24px",
-              background: "linear-gradient(180deg, #fafbff 0%, #f5f6fa 100%)",
-              borderRadius: 12,
-              marginTop: 24,
-            }}
-          >
+      {(loading || words.length > 0 || streamingWord) && (
+        <section className="word-agent-results" aria-label="查询结果">
+          {loading && words.length === 0 && (
+          <div className="word-agent-loading">
             <Spin size="large" tip="AI 正在查询（流式返回）..." />
           </div>
-        )}
+          )}
 
-        {(words.length > 0 || streamingWord) && (
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 20,
-              marginTop: 28,
-            }}
-          >
+          {(words.length > 0 || streamingWord) && (
+          <div className="word-agent-result-list">
             {words.map((item, index) => (
-              <div
-                key={`${item.word}-${index}`}
-                style={{
-                  background: "#fff",
-                  border: "1px solid #eee",
-                  borderRadius: 14,
-                  padding: "20px 24px",
-                  boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    marginBottom: 12,
-                    flexWrap: "wrap",
-                    gap: 8,
-                  }}
-                >
+              <article className="word-agent-result-card" key={`${item.word}-${index}`}>
+                <div className="word-agent-result-head">
                   <div>
-                    <span
-                      style={{
-                        fontSize: 20,
-                        fontWeight: 600,
-                        color: "#667eea",
-                        marginRight: 12,
-                      }}
-                    >
-                      {item.word}
-                    </span>
-                    <span
-                      style={{
-                        color: "#64748b",
-                        fontFamily: "monospace",
-                        fontSize: 15,
-                      }}
-                    >
-                      {item.phonetic}
-                    </span>
+                    <span className="word-agent-result-word">{item.word}</span>
+                    <span className="word-agent-result-phonetic">{item.phonetic}</span>
                   </div>
                   <Button
                     type="primary"
                     size="small"
                     icon={<PlusOutlined />}
                     onClick={() => openAddModal(item)}
-                    style={{
-                      borderRadius: 8,
-                      background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                      border: "none",
-                    }}
                   >
                     新增单词
                   </Button>
                 </div>
                 {item.partOfSpeech && item.partOfSpeech.length > 0 && (
-                  <div
-                    style={{
-                      display: "flex",
-                      flexWrap: "wrap",
-                      gap: 6,
-                      marginBottom: 12,
-                    }}
-                  >
+                  <div className="word-agent-speech-row">
                     {item.partOfSpeech.map((code) => (
-                      <span
-                        key={code}
-                        style={{
-                          padding: "2px 8px",
-                          borderRadius: 6,
-                          fontSize: 12,
-                          background: "#eef2ff",
-                          color: "#4f46e5",
-                        }}
-                      >
+                      <span key={code}>
                         {(EnglishPartSpeech as Record<number, string>)[code] ?? `词性${code}`}
                       </span>
                     ))}
                   </div>
                 )}
-                <p
-                  style={{
-                    margin: "0 0 12px 0",
-                    color: "#334155",
-                    fontSize: 15,
-                    lineHeight: 1.6,
-                  }}
-                >
-                  <span style={{ color: "#64748b", fontWeight: 500 }}>
-                    释义：
-                  </span>
+                <p className="word-agent-meaning">
+                  <span>释义：</span>
                   {item.meaning}
                 </p>
                 {item.examples?.length > 0 && (
-                  <div style={{ marginTop: 14 }}>
-                    <span
-                      style={{
-                        color: "#64748b",
-                        fontWeight: 500,
-                        fontSize: 14,
-                      }}
-                    >
-                      例句
-                    </span>
-                    <ul
-                      style={{
-                        margin: "8px 0 0 0",
-                        paddingLeft: 0,
-                        listStyle: "none",
-                      }}
-                    >
+                  <div className="word-agent-examples">
+                    <span>例句</span>
+                    <ul>
                       {item.examples.map((ex, i) => (
-                        <li
-                          key={i}
-                          style={{
-                            marginBottom: 10,
-                            padding: "6px 0",
-                            borderBottom:
-                              i < item.examples.length - 1
-                                ? "1px solid #f0f0f0"
-                                : "none",
-                          }}
-                        >
-                          <div
-                            style={{
-                              color: "#333",
-                              marginBottom: ex.zh ? 2 : 0,
-                            }}
-                          >
-                            {ex.en}
-                          </div>
-                          {ex.zh && (
-                            <div
-                              style={{
-                                color: "#8c8c8c",
-                                fontSize: 12,
-                                paddingLeft: 8,
-                              }}
-                            >
-                              {ex.zh}
-                            </div>
-                          )}
+                        <li key={i}>
+                          <div>{ex.en}</div>
+                          {ex.zh && <small>{ex.zh}</small>}
                         </li>
                       ))}
                     </ul>
@@ -527,184 +357,50 @@ export const WordAgentTab: React.FC = () => {
                 )}
                 {item.ieltsCase != null &&
                 typeof item.ieltsCase === "object" ? (
-                  <div
-                    style={{
-                      marginTop: 16,
-                      padding: "16px 18px",
-                      background:
-                        "linear-gradient(135deg, #f0f4ff 0%, #faf5ff 100%)",
-                      borderRadius: 12,
-                      borderLeft: "4px solid #667eea",
-                    }}
-                  >
-                    <span
-                      style={{
-                        color: "#667eea",
-                        fontWeight: 600,
-                        fontSize: 13,
-                      }}
-                    >
-                      雅思案例
-                    </span>
-                    <div style={{ marginTop: 8 }}>
-                      <span
-                        className="ielts-source"
-                        style={{
-                          display: "inline-block",
-                          fontSize: 12,
-                          color: "#8c8c8c",
-                          marginBottom: 8,
-                        }}
-                      >
-                        {item.ieltsCase.source}
-                      </span>
-                      <div
-                        className="ielts-question"
-                        style={{
-                          marginTop: 8,
-                          padding: "10px 12px",
-                          background: "rgba(255,255,255,0.8)",
-                          borderRadius: 8,
-                          borderLeft: "2px solid #a78bfa",
-                          fontSize: 14,
-                          color: "#334155",
-                        }}
-                      >
-                        <div
-                          style={{
-                            marginBottom: item.ieltsCase.questionZh ? 4 : 0,
-                          }}
-                        >
-                          {item.ieltsCase.question}
-                        </div>
-                        {item.ieltsCase.questionZh && (
-                          <div
-                            style={{
-                              fontSize: 12,
-                              color: "#8c8c8c",
-                            }}
-                          >
-                            {item.ieltsCase.questionZh}
-                          </div>
-                        )}
+                  <div className="word-agent-ielts">
+                    <span>雅思案例</span>
+                    <div>
+                      <small className="ielts-source">{item.ieltsCase.source}</small>
+                      <div className="ielts-question">
+                        <div>{item.ieltsCase.question}</div>
+                        {item.ieltsCase.questionZh && <small>{item.ieltsCase.questionZh}</small>}
                       </div>
-                      <blockquote
-                        className="ielts-sentence"
-                        style={{
-                          margin: "10px 0 0 0",
-                          padding: "10px 0 0 14px",
-                          borderLeft: "2px solid #667eea",
-                          fontStyle: "italic",
-                          color: "#475569",
-                          fontSize: 14,
-                        }}
-                      >
-                        <div
-                          style={{
-                            marginBottom: item.ieltsCase.sentenceZh ? 4 : 0,
-                          }}
-                        >
-                          {item.ieltsCase.sentence}
-                        </div>
+                      <blockquote className="ielts-sentence">
+                        <div>{item.ieltsCase.sentence}</div>
                         {item.ieltsCase.sentenceZh && (
-                          <div
-                            style={{
-                              fontSize: 12,
-                              color: "#8c8c8c",
-                              fontStyle: "normal",
-                            }}
-                          >
+                          <small>
                             {item.ieltsCase.sentenceZh}
-                          </div>
+                          </small>
                         )}
                       </blockquote>
                     </div>
                   </div>
                 ) : (
-                  <div
-                    style={{
-                      marginTop: 12,
-                      color: "#94a3b8",
-                      fontSize: 13,
-                    }}
-                  >
-                    雅思案例：暂无
-                  </div>
+                  <div className="word-agent-no-ielts">雅思案例：暂无</div>
                 )}
-              </div>
+              </article>
             ))}
             {streamingWord && (
-              <div
-                style={{
-                  background: "#fff",
-                  border: "1px dashed #c7d2fe",
-                  borderRadius: 14,
-                  padding: "20px 24px",
-                  boxShadow: "0 2px 12px rgba(102, 126, 234, 0.1)",
-                }}
-              >
-                <div style={{ marginBottom: 12 }}>
-                  <span
-                    style={{
-                      fontSize: 20,
-                      fontWeight: 600,
-                      color: "#667eea",
-                      marginRight: 12,
-                    }}
-                  >
-                    {streamingWord}
-                  </span>
-                  <span
-                    style={{
-                      color: "#94a3b8",
-                      fontSize: 13,
-                      marginLeft: 8,
-                    }}
-                  >
-                    AI 正在输出…
-                  </span>
+              <article className="word-agent-result-card word-agent-streaming-card">
+                <div className="word-agent-streaming-head">
+                  <span className="word-agent-result-word">{streamingWord}</span>
+                  <span>AI 正在输出...</span>
                 </div>
-                <pre
-                  style={{
-                    margin: 0,
-                    whiteSpace: "pre-wrap",
-                    wordBreak: "break-word",
-                    fontFamily: "inherit",
-                    fontSize: 14,
-                    lineHeight: 1.6,
-                    color: "#334155",
-                    minHeight: 24,
-                  }}
-                >
+                <pre>
                   {streamingChunk || "\u00A0"}
-                  <span
-                    style={{
-                      display: "inline-block",
-                      width: 2,
-                      height: 16,
-                      marginLeft: 2,
-                      background: "#667eea",
-                      verticalAlign: "text-bottom",
-                    }}
-                  />
+                  <span className="word-agent-cursor" />
                 </pre>
-              </div>
+              </article>
             )}
             {loading && (words.length > 0 || streamingWord) && (
-              <div
-                style={{
-                  textAlign: "center",
-                  padding: "24px",
-                  color: "#64748b",
-                  fontSize: 13,
-                }}
-              >
+              <div className="word-agent-more-loading">
                 <Spin size="small" tip="正在接收更多…" />
               </div>
             )}
           </div>
-        )}
-      </div>
+          )}
+        </section>
+      )}
 
       <EditAddModal
         isModalVisible={addModalVisible}
