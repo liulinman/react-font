@@ -1,5 +1,4 @@
 import React, { useEffect, useRef } from "react";
-import loginBlackHoleVocabulary from "@/assets/login-black-hole-vocabulary.png";
 
 type Star = {
   x: number;
@@ -27,51 +26,10 @@ const LINK_DISTANCE = 142;
 const POINTER_RANGE = 190;
 const RIPPLE_LIFE = 54;
 
-export const BLACK_HOLE_GRAVITY = {
-  xRatio: 0.36,
-  yRatio: 0.48,
-  radius: 310,
-  pull: 0.24,
-  rotationSpeed: 0.00022,
+export const STARFIELD_INTERACTION = {
+  linkDistance: LINK_DISTANCE,
+  pointerRange: POINTER_RANGE,
 };
-
-export const ACCRETION_TEXTURE_RING = {
-  innerRadius: 112,
-  outerRadius: 204,
-  scaleX: 1.72,
-  scaleY: 0.45,
-  tilt: -0.2,
-  opacity: 0.16,
-};
-
-type BackgroundCoverFrame = {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-};
-
-export function getAccretionTextureRotation(timestamp: number) {
-  return timestamp * BLACK_HOLE_GRAVITY.rotationSpeed;
-}
-
-function getBackgroundCoverFrame(
-  canvasWidth: number,
-  canvasHeight: number,
-  imageWidth: number,
-  imageHeight: number,
-): BackgroundCoverFrame {
-  const scale = Math.max(canvasWidth / imageWidth, canvasHeight / imageHeight);
-  const width = imageWidth * scale;
-  const height = imageHeight * scale;
-
-  return {
-    x: (canvasWidth - width) / 2,
-    y: (canvasHeight - height) / 2,
-    width,
-    height,
-  };
-}
 
 function createStars(width: number, height: number): Star[] {
   const area = width * height;
@@ -129,53 +87,10 @@ function drawGravityWave(
   context.restore();
 }
 
-function drawAccretionTexture(
-  context: CanvasRenderingContext2D,
-  image: HTMLImageElement,
-  width: number,
-  height: number,
-  x: number,
-  y: number,
-  timestamp: number,
-) {
-  if (!image.complete || !image.naturalWidth || !image.naturalHeight) return;
-
-  const frame = getBackgroundCoverFrame(
-    width,
-    height,
-    image.naturalWidth,
-    image.naturalHeight,
-  );
-  const rotation = getAccretionTextureRotation(timestamp);
-  const baseTransform = context.getTransform();
-
-  context.save();
-  context.translate(x, y);
-  context.rotate(ACCRETION_TEXTURE_RING.tilt);
-  context.scale(ACCRETION_TEXTURE_RING.scaleX, ACCRETION_TEXTURE_RING.scaleY);
-  context.beginPath();
-  context.arc(0, 0, ACCRETION_TEXTURE_RING.outerRadius, 0, Math.PI * 2);
-  context.arc(0, 0, ACCRETION_TEXTURE_RING.innerRadius, 0, Math.PI * 2, true);
-  context.clip("evenodd");
-  context.setTransform(baseTransform);
-  context.translate(x, y);
-  context.rotate(rotation);
-  context.globalAlpha = ACCRETION_TEXTURE_RING.opacity;
-  context.drawImage(
-    image,
-    frame.x - x,
-    frame.y - y,
-    frame.width,
-    frame.height,
-  );
-  context.restore();
-}
-
 const LoginStarfieldCanvas: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const frameRef = useRef<number | null>(null);
   const starsRef = useRef<Star[]>([]);
-  const accretionTextureRef = useRef<HTMLImageElement | null>(null);
   const pointerRef = useRef<PointerState>({ active: false, x: 0, y: 0 });
   const ripplesRef = useRef<Ripple[]>([]);
   const reducedMotionRef = useRef(false);
@@ -187,9 +102,6 @@ const LoginStarfieldCanvas: React.FC = () => {
 
     const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
     reducedMotionRef.current = reducedMotionQuery.matches;
-    const accretionTexture = new Image();
-    accretionTexture.src = loginBlackHoleVocabulary;
-    accretionTextureRef.current = accretionTexture;
 
     const resize = () => {
       const { width, height } = getCanvasSize(canvas);
@@ -206,42 +118,7 @@ const LoginStarfieldCanvas: React.FC = () => {
       const pointer = pointerRef.current;
       const stars = starsRef.current;
       const timestamp = reducedMotionRef.current ? 0 : performance.now();
-      const gravity = {
-        x: width * BLACK_HOLE_GRAVITY.xRatio,
-        y: height * BLACK_HOLE_GRAVITY.yRatio,
-      };
-
       context.clearRect(0, 0, width, height);
-
-      const accretionGlow = context.createRadialGradient(
-        gravity.x,
-        gravity.y,
-        24,
-        gravity.x,
-        gravity.y,
-        BLACK_HOLE_GRAVITY.radius,
-      );
-      accretionGlow.addColorStop(0, "rgba(0, 0, 0, 0)");
-      accretionGlow.addColorStop(0.16, "rgba(251, 191, 36, 0.1)");
-      accretionGlow.addColorStop(0.34, "rgba(245, 158, 11, 0.08)");
-      accretionGlow.addColorStop(0.72, "rgba(59, 130, 246, 0.035)");
-      accretionGlow.addColorStop(1, "rgba(2, 6, 23, 0)");
-      context.fillStyle = accretionGlow;
-      context.fillRect(0, 0, width, height);
-
-      if (accretionTextureRef.current) {
-        drawAccretionTexture(
-          context,
-          accretionTextureRef.current,
-          width,
-          height,
-          gravity.x,
-          gravity.y,
-          timestamp,
-        );
-      }
-      drawGravityWave(context, gravity.x, gravity.y, 132, 0.16);
-      drawGravityWave(context, gravity.x, gravity.y, 196, 0.1);
 
       const glow = context.createRadialGradient(
         pointer.active ? pointer.x : width * 0.55,
@@ -278,20 +155,6 @@ const LoginStarfieldCanvas: React.FC = () => {
             }
           }
 
-          const gravityDx = gravity.x - star.x;
-          const gravityDy = gravity.y - star.y;
-          const gravityDistance = Math.hypot(gravityDx, gravityDy);
-          if (
-            gravityDistance < BLACK_HOLE_GRAVITY.radius &&
-            gravityDistance > 36
-          ) {
-            const force =
-              (1 - gravityDistance / BLACK_HOLE_GRAVITY.radius) *
-              BLACK_HOLE_GRAVITY.pull;
-            const tangent = force * 0.48;
-            star.x += (gravityDx / gravityDistance) * force + (-gravityDy / gravityDistance) * tangent;
-            star.y += (gravityDy / gravityDistance) * force + (gravityDx / gravityDistance) * tangent;
-          }
         }
 
         for (let nextIndex = index + 1; nextIndex < stars.length; nextIndex += 1) {
@@ -307,23 +170,15 @@ const LoginStarfieldCanvas: React.FC = () => {
             const pointerBoost = pointer.active
               ? Math.max(0, 1 - pointerDistance / POINTER_RANGE)
               : 0;
-            const gravityDistance = Math.hypot(gravity.x - midX, gravity.y - midY);
-            const gravityBoost = Math.max(
-              0,
-              1 - gravityDistance / BLACK_HOLE_GRAVITY.radius,
-            );
             const alpha =
               (1 - distance / LINK_DISTANCE) *
-              (0.09 + pointerBoost * 0.34 + gravityBoost * 0.18);
+              (0.09 + pointerBoost * 0.34);
 
             context.beginPath();
             context.moveTo(star.x, star.y);
             context.lineTo(next.x, next.y);
-            context.strokeStyle =
-              gravityBoost > 0.24
-                ? `rgba(251, 191, 36, ${alpha})`
-                : `rgba(125, 211, 252, ${alpha})`;
-            context.lineWidth = 0.7 + pointerBoost * 0.9 + gravityBoost * 0.5;
+            context.strokeStyle = `rgba(125, 211, 252, ${alpha})`;
+            context.lineWidth = 0.7 + pointerBoost * 0.9;
             context.stroke();
           }
         }
@@ -334,11 +189,6 @@ const LoginStarfieldCanvas: React.FC = () => {
           ? Math.hypot(pointer.x - star.x, pointer.y - star.y)
           : POINTER_RANGE;
         const boost = pointer.active ? Math.max(0, 1 - distance / POINTER_RANGE) : 0;
-        const gravityDistance = Math.hypot(gravity.x - star.x, gravity.y - star.y);
-        const gravityBoost = Math.max(
-          0,
-          1 - gravityDistance / BLACK_HOLE_GRAVITY.radius,
-        );
         const pulse = reducedMotionRef.current
           ? 0.45
           : 0.45 + Math.sin(timestamp / 700 + star.phase * 6.28) * 0.22;
@@ -347,14 +197,11 @@ const LoginStarfieldCanvas: React.FC = () => {
         context.arc(
           star.x,
           star.y,
-          star.radius + boost * 1.9 + gravityBoost * 1.2,
+          star.radius + boost * 1.9,
           0,
           Math.PI * 2,
         );
-        context.fillStyle =
-          gravityBoost > 0.2
-            ? `rgba(253, 186, 116, ${0.34 + pulse * 0.28 + gravityBoost * 0.38})`
-            : starColor(star.hue, 0.38 + pulse * 0.32 + boost * 0.42);
+        context.fillStyle = starColor(star.hue, 0.38 + pulse * 0.32 + boost * 0.42);
         context.fill();
       });
 

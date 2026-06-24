@@ -1,11 +1,8 @@
 import "@testing-library/jest-dom/vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import LoginStarfieldCanvas, {
-  ACCRETION_TEXTURE_RING,
-  BLACK_HOLE_GRAVITY,
-  getAccretionTextureRotation,
-} from "./LoginStarfieldCanvas";
+import LoginStarfieldCanvas from "./LoginStarfieldCanvas";
+import * as starfieldModule from "./LoginStarfieldCanvas";
 
 describe("LoginStarfieldCanvas", () => {
   const originalMatchMedia = window.matchMedia;
@@ -69,28 +66,14 @@ describe("LoginStarfieldCanvas", () => {
     }).not.toThrow();
   });
 
-  it("exposes a center-left black-hole gravity well", () => {
-    expect(BLACK_HOLE_GRAVITY.xRatio).toBeLessThan(0.5);
-    expect(BLACK_HOLE_GRAVITY.yRatio).toBeGreaterThan(0.28);
-    expect(BLACK_HOLE_GRAVITY.yRatio).toBeLessThan(0.62);
-    expect(BLACK_HOLE_GRAVITY.radius).toBeGreaterThan(220);
+  it("does not expose black-hole or accretion-disk animation hooks", () => {
+    expect("BLACK_HOLE_GRAVITY" in starfieldModule).toBe(false);
+    expect("ACCRETION_TEXTURE_RING" in starfieldModule).toBe(false);
+    expect("getAccretionTextureRotation" in starfieldModule).toBe(false);
   });
 
-  it("exposes a non-zero accretion disk rotation speed", () => {
-    expect(BLACK_HOLE_GRAVITY.rotationSpeed).toBeGreaterThan(0);
-  });
-
-  it("uses a masked background texture ring instead of particles", () => {
-    expect(ACCRETION_TEXTURE_RING.outerRadius).toBeGreaterThan(
-      ACCRETION_TEXTURE_RING.innerRadius,
-    );
-    expect(ACCRETION_TEXTURE_RING.opacity).toBeLessThan(0.7);
-  });
-
-  it("rotates the sampled background texture over time", () => {
-    expect(getAccretionTextureRotation(2400)).not.toBeCloseTo(
-      getAccretionTextureRotation(0),
-      4,
-    );
+  it("keeps the starfield interaction focused on pointer movement", () => {
+    expect(starfieldModule.STARFIELD_INTERACTION.pointerRange).toBeGreaterThan(160);
+    expect(starfieldModule.STARFIELD_INTERACTION.linkDistance).toBeGreaterThan(120);
   });
 });
