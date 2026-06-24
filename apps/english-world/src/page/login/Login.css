@@ -18,8 +18,8 @@
   content: "";
   pointer-events: none;
   background:
-    linear-gradient(90deg, rgba(3, 7, 18, 0.34), transparent 42%, rgba(3, 7, 18, 0.22)),
-    radial-gradient(circle at 50% 50%, transparent 0, transparent 36%, rgba(3, 7, 18, 0.42) 100%);
+    linear-gradient(90deg, rgba(3, 7, 18, 0.12), transparent 38%, rgba(3, 7, 18, 0.38)),
+    radial-gradient(circle at 36% 48%, transparent 0, transparent 24%, rgba(3, 7, 18, 0.34) 64%, rgba(3, 7, 18, 0.58) 100%);
 }
 
 .login-starfield,
@@ -32,9 +32,10 @@
 .login-starfield {
   transform: translate3d(var(--login-parallax-x), var(--login-parallax-y), 0);
   background:
-    radial-gradient(circle at 18% 24%, rgba(125, 211, 252, 0.26), transparent 22%),
-    radial-gradient(circle at 76% 20%, rgba(167, 139, 250, 0.22), transparent 20%),
-    radial-gradient(circle at 46% 78%, rgba(45, 212, 191, 0.14), transparent 24%);
+    radial-gradient(circle at 34% 48%, rgba(251, 191, 36, 0.22), transparent 24%),
+    radial-gradient(circle at 18% 24%, rgba(125, 211, 252, 0.18), transparent 22%),
+    radial-gradient(circle at 76% 20%, rgba(167, 139, 250, 0.18), transparent 20%),
+    radial-gradient(circle at 46% 78%, rgba(45, 212, 191, 0.1), transparent 24%);
   transition: transform 180ms ease-out;
 }
 

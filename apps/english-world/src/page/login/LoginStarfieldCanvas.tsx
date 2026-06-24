@@ -26,6 +26,13 @@ const LINK_DISTANCE = 142;
 const POINTER_RANGE = 190;
 const RIPPLE_LIFE = 54;
 
+export const BLACK_HOLE_GRAVITY = {
+  xRatio: 0.36,
+  yRatio: 0.48,
+  radius: 310,
+  pull: 0.24,
+};
+
 function createStars(width: number, height: number): Star[] {
   const area = width * height;
   const targetCount = width < 640 ? 46 : Math.min(118, Math.max(72, area / 14500));
@@ -63,6 +70,25 @@ function starColor(hue: number, alpha: number) {
   return `rgba(94, 234, 212, ${alpha})`;
 }
 
+function drawGravityWave(
+  context: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  radius: number,
+  alpha: number,
+) {
+  context.save();
+  context.translate(x, y);
+  context.rotate(-0.18);
+  context.scale(1.52, 0.52);
+  context.beginPath();
+  context.arc(0, 0, radius, 0, Math.PI * 2);
+  context.strokeStyle = `rgba(251, 191, 36, ${alpha})`;
+  context.lineWidth = 1.4;
+  context.stroke();
+  context.restore();
+}
+
 const LoginStarfieldCanvas: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const frameRef = useRef<number | null>(null);
@@ -93,8 +119,31 @@ const LoginStarfieldCanvas: React.FC = () => {
       const { width, height } = getCanvasSize(canvas);
       const pointer = pointerRef.current;
       const stars = starsRef.current;
+      const gravity = {
+        x: width * BLACK_HOLE_GRAVITY.xRatio,
+        y: height * BLACK_HOLE_GRAVITY.yRatio,
+      };
 
       context.clearRect(0, 0, width, height);
+
+      const accretionGlow = context.createRadialGradient(
+        gravity.x,
+        gravity.y,
+        24,
+        gravity.x,
+        gravity.y,
+        BLACK_HOLE_GRAVITY.radius,
+      );
+      accretionGlow.addColorStop(0, "rgba(0, 0, 0, 0)");
+      accretionGlow.addColorStop(0.16, "rgba(251, 191, 36, 0.1)");
+      accretionGlow.addColorStop(0.34, "rgba(245, 158, 11, 0.08)");
+      accretionGlow.addColorStop(0.72, "rgba(59, 130, 246, 0.035)");
+      accretionGlow.addColorStop(1, "rgba(2, 6, 23, 0)");
+      context.fillStyle = accretionGlow;
+      context.fillRect(0, 0, width, height);
+
+      drawGravityWave(context, gravity.x, gravity.y, 132, 0.16);
+      drawGravityWave(context, gravity.x, gravity.y, 196, 0.1);
 
       const glow = context.createRadialGradient(
         pointer.active ? pointer.x : width * 0.55,
@@ -130,6 +179,21 @@ const LoginStarfieldCanvas: React.FC = () => {
               star.y += (dy / distance) * pull;
             }
           }
+
+          const gravityDx = gravity.x - star.x;
+          const gravityDy = gravity.y - star.y;
+          const gravityDistance = Math.hypot(gravityDx, gravityDy);
+          if (
+            gravityDistance < BLACK_HOLE_GRAVITY.radius &&
+            gravityDistance > 36
+          ) {
+            const force =
+              (1 - gravityDistance / BLACK_HOLE_GRAVITY.radius) *
+              BLACK_HOLE_GRAVITY.pull;
+            const tangent = force * 0.48;
+            star.x += (gravityDx / gravityDistance) * force + (-gravityDy / gravityDistance) * tangent;
+            star.y += (gravityDy / gravityDistance) * force + (gravityDx / gravityDistance) * tangent;
+          }
         }
 
         for (let nextIndex = index + 1; nextIndex < stars.length; nextIndex += 1) {
@@ -145,13 +209,23 @@ const LoginStarfieldCanvas: React.FC = () => {
             const pointerBoost = pointer.active
               ? Math.max(0, 1 - pointerDistance / POINTER_RANGE)
               : 0;
-            const alpha = (1 - distance / LINK_DISTANCE) * (0.11 + pointerBoost * 0.36);
+            const gravityDistance = Math.hypot(gravity.x - midX, gravity.y - midY);
+            const gravityBoost = Math.max(
+              0,
+              1 - gravityDistance / BLACK_HOLE_GRAVITY.radius,
+            );
+            const alpha =
+              (1 - distance / LINK_DISTANCE) *
+              (0.09 + pointerBoost * 0.34 + gravityBoost * 0.18);
 
             context.beginPath();
             context.moveTo(star.x, star.y);
             context.lineTo(next.x, next.y);
-            context.strokeStyle = `rgba(125, 211, 252, ${alpha})`;
-            context.lineWidth = 0.8 + pointerBoost * 0.9;
+            context.strokeStyle =
+              gravityBoost > 0.24
+                ? `rgba(251, 191, 36, ${alpha})`
+                : `rgba(125, 211, 252, ${alpha})`;
+            context.lineWidth = 0.7 + pointerBoost * 0.9 + gravityBoost * 0.5;
             context.stroke();
           }
         }
@@ -162,13 +236,27 @@ const LoginStarfieldCanvas: React.FC = () => {
           ? Math.hypot(pointer.x - star.x, pointer.y - star.y)
           : POINTER_RANGE;
         const boost = pointer.active ? Math.max(0, 1 - distance / POINTER_RANGE) : 0;
+        const gravityDistance = Math.hypot(gravity.x - star.x, gravity.y - star.y);
+        const gravityBoost = Math.max(
+          0,
+          1 - gravityDistance / BLACK_HOLE_GRAVITY.radius,
+        );
         const pulse = reducedMotionRef.current
           ? 0.45
           : 0.45 + Math.sin(performance.now() / 700 + star.phase * 6.28) * 0.22;
 
         context.beginPath();
-        context.arc(star.x, star.y, star.radius + boost * 1.9, 0, Math.PI * 2);
-        context.fillStyle = starColor(star.hue, 0.38 + pulse * 0.32 + boost * 0.42);
+        context.arc(
+          star.x,
+          star.y,
+          star.radius + boost * 1.9 + gravityBoost * 1.2,
+          0,
+          Math.PI * 2,
+        );
+        context.fillStyle =
+          gravityBoost > 0.2
+            ? `rgba(253, 186, 116, ${0.34 + pulse * 0.28 + gravityBoost * 0.38})`
+            : starColor(star.hue, 0.38 + pulse * 0.32 + boost * 0.42);
         context.fill();
       });
 
@@ -178,11 +266,15 @@ const LoginStarfieldCanvas: React.FC = () => {
 
       ripplesRef.current.forEach((ripple) => {
         const progress = ripple.age / RIPPLE_LIFE;
-        context.beginPath();
-        context.arc(ripple.x, ripple.y, 18 + progress * 150, 0, Math.PI * 2);
-        context.strokeStyle = `rgba(103, 232, 249, ${0.36 * (1 - progress)})`;
-        context.lineWidth = 1.6;
-        context.stroke();
+        const rippleRadius = 18 + progress * 150;
+
+        drawGravityWave(
+          context,
+          ripple.x,
+          ripple.y,
+          rippleRadius,
+          0.34 * (1 - progress),
+        );
       });
     };
 

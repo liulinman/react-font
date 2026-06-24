@@ -1,7 +1,9 @@
 import "@testing-library/jest-dom/vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import LoginStarfieldCanvas from "./LoginStarfieldCanvas";
+import LoginStarfieldCanvas, {
+  BLACK_HOLE_GRAVITY,
+} from "./LoginStarfieldCanvas";
 
 describe("LoginStarfieldCanvas", () => {
   const originalMatchMedia = window.matchMedia;
@@ -23,6 +25,8 @@ describe("LoginStarfieldCanvas", () => {
       save: vi.fn(),
       restore: vi.fn(),
       scale: vi.fn(),
+      rotate: vi.fn(),
+      translate: vi.fn(),
     })) as unknown as HTMLCanvasElement["getContext"];
 
     window.matchMedia = vi.fn().mockImplementation((query: string) => ({
@@ -61,5 +65,12 @@ describe("LoginStarfieldCanvas", () => {
         clientY: 90,
       });
     }).not.toThrow();
+  });
+
+  it("exposes a center-left black-hole gravity well", () => {
+    expect(BLACK_HOLE_GRAVITY.xRatio).toBeLessThan(0.5);
+    expect(BLACK_HOLE_GRAVITY.yRatio).toBeGreaterThan(0.28);
+    expect(BLACK_HOLE_GRAVITY.yRatio).toBeLessThan(0.62);
+    expect(BLACK_HOLE_GRAVITY.radius).toBeGreaterThan(220);
   });
 });

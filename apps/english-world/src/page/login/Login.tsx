@@ -3,7 +3,7 @@ import { Form, Input, Button, Card, Tabs, message } from "antd";
 import { UserOutlined, LockOutlined } from "@ant-design/icons";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import loginStarryVocabulary from "@/assets/login-starry-vocabulary.png";
+import loginBlackHoleVocabulary from "@/assets/login-black-hole-vocabulary.png";
 import LoginStarfieldCanvas from "./LoginStarfieldCanvas";
 import "./Login.css";
 
@@ -107,7 +107,7 @@ const Login: React.FC = () => {
   const loginContainerStyle: LoginContainerStyle = {
     "--login-parallax-x": `${parallax.x * 18}px`,
     "--login-parallax-y": `${parallax.y * 18}px`,
-    backgroundImage: `linear-gradient(135deg, rgba(3, 7, 18, 0.72), rgba(15, 23, 42, 0.58)), url(${loginStarryVocabulary})`,
+    backgroundImage: `linear-gradient(115deg, rgba(3, 7, 18, 0.36), rgba(15, 23, 42, 0.48) 48%, rgba(3, 7, 18, 0.7)), url(${loginBlackHoleVocabulary})`,
   };
 
   return (
