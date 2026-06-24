@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from "react";
+import loginBlackHoleVocabulary from "@/assets/login-black-hole-vocabulary.png";
 
 type Star = {
   x: number;
@@ -22,19 +23,9 @@ type Ripple = {
   age: number;
 };
 
-type AccretionParticle = {
-  radius: number;
-  phase: number;
-  speed: number;
-  size: number;
-  alpha: number;
-  warmth: number;
-};
-
 const LINK_DISTANCE = 142;
 const POINTER_RANGE = 190;
 const RIPPLE_LIFE = 54;
-export const ACCRETION_PARTICLE_COUNT = 86;
 
 export const BLACK_HOLE_GRAVITY = {
   xRatio: 0.36,
@@ -44,37 +35,41 @@ export const BLACK_HOLE_GRAVITY = {
   rotationSpeed: 0.00022,
 };
 
-export function createAccretionParticles(): AccretionParticle[] {
-  return Array.from({ length: ACCRETION_PARTICLE_COUNT }, (_, index) => {
-    const seed = index + 1;
-    const band = seed % 4;
+export const ACCRETION_TEXTURE_RING = {
+  innerRadius: 112,
+  outerRadius: 204,
+  scaleX: 1.72,
+  scaleY: 0.45,
+  tilt: -0.2,
+  opacity: 0.16,
+};
 
-    return {
-      radius: 92 + band * 32 + ((seed * 17) % 26),
-      phase: ((seed * 137) % 628) / 100,
-      speed:
-        (seed % 2 === 0 ? 1 : -0.78) *
-        (0.00016 + ((seed * 11) % 9) / 100000),
-      size: 0.9 + ((seed * 19) % 18) / 10,
-      alpha: 0.18 + ((seed * 23) % 26) / 100,
-      warmth: ((seed * 31) % 100) / 100,
-    };
-  });
+type BackgroundCoverFrame = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
+export function getAccretionTextureRotation(timestamp: number) {
+  return timestamp * BLACK_HOLE_GRAVITY.rotationSpeed;
 }
 
-export function getAccretionParticlePosition(
-  particle: AccretionParticle,
-  timestamp: number,
-) {
-  const angle = particle.phase + timestamp * particle.speed;
-  const diskX = Math.cos(angle) * particle.radius * 1.72;
-  const diskY = Math.sin(angle) * particle.radius * 0.45;
-  const tilt = -0.2;
+function getBackgroundCoverFrame(
+  canvasWidth: number,
+  canvasHeight: number,
+  imageWidth: number,
+  imageHeight: number,
+): BackgroundCoverFrame {
+  const scale = Math.max(canvasWidth / imageWidth, canvasHeight / imageHeight);
+  const width = imageWidth * scale;
+  const height = imageHeight * scale;
 
   return {
-    x: diskX * Math.cos(tilt) - diskY * Math.sin(tilt),
-    y: diskX * Math.sin(tilt) + diskY * Math.cos(tilt),
-    depth: (Math.sin(angle) + 1) / 2,
+    x: (canvasWidth - width) / 2,
+    y: (canvasHeight - height) / 2,
+    width,
+    height,
   };
 }
 
@@ -134,92 +129,53 @@ function drawGravityWave(
   context.restore();
 }
 
-function drawAccretionDisk(
+function drawAccretionTexture(
   context: CanvasRenderingContext2D,
+  image: HTMLImageElement,
+  width: number,
+  height: number,
   x: number,
   y: number,
   timestamp: number,
-  particles: AccretionParticle[],
-  pointer: PointerState,
 ) {
-  const rotation = timestamp * BLACK_HOLE_GRAVITY.rotationSpeed;
-  const rings = [
-    { radius: 118, alpha: 0.22, width: 2.4, offset: 0 },
-    { radius: 158, alpha: 0.18, width: 1.7, offset: 1.7 },
-    { radius: 210, alpha: 0.12, width: 1.2, offset: 3.2 },
-  ];
+  if (!image.complete || !image.naturalWidth || !image.naturalHeight) return;
 
-  rings.forEach((ring, ringIndex) => {
-    for (let segment = 0; segment < 3; segment += 1) {
-      const start =
-        rotation * (ringIndex % 2 === 0 ? 1 : -0.72) +
-        ring.offset +
-        segment * 2.08;
-      const end = start + 0.82 + ringIndex * 0.08;
+  const frame = getBackgroundCoverFrame(
+    width,
+    height,
+    image.naturalWidth,
+    image.naturalHeight,
+  );
+  const rotation = getAccretionTextureRotation(timestamp);
+  const baseTransform = context.getTransform();
 
-      context.save();
-      context.translate(x, y);
-      context.rotate(-0.2 + rotation * 0.12);
-      context.scale(1.72, 0.45);
-      context.beginPath();
-      context.arc(0, 0, ring.radius, start, end);
-      context.strokeStyle = `rgba(251, 191, 36, ${ring.alpha})`;
-      context.lineWidth = ring.width;
-      context.shadowColor = "rgba(251, 191, 36, 0.28)";
-      context.shadowBlur = 12;
-      context.stroke();
-      context.restore();
-    }
-  });
-
-  [...particles]
-    .map((particle) => ({
-      particle,
-      current: getAccretionParticlePosition(particle, timestamp),
-      previous: getAccretionParticlePosition(particle, timestamp - 520),
-    }))
-    .sort((a, b) => a.current.depth - b.current.depth)
-    .forEach(({ particle, current, previous }) => {
-      const worldX = x + current.x;
-      const worldY = y + current.y;
-      const pointerBoost = pointer.active
-        ? Math.max(
-            0,
-            1 - Math.hypot(pointer.x - worldX, pointer.y - worldY) / 240,
-          )
-        : 0;
-      const depthGlow = 0.58 + current.depth * 0.72;
-      const hue = particle.warmth > 0.62 ? "253, 224, 138" : "251, 146, 60";
-      const alpha = Math.min(0.72, particle.alpha * depthGlow + pointerBoost * 0.18);
-
-      context.beginPath();
-      context.moveTo(x + previous.x, y + previous.y);
-      context.lineTo(worldX, worldY);
-      context.strokeStyle = `rgba(${hue}, ${alpha * 0.7})`;
-      context.lineWidth = particle.size * (0.72 + current.depth * 0.7);
-      context.stroke();
-
-      context.beginPath();
-      context.arc(
-        worldX,
-        worldY,
-        particle.size * (0.8 + current.depth * 1.05 + pointerBoost),
-        0,
-        Math.PI * 2,
-      );
-      context.fillStyle = `rgba(${hue}, ${alpha})`;
-      context.shadowColor = `rgba(${hue}, ${0.24 + current.depth * 0.16})`;
-      context.shadowBlur = 10 + current.depth * 14 + pointerBoost * 10;
-      context.fill();
-      context.shadowBlur = 0;
-    });
+  context.save();
+  context.translate(x, y);
+  context.rotate(ACCRETION_TEXTURE_RING.tilt);
+  context.scale(ACCRETION_TEXTURE_RING.scaleX, ACCRETION_TEXTURE_RING.scaleY);
+  context.beginPath();
+  context.arc(0, 0, ACCRETION_TEXTURE_RING.outerRadius, 0, Math.PI * 2);
+  context.arc(0, 0, ACCRETION_TEXTURE_RING.innerRadius, 0, Math.PI * 2, true);
+  context.clip("evenodd");
+  context.setTransform(baseTransform);
+  context.translate(x, y);
+  context.rotate(rotation);
+  context.globalAlpha = ACCRETION_TEXTURE_RING.opacity;
+  context.drawImage(
+    image,
+    frame.x - x,
+    frame.y - y,
+    frame.width,
+    frame.height,
+  );
+  context.restore();
 }
 
 const LoginStarfieldCanvas: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const frameRef = useRef<number | null>(null);
   const starsRef = useRef<Star[]>([]);
-  const accretionParticlesRef = useRef<AccretionParticle[]>(createAccretionParticles());
+  const accretionTextureRef = useRef<HTMLImageElement | null>(null);
   const pointerRef = useRef<PointerState>({ active: false, x: 0, y: 0 });
   const ripplesRef = useRef<Ripple[]>([]);
   const reducedMotionRef = useRef(false);
@@ -231,6 +187,9 @@ const LoginStarfieldCanvas: React.FC = () => {
 
     const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
     reducedMotionRef.current = reducedMotionQuery.matches;
+    const accretionTexture = new Image();
+    accretionTexture.src = loginBlackHoleVocabulary;
+    accretionTextureRef.current = accretionTexture;
 
     const resize = () => {
       const { width, height } = getCanvasSize(canvas);
@@ -270,14 +229,17 @@ const LoginStarfieldCanvas: React.FC = () => {
       context.fillStyle = accretionGlow;
       context.fillRect(0, 0, width, height);
 
-      drawAccretionDisk(
-        context,
-        gravity.x,
-        gravity.y,
-        timestamp,
-        accretionParticlesRef.current,
-        pointer,
-      );
+      if (accretionTextureRef.current) {
+        drawAccretionTexture(
+          context,
+          accretionTextureRef.current,
+          width,
+          height,
+          gravity.x,
+          gravity.y,
+          timestamp,
+        );
+      }
       drawGravityWave(context, gravity.x, gravity.y, 132, 0.16);
       drawGravityWave(context, gravity.x, gravity.y, 196, 0.1);
 
