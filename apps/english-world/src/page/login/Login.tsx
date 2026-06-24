@@ -4,6 +4,7 @@ import { UserOutlined, LockOutlined } from "@ant-design/icons";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import loginStarryVocabulary from "@/assets/login-starry-vocabulary.png";
+import LoginStarfieldCanvas from "./LoginStarfieldCanvas";
 import "./Login.css";
 
 const { TabPane } = Tabs;
@@ -118,6 +119,7 @@ const Login: React.FC = () => {
     >
       <div className="login-starfield" aria-hidden="true" />
       <div className="login-orbit" aria-hidden="true" />
+      <LoginStarfieldCanvas />
       <section className="login-hero" aria-label="英语世界登录">
         <div className="login-copy">
           <div className="login-kicker">AI vocabulary constellation</div>

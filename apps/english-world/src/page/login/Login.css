@@ -52,6 +52,15 @@
   transition: transform 220ms ease-out;
 }
 
+.login-interactive-starfield {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
 .login-hero {
   position: relative;
   z-index: 1;
@@ -454,6 +463,7 @@
 @media (prefers-reduced-motion: reduce) {
   .login-starfield,
   .login-orbit,
+  .login-interactive-starfield,
   .login-copy,
   .login-word-chip,
   .login-card .ant-btn-primary,
