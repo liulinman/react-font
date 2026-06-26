@@ -290,9 +290,9 @@ export const RecitePage: React.FC = () => {
     <div className="english-world-shell">
       <EnglishHeader activeKey="recite" />
       <main className="english-world-main">
-      <div className="max-w-6xl">
+      <div className="recite-loop">
         {/* 标题和操作按钮 */}
-        <div className="mb-6 flex items-center justify-between">
+        <section className="recite-loop-topbar">
           <Title level={2} className="mb-0">
             今日复习
           </Title>
@@ -339,11 +339,11 @@ export const RecitePage: React.FC = () => {
               </Button>
             )}
           </Space>
-        </div>
+        </section>
 
         {/* 练习中 */}
         {status === "practicing" && (
-          <Card className="border border-blue-100 shadow-sm">
+          <Card className="recite-question-panel">
             <div className="mb-5 flex items-center justify-between gap-6">
               <div>
                 <Tag color="blue">第 {cardState.displayIndex} / {cardState.totalCount} 题</Tag>
@@ -358,7 +358,7 @@ export const RecitePage: React.FC = () => {
                 </Text>
               </div>
               <div className="min-w-[260px]">
-                <div className="mb-1 flex justify-between text-sm text-gray-500">
+                <div className="recite-progress-meta">
                   <span>已完成 {progress.answeredCount}</span>
                   <span>剩余 {progress.remainingCount}</span>
                 </div>
@@ -369,7 +369,7 @@ export const RecitePage: React.FC = () => {
             {currentQuestion && (
               <div className="mx-auto max-w-3xl py-4">
                 <Text type="secondary">请回忆答案</Text>
-                <div className="mt-3 mb-8 rounded-lg bg-slate-50 px-8 py-10 text-center">
+                <div className="recite-prompt-card">
                   <div className="flex items-center justify-center gap-2">
                     <Title level={2} className="mb-0">
                       {currentQuestion.question}
@@ -445,9 +445,9 @@ export const RecitePage: React.FC = () => {
 
         {/* 提交结果 */}
         {status === "submitted" && results && (
-          <Card>
+          <Card className="recite-result-panel">
             {resultInsight && (
-              <div className="mb-6 rounded-xl border border-blue-100 bg-white p-5 shadow-sm">
+              <div className="recite-result-next">
                 <Alert
                   className="mb-4"
                   type={resultInsight.tone === "danger" ? "error" : resultInsight.tone}
@@ -545,51 +545,51 @@ export const RecitePage: React.FC = () => {
               </Row>
 	            </div>
 	            <Divider />
-	            <div className="space-y-4">
+            <div className="recite-result-list">
               {orderedResults.map((result, index) => (
                 <div
                   key={`${result.wordId}-${index}`}
-                    data-testid="recite-result-item"
-                  className={`p-4 rounded-lg border ${
+                  data-testid="recite-result-item"
+                  className={`recite-result-item ${
                     result.isCorrect
-	                      ? "bg-green-50 border-green-200"
-	                      : "bg-red-50 border-red-200"
-	                  }`}
-	                >
-	                  <div className="flex items-center justify-between mb-2">
+                      ? "recite-result-item-correct"
+                      : "recite-result-item-wrong"
+                  }`}
+                >
+                  <div className="recite-result-item-head">
                     <Text strong>{result.englishWord}</Text>
                     {result.isCorrect ? (
-	                      <Tag color="success" icon={<CheckOutlined />}>
-	                        正确
-	                      </Tag>
+                      <Tag color="success" icon={<CheckOutlined />}>
+                        正确
+                      </Tag>
                     ) : (
                       <Tag color="error" icon={<CloseOutlined />}>
                         错误
                       </Tag>
-	                    )}
-	                  </div>
-	                  <div className="space-y-1">
-                    <div>
+                    )}
+                  </div>
+                  <div>
+                    <div className="recite-result-answer">
                       <Text type="secondary">单词: </Text>
                       <span className="inline-flex items-center gap-1">
                         <Text>{result.englishWord}</Text>
                         <BritishPronunciationButton word={result.englishWord} />
                       </span>
                     </div>
-                    <div>
+                    <div className="recite-result-answer">
                       <Text type="secondary">正确答案: </Text>
                       <Text strong className="text-green-600">
                         {result.correctAnswer}
                       </Text>
                     </div>
-	                    {!result.isCorrect && (
-	                      <div>
-	                        <Text type="secondary">你的答案: </Text>
+                    {!result.isCorrect && (
+                      <div className="recite-result-answer">
+                        <Text type="secondary">你的答案: </Text>
                         <Text strong className="text-red-600">
                           {result.userAnswer || "(未填写)"}
                         </Text>
-	                      </div>
-	                    )}
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
@@ -599,7 +599,7 @@ export const RecitePage: React.FC = () => {
 
         {/* 初始状态 */}
         {status === "idle" && (
-          <Card className="max-w-4xl border border-blue-100">
+          <Card className="recite-intro-panel">
             <div className="flex flex-col gap-6">
               <div>
                 <Tag color="blue" icon={<ThunderboltOutlined />}>
@@ -666,7 +666,7 @@ export const RecitePage: React.FC = () => {
 
         {/* 加载中 */}
         {status === "loading" && (
-          <Card>
+          <Card className="recite-intro-panel">
             <div className="text-center py-8">
               <Spin size="large" />
               <div className="mt-4">
