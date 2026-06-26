@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
+import type { AnswerResult } from "@/server/recite/recite";
 import {
   createReviewCardState,
   createReviewProgress,
   createReviewResultInsight,
+  getWrongWordIds,
+  orderResultsForReview,
 } from "./reviewExperience";
 
 describe("reviewExperience", () => {
@@ -75,5 +78,70 @@ describe("reviewExperience", () => {
       canGoNext: false,
       isLast: true,
     });
+  });
+
+  it("提取错词 id 并去重保序", () => {
+    const results = [
+      {
+        wordId: 2,
+        englishWord: "fragile",
+        correctAnswer: "fragile",
+        userAnswer: "",
+        isCorrect: false,
+      },
+      {
+        wordId: 5,
+        englishWord: "resilient",
+        correctAnswer: "resilient",
+        userAnswer: "resilient",
+        isCorrect: true,
+      },
+      {
+        wordId: 2,
+        englishWord: "fragile",
+        correctAnswer: "fragile",
+        userAnswer: "fragil",
+        isCorrect: false,
+      },
+    ] satisfies AnswerResult[];
+
+    expect(getWrongWordIds(results)).toEqual([2]);
+  });
+
+  it("复盘时把错词排在正确词前面并保持组内顺序", () => {
+    const results = [
+      {
+        wordId: 1,
+        englishWord: "alpha",
+        correctAnswer: "alpha",
+        userAnswer: "alpha",
+        isCorrect: true,
+      },
+      {
+        wordId: 2,
+        englishWord: "beta",
+        correctAnswer: "beta",
+        userAnswer: "",
+        isCorrect: false,
+      },
+      {
+        wordId: 3,
+        englishWord: "gamma",
+        correctAnswer: "gamma",
+        userAnswer: "gamma",
+        isCorrect: true,
+      },
+      {
+        wordId: 4,
+        englishWord: "delta",
+        correctAnswer: "delta",
+        userAnswer: "del",
+        isCorrect: false,
+      },
+    ] satisfies AnswerResult[];
+
+    expect(orderResultsForReview(results).map((item) => item.wordId)).toEqual([
+      2, 4, 1, 3,
+    ]);
   });
 });

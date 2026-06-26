@@ -1,4 +1,4 @@
-import type { Statistics } from "@/server/recite/recite";
+import type { AnswerResult, Statistics } from "@/server/recite/recite";
 
 export type ReviewProgress = {
   totalCount: number;
@@ -107,4 +107,30 @@ export function createReviewCardState({
     canGoNext: safeIndex < maxIndex,
     isLast: safeTotalCount === 0 || safeIndex === maxIndex,
   };
+}
+
+export function getWrongWordIds(results: AnswerResult[]): number[] {
+  const seen = new Set<number>();
+  const wordIds: number[] = [];
+
+  results.forEach((result) => {
+    if (result.isCorrect || seen.has(result.wordId)) {
+      return;
+    }
+    seen.add(result.wordId);
+    wordIds.push(result.wordId);
+  });
+
+  return wordIds;
+}
+
+export function orderResultsForReview(
+  results: AnswerResult[],
+): AnswerResult[] {
+  return [...results].sort((a, b) => {
+    if (a.isCorrect === b.isCorrect) {
+      return 0;
+    }
+    return a.isCorrect ? 1 : -1;
+  });
 }
