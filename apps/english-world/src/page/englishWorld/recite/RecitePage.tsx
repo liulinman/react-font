@@ -50,6 +50,8 @@ import {
   createReviewProgress,
   createReviewResultInsight,
   createReviewCardState,
+  getWrongWordIds,
+  orderResultsForReview,
 } from "./reviewExperience";
 import { BritishPronunciationButton } from "../component/BritishPronunciationButton";
 import { parsePlanReviewSearch } from "./planReview";
@@ -87,6 +89,8 @@ export const RecitePage: React.FC = () => {
   const resultInsight = results
     ? createReviewResultInsight(results.statistics)
     : null;
+  const orderedResults = results ? orderResultsForReview(results.results) : [];
+  const wrongWordIds = results ? getWrongWordIds(results.results) : [];
   const currentQuestion = questions[currentIndex];
   const cardState = createReviewCardState({
     totalCount: questions.length,
@@ -164,8 +168,6 @@ export const RecitePage: React.FC = () => {
 
       setResults(response);
       setStatus("submitted");
-      // 保存会话ID（可选，用于后续功能）
-      console.log("本次复习会话ID:", response.sessionId);
       message.success("今日复习完成");
     } catch (error: unknown) {
       console.error("提交答案失败:", error);
@@ -176,6 +178,40 @@ export const RecitePage: React.FC = () => {
       setLoading(false);
     }
   }, [questions, answers, direction]);
+
+  const handleRepairWrongWords = useCallback(async () => {
+    if (wrongWordIds.length === 0) {
+      navigate("/englishWorld");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setStatus("loading");
+      const response = await request<StartReciteResponse>(
+        startRecite({
+          wordIds: wrongWordIds,
+          wordCount: wrongWordIds.length,
+          direction,
+        }),
+      );
+
+      setQuestions(response.questions);
+      setDirection(response.direction);
+      setAnswers({});
+      setResults(null);
+      setCurrentIndex(0);
+      setStatus("practicing");
+      form.resetFields();
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : "错词复习加载失败，请重试";
+      message.error(errorMessage);
+      setStatus("submitted");
+    } finally {
+      setLoading(false);
+    }
+  }, [direction, form, navigate, wrongWordIds]);
 
   // 获取历史记录
   const loadHistory = useCallback(async (pageNum: number = 1) => {
@@ -352,6 +388,7 @@ export const RecitePage: React.FC = () => {
                     name={`answer_${currentQuestion.wordId}`}
                   >
                     <Input
+                      aria-label="你的答案"
                       key={currentQuestion.wordId}
                       autoFocus
                       placeholder="输入后按 Enter 进入下一题"
@@ -437,31 +474,29 @@ export const RecitePage: React.FC = () => {
                       type="primary"
                       size="large"
                       danger={resultInsight.priority === "repair"}
-                      icon={
-                        resultInsight.priority === "repair" ? (
-                          <ReloadOutlined />
-                        ) : (
-                          <CheckOutlined />
-                        )
-                      }
+	                      icon={
+	                        resultInsight.priority === "repair" ? (
+	                          <ReloadOutlined />
+	                        ) : (
+	                          <CheckOutlined />
+	                        )
+	                      }
                       onClick={
-                        resultInsight.priority === "repair"
-                          ? handleStartRecite
+                        wrongWordIds.length > 0
+                          ? handleRepairWrongWords
                           : () => navigate("/englishWorld")
                       }
                       loading={loading}
                     >
-                      {resultInsight.primaryCtaLabel}
+                      {wrongWordIds.length > 0
+                        ? "再练错词"
+                        : "完成，回到今日路线"}
                     </Button>
                     <Button
                       size="large"
-                      onClick={
-                        resultInsight.priority === "repair"
-                          ? () => navigate("/englishWorld/context-lab")
-                          : () => navigate("/englishWorld")
-                      }
+                      onClick={() => navigate("/englishWorld")}
                     >
-                      {resultInsight.secondaryCtaLabel}
+                      回到今日路线
                     </Button>
                   </Space>
                 </div>
@@ -508,33 +543,34 @@ export const RecitePage: React.FC = () => {
                   />
                 </Col>
               </Row>
-            </div>
-            <Divider />
-            <div className="space-y-4">
-              {results.results.map((result, index) => (
+	            </div>
+	            <Divider />
+	            <div className="space-y-4">
+              {orderedResults.map((result, index) => (
                 <div
-                  key={result.wordId}
+                  key={`${result.wordId}-${index}`}
+                    data-testid="recite-result-item"
                   className={`p-4 rounded-lg border ${
                     result.isCorrect
-                      ? "bg-green-50 border-green-200"
-                      : "bg-red-50 border-red-200"
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <Text strong>第 {index + 1} 题</Text>
+	                      ? "bg-green-50 border-green-200"
+	                      : "bg-red-50 border-red-200"
+	                  }`}
+	                >
+	                  <div className="flex items-center justify-between mb-2">
+                    <Text strong>{result.englishWord}</Text>
                     {result.isCorrect ? (
-                      <Tag color="success" icon={<CheckOutlined />}>
-                        正确
-                      </Tag>
+	                      <Tag color="success" icon={<CheckOutlined />}>
+	                        正确
+	                      </Tag>
                     ) : (
                       <Tag color="error" icon={<CloseOutlined />}>
                         错误
                       </Tag>
-                    )}
-                  </div>
-                  <div className="space-y-1">
+	                    )}
+	                  </div>
+	                  <div className="space-y-1">
                     <div>
-                      <Text type="secondary">题目: </Text>
+                      <Text type="secondary">单词: </Text>
                       <span className="inline-flex items-center gap-1">
                         <Text>{result.englishWord}</Text>
                         <BritishPronunciationButton word={result.englishWord} />
@@ -546,14 +582,14 @@ export const RecitePage: React.FC = () => {
                         {result.correctAnswer}
                       </Text>
                     </div>
-                    {!result.isCorrect && (
-                      <div>
-                        <Text type="secondary">你的答案: </Text>
+	                    {!result.isCorrect && (
+	                      <div>
+	                        <Text type="secondary">你的答案: </Text>
                         <Text strong className="text-red-600">
-                          {result.userAnswer}
+                          {result.userAnswer || "(未填写)"}
                         </Text>
-                      </div>
-                    )}
+	                      </div>
+	                    )}
                   </div>
                 </div>
               ))}

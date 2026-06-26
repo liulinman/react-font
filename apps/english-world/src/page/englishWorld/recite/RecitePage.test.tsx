@@ -5,16 +5,61 @@ import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import { RecitePage } from "./RecitePage";
 
+const startQuestions = [
+  { wordId: 2, question: "脆弱的", direction: 0 },
+  { wordId: 5, question: "有复原力的", direction: 0 },
+];
+
+const repairQuestions = [{ wordId: 2, question: "脆弱的", direction: 0 }];
+let submitShouldReject = false;
+
 const requestMock = vi.fn((requestConfig: unknown) => {
-  const config = requestConfig as { url?: string };
+  const config = requestConfig as {
+    url?: string;
+    data?: {
+      wordIds?: number[];
+      answers?: Array<{ wordId: number; userAnswer: string }>;
+    };
+  };
   if (config.url === "/recite/start") {
+    const usesRepair =
+      Array.isArray(config.data?.wordIds) &&
+      config.data.wordIds.length === 1 &&
+      config.data.wordIds[0] === 2;
     return Promise.resolve({
-      questions: [
-        { wordId: 2, question: "脆弱的", direction: 0 },
-        { wordId: 5, question: "有复原力的", direction: 0 },
-      ],
+      questions: usesRepair ? repairQuestions : startQuestions,
       direction: 0,
-      totalCount: 2,
+      totalCount: usesRepair ? 1 : 2,
+    });
+  }
+  if (config.url === "/recite/submit") {
+    if (submitShouldReject) {
+      return Promise.reject(new Error("提交失败"));
+    }
+    return Promise.resolve({
+      sessionId: 91,
+      results: [
+        {
+          wordId: 2,
+          englishWord: "fragile",
+          correctAnswer: "fragile",
+          userAnswer: config.data?.answers?.[0]?.userAnswer ?? "",
+          isCorrect: false,
+        },
+        {
+          wordId: 5,
+          englishWord: "resilient",
+          correctAnswer: "resilient",
+          userAnswer: config.data?.answers?.[1]?.userAnswer ?? "",
+          isCorrect: true,
+        },
+      ],
+      statistics: {
+        totalCount: 2,
+        correctCount: 1,
+        errorCount: 1,
+        accuracy: 50,
+      },
     });
   }
   return Promise.resolve({});
@@ -69,6 +114,7 @@ describe("RecitePage plan review", () => {
   afterEach(() => {
     cleanup();
     requestMock.mockClear();
+    submitShouldReject = false;
   });
 
   it("starts review with word ids from the daily plan query", async () => {
@@ -109,5 +155,95 @@ describe("RecitePage plan review", () => {
     );
 
     expect(container.querySelector(".english-world-main")).toBeInTheDocument();
+  });
+
+  it("uses Enter to move through questions and submit the final answer", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter initialEntries={["/englishWorld/recite"]}>
+        <RecitePage />
+      </MemoryRouter>,
+    );
+
+    await user.click(
+      screen.getByRole("button", { name: /开始复习|开始今日复习/ }),
+    );
+    expect(await screen.findByText("脆弱的")).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText("你的答案"), "fragil{enter}");
+    expect(await screen.findByText("有复原力的")).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText("你的答案"), "resilient{enter}");
+
+    await waitFor(() => {
+      expect(requestMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          url: "/recite/submit",
+          data: expect.objectContaining({
+            answers: [
+              { wordId: 2, userAnswer: "fragil" },
+              { wordId: 5, userAnswer: "resilient" },
+            ],
+          }),
+        }),
+      );
+    });
+    const resultItems = await screen.findAllByTestId("recite-result-item");
+    expect(resultItems[0]).toHaveTextContent("fragile");
+  });
+
+  it("renders wrong results first and starts a repair session from failed word ids", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter initialEntries={["/englishWorld/recite"]}>
+        <RecitePage />
+      </MemoryRouter>,
+    );
+
+    await user.click(
+      screen.getByRole("button", { name: /开始复习|开始今日复习/ }),
+    );
+    await user.type(await screen.findByLabelText("你的答案"), "fragil{enter}");
+    await user.type(await screen.findByLabelText("你的答案"), "resilient{enter}");
+
+    const resultItems = await screen.findAllByTestId("recite-result-item");
+    expect(resultItems[0]).toHaveTextContent("fragile");
+    expect(resultItems[0]).toHaveTextContent("错误");
+
+    await user.click(screen.getByRole("button", { name: /再练错词/ }));
+
+    await waitFor(() => {
+      expect(requestMock).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          url: "/recite/start",
+          data: expect.objectContaining({
+            wordIds: [2],
+            wordCount: 1,
+          }),
+        }),
+      );
+    });
+    expect(await screen.findByText("脆弱的")).toBeInTheDocument();
+  });
+
+  it("keeps answers visible when submit fails", async () => {
+    submitShouldReject = true;
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter initialEntries={["/englishWorld/recite"]}>
+        <RecitePage />
+      </MemoryRouter>,
+    );
+
+    await user.click(
+      screen.getByRole("button", { name: /开始复习|开始今日复习/ }),
+    );
+    await user.type(await screen.findByLabelText("你的答案"), "fragil{enter}");
+    await user.type(await screen.findByLabelText("你的答案"), "resilient{enter}");
+
+    expect(await screen.findByDisplayValue("resilient")).toBeInTheDocument();
   });
 });
