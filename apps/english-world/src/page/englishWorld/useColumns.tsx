@@ -17,10 +17,20 @@ import {
   getTypeLabel,
 } from "./utils/wordLabels";
 import { BritishPronunciationButton } from "./component/BritishPronunciationButton";
+import {
+  getContextLabReferenceLabel,
+  isExternalReference,
+  type ParsedContextLabReference,
+  parseContextLabReference,
+} from "./utils/contextLabReference";
 
 type Props = {
   handleEdit: (record: WordList) => void;
   handleDelete: (id: number) => void;
+  handleOpenContextLabReference?: (
+    reference: ParsedContextLabReference,
+    record: WordList,
+  ) => void;
   page: number;
   pageSize: number;
 };
@@ -28,7 +38,13 @@ type Props = {
 const { Paragraph } = Typography;
 
 export const useColumns = (props: Props) => {
-  const { handleEdit, handleDelete, page, pageSize } = props;
+  const {
+    handleEdit,
+    handleDelete,
+    handleOpenContextLabReference,
+    page,
+    pageSize,
+  } = props;
 
   // 将换行符转换为 HTML 的 <br /> 标签
   const formatNote = (text?: string) => {
@@ -245,14 +261,24 @@ export const useColumns = (props: Props) => {
       dataIndex: "englishReference",
       key: "englishReference",
       ellipsis: true,
-      render: (text: string) => {
-        // 检查是否是 URL
-        const isUrl =
-          text && (text.startsWith("http://") || text.startsWith("https://"));
+      render: (text: string, record: WordList) => {
+        const contextLabReference = parseContextLabReference(text);
+        const isUrl = isExternalReference(text);
 
         return (
           <Tooltip title={text} placement="topLeft">
-            {isUrl ? (
+            {contextLabReference ? (
+              <button
+                type="button"
+                className="word-reference-link word-reference-link-internal"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  handleOpenContextLabReference?.(contextLabReference, record);
+                }}
+              >
+                {getContextLabReferenceLabel(contextLabReference)}
+              </button>
+            ) : isUrl ? (
               <a
                 href={text}
                 target="_blank"

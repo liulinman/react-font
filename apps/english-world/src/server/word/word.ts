@@ -1,5 +1,10 @@
 import { YTRequest, type CommonRecord } from "@font/api";
-import { DailyStat, FilterWordList, WordList } from "./word.type";
+import {
+  DailyStat,
+  FilterWordList,
+  ImportMissingWordsResult,
+  WordList,
+} from "./word.type";
 
 export const wordFindList = () => {
   return {
@@ -15,6 +20,17 @@ export const wordAdd = (
     url: "/english/AddEnglishWord",
     data,
     method: "POST",
+  };
+};
+
+export const wordImportMissing = (data: {
+  words: Array<Omit<WordList, "id">>;
+}): YTRequest<ImportMissingWordsResult> => {
+  return {
+    url: "/english/importMissingWords",
+    data,
+    method: "POST",
+    __responseType: undefined as unknown as ImportMissingWordsResult,
   };
 };
 

@@ -1,5 +1,6 @@
 import "@testing-library/jest-dom/vitest";
-import { cleanup, render, screen } from "@testing-library/react";
+import type React from "react";
+import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
@@ -153,6 +154,176 @@ describe("EnglishWorld ToC routing", () => {
       expect.objectContaining({ x: 1360, y: expect.any(Number) }),
     );
     expect(tableProps.pagination?.pageSizeOptions).toContain("500");
+  });
+
+  it("renders context lab references as readable source buttons in the table", () => {
+    render(
+      <MemoryRouter initialEntries={["/englishWorld/words"]}>
+        <EnglishWorld />
+      </MemoryRouter>,
+    );
+
+    const tableProps = tablePropsMock.mock.calls.at(-1)?.[0] as {
+      columns?: Array<{
+        title?: string;
+        dataIndex?: string;
+        render?: (value: string) => React.ReactNode;
+      }>;
+    };
+    const referenceColumn = tableProps.columns?.find(
+      (column) => column.dataIndex === "englishReference",
+    );
+
+    expect(referenceColumn).toBeDefined();
+    render(
+      <MemoryRouter>
+        {referenceColumn?.render?.(
+          "/englishWorld/context-lab?taskId=12&word=urban+farming",
+        )}
+      </MemoryRouter>,
+    );
+
+    const referenceButton = screen.getByRole("button", {
+      name: "来自阅读 · 练习包 #12",
+    });
+    expect(referenceButton).toHaveClass("word-reference-link-internal");
+  });
+
+  it("opens a context lab reference in the word library instead of routing immediately", async () => {
+    const user = userEvent.setup();
+    requestMock.mockImplementation((config) => {
+      if (config.url === "/context-lab/detail") {
+        return Promise.resolve({
+          id: 12,
+          taskId: 12,
+          status: "succeeded",
+          sourceType: "custom",
+          words: ["urban farming"],
+          articleExerciseId: 88,
+          article:
+            "Urban Farming\n\nUrban farming improves local food supply.",
+          questions: [
+            {
+              id: "q1",
+              stem: "What is the passage about?",
+              options: ["Urban farming", "Space travel"],
+            },
+          ],
+        });
+      }
+      return Promise.resolve({ list: [], total: 0, totalPages: 0 });
+    });
+
+    const { container } = render(
+      <MemoryRouter initialEntries={["/englishWorld/words"]}>
+        <EnglishWorld />
+      </MemoryRouter>,
+    );
+
+    const tableProps = tablePropsMock.mock.calls.at(-1)?.[0] as {
+      columns?: Array<{
+        dataIndex?: string;
+        render?: (
+          value: string,
+          record?: Record<string, unknown>,
+        ) => React.ReactNode;
+      }>;
+    };
+    const referenceColumn = tableProps.columns?.find(
+      (column) => column.dataIndex === "englishReference",
+    );
+
+    render(
+      <MemoryRouter>
+        {referenceColumn?.render?.(
+          "/englishWorld/context-lab?taskId=12&word=urban+farming",
+        )}
+      </MemoryRouter>,
+    );
+
+    await user.click(
+      screen.getByRole("button", { name: "来自阅读 · 练习包 #12" }),
+    );
+
+    await waitFor(() => {
+      expect(requestMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          url: "/context-lab/detail",
+          method: "POST",
+          data: { taskId: 12 },
+        }),
+      );
+    });
+    expect(screen.getByText("词库管理")).toBeInTheDocument();
+    const dialog = await screen.findByRole("dialog", {
+      name: /单词来源文章/,
+    });
+    expect(dialog).toBeInTheDocument();
+    expect(container).not.toHaveTextContent("Mock Context Lab");
+    expect(
+      within(dialog).getByRole("button", { name: "占满屏幕" }),
+    ).toBeInTheDocument();
+  });
+
+  it("shows a stale reference state when the source task has been deleted", async () => {
+    const user = userEvent.setup();
+    requestMock.mockImplementation((config) => {
+      if (config.url === "/context-lab/detail") {
+        return Promise.reject({
+          code: 404,
+          message: "生成任务不存在或无权限",
+        });
+      }
+      return Promise.resolve({ list: [], total: 0, totalPages: 0 });
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/englishWorld/words"]}>
+        <EnglishWorld />
+      </MemoryRouter>,
+    );
+
+    const tableProps = tablePropsMock.mock.calls.at(-1)?.[0] as {
+      columns?: Array<{
+        dataIndex?: string;
+        render?: (
+          value: string,
+          record?: Record<string, unknown>,
+        ) => React.ReactNode;
+      }>;
+    };
+    const referenceColumn = tableProps.columns?.find(
+      (column) => column.dataIndex === "englishReference",
+    );
+
+    render(
+      <MemoryRouter>
+        {referenceColumn?.render?.(
+          "/englishWorld/context-lab?taskId=16&word=undergone",
+          {
+            id: 1,
+            englishWord: "undergone",
+            englishReference:
+              "/englishWorld/context-lab?taskId=16&word=undergone",
+          },
+        )}
+      </MemoryRouter>,
+    );
+
+    await user.click(
+      screen.getByRole("button", { name: "来自阅读 · 练习包 #16" }),
+    );
+
+    const dialog = await screen.findByRole("dialog", {
+      name: /单词来源文章/,
+    });
+    expect(within(dialog).getByText(/来源引用已失效/)).toBeInTheDocument();
+    expect(
+      within(dialog).queryByRole("button", { name: "开始练习" }),
+    ).not.toBeInTheDocument();
+    expect(
+      within(dialog).getByRole("button", { name: "编辑词条" }),
+    ).toBeInTheDocument();
   });
 
   it("switches the word library between list and card views", async () => {

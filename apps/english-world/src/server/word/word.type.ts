@@ -28,3 +28,13 @@ export type DailyStat = {
   date: string;
   count: number;
 };
+
+export type ImportMissingWordsResult = {
+  received: number;
+  normalized: number;
+  inserted: number;
+  skippedExisting: number;
+  skippedDuplicate: number;
+  insertedWords: string[];
+  skippedWords: string[];
+};

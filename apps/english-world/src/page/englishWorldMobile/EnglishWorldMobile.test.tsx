@@ -1,6 +1,7 @@
 import "antd-mobile/es/global";
 import "@testing-library/jest-dom/vitest";
 import { cleanup, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import request from "@font/api";
@@ -68,5 +69,19 @@ describe("EnglishWorldMobile ToC entry", () => {
     expect(screen.getByText("词库")).toBeInTheDocument();
     expect(screen.queryByText("单词管理")).not.toBeInTheDocument();
     expect(request).not.toHaveBeenCalled();
+  });
+
+  it("opens mobile Context Lab from the home context card", async () => {
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter>
+        <EnglishWorldMobile />
+      </MemoryRouter>,
+    );
+
+    await user.click(screen.getByText("语境练习"));
+
+    expect(await screen.findByText("Context Lab")).toBeInTheDocument();
+    expect(screen.getByText("Mock Exercise Agent")).toBeInTheDocument();
   });
 });

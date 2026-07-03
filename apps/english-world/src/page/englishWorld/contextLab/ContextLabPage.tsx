@@ -8,6 +8,7 @@ import {
   Modal,
   Radio,
   Segmented,
+  Select,
   Space,
   Spin,
   Tag,
@@ -31,18 +32,20 @@ import {
   wordAgentQuery,
   type WordAgentItem,
 } from "@/server/wordAgent/wordAgent";
-import { wordAdd, wordExist } from "@/server/word/word";
+import { wordAdd, wordExist, wordImportMissing } from "@/server/word/word";
 import type { WordList } from "@/server/word/word.type";
 import {
   contextLabCreateTask,
   contextLabDeleteAttempt,
   contextLabDeleteTask,
+  contextLabDetail,
   contextLabHistory,
   contextLabAttemptHistory,
   contextLabAttemptDetail,
   contextLabSubmit,
   downloadContextLabPdfTemplate,
   downloadContextLabTaskPdf,
+  subscribeContextLabTaskEvents,
 } from "../server/learning";
 import type {
   ContextLabGenerateParams,
@@ -63,6 +66,11 @@ import {
   isContextLabTaskActive,
 } from "./contextLabTask";
 import { EditAddModal, type AddInitialValues } from "../component/EditAddModal";
+import {
+  buildContextLabReference,
+  parseContextLabReference,
+} from "../utils/contextLabReference";
+import { getPartSpeechLabel } from "../utils/wordLabels";
 
 const { Text, Title } = Typography;
 const { TextArea } = Input;
@@ -89,6 +97,15 @@ type ContextLabAnswerItem = {
   questionId: string;
   selectedIndex?: unknown;
 };
+
+type ContextLabHistorySourceFilter = "all" | ContextLabTask["sourceType"];
+type MarkedVocabularyItem = Omit<WordList, "id"> & {
+  key: string;
+};
+const PART_SPEECH_OPTIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9].map((value) => ({
+  value,
+  label: getPartSpeechLabel(value).label,
+}));
 
 function isPlainRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -124,6 +141,10 @@ function cleanSelectedVocabularyText(text: string) {
     .trim();
 }
 
+function getVocabularyKey(text: string) {
+  return cleanSelectedVocabularyText(text).toLocaleLowerCase();
+}
+
 function wordAgentItemToAddInitial(
   item: WordAgentItem,
   fallbackWord: string,
@@ -137,6 +158,87 @@ function wordAgentItemToAddInitial(
     englishLevel: 0,
     englishType: englishWord.includes(" ") ? 1 : 0,
   };
+}
+
+function buildMarkedVocabularyItem(
+  text: string,
+  currentTask: ContextLabTask | null,
+): MarkedVocabularyItem {
+  const englishWord = cleanSelectedVocabularyText(text);
+  return {
+    key: getVocabularyKey(englishWord),
+    englishWord,
+    englishLevel: 0,
+    englishType: englishWord.includes(" ") ? 1 : 0,
+    englishReference:
+      currentTask && currentTask.taskId
+        ? buildContextLabReference(currentTask, englishWord)
+        : undefined,
+  };
+}
+
+function toImportWordPayload(item: MarkedVocabularyItem): Omit<WordList, "id"> {
+  return {
+    englishWord: item.englishWord,
+    ...(item.englishPhonetic ? { englishPhonetic: item.englishPhonetic } : {}),
+    ...(item.englishChinese ? { englishChinese: item.englishChinese } : {}),
+    ...(item.englishPartSpeech?.length
+      ? { englishPartSpeech: item.englishPartSpeech }
+      : {}),
+    englishLevel: item.englishLevel,
+    englishType: item.englishType,
+    ...(item.englishReference
+      ? { englishReference: item.englishReference }
+      : {}),
+  };
+}
+
+function mergeImportPreviewWithAi(
+  currentWords: MarkedVocabularyItem[],
+  originalWords: MarkedVocabularyItem[],
+  aiWords: WordAgentItem[],
+) {
+  const aiWordsByKey = new Map(
+    aiWords
+      .filter((item) => item.word)
+      .map((item) => [getVocabularyKey(item.word), item]),
+  );
+  const originalWordsByKey = new Map(
+    originalWords.map((item) => [item.key, item]),
+  );
+
+  return currentWords.map((currentWord, index) => {
+    const originalWord = originalWordsByKey.get(currentWord.key);
+    const aiWord = aiWordsByKey.get(currentWord.key) ?? aiWords[index];
+    if (!aiWord) return currentWord;
+
+    const originalEnglishWord = originalWord?.englishWord ?? "";
+    const aiEnglishWord = cleanSelectedVocabularyText(
+      aiWord.word || currentWord.englishWord,
+    );
+    const currentEnglishWord = cleanSelectedVocabularyText(
+      currentWord.englishWord,
+    );
+    const canUpdateWord =
+      currentEnglishWord === cleanSelectedVocabularyText(originalEnglishWord);
+    const nextEnglishWord = canUpdateWord
+      ? aiEnglishWord
+      : currentWord.englishWord;
+
+    return {
+      ...currentWord,
+      englishWord: nextEnglishWord,
+      englishPhonetic:
+        currentWord.englishPhonetic || aiWord.phonetic || undefined,
+      englishChinese: currentWord.englishChinese || aiWord.meaning || undefined,
+      englishPartSpeech: currentWord.englishPartSpeech?.length
+        ? currentWord.englishPartSpeech
+        : aiWord.partOfSpeech?.length
+          ? aiWord.partOfSpeech
+          : currentWord.englishPartSpeech,
+      englishType: nextEnglishWord.includes(" ") ? 1 : 0,
+    };
+  });
 }
 
 function splitArticleParagraphs(article: string) {
@@ -173,6 +275,12 @@ function getContextLabSourceLabel(sourceType: ContextLabTask["sourceType"]) {
   return labels[sourceType] ?? "练习包";
 }
 
+function getContextLabSearchSourceType(
+  sourceType: ContextLabHistorySourceFilter,
+) {
+  return sourceType === "all" ? undefined : sourceType;
+}
+
 export function formatElapsedSeconds(totalSeconds: number) {
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
@@ -195,6 +303,9 @@ function ContextLabPageContent({
   const [creating, setCreating] = useState(false);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [history, setHistory] = useState<ContextLabTask[]>([]);
+  const [historyKeyword, setHistoryKeyword] = useState("");
+  const [historySourceType, setHistorySourceType] =
+    useState<ContextLabHistorySourceFilter>("all");
   const [currentTask, setCurrentTask] = useState<ContextLabTask | null>(null);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [results, setResults] = useState<ExerciseResultItem[]>([]);
@@ -206,6 +317,8 @@ function ContextLabPageContent({
   const [downloadingTaskId, setDownloadingTaskId] = useState<number | null>(
     null,
   );
+  const [sourcePreviewOpen, setSourcePreviewOpen] = useState(false);
+  const [sourcePreviewFullscreen, setSourcePreviewFullscreen] = useState(false);
   const [practiceModalOpen, setPracticeModalOpen] = useState(false);
   const [practiceFullscreen, setPracticeFullscreen] = useState(false);
   const [attemptDrawerOpen, setAttemptDrawerOpen] = useState(false);
@@ -225,13 +338,23 @@ function ContextLabPageContent({
     x: number;
     y: number;
   }>({ open: false, x: 0, y: 0 });
+  const [markedVocabulary, setMarkedVocabulary] = useState<
+    MarkedVocabularyItem[]
+  >([]);
+  const [importPreviewOpen, setImportPreviewOpen] = useState(false);
+  const [importPreviewWords, setImportPreviewWords] = useState<
+    MarkedVocabularyItem[]
+  >([]);
   const [addingSelectedWord, setAddingSelectedWord] = useState(false);
   const [translatingSelectedWord, setTranslatingSelectedWord] = useState(false);
+  const [importingMarkedWords, setImportingMarkedWords] = useState(false);
+  const [confirmingMarkedImport, setConfirmingMarkedImport] = useState(false);
   const [translationResult, setTranslationResult] =
     useState<WordAgentItem | null>(null);
   const [addModalVisible, setAddModalVisible] = useState(false);
   const [addInitialValues, setAddInitialValues] =
     useState<AddInitialValues | null>(null);
+  const [highlightWord, setHighlightWord] = useState("");
 
   const closeSelectionMenu = () => {
     setSelectionMenu((prev) => ({ ...prev, open: false }));
@@ -242,9 +365,9 @@ function ContextLabPageContent({
     return buildContextLabGenerateParams({ sourceMode, count, customWords });
   }, [count, customWords, sourceMode]);
 
-  const hasActiveTask = history.some((task) =>
-    isContextLabTaskActive(task.status),
-  );
+  const trimmedHistoryKeyword = historyKeyword.trim();
+  const historySearchActive =
+    Boolean(trimmedHistoryKeyword) || historySourceType !== "all";
 
   const answeredCount =
     currentTask?.questions?.filter((question, index) => {
@@ -256,7 +379,14 @@ function ContextLabPageContent({
     setHistoryLoading(true);
     try {
       const response = await request(
-        contextLabHistory({ page: 1, pageSize: 10 }),
+        contextLabHistory({
+          page: 1,
+          pageSize: 10,
+          ...(trimmedHistoryKeyword ? { keyword: trimmedHistoryKeyword } : {}),
+          ...(getContextLabSearchSourceType(historySourceType)
+            ? { sourceType: getContextLabSearchSourceType(historySourceType) }
+            : {}),
+        }),
       );
       setHistory(response.list ?? []);
       setCurrentTask((prev) => {
@@ -329,6 +459,30 @@ function ContextLabPageContent({
   }, []);
 
   useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void loadHistory();
+    }, 300);
+    return () => window.clearTimeout(timer);
+  }, [historyKeyword, historySourceType]);
+
+  useEffect(() => {
+    return subscribeContextLabTaskEvents((task) => {
+      setHistory((prev) => {
+        const exists = prev.some((item) => item.taskId === task.taskId);
+        if (!exists) {
+          return historySearchActive ? prev : [task, ...prev].slice(0, 10);
+        }
+        return prev.map((item) =>
+          item.taskId === task.taskId ? { ...item, ...task } : item,
+        );
+      });
+      setCurrentTask((prev) =>
+        prev?.taskId === task.taskId ? { ...prev, ...task } : prev,
+      );
+    });
+  }, [historySearchActive]);
+
+  useEffect(() => {
     const params = new URLSearchParams(initialSearch);
     const words = (params.get("words") ?? "")
       .split(",")
@@ -343,12 +497,52 @@ function ContextLabPageContent({
   }, [initialSearch]);
 
   useEffect(() => {
-    if (!hasActiveTask) return;
-    const timer = window.setInterval(() => {
-      void loadHistory();
-    }, 2000);
-    return () => window.clearInterval(timer);
-  }, [hasActiveTask]);
+    const reference = parseContextLabReference(
+      `/englishWorld/context-lab${initialSearch}`,
+    );
+    if (!reference?.taskId) return;
+
+    let cancelled = false;
+    void (async () => {
+      try {
+        const existingTask = history.find(
+          (task) => task.taskId === reference.taskId,
+        );
+        const task =
+          existingTask?.status === "succeeded" && existingTask.article
+            ? existingTask
+            : await request<ContextLabTask>(
+                {
+                  ...contextLabDetail({ taskId: reference.taskId }),
+                  config: { suppressErrorMessage: true },
+                },
+              );
+        if (cancelled) return;
+        setCurrentTask(task);
+        setAnswers({});
+        setResults([]);
+        setSubmitSummary(null);
+        setElapsedSeconds(0);
+        setPracticeFullscreen(false);
+        setSourcePreviewFullscreen(false);
+        setHighlightWord(reference.word ?? "");
+        setPracticeModalOpen(false);
+        setSourcePreviewOpen(true);
+      } catch (error: unknown) {
+        if (!cancelled) {
+          message.warning("来源文章已删除或不可访问");
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [history, initialSearch]);
+
+  useEffect(() => {
+    setMarkedVocabulary([]);
+  }, [currentTask?.taskId]);
 
   useEffect(() => {
     if (
@@ -425,7 +619,22 @@ function ContextLabPageContent({
     setResults([]);
     setSubmitSummary(null);
     setElapsedSeconds(0);
+    setHighlightWord("");
     setPracticeFullscreen(false);
+    setSourcePreviewFullscreen(false);
+    setSourcePreviewOpen(false);
+    setPracticeModalOpen(true);
+  };
+
+  const handleStartPracticeFromSource = () => {
+    if (!currentTask) return;
+    setAnswers({});
+    setResults([]);
+    setSubmitSummary(null);
+    setElapsedSeconds(0);
+    setPracticeFullscreen(false);
+    setSourcePreviewFullscreen(false);
+    setSourcePreviewOpen(false);
     setPracticeModalOpen(true);
   };
 
@@ -482,6 +691,8 @@ function ContextLabPageContent({
             message.success("练习包已删除");
             if (currentTask?.taskId === task.taskId) {
               setCurrentTask(null);
+              setSourcePreviewOpen(false);
+              setSourcePreviewFullscreen(false);
               setPracticeModalOpen(false);
             }
             if (attemptTask?.taskId === task.taskId) {
@@ -553,6 +764,133 @@ function ContextLabPageContent({
     });
   };
 
+  const handleMarkSelectedVocabulary = () => {
+    const text = cleanSelectedVocabularyText(selectedVocabulary);
+    if (!text) {
+      message.warning("请先选中单词或短语");
+      return;
+    }
+
+    const key = getVocabularyKey(text);
+    if (markedVocabulary.some((item) => item.key === key)) {
+      message.info("这个词已经标记过了");
+      closeSelectionMenu();
+      window.getSelection()?.removeAllRanges();
+      return;
+    }
+
+    setMarkedVocabulary((prev) => [
+      ...prev,
+      buildMarkedVocabularyItem(text, currentTask),
+    ]);
+    setImportPreviewWords([]);
+    setImportPreviewOpen(false);
+    message.success("已标记，稍后可一键导入");
+    closeSelectionMenu();
+    window.getSelection()?.removeAllRanges();
+  };
+
+  const handleRemoveMarkedVocabulary = (key: string) => {
+    setMarkedVocabulary((prev) => prev.filter((item) => item.key !== key));
+    setImportPreviewWords([]);
+    setImportPreviewOpen(false);
+  };
+
+  const handleClearMarkedVocabulary = () => {
+    setMarkedVocabulary([]);
+    setImportPreviewWords([]);
+    setImportPreviewOpen(false);
+  };
+
+  const handleCloseImportPreview = () => {
+    setImportPreviewOpen(false);
+    setImportPreviewWords([]);
+  };
+
+  const handleUpdateImportPreviewWord = (
+    key: string,
+    patch: Partial<MarkedVocabularyItem>,
+  ) => {
+    setImportPreviewWords((prev) =>
+      prev.map((item) =>
+        item.key === key
+          ? {
+              ...item,
+              ...patch,
+              englishType:
+                patch.englishWord !== undefined
+                  ? cleanSelectedVocabularyText(patch.englishWord).includes(" ")
+                    ? 1
+                    : 0
+                  : item.englishType,
+            }
+          : item,
+      ),
+    );
+  };
+
+  const handleImportMarkedVocabulary = async () => {
+    if (markedVocabulary.length === 0) {
+      message.warning("还没有标记生词");
+      return;
+    }
+
+    const wordsSnapshot = markedVocabulary;
+    setImportPreviewWords(wordsSnapshot);
+    setImportPreviewOpen(true);
+    setImportingMarkedWords(true);
+    try {
+      const response = await request(
+        wordAgentQuery({
+          words: wordsSnapshot.map((item) => item.englishWord),
+        }),
+      );
+      setImportPreviewWords((prev) =>
+        mergeImportPreviewWithAi(
+          prev.length ? prev : wordsSnapshot,
+          wordsSnapshot,
+          response.words ?? [],
+        ),
+      );
+    } catch (error: unknown) {
+      message.error(error instanceof Error ? error.message : "AI 补全标记词失败");
+    } finally {
+      setImportingMarkedWords(false);
+    }
+  };
+
+  const handleConfirmMarkedVocabularyImport = async () => {
+    if (importPreviewWords.length === 0) {
+      message.warning("没有可导入的预览词");
+      return;
+    }
+
+    setConfirmingMarkedImport(true);
+    try {
+      const response = await request(
+        wordImportMissing({
+          words: importPreviewWords.map(toImportWordPayload),
+        }),
+      );
+      const skipped = response.skippedExisting + response.skippedDuplicate;
+      if (response.inserted > 0) {
+        message.success(
+          skipped > 0
+            ? `已导入 ${response.inserted} 个生词，跳过 ${skipped} 个已有/重复词`
+            : `已导入 ${response.inserted} 个生词`,
+        );
+      } else {
+        message.info("标记词都已在词库，无需重复导入");
+      }
+      handleClearMarkedVocabulary();
+      setImportPreviewWords([]);
+    } catch (error: unknown) {
+      message.error(error instanceof Error ? error.message : "导入标记词失败");
+    } finally {
+      setConfirmingMarkedImport(false);
+    }
+  };
+
   useEffect(() => {
     if (!selectionMenu.open) return;
 
@@ -605,7 +943,13 @@ function ContextLabPageContent({
         message.warning("AI 没有返回可添加的词条");
         return;
       }
-      setAddInitialValues(wordAgentItemToAddInitial(item, text));
+      setAddInitialValues({
+        ...wordAgentItemToAddInitial(item, text),
+        englishReference:
+          currentTask && currentTask.taskId
+            ? buildContextLabReference(currentTask, text)
+            : undefined,
+      });
       setAddModalVisible(true);
       setSelectionMenu((prev) => ({ ...prev, open: false }));
       window.getSelection()?.removeAllRanges();
@@ -647,7 +991,11 @@ function ContextLabPageContent({
         return false;
       }
       await request(wordAdd(data));
-      message.success("已保存到单词本");
+      message.success(
+        data.englishReference
+          ? "已保存到词库，并关联当前阅读来源"
+          : "已保存到单词本",
+      );
       setAddModalVisible(false);
       setAddInitialValues(null);
       return true;
@@ -731,6 +1079,105 @@ function ContextLabPageContent({
     );
   };
 
+  const renderHighlightedArticleText = (text: string) => {
+    const highlightTerms = [
+      ...markedVocabulary.map((item) => ({
+        className:
+          "context-lab-article-highlight context-lab-marked-vocabulary-highlight",
+        key: item.key,
+        text: item.englishWord,
+      })),
+      ...(highlightWord.trim()
+        ? [
+            {
+              className: "context-lab-article-highlight",
+              key: getVocabularyKey(highlightWord),
+              text: highlightWord.trim(),
+            },
+          ]
+        : []),
+    ].reduce<Array<{ className: string; key: string; lowerText: string; text: string }>>(
+      (items, item) => {
+        const cleanText = cleanSelectedVocabularyText(item.text);
+        if (!cleanText || items.some((existing) => existing.key === item.key)) {
+          return items;
+        }
+        return [
+          ...items,
+          {
+            ...item,
+            lowerText: cleanText.toLocaleLowerCase(),
+            text: cleanText,
+          },
+        ];
+      },
+      [],
+    );
+
+    if (highlightTerms.length === 0) return text;
+
+    const sortedTerms = [...highlightTerms].sort(
+      (left, right) => right.text.length - left.text.length,
+    );
+    const lowerText = text.toLocaleLowerCase();
+    const segments: Array<{ className?: string; text: string }> = [];
+    let cursor = 0;
+
+    while (cursor < text.length) {
+      const nextMatch = sortedTerms.reduce<
+        | {
+            className: string;
+            index: number;
+            length: number;
+          }
+        | undefined
+      >((bestMatch, term) => {
+        const index = lowerText.indexOf(term.lowerText, cursor);
+        if (index < 0) return bestMatch;
+        if (!bestMatch || index < bestMatch.index) {
+          return {
+            className: term.className,
+            index,
+            length: term.text.length,
+          };
+        }
+        if (index === bestMatch.index && term.text.length > bestMatch.length) {
+          return {
+            className: term.className,
+            index,
+            length: term.text.length,
+          };
+        }
+        return bestMatch;
+      }, undefined);
+
+      if (!nextMatch) {
+        segments.push({ text: text.slice(cursor) });
+        break;
+      }
+
+      if (nextMatch.index > cursor) {
+        segments.push({ text: text.slice(cursor, nextMatch.index) });
+      }
+
+      segments.push({
+        className: nextMatch.className,
+        text: text.slice(nextMatch.index, nextMatch.index + nextMatch.length),
+      });
+      cursor = nextMatch.index + nextMatch.length;
+    }
+
+    return segments.map((segment, index) =>
+      segment.className ? (
+        <mark className={segment.className} key={`${segment.text}-${index}`}>
+          {segment.text}
+        </mark>
+      ) : (
+        <span key={`${segment.text}-${index}`}>{segment.text}</span>
+      ),
+    );
+  };
+
   const renderResultReview = () => {
     if (!submitSummary) return null;
     const weakWords = submitSummary.weakWords ?? [];
@@ -786,6 +1233,257 @@ function ContextLabPageContent({
     );
   };
 
+  const renderArticleReadingPane = () => {
+    if (
+      currentTask?.status !== "succeeded" ||
+      !currentTask.article
+    ) {
+      return null;
+    }
+
+    return (
+      <section
+        aria-label="文章阅读区"
+        className="context-lab-reading-pane"
+        onScroll={closeSelectionMenu}
+      >
+        <div
+          className="context-lab-article"
+          onContextMenu={handleReadingContextMenu}
+        >
+          {(() => {
+            const articleContent = parseArticleContent(currentTask.article);
+            return (
+              <>
+                <div className="context-lab-article-topic-wrap">
+                  <Text className="learning-cockpit-label">雅思阅读</Text>
+                  {articleContent.topic && (
+                    <>
+                      <Text className="context-lab-topic-label">文章主题</Text>
+                      <span
+                        aria-hidden="true"
+                        className="context-lab-topic-divider"
+                      >
+                        /
+                      </span>
+                      <h4 className="context-lab-article-topic">
+                        {renderHighlightedArticleText(articleContent.topic)}
+                      </h4>
+                    </>
+                  )}
+                </div>
+                {articleContent.paragraphs.map((paragraph, index) => (
+                  <p
+                    className="context-lab-article-paragraph"
+                    key={`${paragraph}-${index}`}
+                  >
+                    {renderHighlightedArticleText(paragraph)}
+                  </p>
+                ))}
+              </>
+            );
+          })()}
+        </div>
+        {markedVocabulary.length > 0 && (
+          <section
+            aria-label="已标记生词"
+            className="context-lab-marked-vocabulary"
+          >
+            <div className="context-lab-marked-vocabulary-head">
+              <div>
+                <Text className="learning-cockpit-label">Marked</Text>
+                <strong>已标记 {markedVocabulary.length} 个生词</strong>
+              </div>
+              <Space size={6}>
+                <Button
+                  size="small"
+                  type="link"
+                  onClick={handleClearMarkedVocabulary}
+                >
+                  清空
+                </Button>
+                <Button
+                  loading={importingMarkedWords}
+                  size="small"
+                  type="primary"
+                  onClick={handleImportMarkedVocabulary}
+                >
+                  预览并导入
+                </Button>
+              </Space>
+            </div>
+            <div className="context-lab-marked-vocabulary-list">
+              {markedVocabulary.map((item) => (
+                <Tag
+                  closable
+                  color="gold"
+                  key={item.key}
+                  onClose={(event) => {
+                    event.preventDefault();
+                    handleRemoveMarkedVocabulary(item.key);
+                  }}
+                >
+                  {item.englishWord}
+                </Tag>
+              ))}
+            </div>
+          </section>
+        )}
+        <Modal
+          aria-label="导入预览"
+          destroyOnHidden
+          centered
+          className="context-lab-import-preview-modal"
+          footer={null}
+          onCancel={handleCloseImportPreview}
+          open={importPreviewOpen}
+          title="导入预览"
+          width={720}
+        >
+          <div
+            aria-label="导入预览"
+            className="context-lab-import-preview"
+            role="dialog"
+          >
+            <div className="context-lab-import-preview-status">
+              <Text type="secondary">
+                {importingMarkedWords
+                  ? "预览已打开，AI 正在补全音标、释义和词性；你也可以先手动编辑。"
+                  : "AI 已补齐标记词内容，你可以先修改再确认导入；系统只会插入词库中不存在的词。"}
+              </Text>
+              {importingMarkedWords && <Tag color="processing">AI 补全中</Tag>}
+            </div>
+            <div className="context-lab-import-preview-list">
+              {importPreviewWords.map((item, index) => (
+                <section
+                  aria-label={`待导入词 ${index + 1}`}
+                  className="context-lab-import-preview-item"
+                  key={item.key}
+                >
+                  <div className="context-lab-import-preview-grid">
+                    <label className="context-lab-import-preview-field">
+                      <span>单词/短语</span>
+                      <Input
+                        aria-label={`第 ${index + 1} 个词单词`}
+                        value={item.englishWord}
+                        onChange={(event) =>
+                          handleUpdateImportPreviewWord(item.key, {
+                            englishWord: event.target.value,
+                          })
+                        }
+                      />
+                    </label>
+                    <label className="context-lab-import-preview-field">
+                      <span>音标</span>
+                      <Input
+                        aria-label={`第 ${index + 1} 个词音标`}
+                        placeholder="可留空"
+                        value={item.englishPhonetic ?? ""}
+                        onChange={(event) =>
+                          handleUpdateImportPreviewWord(item.key, {
+                            englishPhonetic: event.target.value,
+                          })
+                        }
+                      />
+                    </label>
+                  </div>
+                  <label className="context-lab-import-preview-field">
+                    <span>释义</span>
+                    <TextArea
+                      aria-label={`第 ${index + 1} 个词释义`}
+                      autoSize={{ minRows: 2, maxRows: 4 }}
+                      placeholder="AI 暂未补齐释义，可手动填写"
+                      value={item.englishChinese ?? ""}
+                      onChange={(event) =>
+                        handleUpdateImportPreviewWord(item.key, {
+                          englishChinese: event.target.value,
+                        })
+                      }
+                    />
+                  </label>
+                  <div className="context-lab-import-preview-field">
+                    <span>词性</span>
+                    <Select
+                      aria-label={`第 ${index + 1} 个词词性`}
+                      mode="multiple"
+                      options={PART_SPEECH_OPTIONS}
+                      placeholder="选择词性"
+                      value={item.englishPartSpeech ?? []}
+                      onChange={(value) =>
+                        handleUpdateImportPreviewWord(item.key, {
+                          englishPartSpeech: value,
+                        })
+                      }
+                    />
+                  </div>
+                </section>
+              ))}
+            </div>
+            <Space className="context-lab-import-preview-actions" wrap>
+              <Button onClick={handleCloseImportPreview}>继续标记</Button>
+              <Button
+                loading={confirmingMarkedImport}
+                type="primary"
+                onClick={handleConfirmMarkedVocabularyImport}
+              >
+                确认导入
+              </Button>
+            </Space>
+          </div>
+        </Modal>
+        <div className="learning-cockpit-word-strip">
+          {currentTask.words.map((word) => (
+            <Tag key={word} color="blue">
+              {word}
+            </Tag>
+          ))}
+        </div>
+        {selectionMenu.open && (
+          <div
+            className="context-lab-selection-menu"
+            onPointerDown={(event) => event.stopPropagation()}
+            style={{ left: selectionMenu.x, top: selectionMenu.y }}
+          >
+            <div className="context-lab-selection-menu-actions">
+              <Button
+                size="small"
+                type="text"
+                onClick={handleMarkSelectedVocabulary}
+              >
+                标记生词
+              </Button>
+              <Button
+                loading={translatingSelectedWord}
+                size="small"
+                type="text"
+                onClick={handleTranslateSelectedVocabulary}
+              >
+                翻译
+              </Button>
+              <Button
+                loading={addingSelectedWord}
+                size="small"
+                type="text"
+                onClick={handleAddSelectedVocabulary}
+              >
+                一键添加到词库
+              </Button>
+            </div>
+            {translationResult && (
+              <div className="context-lab-selection-translation">
+                <strong>{translationResult.word || selectedVocabulary}</strong>
+                {translationResult.phonetic && (
+                  <span>{translationResult.phonetic}</span>
+                )}
+                <p>{translationResult.meaning || "暂无释义"}</p>
+              </div>
+            )}
+          </div>
+        )}
+      </section>
+    );
+  };
+
   const renderPracticeWorkspace = () => {
     if (
       currentTask?.status !== "succeeded" ||
@@ -798,95 +1496,7 @@ function ContextLabPageContent({
     return (
       <div className="context-lab-practice-pack">
         <div className="context-lab-practice-workspace">
-          <section
-            aria-label="文章阅读区"
-            className="context-lab-reading-pane"
-            onScroll={closeSelectionMenu}
-          >
-            <div
-              className="context-lab-article"
-              onContextMenu={handleReadingContextMenu}
-            >
-              {(() => {
-                const articleContent = parseArticleContent(currentTask.article);
-                return (
-                  <>
-                    <div className="context-lab-article-topic-wrap">
-                      <Text className="learning-cockpit-label">
-                        雅思阅读
-                      </Text>
-                      {articleContent.topic && (
-                        <>
-                          <Text className="context-lab-topic-label">
-                            文章主题
-                          </Text>
-                          <span
-                            aria-hidden="true"
-                            className="context-lab-topic-divider"
-                          >
-                            /
-                          </span>
-                          <h4 className="context-lab-article-topic">
-                            {articleContent.topic}
-                          </h4>
-                        </>
-                      )}
-                    </div>
-                    {articleContent.paragraphs.map((paragraph, index) => (
-                      <p
-                        className="context-lab-article-paragraph"
-                        key={`${paragraph}-${index}`}
-                      >
-                        {paragraph}
-                      </p>
-                    ))}
-                  </>
-                );
-              })()}
-            </div>
-            <div className="learning-cockpit-word-strip">
-              {currentTask.words.map((word) => (
-                <Tag key={word} color="blue">
-                  {word}
-                </Tag>
-              ))}
-            </div>
-            {selectionMenu.open && (
-              <div
-                className="context-lab-selection-menu"
-                onPointerDown={(event) => event.stopPropagation()}
-                style={{ left: selectionMenu.x, top: selectionMenu.y }}
-              >
-                <div className="context-lab-selection-menu-actions">
-                  <Button
-                    loading={translatingSelectedWord}
-                    size="small"
-                    type="text"
-                    onClick={handleTranslateSelectedVocabulary}
-                  >
-                    翻译
-                  </Button>
-                  <Button
-                    loading={addingSelectedWord}
-                    size="small"
-                    type="text"
-                    onClick={handleAddSelectedVocabulary}
-                  >
-                    一键添加到词库
-                  </Button>
-                </div>
-                {translationResult && (
-                  <div className="context-lab-selection-translation">
-                    <strong>{translationResult.word || selectedVocabulary}</strong>
-                    {translationResult.phonetic && (
-                      <span>{translationResult.phonetic}</span>
-                    )}
-                    <p>{translationResult.meaning || "暂无释义"}</p>
-                  </div>
-                )}
-              </div>
-            )}
-          </section>
+          {renderArticleReadingPane()}
 
           <section aria-label="题目作答区" className="context-lab-question-pane">
             <div className="context-lab-question-toolbar">
@@ -1074,6 +1684,43 @@ function ContextLabPageContent({
             </Button>
           </div>
 
+          <div className="context-lab-history-search">
+            <Input.Search
+              allowClear
+              aria-label="搜索练习包"
+              placeholder="搜索练习包、单词、来源、状态"
+              value={historyKeyword}
+              onChange={(event) => setHistoryKeyword(event.target.value)}
+              onSearch={(value) => setHistoryKeyword(value)}
+            />
+            <Segmented<ContextLabHistorySourceFilter>
+              aria-label="练习包来源筛选"
+              value={historySourceType}
+              onChange={setHistorySourceType}
+              options={[
+                { label: "全部", value: "all" },
+                { label: "薄弱词", value: "proficiency" },
+                { label: "随机词", value: "random" },
+                { label: "手输词", value: "custom" },
+              ]}
+            />
+            {historySearchActive && (
+              <div className="context-lab-history-search-summary">
+                找到 {history.length} 个练习包
+                <Button
+                  size="small"
+                  type="link"
+                  onClick={() => {
+                    setHistoryKeyword("");
+                    setHistorySourceType("all");
+                  }}
+                >
+                  清空搜索
+                </Button>
+              </div>
+            )}
+          </div>
+
           {currentTask && renderTaskStatus(currentTask)}
 
           {!currentTask && historyLoading && (
@@ -1084,7 +1731,25 @@ function ContextLabPageContent({
           )}
 
           {!currentTask && !historyLoading && history.length === 0 && (
-            <Empty description="还没有生成记录。先提交一组词。" />
+            <Empty
+              description={
+                historySearchActive
+                  ? "没有找到相关练习包"
+                  : "还没有生成记录。先提交一组词。"
+              }
+            >
+              {historySearchActive && (
+                <Button
+                  type="link"
+                  onClick={() => {
+                    setHistoryKeyword("");
+                    setHistorySourceType("all");
+                  }}
+                >
+                  清空搜索
+                </Button>
+              )}
+            </Empty>
           )}
 
           <div className="context-lab-history-list">
@@ -1382,6 +2047,75 @@ function ContextLabPageContent({
       </Drawer>
 
       <Modal
+        className={`context-lab-source-modal${
+          sourcePreviewFullscreen ? " context-lab-source-modal-fullscreen" : ""
+        }`}
+        destroyOnHidden={false}
+        footer={[
+          <Button
+            key="close"
+            onClick={() => {
+              closeSelectionMenu();
+              setSourcePreviewOpen(false);
+              setSourcePreviewFullscreen(false);
+            }}
+          >
+            关闭
+          </Button>,
+          <Button
+            key="practice"
+            type="primary"
+            icon={<PlayCircleOutlined aria-hidden="true" />}
+            onClick={handleStartPracticeFromSource}
+          >
+            开始练习
+          </Button>,
+        ]}
+        open={sourcePreviewOpen}
+        title={
+          <div className="context-lab-source-modal-title">
+            <span>单词来源文章</span>
+            <Button
+              aria-label={sourcePreviewFullscreen ? "退出满屏" : "占满屏幕"}
+              icon={
+                sourcePreviewFullscreen ? (
+                  <FullscreenExitOutlined />
+                ) : (
+                  <FullscreenOutlined />
+                )
+              }
+              size="small"
+              type="text"
+              onClick={() => setSourcePreviewFullscreen((value) => !value)}
+            >
+              {sourcePreviewFullscreen ? "退出满屏" : "占满屏幕"}
+            </Button>
+          </div>
+        }
+        width={sourcePreviewFullscreen ? "100vw" : "min(980px, 92vw)"}
+        onCancel={() => {
+          closeSelectionMenu();
+          setSourcePreviewOpen(false);
+          setSourcePreviewFullscreen(false);
+        }}
+      >
+        <div className="context-lab-source-preview">
+          <div className="context-lab-source-preview-head">
+            <div>
+              <Text className="learning-cockpit-label">Word Source</Text>
+              <Title level={4}>
+                {highlightWord ? `定位：${highlightWord}` : "来源定位"}
+              </Title>
+            </div>
+            <Text type="secondary">
+              这里只查看单词出现的原文，需要做题时再开始练习。
+            </Text>
+          </div>
+          {renderArticleReadingPane()}
+        </div>
+      </Modal>
+
+      <Modal
         className={`context-lab-practice-modal${
           practiceFullscreen ? " context-lab-practice-modal-fullscreen" : ""
         }`}
@@ -1411,6 +2145,7 @@ function ContextLabPageContent({
         width={practiceFullscreen ? "100vw" : "min(1280px, 96vw)"}
         onCancel={() => {
           closeSelectionMenu();
+          setHighlightWord("");
           setPracticeModalOpen(false);
         }}
       >

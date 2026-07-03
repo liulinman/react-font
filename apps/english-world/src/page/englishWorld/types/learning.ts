@@ -195,6 +195,8 @@ export type ContextLabHistoryParams = {
   page?: number;
   pageSize?: number;
   status?: ContextLabTaskStatus;
+  keyword?: string;
+  sourceType?: ContextLabGenerateParams["sourceType"];
 };
 
 export type ContextLabHistoryResponse = {

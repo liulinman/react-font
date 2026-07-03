@@ -1,8 +1,9 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   contextLabCreateTask,
   contextLabDetail,
   contextLabHistory,
+  subscribeContextLabTaskEvents,
 } from "../server/learning";
 import {
   getContextLabStatusLabel,
@@ -11,6 +12,10 @@ import {
 } from "./contextLabTask";
 
 describe("contextLabTask", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
   it("detects active and terminal generation states", () => {
     expect(isContextLabTaskActive("pending")).toBe(true);
     expect(isContextLabTaskActive("processing")).toBe(true);
@@ -47,5 +52,48 @@ describe("contextLabTask", () => {
       method: "POST",
       data: { taskId: 12 },
     });
+  });
+
+  it("parses task updates from the context lab task event stream", async () => {
+    const stream = new ReadableStream({
+      start(controller) {
+        controller.enqueue(
+          new TextEncoder().encode(
+            `data: ${JSON.stringify({
+              type: "task-updated",
+              task: {
+                id: 12,
+                taskId: 12,
+                status: "succeeded",
+                sourceType: "custom",
+                words: ["fragile", "steady", "recover"],
+              },
+            })}\n\n`,
+          ),
+        );
+        controller.close();
+      },
+    });
+    const fetchMock = vi.fn(
+      async (_input: RequestInfo | URL, _init?: RequestInit) =>
+        new Response(stream),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const updates: unknown[] = [];
+    const unsubscribe = subscribeContextLabTaskEvents((task) =>
+      updates.push(task),
+    );
+
+    await vi.waitFor(() => expect(updates).toHaveLength(1));
+    expect(updates[0]).toMatchObject({
+      taskId: 12,
+      status: "succeeded",
+    });
+
+    const signal = (fetchMock.mock.calls[0][1] as RequestInit)
+      .signal as AbortSignal;
+    unsubscribe();
+    expect(signal.aborted).toBe(true);
   });
 });

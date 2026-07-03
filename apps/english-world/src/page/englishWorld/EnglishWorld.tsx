@@ -12,8 +12,10 @@ import {
   Segmented,
   Select,
   Space,
+  Spin,
   Table,
   Tag,
+  Typography,
 } from "antd";
 import { EditAddModal } from "./component/EditAddModal";
 import request, { useMutation } from "@font/api";
@@ -27,12 +29,17 @@ import { LearningCockpitPage } from "./cockpit/LearningCockpitPage";
 import { MemoryMapPage } from "./memoryMap/MemoryMapPage";
 import { ContextLabPage } from "./contextLab/ContextLabPage";
 import { WordAgentTab } from "./component/WordAgentTab";
+import { contextLabDetail } from "./server/learning";
+import type { ContextLabTask } from "./types/learning";
 import {
   AppstoreOutlined,
   BarsOutlined,
   DeleteFilled,
   DownOutlined,
   EditFilled,
+  FullscreenExitOutlined,
+  FullscreenOutlined,
+  PlayCircleOutlined,
   PlusOutlined,
   UpOutlined,
 } from "@ant-design/icons";
@@ -46,10 +53,37 @@ import {
   getTypeLabel,
 } from "./utils/wordLabels";
 import { BritishPronunciationButton } from "./component/BritishPronunciationButton";
+import {
+  getContextLabReferenceLabel,
+  type ParsedContextLabReference,
+  parseContextLabReference,
+} from "./utils/contextLabReference";
 import "./EnglishWorld.css";
 const { RangePicker } = DatePicker;
+const { Text, Title } = Typography;
 const WORD_TABLE_SCROLL_Y = 620;
 type WordLibraryView = "list" | "card";
+
+function splitContextLabArticleParagraphs(article: string) {
+  return article
+    .split(/\n\s*\n/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean);
+}
+
+function parseContextLabArticleContent(article: string) {
+  const blocks = splitContextLabArticleParagraphs(article);
+  if (blocks.length >= 4) {
+    return {
+      topic: blocks[0],
+      paragraphs: blocks.slice(1),
+    };
+  }
+  return {
+    topic: undefined,
+    paragraphs: blocks,
+  };
+}
 
 const EnglishWorld: React.FC = () => {
   const [form] = Form.useForm();
@@ -57,6 +91,16 @@ const EnglishWorld: React.FC = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [wordRecord, setWordRecord] = useState<WordList>();
   const [libraryView, setLibraryView] = useState<WordLibraryView>("list");
+  const [sourcePreviewOpen, setSourcePreviewOpen] = useState(false);
+  const [sourcePreviewFullscreen, setSourcePreviewFullscreen] = useState(false);
+  const [sourcePreviewLoading, setSourcePreviewLoading] = useState(false);
+  const [sourcePreviewReference, setSourcePreviewReference] =
+    useState<ParsedContextLabReference | null>(null);
+  const [sourcePreviewRecord, setSourcePreviewRecord] =
+    useState<WordList | null>(null);
+  const [sourcePreviewTask, setSourcePreviewTask] =
+    useState<ContextLabTask | null>(null);
+  const [sourcePreviewError, setSourcePreviewError] = useState("");
   const { mutateAsync: mutateWordAdd, isPending: buttonPending } =
     useMutation(wordAdd);
   const location = useLocation();
@@ -188,9 +232,55 @@ const EnglishWorld: React.FC = () => {
     setIsModalVisible(true);
   };
 
+  const closeSourcePreview = () => {
+    setSourcePreviewOpen(false);
+    setSourcePreviewFullscreen(false);
+  };
+
+  const handleOpenContextLabReference = async (
+    reference: ParsedContextLabReference,
+    record?: WordList,
+  ) => {
+    setSourcePreviewReference(reference);
+    setSourcePreviewRecord(record ?? null);
+    setSourcePreviewTask(null);
+    setSourcePreviewError("");
+    setSourcePreviewFullscreen(false);
+    setSourcePreviewOpen(true);
+    setSourcePreviewLoading(true);
+    try {
+      const task = await request<ContextLabTask>(
+        {
+          ...contextLabDetail({ taskId: reference.taskId }),
+          config: { suppressErrorMessage: true },
+        },
+      );
+      setSourcePreviewTask(task);
+    } catch {
+      setSourcePreviewError(
+        "这个引用对应的练习包已经删除或不可访问，来源文章无法继续打开。",
+      );
+    } finally {
+      setSourcePreviewLoading(false);
+    }
+  };
+
+  const handleStartContextLabPractice = () => {
+    if (!sourcePreviewReference) return;
+    closeSourcePreview();
+    navigate(sourcePreviewReference.href);
+  };
+
+  const handleEditSourcePreviewRecord = () => {
+    if (!sourcePreviewRecord) return;
+    closeSourcePreview();
+    handleEdit(sourcePreviewRecord);
+  };
+
   const { columns } = useColumns({
     handleEdit,
     handleDelete,
+    handleOpenContextLabReference,
     page,
     pageSize,
   });
@@ -263,11 +353,92 @@ const EnglishWorld: React.FC = () => {
     changePage(page, pageSize);
   };
 
+  const renderSourcePreviewText = (text: string) => {
+    const keyword = sourcePreviewReference?.word?.trim();
+    if (!keyword) return text;
+
+    const lowerText = text.toLocaleLowerCase();
+    const lowerKeyword = keyword.toLocaleLowerCase();
+    const segments: Array<{ text: string; highlight: boolean }> = [];
+    let cursor = 0;
+    let index = lowerText.indexOf(lowerKeyword);
+
+    while (index >= 0) {
+      if (index > cursor) {
+        segments.push({ text: text.slice(cursor, index), highlight: false });
+      }
+      segments.push({
+        text: text.slice(index, index + keyword.length),
+        highlight: true,
+      });
+      cursor = index + keyword.length;
+      index = lowerText.indexOf(lowerKeyword, cursor);
+    }
+
+    if (cursor < text.length) {
+      segments.push({ text: text.slice(cursor), highlight: false });
+    }
+
+    return segments.map((segment, index) =>
+      segment.highlight ? (
+        <mark className="context-lab-article-highlight" key={`${segment.text}-${index}`}>
+          {segment.text}
+        </mark>
+      ) : (
+        segment.text
+      ),
+    );
+  };
+
+  const renderSourcePreviewArticle = () => {
+    if (!sourcePreviewTask?.article) return null;
+    const articleContent = parseContextLabArticleContent(sourcePreviewTask.article);
+
+    return (
+      <section aria-label="文章阅读区" className="context-lab-reading-pane">
+        <div className="context-lab-article">
+          <div className="context-lab-article-topic-wrap">
+            <Text className="learning-cockpit-label">雅思阅读</Text>
+            {articleContent.topic && (
+              <>
+                <Text className="context-lab-topic-label">文章主题</Text>
+                <span aria-hidden="true" className="context-lab-topic-divider">
+                  /
+                </span>
+                <h4 className="context-lab-article-topic">
+                  {renderSourcePreviewText(articleContent.topic)}
+                </h4>
+              </>
+            )}
+          </div>
+          {articleContent.paragraphs.map((paragraph, index) => (
+            <p
+              className="context-lab-article-paragraph"
+              key={`${paragraph}-${index}`}
+            >
+              {renderSourcePreviewText(paragraph)}
+            </p>
+          ))}
+        </div>
+        <div className="learning-cockpit-word-strip">
+          {sourcePreviewTask.words.map((word) => (
+            <Tag key={word} color="blue">
+              {word}
+            </Tag>
+          ))}
+        </div>
+      </section>
+    );
+  };
+
   const renderWordCard = (record: WordList, index: number) => {
     const serialNumber = (page - 1) * pageSize + index + 1;
     const typeInfo = getTypeLabel(record.englishType);
     const levelInfo = getLevelLabel(record.englishLevel);
     const partSpeechList = record.englishPartSpeech ?? [];
+    const contextLabReference = parseContextLabReference(
+      record.englishReference,
+    );
 
     return (
       <article className="word-card" key={record.id}>
@@ -333,7 +504,23 @@ const EnglishWorld: React.FC = () => {
 
         <div className="word-card-meta">
           <span>{record.englishNote ? "有笔记" : "无笔记"}</span>
-          <span>{record.englishReference ? "有引用" : "无引用"}</span>
+          {contextLabReference ? (
+            <button
+              type="button"
+              className="word-reference-link word-reference-link-internal"
+              onClick={(event) => {
+                event.stopPropagation();
+                void handleOpenContextLabReference(
+                  contextLabReference,
+                  record,
+                );
+              }}
+            >
+              {getContextLabReferenceLabel(contextLabReference)}
+            </button>
+          ) : (
+            <span>{record.englishReference ? "有引用" : "无引用"}</span>
+          )}
         </div>
 
         <div className="word-card-actions">
@@ -522,6 +709,93 @@ const EnglishWorld: React.FC = () => {
               onOk={handleModalOk}
               onCancel={handleModalCancel}
             />
+            <Modal
+              className={`context-lab-source-modal${
+                sourcePreviewFullscreen
+                  ? " context-lab-source-modal-fullscreen"
+                  : ""
+              }`}
+              destroyOnHidden={false}
+              footer={[
+                <Button key="close" onClick={closeSourcePreview}>
+                  关闭
+                </Button>,
+                sourcePreviewError && sourcePreviewRecord ? (
+                  <Button key="edit" onClick={handleEditSourcePreviewRecord}>
+                    编辑词条
+                  </Button>
+                ) : (
+                  <Button
+                    key="practice"
+                    type="primary"
+                    disabled={sourcePreviewLoading || !sourcePreviewTask}
+                    icon={<PlayCircleOutlined aria-hidden="true" />}
+                    onClick={handleStartContextLabPractice}
+                  >
+                    开始练习
+                  </Button>
+                ),
+              ]}
+              open={sourcePreviewOpen}
+              title={
+                <div className="context-lab-source-modal-title">
+                  <span>单词来源文章</span>
+                  <Button
+                    aria-label={
+                      sourcePreviewFullscreen ? "退出满屏" : "占满屏幕"
+                    }
+                    icon={
+                      sourcePreviewFullscreen ? (
+                        <FullscreenExitOutlined />
+                      ) : (
+                        <FullscreenOutlined />
+                      )
+                    }
+                    size="small"
+                    type="text"
+                    onClick={() =>
+                      setSourcePreviewFullscreen((value) => !value)
+                    }
+                  >
+                    {sourcePreviewFullscreen ? "退出满屏" : "占满屏幕"}
+                  </Button>
+                </div>
+              }
+              width={sourcePreviewFullscreen ? "100vw" : "min(980px, 92vw)"}
+              onCancel={closeSourcePreview}
+            >
+              <div className="context-lab-source-preview">
+                <div className="context-lab-source-preview-head">
+                  <div>
+                    <Text className="learning-cockpit-label">Word Source</Text>
+                    <Title level={4}>
+                      {sourcePreviewReference?.word
+                        ? `定位：${sourcePreviewReference.word}`
+                        : "来源定位"}
+                    </Title>
+                  </div>
+                  <Text type="secondary">
+                    这里只查看单词出现的原文，需要做题时再开始练习。
+                  </Text>
+                </div>
+                {sourcePreviewLoading ? (
+                  <div className="context-lab-history-empty">
+                    <Spin />
+                    <Text type="secondary">正在读取来源文章...</Text>
+                  </div>
+                ) : sourcePreviewError ? (
+                  <Empty
+                    description={
+                      <span>
+                        来源引用已失效。原练习包可能已被删除，当前单词仍可保留；如需处理，可以编辑词条清空或更新引用。
+                      </span>
+                    }
+                  />
+                ) : (
+                  renderSourcePreviewArticle()
+                )}
+              </div>
+            </Modal>
           </div>
         )}
       </main>

@@ -79,6 +79,73 @@ export const contextLabDetail = (
   __responseType: undefined as unknown as ContextLabTask,
 });
 
+type ContextLabTaskStreamPayload =
+  | { type: "task-updated"; task?: ContextLabTask }
+  | { type: "connected" | "heartbeat"; data?: unknown }
+  | { type: string; task?: ContextLabTask; data?: unknown };
+
+function parseContextLabTaskStreamLine(
+  line: string,
+): ContextLabTaskStreamPayload | null {
+  if (!line.startsWith("data: ")) return null;
+  const payload = line.slice(6).trim();
+  if (!payload) return null;
+  try {
+    return JSON.parse(payload) as ContextLabTaskStreamPayload;
+  } catch {
+    return null;
+  }
+}
+
+export function subscribeContextLabTaskEvents(
+  onTaskUpdate: (task: ContextLabTask) => void,
+  onError?: (error: Error) => void,
+) {
+  const controller = new AbortController();
+  let active = true;
+
+  void (async () => {
+    try {
+      const response = await fetch(`${getApiBaseUrl()}/context-lab/task-events`, {
+        method: "GET",
+        credentials: "include",
+        signal: controller.signal,
+      });
+      if (!response.ok || !response.body) {
+        throw new Error("任务状态订阅失败");
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (active) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split(/\r?\n/);
+        buffer = lines.pop() ?? "";
+
+        for (const line of lines) {
+          const event = parseContextLabTaskStreamLine(line);
+          if (event?.type === "task-updated" && event.task) {
+            onTaskUpdate(event.task);
+          }
+        }
+      }
+    } catch (error) {
+      if ((error as { name?: string }).name !== "AbortError") {
+        onError?.(error instanceof Error ? error : new Error("任务状态订阅失败"));
+      }
+    }
+  })();
+
+  return () => {
+    active = false;
+    controller.abort();
+  };
+}
+
 export const contextLabAttemptHistory = (
   data: ContextLabAttemptHistoryParams,
 ): YTRequest<ContextLabAttemptHistoryResponse> => ({

@@ -8,11 +8,15 @@ import {
   QueryKey,
 } from "@tanstack/react-query";
 
+type RequestConfig = AxiosRequestConfig & {
+  suppressErrorMessage?: boolean;
+};
+
 // 定义 YTRequest 类型，支持泛型
 export interface YTRequest<T = unknown> {
   url: string;
   data?: unknown;
-  config?: AxiosRequestConfig;
+  config?: RequestConfig;
   method: string;
   // 内部使用，用于类型推导
   __responseType?: T;
@@ -58,7 +62,10 @@ api.interceptors.response.use(
       return { ...response, data: data !== undefined ? data : response.data };
     } else {
       // 业务失败，抛出错误
-      if (code !== 4001) {
+      if (
+        code !== 4001 &&
+        !(response.config as RequestConfig).suppressErrorMessage
+      ) {
         showErrorOnce(msg || "请求失败");
       }
       return Promise.reject({
@@ -88,7 +95,11 @@ api.interceptors.response.use(
 
     const errorData = error.response?.data;
     const msg = errorData?.message ?? error.message;
-    if (errorData?.code !== 4001 && msg)
+    if (
+      errorData?.code !== 4001 &&
+      msg &&
+      !(error.config as RequestConfig | undefined)?.suppressErrorMessage
+    )
       showErrorOnce(typeof msg === "string" ? msg : String(msg));
 
     // 返回错误，可以根据需求抛出或处理

@@ -10,8 +10,14 @@ const startQuestions = [
   { wordId: 5, question: "有复原力的", direction: 0 },
 ];
 
+const threeQuestionSession = [
+  ...startQuestions,
+  { wordId: 9, question: "梯度，坡度，斜率", direction: 0 },
+];
+
 const repairQuestions = [{ wordId: 2, question: "脆弱的", direction: 0 }];
 let submitShouldReject = false;
+let useThreeQuestionSession = false;
 
 const requestMock = vi.fn((requestConfig: unknown) => {
   const config = requestConfig as {
@@ -27,9 +33,13 @@ const requestMock = vi.fn((requestConfig: unknown) => {
       config.data.wordIds.length === 1 &&
       config.data.wordIds[0] === 2;
     return Promise.resolve({
-      questions: usesRepair ? repairQuestions : startQuestions,
+      questions: usesRepair
+        ? repairQuestions
+        : useThreeQuestionSession
+          ? threeQuestionSession
+          : startQuestions,
       direction: 0,
-      totalCount: usesRepair ? 1 : 2,
+      totalCount: usesRepair ? 1 : useThreeQuestionSession ? 3 : 2,
     });
   }
   if (config.url === "/recite/submit") {
@@ -115,6 +125,7 @@ describe("RecitePage plan review", () => {
     cleanup();
     requestMock.mockClear();
     submitShouldReject = false;
+    useThreeQuestionSession = false;
   });
 
   it("starts review with word ids from the daily plan query", async () => {
@@ -155,6 +166,48 @@ describe("RecitePage plan review", () => {
     );
 
     expect(container.querySelector(".english-world-main")).toBeInTheDocument();
+  });
+
+  it("uses a client-ready review studio instead of a form-like review card", async () => {
+    const user = userEvent.setup();
+
+    const { container } = render(
+      <MemoryRouter initialEntries={["/englishWorld/recite"]}>
+        <RecitePage />
+      </MemoryRouter>,
+    );
+
+    await user.click(
+      screen.getByRole("button", { name: /开始复习|开始今日复习/ }),
+    );
+
+    expect(await screen.findByText("脆弱的")).toBeInTheDocument();
+    expect(container.querySelector(".recite-studio-shell")).toBeInTheDocument();
+    expect(container.querySelector(".recite-session-header")).toBeInTheDocument();
+    expect(container.querySelector(".recite-question-canvas")).toBeInTheDocument();
+    expect(container.querySelector(".recite-answer-dock")).toBeInTheDocument();
+    expect(container.querySelector(".recite-progress-dots")).toBeInTheDocument();
+  });
+
+  it("does not mark skipped unfinished questions as completed in the progress dots", async () => {
+    useThreeQuestionSession = true;
+    const user = userEvent.setup();
+
+    const { container } = render(
+      <MemoryRouter initialEntries={["/englishWorld/recite"]}>
+        <RecitePage />
+      </MemoryRouter>,
+    );
+
+    await user.click(
+      screen.getByRole("button", { name: /开始复习|开始今日复习/ }),
+    );
+    await user.click(await screen.findByRole("button", { name: "下一题" }));
+    await user.click(screen.getByRole("button", { name: "下一题" }));
+
+    expect(await screen.findByText("梯度，坡度，斜率")).toBeInTheDocument();
+    expect(container.querySelectorAll(".recite-progress-dot-active")).toHaveLength(0);
+    expect(container.querySelectorAll(".recite-progress-dot-current")).toHaveLength(1);
   });
 
   it("uses Enter to move through questions and submit the final answer", async () => {

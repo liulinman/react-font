@@ -103,6 +103,9 @@ const EnglishWorldMobile: React.FC = () => {
   const [activeView, setActiveView] = useState<
     "review" | "list" | "stats" | "aiTool"
   >("review");
+  const [activeToolTab, setActiveToolTab] = useState<"word" | "contextLab">(
+    "word"
+  );
 
   // 统计相关状态
   const [selectedLevel, setSelectedLevel] = useState<EnglishAbsorb>(
@@ -410,7 +413,10 @@ const EnglishWorldMobile: React.FC = () => {
                 <Button
                   fill="none"
                   size="small"
-                  onClick={() => setActiveView("aiTool")}
+                  onClick={() => {
+                    setActiveToolTab("word");
+                    setActiveView("aiTool");
+                  }}
                   style={{ padding: "4px 8px" }}
                 >
                   工具
@@ -427,11 +433,14 @@ const EnglishWorldMobile: React.FC = () => {
             ) : activeView === "list" ? (
               <>
                 <Button
-                  fill="none"
-                  size="small"
-                  onClick={() => setActiveView("aiTool")}
-                  style={{ padding: "4px 8px" }}
-                >
+                fill="none"
+                size="small"
+                onClick={() => {
+                  setActiveToolTab("word");
+                  setActiveView("aiTool");
+                }}
+                style={{ padding: "4px 8px" }}
+              >
                   <AppstoreOutline />
                 </Button>
                 <Button
@@ -499,7 +508,10 @@ const EnglishWorldMobile: React.FC = () => {
               </Card>
               <Card
                 className="mobile-study-card"
-                onClick={() => setActiveView("aiTool")}
+                onClick={() => {
+                  setActiveToolTab("contextLab");
+                  setActiveView("aiTool");
+                }}
               >
                 <div className="mobile-study-card-title">语境练习</div>
                 <div className="mobile-study-card-desc">
@@ -521,12 +533,14 @@ const EnglishWorldMobile: React.FC = () => {
           </div>
         ) : activeView === "aiTool" ? (
           <Tabs
+            activeKey={activeToolTab}
+            onChange={(key) => setActiveToolTab(key as "word" | "contextLab")}
             style={{ "--title-font-size": "14px", "--content-padding": "0" }}
           >
             <Tabs.Tab title="AI 单词查询" key="word">
               <WordAgentTabMobile />
             </Tabs.Tab>
-            <Tabs.Tab title="阅读+选择题" key="exercise">
+            <Tabs.Tab title="Context Lab" key="contextLab">
               <ExerciseAgentTabMobile />
             </Tabs.Tab>
           </Tabs>

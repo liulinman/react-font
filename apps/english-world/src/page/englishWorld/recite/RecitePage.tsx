@@ -96,6 +96,10 @@ export const RecitePage: React.FC = () => {
     totalCount: questions.length,
     currentIndex,
   });
+  const progressDots = Array.from(
+    { length: cardState.totalCount },
+    (_, index) => index,
+  );
   const planReview = useMemo(
     () => parsePlanReviewSearch(location.search),
     [location.search],
@@ -343,85 +347,99 @@ export const RecitePage: React.FC = () => {
 
         {/* 练习中 */}
         {status === "practicing" && (
-          <Card className="recite-question-panel">
-            <div className="mb-5 flex items-center justify-between gap-6">
+          <Card className="recite-question-panel recite-studio-shell">
+            <div className="recite-session-header">
               <div>
-                <Tag color="blue">第 {cardState.displayIndex} / {cardState.totalCount} 题</Tag>
-                <Title level={3} className="mt-3 mb-1">
-                  3 分钟短复习
-                </Title>
+                <Text className="recite-session-kicker">REVIEW STUDIO</Text>
+                <Title level={3}>默写训练舱</Title>
                 <Text type="secondary">
                   {direction === PracticeDirection.ChineseToEnglish
-                    ? "看中文，回忆英文"
-                    : "看英文，回忆中文"}
-                  ，先完成今天这一小组。
+                    ? "看中文，准确写出英文。"
+                    : "看英文，准确写出中文。"}
+                  先完成本轮，再集中处理错词。
                 </Text>
               </div>
-              <div className="min-w-[260px]">
-                <div className="recite-progress-meta">
-                  <span>已完成 {progress.answeredCount}</span>
-                  <span>剩余 {progress.remainingCount}</span>
+              <div className="recite-session-metrics">
+                <div>
+                  <span>当前</span>
+                  <strong>{cardState.displayIndex}</strong>
                 </div>
-                <Progress percent={progress.percent} size="small" />
+                <div>
+                  <span>题量</span>
+                  <strong>{cardState.totalCount}</strong>
+                </div>
+                <div>
+                  <span>完成</span>
+                  <strong>{progress.percent}%</strong>
+                </div>
               </div>
             </div>
-            <Divider />
             {currentQuestion && (
-              <div className="mx-auto max-w-3xl py-4">
-                <Text type="secondary">请回忆答案</Text>
-                <div className="recite-prompt-card">
-                  <div className="flex items-center justify-center gap-2">
-                    <Title level={2} className="mb-0">
-                      {currentQuestion.question}
-                    </Title>
-                    {direction === PracticeDirection.EnglishToChinese && (
-                      <BritishPronunciationButton
-                        word={currentQuestion.question}
-                        size="middle"
-                      />
-                    )}
+              <div className="recite-studio-grid">
+                <section className="recite-question-canvas">
+                  <div className="recite-question-topline">
+                    <span>第 {cardState.displayIndex} 题</span>
+                    <span>
+                      {direction === PracticeDirection.ChineseToEnglish
+                        ? "中文提示"
+                        : "英文提示"}
+                    </span>
                   </div>
-                </div>
-                <Form form={form} layout="vertical">
-                  <Form.Item
-                    label={<Text strong>你的答案</Text>}
-                    name={`answer_${currentQuestion.wordId}`}
-                  >
-                    <Input
-                      aria-label="你的答案"
-                      key={currentQuestion.wordId}
-                      autoFocus
-                      placeholder="输入后按 Enter 进入下一题"
+                  <div className="recite-prompt-card">
+                    <div className="recite-prompt-content">
+                      <Title level={2}>
+                        {currentQuestion.question}
+                      </Title>
+                      {direction === PracticeDirection.EnglishToChinese && (
+                        <BritishPronunciationButton
+                          word={currentQuestion.question}
+                          size="middle"
+                        />
+                      )}
+                    </div>
+                  </div>
+                  <div className="recite-answer-dock">
+                    <div className="recite-answer-dock-head">
+                      <Text strong>写下答案</Text>
+                      <Text type="secondary">
+                        {answers[currentQuestion.wordId]?.trim()
+                          ? "已记录"
+                          : "留空也可以继续"}
+                      </Text>
+                    </div>
+                    <Form form={form} layout="vertical" className="recite-answer-form">
+                      <Form.Item name={`answer_${currentQuestion.wordId}`}>
+                        <Input
+                          aria-label="你的答案"
+                          key={currentQuestion.wordId}
+                          autoFocus
+                          placeholder="输入答案，按 Enter 继续"
+                          size="large"
+                          value={answers[currentQuestion.wordId] || ""}
+                          onChange={(e) =>
+                            handleAnswerChange(currentQuestion.wordId, e.target.value)
+                          }
+                          onPressEnter={(e) => {
+                            e.preventDefault();
+                            if (cardState.canGoNext) {
+                              goNextQuestion();
+                            } else {
+                              handleSubmit();
+                            }
+                          }}
+                        />
+                      </Form.Item>
+                    </Form>
+                  </div>
+                  <div className="recite-answer-bar">
+                    <Button
                       size="large"
-                      value={answers[currentQuestion.wordId] || ""}
-                      onChange={(e) =>
-                        handleAnswerChange(currentQuestion.wordId, e.target.value)
-                      }
-                      onPressEnter={(e) => {
-                        e.preventDefault();
-                        if (cardState.canGoNext) {
-                          goNextQuestion();
-                        } else {
-                          handleSubmit();
-                        }
-                      }}
-                    />
-                  </Form.Item>
-                </Form>
-                <div className="mt-6 flex items-center justify-between">
-                  <Button
-                    size="large"
-                    disabled={!cardState.canGoPrev}
-                    onClick={goPrevQuestion}
-                  >
-                    上一题
-                  </Button>
-                  <Space>
-                    <Text type="secondary">
-                      {answers[currentQuestion.wordId]?.trim()
-                        ? "已填写"
-                        : "可以先跳过，最后一起提交"}
-                    </Text>
+                      disabled={!cardState.canGoPrev}
+                      onClick={goPrevQuestion}
+                    >
+                      上一题
+                    </Button>
+                    <Text type="secondary">Enter 继续，最后一题自动提交</Text>
                     {cardState.canGoNext ? (
                       <Button type="primary" size="large" onClick={goNextQuestion}>
                         下一题
@@ -436,13 +454,46 @@ export const RecitePage: React.FC = () => {
                         完成复习
                       </Button>
                     )}
-                  </Space>
-                </div>
+                  </div>
+                </section>
+                <aside className="recite-practice-rail">
+                  <div className="recite-rail-card">
+                    <Text className="recite-rail-label">SESSION PROGRESS</Text>
+                    <div className="recite-progress-meta">
+                      <span>已完成 {progress.answeredCount}</span>
+                      <span>剩余 {progress.remainingCount}</span>
+                    </div>
+                    <Progress percent={progress.percent} size="small" />
+                    <div className="recite-progress-dots" aria-label="题目进度">
+                      {progressDots.map((index) => {
+                        const dotQuestion = questions[index];
+                        const isAnswered = Boolean(
+                          dotQuestion && answers[dotQuestion.wordId]?.trim(),
+                        );
+                        const isCurrent = index === currentIndex;
+                        const className = [
+                          "recite-progress-dot",
+                          isAnswered ? "recite-progress-dot-active" : "",
+                          isCurrent ? "recite-progress-dot-current" : "",
+                        ]
+                          .filter(Boolean)
+                          .join(" ");
+
+                        return <span key={index} className={className} />;
+                      })}
+                    </div>
+                  </div>
+                  <div className="recite-rail-card recite-rail-tip">
+                    <Text strong>完成感设计</Text>
+                    <Text type="secondary">
+                      一题一题推进，先完成，再修错。结果页会自动把错词提到最前面。
+                    </Text>
+                  </div>
+                </aside>
               </div>
             )}
           </Card>
         )}
-
         {/* 提交结果 */}
         {status === "submitted" && results && (
           <Card className="recite-result-panel">
