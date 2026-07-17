@@ -90,7 +90,10 @@ export const RecitePage: React.FC = () => {
     ? createReviewResultInsight(results.statistics)
     : null;
   const orderedResults = results ? orderResultsForReview(results.results) : [];
-  const wrongWordIds = results ? getWrongWordIds(results.results) : [];
+  const wrongWordIds = useMemo(
+    () => (results ? getWrongWordIds(results.results) : []),
+    [results],
+  );
   const currentQuestion = questions[currentIndex];
   const cardState = createReviewCardState({
     totalCount: questions.length,
