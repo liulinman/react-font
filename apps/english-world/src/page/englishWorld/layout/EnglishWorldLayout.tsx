@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { EnglishHeader } from "../component/EnglishHeader";
+import { EnglishWorldContextBar } from "./EnglishWorldContextBar";
 
 export const SIDEBAR_COLLAPSED_STORAGE_KEY =
   "english-world-sidebar-collapsed";
@@ -53,7 +54,10 @@ export function EnglishWorldLayout({
         onCollapsedChange={handleCollapsedChange}
         onNavClick={onNavClick}
       />
-      <main className="english-world-main">{children}</main>
+      <div className="english-world-workspace">
+        <EnglishWorldContextBar activeKey={activeKey} />
+        <main className="english-world-main">{children}</main>
+      </div>
     </div>
   );
 }

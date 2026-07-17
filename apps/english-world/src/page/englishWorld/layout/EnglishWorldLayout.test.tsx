@@ -59,4 +59,19 @@ describe("EnglishWorldLayout sidebar state", () => {
     expect(container.querySelector(".english-world-shell-collapsed")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "收起侧栏" })).toBeInTheDocument();
   });
+
+  it("shows the current product section in the desktop context bar", () => {
+    render(
+      <MemoryRouter>
+        <EnglishWorldLayout activeKey="words">content</EnglishWorldLayout>
+      </MemoryRouter>,
+    );
+
+    const contextBar = screen.getByRole("banner");
+    expect(contextBar).toHaveTextContent("English World");
+    expect(contextBar).toHaveTextContent("词库");
+    expect(
+      contextBar.querySelector(".english-world-context-date"),
+    ).toBeInTheDocument();
+  });
 });
