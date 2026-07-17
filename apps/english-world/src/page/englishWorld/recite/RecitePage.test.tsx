@@ -1,5 +1,11 @@
 import "@testing-library/jest-dom/vitest";
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import {
+  cleanup,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
@@ -190,6 +196,7 @@ describe("RecitePage plan review", () => {
     expect(container.querySelector(".recite-studio-shell")).toBeInTheDocument();
     expect(container.querySelector(".recite-session-header")).toBeInTheDocument();
     expect(container.querySelector(".recite-question-canvas")).toBeInTheDocument();
+    expect(container.querySelector(".recite-question-stage")).toBeInTheDocument();
     expect(container.querySelector(".recite-answer-dock")).toBeInTheDocument();
     expect(container.querySelector(".recite-progress-dots")).toBeInTheDocument();
   });
@@ -254,7 +261,7 @@ describe("RecitePage plan review", () => {
   it("renders wrong results first and starts a repair session from failed word ids", async () => {
     const user = userEvent.setup();
 
-    render(
+    const { container } = render(
       <MemoryRouter initialEntries={["/englishWorld/recite"]}>
         <RecitePage />
       </MemoryRouter>,
@@ -270,7 +277,21 @@ describe("RecitePage plan review", () => {
     expect(resultItems[0]).toHaveTextContent("fragile");
     expect(resultItems[0]).toHaveTextContent("错误");
 
-    await user.click(screen.getByRole("button", { name: /再练错词/ }));
+    const resultActions = container.querySelector(".recite-result-actions");
+    expect(resultActions).toBeInTheDocument();
+    expect(resultActions?.querySelectorAll(".ant-btn-primary")).toHaveLength(1);
+    const repairButton = within(resultActions as HTMLElement).getByRole(
+      "button",
+      { name: /再练错词/ },
+    );
+    expect(repairButton).not.toHaveClass("ant-btn-dangerous");
+    expect(
+      within(resultActions as HTMLElement).getByRole("button", {
+        name: "回到今日路线",
+      }),
+    ).toBeInTheDocument();
+
+    await user.click(repairButton);
 
     await waitFor(() => {
       expect(requestMock).toHaveBeenLastCalledWith(

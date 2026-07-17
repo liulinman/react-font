@@ -383,51 +383,56 @@ export const RecitePage: React.FC = () => {
                         : "英文提示"}
                     </span>
                   </div>
-                  <div className="recite-prompt-card">
-                    <div className="recite-prompt-content">
-                      <Title level={2}>
-                        {currentQuestion.question}
-                      </Title>
-                      {direction === PracticeDirection.EnglishToChinese && (
-                        <BritishPronunciationButton
-                          word={currentQuestion.question}
-                          size="middle"
-                        />
-                      )}
+                  <div
+                    className="recite-question-stage"
+                    key={currentQuestion.wordId}
+                  >
+                    <div className="recite-prompt-card">
+                      <div className="recite-prompt-content">
+                        <Title level={2}>
+                          {currentQuestion.question}
+                        </Title>
+                        {direction === PracticeDirection.EnglishToChinese && (
+                          <BritishPronunciationButton
+                            word={currentQuestion.question}
+                            size="middle"
+                          />
+                        )}
+                      </div>
                     </div>
-                  </div>
-                  <div className="recite-answer-dock">
-                    <div className="recite-answer-dock-head">
-                      <Text strong>写下答案</Text>
-                      <Text type="secondary">
-                        {answers[currentQuestion.wordId]?.trim()
-                          ? "已记录"
-                          : "留空也可以继续"}
-                      </Text>
-                    </div>
-                    <Form form={form} layout="vertical" className="recite-answer-form">
-                      <Form.Item name={`answer_${currentQuestion.wordId}`}>
-                        <Input
-                          aria-label="你的答案"
-                          key={currentQuestion.wordId}
-                          autoFocus
-                          placeholder="输入答案，按 Enter 继续"
-                          size="large"
-                          value={answers[currentQuestion.wordId] || ""}
-                          onChange={(e) =>
-                            handleAnswerChange(currentQuestion.wordId, e.target.value)
-                          }
-                          onPressEnter={(e) => {
-                            e.preventDefault();
-                            if (cardState.canGoNext) {
-                              goNextQuestion();
-                            } else {
-                              handleSubmit();
+                    <div className="recite-answer-dock">
+                      <div className="recite-answer-dock-head">
+                        <Text strong>写下答案</Text>
+                        <Text type="secondary">
+                          {answers[currentQuestion.wordId]?.trim()
+                            ? "已记录"
+                            : "留空也可以继续"}
+                        </Text>
+                      </div>
+                      <Form form={form} layout="vertical" className="recite-answer-form">
+                        <Form.Item name={`answer_${currentQuestion.wordId}`}>
+                          <Input
+                            aria-label="你的答案"
+                            key={currentQuestion.wordId}
+                            autoFocus
+                            placeholder="输入答案，按 Enter 继续"
+                            size="large"
+                            value={answers[currentQuestion.wordId] || ""}
+                            onChange={(e) =>
+                              handleAnswerChange(currentQuestion.wordId, e.target.value)
                             }
-                          }}
-                        />
-                      </Form.Item>
-                    </Form>
+                            onPressEnter={(e) => {
+                              e.preventDefault();
+                              if (cardState.canGoNext) {
+                                goNextQuestion();
+                              } else {
+                                handleSubmit();
+                              }
+                            }}
+                          />
+                        </Form.Item>
+                      </Form>
+                    </div>
                   </div>
                   <div className="recite-answer-bar">
                     <Button
@@ -514,22 +519,21 @@ export const RecitePage: React.FC = () => {
                     <Text strong>下一步</Text>
                     <div className="mt-1 text-sm text-gray-500">
                       {resultInsight.priority === "repair"
-                        ? "趁记忆还热，再做一组围绕薄弱词的短复习。"
+                        ? "优先巩固本轮没记牢的词，完成后再回到今日路线。"
                         : "今天的复习已经闭环，回到首页查看整体学习节奏。"}
                     </div>
                   </div>
-                  <Space wrap>
+                  <Space wrap className="recite-result-actions">
                     <Button
                       type="primary"
                       size="large"
-                      danger={resultInsight.priority === "repair"}
-	                      icon={
-	                        resultInsight.priority === "repair" ? (
-	                          <ReloadOutlined />
-	                        ) : (
-	                          <CheckOutlined />
-	                        )
-	                      }
+                      icon={
+                        resultInsight.priority === "repair" ? (
+                          <ReloadOutlined />
+                        ) : (
+                          <CheckOutlined />
+                        )
+                      }
                       onClick={
                         wrongWordIds.length > 0
                           ? handleRepairWrongWords
