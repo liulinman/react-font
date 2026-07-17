@@ -89,7 +89,12 @@ export type ContextLabGenerateParams =
   | {
       sourceType: "custom";
       words: string[];
+      mode?: ContextLabMode;
+      reciteSessionId?: number;
+      requestUid?: string;
     };
+
+export type ContextLabMode = "standard" | "micro";
 
 export type ContextLabSubmitParams = {
   sessionId: number;
@@ -154,7 +159,7 @@ export type ContextLabSubmitResult = {
 };
 
 export type ContextLabInitialSource = {
-  source?: "cockpit" | "result";
+  source?: "cockpit" | "result" | "recite-result";
   words: string[];
 };
 
@@ -168,6 +173,7 @@ export type ContextLabQuestion = {
   id: string;
   stem: string;
   options: string[];
+  targetWord?: string;
 };
 
 export type ContextLabTask = {
@@ -177,6 +183,8 @@ export type ContextLabTask = {
   status: ContextLabTaskStatus;
   sourceType: ContextLabGenerateParams["sourceType"];
   words: string[];
+  mode?: ContextLabMode;
+  reciteSessionId?: number;
   articleExerciseId?: number;
   article?: string;
   questions?: ContextLabQuestion[];
@@ -185,6 +193,7 @@ export type ContextLabTask = {
   latestScore?: number;
   latestWrongCount?: number;
   latestAttemptTime?: string;
+  latestAttempt?: ContextLabAttempt;
   errorMessage?: string;
   createTime?: string;
   updateTime?: string;

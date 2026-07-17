@@ -58,7 +58,12 @@ export function LearningCockpitPage() {
   useEffect(() => {
     let mounted = true;
 
-    void request(dailyCoachSummary({ days: 7, timezone: 8 }))
+    void request(
+      dailyCoachSummary({
+        days: 7,
+        timezoneOffsetMinutes: -new Date().getTimezoneOffset(),
+      }),
+    )
       .then((data) => {
         if (mounted) setCoachSummary(data);
       })

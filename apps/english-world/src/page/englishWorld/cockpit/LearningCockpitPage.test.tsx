@@ -145,7 +145,13 @@ describe("LearningCockpitPage", () => {
     );
 
     expect(requestMock).toHaveBeenCalledWith(
-      expect.objectContaining({ url: "/daily-coach/summary" }),
+      expect.objectContaining({
+        url: "/daily-coach/summary",
+        data: {
+          days: 7,
+          timezoneOffsetMinutes: -new Date().getTimezoneOffset(),
+        },
+      }),
     );
     expect(requestMock).toHaveBeenCalledWith(
       expect.objectContaining({ url: "/memory-map/overview" }),

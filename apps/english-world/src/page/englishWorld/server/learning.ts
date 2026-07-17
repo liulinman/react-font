@@ -26,6 +26,7 @@ import { getApiBaseUrl } from "@font/api";
 export const dailyCoachSummary = (data: {
   days?: number;
   timezone?: number;
+  timezoneOffsetMinutes?: number;
 }): YTRequest<DailyCoachSummary> => ({
   url: "/daily-coach/summary",
   method: "POST",

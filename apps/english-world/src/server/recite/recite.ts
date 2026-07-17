@@ -3,6 +3,7 @@ import type {
   SubmitAnswerParams,
   GetHistoryParams,
   GetStatsParams,
+  GetReciteSessionResultParams,
 } from "./recite.type";
 
 export const startRecite = (params?: StartReciteParams) => {
@@ -37,6 +38,14 @@ export const getReciteStats = (params?: GetStatsParams) => {
   };
 };
 
+export const getReciteSessionResult = (
+  params: GetReciteSessionResultParams,
+) => ({
+  url: "/recite/session-result",
+  method: "POST",
+  data: params,
+});
+
 export type {
   StartReciteParams,
   StartReciteResponse,
@@ -46,6 +55,7 @@ export type {
   GetHistoryResponse,
   GetStatsParams,
   GetStatsResponse,
+  GetReciteSessionResultParams,
 } from "./recite.type";
 
 export type {

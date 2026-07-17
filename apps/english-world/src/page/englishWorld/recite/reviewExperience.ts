@@ -124,6 +124,38 @@ export function getWrongWordIds(results: AnswerResult[]): number[] {
   return wordIds;
 }
 
+export function getContextRepairWords(
+  results: AnswerResult[],
+  limit = 3,
+): string[] {
+  const seen = new Set<string>();
+  const words: string[] = [];
+
+  for (const result of results) {
+    if (result.isCorrect) continue;
+    const word = result.englishWord?.trim();
+    const key = word?.toLowerCase();
+    if (!word || !key || seen.has(key)) continue;
+    seen.add(key);
+    words.push(word);
+    if (words.length >= Math.max(1, limit)) break;
+  }
+  return words;
+}
+
+export function buildMicroContextPath(
+  sessionId: number,
+  words: string[],
+): string {
+  const params = new URLSearchParams({
+    mode: "micro",
+    source: "recite-result",
+    reciteSessionId: String(sessionId),
+    words: words.join(","),
+  });
+  return `/englishWorld/context-lab?${params.toString().replace(/\+/g, "%20")}`;
+}
+
 export function orderResultsForReview(
   results: AnswerResult[],
 ): AnswerResult[] {

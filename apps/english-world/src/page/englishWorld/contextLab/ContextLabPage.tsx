@@ -1,4 +1,11 @@
-import { useEffect, useMemo, useState, type MouseEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type MouseEvent,
+} from "react";
 import {
   Button,
   Drawer,
@@ -71,12 +78,28 @@ import {
   parseContextLabReference,
 } from "../utils/contextLabReference";
 import { getPartSpeechLabel } from "../utils/wordLabels";
+import {
+  buildMicroGenerateParams,
+  isInvalidMicroContextEntry,
+  parseMicroContextEntry,
+} from "./microContext";
+import {
+  buildLearningEventUid,
+  recordLearningEvent,
+} from "../analytics/learningEvents";
 
 const { Text, Title } = Typography;
 const { TextArea } = Input;
 const ANSWER_LETTERS = ["A", "B", "C", "D"];
 const ACTIVE_TASK_DELETE_MESSAGE =
   "生成中的练习包暂不支持删除，请等待任务完成或失败后再操作";
+
+function createRequestUid() {
+  return (
+    globalThis.crypto?.randomUUID?.() ??
+    `request-${Date.now()}-${Math.random().toString(16).slice(2)}`
+  );
+}
 
 function getAnswerLetter(index: number) {
   return ANSWER_LETTERS[index] ?? String(index);
@@ -293,9 +316,15 @@ export function formatElapsedSeconds(totalSeconds: number) {
 function ContextLabPageContent({
   initialSearch,
   onOpenWordLibrary,
+  onBackToReciteResult,
+  onMicroTaskReady,
+  onBackToToday,
 }: {
   initialSearch: string;
   onOpenWordLibrary?: () => void;
+  onBackToReciteResult?: (sessionId: number) => void;
+  onMicroTaskReady?: (taskId: number) => void;
+  onBackToToday?: () => void;
 }) {
   const [sourceMode, setSourceMode] = useState<ContextLabSourceMode>("weak");
   const [count, setCount] = useState(8);
@@ -355,6 +384,29 @@ function ContextLabPageContent({
   const [addInitialValues, setAddInitialValues] =
     useState<AddInitialValues | null>(null);
   const [highlightWord, setHighlightWord] = useState("");
+  const [microCreateError, setMicroCreateError] = useState("");
+  const [microWaitLong, setMicroWaitLong] = useState(false);
+  const microEntry = useMemo(
+    () => parseMicroContextEntry(initialSearch),
+    [initialSearch],
+  );
+  const invalidMicroEntry = useMemo(
+    () => isInvalidMicroContextEntry(initialSearch),
+    [initialSearch],
+  );
+  const microTaskId = useMemo(() => {
+    if (!microEntry) return null;
+    const value = Number(new URLSearchParams(initialSearch).get("taskId"));
+    return Number.isInteger(value) && value > 0 ? value : null;
+  }, [initialSearch, microEntry]);
+  const isMicroMode = microEntry !== null || invalidMicroEntry;
+  const autoCreateMicroKeyRef = useRef<string | null>(null);
+  const microCreateInFlightRef = useRef(false);
+  const activeMicroTaskIdRef = useRef<number | null>(null);
+  const generatedMicroTaskIdsRef = useRef(new Set<number>());
+  const completedMicroTaskIdsRef = useRef(new Set<number>());
+  const microRequestUidRef = useRef<string | null>(null);
+  const submitInFlightRef = useRef(false);
 
   const closeSelectionMenu = () => {
     setSelectionMenu((prev) => ({ ...prev, open: false }));
@@ -362,8 +414,88 @@ function ContextLabPageContent({
   };
 
   const requestBody = useMemo<ContextLabGenerateParams>(() => {
+    if (microEntry) {
+      return buildMicroGenerateParams(
+        microEntry.reciteSessionId,
+        microEntry.words,
+      );
+    }
     return buildContextLabGenerateParams({ sourceMode, count, customWords });
-  }, [count, customWords, sourceMode]);
+  }, [count, customWords, microEntry, sourceMode]);
+
+  const recordMicroGenerated = useCallback(async (task: ContextLabTask) => {
+    if (!microEntry || generatedMicroTaskIdsRef.current.has(task.taskId)) return;
+    const saved = await recordLearningEvent({
+      eventUid: buildLearningEventUid("micro_context_generated", task.taskId),
+      eventType: "micro_context_generated",
+      reciteSessionId: microEntry.reciteSessionId,
+      contextTaskId: task.taskId,
+      wordCount: microEntry.words.length,
+      timezoneOffsetMinutes: -new Date().getTimezoneOffset(),
+      status: "succeeded",
+    });
+    if (saved) generatedMicroTaskIdsRef.current.add(task.taskId);
+  }, [microEntry]);
+
+  const createMicroTask = useCallback(async (renewRequestUid = false) => {
+    if (!microEntry || microCreateInFlightRef.current) return;
+    if (renewRequestUid || !microRequestUidRef.current) {
+      microRequestUidRef.current = createRequestUid();
+    }
+    microCreateInFlightRef.current = true;
+    setCreating(true);
+    setMicroCreateError("");
+    setMicroWaitLong(false);
+    activeMicroTaskIdRef.current = null;
+    setCurrentTask(null);
+    setAnswers({});
+    setResults([]);
+    setSubmitSummary(null);
+    setElapsedSeconds(0);
+    try {
+      const task = await request(
+        contextLabCreateTask(
+          buildMicroGenerateParams(
+            microEntry.reciteSessionId,
+            microEntry.words,
+            microRequestUidRef.current,
+          ),
+        ),
+      );
+      activeMicroTaskIdRef.current = task.taskId;
+      setCurrentTask(task);
+      onMicroTaskReady?.(task.taskId);
+      if (task.status === "succeeded") {
+        void recordMicroGenerated(task);
+        setPracticeModalOpen(true);
+      }
+    } catch (error: unknown) {
+      setMicroCreateError(
+        error instanceof Error ? error.message : "错词语境生成失败",
+      );
+      message.error(error instanceof Error ? error.message : "错词语境生成失败");
+    } finally {
+      microCreateInFlightRef.current = false;
+      setCreating(false);
+    }
+  }, [microEntry, onMicroTaskReady, recordMicroGenerated]);
+
+  const refreshCurrentMicroTask = async () => {
+    if (!microEntry || !currentTask) return;
+    try {
+      const task = await request<ContextLabTask>(
+        contextLabDetail({ taskId: currentTask.taskId }),
+      );
+      if (task.reciteSessionId !== microEntry.reciteSessionId) return;
+      setCurrentTask(task);
+      if (task.status === "succeeded") {
+        void recordMicroGenerated(task);
+        setPracticeModalOpen(true);
+      }
+    } catch (error: unknown) {
+      message.error(error instanceof Error ? error.message : "任务状态刷新失败");
+    }
+  };
 
   const trimmedHistoryKeyword = historyKeyword.trim();
   const historySearchActive =
@@ -455,15 +587,12 @@ function ContextLabPageContent({
   };
 
   useEffect(() => {
-    void loadHistory();
-  }, []);
-
-  useEffect(() => {
+    if (isMicroMode) return;
     const timer = window.setTimeout(() => {
       void loadHistory();
     }, 300);
     return () => window.clearTimeout(timer);
-  }, [historyKeyword, historySourceType]);
+  }, [historyKeyword, historySourceType, isMicroMode]);
 
   useEffect(() => {
     return subscribeContextLabTaskEvents((task) => {
@@ -479,8 +608,106 @@ function ContextLabPageContent({
       setCurrentTask((prev) =>
         prev?.taskId === task.taskId ? { ...prev, ...task } : prev,
       );
+      if (
+        microEntry &&
+        task.taskId === activeMicroTaskIdRef.current &&
+        task.reciteSessionId === microEntry.reciteSessionId &&
+        task.status === "succeeded"
+      ) {
+        void recordMicroGenerated(task);
+        setPracticeModalOpen(true);
+      }
     });
-  }, [historySearchActive]);
+  }, [historySearchActive, microEntry, recordMicroGenerated]);
+
+  useEffect(() => {
+    if (!microEntry || !microTaskId) return;
+    let cancelled = false;
+    void request<ContextLabTask>(
+      {
+        ...contextLabDetail({ taskId: microTaskId }),
+        config: { suppressErrorMessage: true },
+      },
+    )
+      .then((task) => {
+        if (
+          cancelled ||
+          task.mode !== "micro" ||
+          task.reciteSessionId !== microEntry.reciteSessionId
+        ) {
+          if (!cancelled) setMicroCreateError("修复任务与来源回合不一致");
+          return;
+        }
+        activeMicroTaskIdRef.current = task.taskId;
+        setCurrentTask(task);
+        if (task.latestAttempt) {
+          completedMicroTaskIdsRef.current.add(task.taskId);
+          setResults(task.latestAttempt.results ?? []);
+          setSubmitSummary(task.latestAttempt as ContextLabSubmitResult);
+        }
+        if (task.status === "succeeded") {
+          void recordMicroGenerated(task);
+          setPracticeModalOpen(true);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setMicroCreateError("修复任务不可用，请重新生成");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [microEntry, microTaskId, recordMicroGenerated]);
+
+  useEffect(() => {
+    if (
+      !microEntry ||
+      !currentTask ||
+      !isContextLabTaskActive(currentTask.status)
+    ) {
+      return;
+    }
+    let cancelled = false;
+    const refresh = async () => {
+      try {
+        const task = await request<ContextLabTask>(
+          {
+            ...contextLabDetail({ taskId: currentTask.taskId }),
+            config: { suppressErrorMessage: true },
+          },
+        );
+        if (
+          cancelled ||
+          task.taskId !== activeMicroTaskIdRef.current ||
+          task.reciteSessionId !== microEntry.reciteSessionId
+        ) {
+          return;
+        }
+        setCurrentTask(task);
+        if (task.status === "succeeded") {
+          void recordMicroGenerated(task);
+          setPracticeModalOpen(true);
+        }
+      } catch {
+        // SSE may reconnect later; polling keeps trying while the task is active.
+      }
+    };
+    void refresh();
+    const pollTimer = window.setInterval(() => void refresh(), 2000);
+    const waitTimer = window.setTimeout(() => setMicroWaitLong(true), 90_000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(pollTimer);
+      window.clearTimeout(waitTimer);
+    };
+  }, [currentTask, microEntry, recordMicroGenerated]);
+
+  useEffect(() => {
+    if (!microEntry || microTaskId) return;
+    const entryKey = `${microEntry.reciteSessionId}:${microEntry.words.join("|")}`;
+    if (autoCreateMicroKeyRef.current === entryKey) return;
+    autoCreateMicroKeyRef.current = entryKey;
+    void createMicroTask();
+  }, [createMicroTask, microEntry, microTaskId]);
 
   useEffect(() => {
     const params = new URLSearchParams(initialSearch);
@@ -491,12 +718,16 @@ function ContextLabPageContent({
       .slice(0, 20);
 
     if (params.get("source") === "cockpit" && words.length > 0) {
-      setSourceMode("custom");
-      setCustomWords(words.join(", "));
+      const timer = window.setTimeout(() => {
+        setSourceMode("custom");
+        setCustomWords(words.join(", "));
+      }, 0);
+      return () => window.clearTimeout(timer);
     }
   }, [initialSearch]);
 
   useEffect(() => {
+    if (microEntry) return;
     const reference = parseContextLabReference(
       `/englishWorld/context-lab${initialSearch}`,
     );
@@ -528,7 +759,7 @@ function ContextLabPageContent({
         setHighlightWord(reference.word ?? "");
         setPracticeModalOpen(false);
         setSourcePreviewOpen(true);
-      } catch (error: unknown) {
+      } catch {
         if (!cancelled) {
           message.warning("来源文章已删除或不可访问");
         }
@@ -538,10 +769,11 @@ function ContextLabPageContent({
     return () => {
       cancelled = true;
     };
-  }, [history, initialSearch]);
+  }, [history, initialSearch, microEntry]);
 
   useEffect(() => {
-    setMarkedVocabulary([]);
+    const timer = window.setTimeout(() => setMarkedVocabulary([]), 0);
+    return () => window.clearTimeout(timer);
   }, [currentTask?.taskId]);
 
   useEffect(() => {
@@ -713,6 +945,7 @@ function ContextLabPageContent({
 
   const handleSubmit = async () => {
     if (!currentTask?.questions?.length) return;
+    if (submitInFlightRef.current) return;
     const sessionId = currentTask.articleExerciseId ?? currentTask.taskId;
     const questionKeys = currentTask.questions.map((question, index) =>
       question.id || `q-${index}`,
@@ -723,6 +956,7 @@ function ContextLabPageContent({
       return;
     }
 
+    submitInFlightRef.current = true;
     setSubmitting(true);
     try {
       const response = await request(
@@ -740,11 +974,36 @@ function ContextLabPageContent({
       );
       setResults(response.results ?? []);
       setSubmitSummary(response);
-      await loadHistory();
+      if (microEntry) {
+        if (
+          response.attemptId &&
+          !completedMicroTaskIdsRef.current.has(currentTask.taskId)
+        ) {
+          const saved = await recordLearningEvent({
+          eventUid: buildLearningEventUid(
+            "micro_context_completed",
+            currentTask.taskId,
+          ),
+          eventType: "micro_context_completed",
+          reciteSessionId: microEntry.reciteSessionId,
+          contextTaskId: currentTask.taskId,
+          attemptId: response.attemptId,
+          wordCount: microEntry.words.length,
+          correctCount: response.correctCount,
+          elapsedSeconds,
+          timezoneOffsetMinutes: -new Date().getTimezoneOffset(),
+          status: "completed",
+          });
+          if (saved) completedMicroTaskIdsRef.current.add(currentTask.taskId);
+        }
+      } else {
+        await loadHistory();
+      }
       message.success("练习已提交");
     } catch (error: unknown) {
       message.error(error instanceof Error ? error.message : "提交失败");
     } finally {
+      submitInFlightRef.current = false;
       setSubmitting(false);
     }
   };
@@ -1020,7 +1279,7 @@ function ContextLabPageContent({
         </Text>
       </div>
       <Space>
-        {task.status === "succeeded" && (
+        {task.status === "succeeded" && !isMicroMode && (
           <Button
             aria-label="下载本次练习 PDF"
             icon={<DownloadOutlined />}
@@ -1190,13 +1449,17 @@ function ContextLabPageContent({
       >
         <div>
           <Text className="learning-cockpit-label">Result</Text>
-          <Title level={4}>结果复盘</Title>
+          <Title level={4}>{isMicroMode ? "语境结果" : "结果复盘"}</Title>
         </div>
         <div className="context-lab-result-metrics">
           <strong>{submitSummary.score ?? 0}</strong>
           <span>得分</span>
           <Tag color={(submitSummary.wrongCount ?? 0) > 0 ? "orange" : "green"}>
-            错题 {submitSummary.wrongCount ?? 0}
+            {isMicroMode
+              ? (submitSummary.wrongCount ?? 0) > 0
+                ? "还需复查"
+                : "语境通过"
+              : `错题 ${submitSummary.wrongCount ?? 0}`}
           </Tag>
         </div>
         {weakWords.length > 0 && (
@@ -1213,8 +1476,21 @@ function ContextLabPageContent({
             <li key={suggestion}>{suggestion}</li>
           ))}
         </ul>
+        {isMicroMode && <Text type="secondary">下一自然日再确认</Text>}
         <Space wrap>
-          {weakWords.length > 0 && (
+          {isMicroMode ? (
+            <Button
+              onClick={() => {
+                setAnswers({});
+                setResults([]);
+                setSubmitSummary(null);
+                setElapsedSeconds(0);
+                setSubmitting(false);
+              }}
+            >
+              整组再答一次
+            </Button>
+          ) : weakWords.length > 0 ? (
             <Button
               onClick={() => {
                 setSourceMode("custom");
@@ -1224,7 +1500,7 @@ function ContextLabPageContent({
             >
               用薄弱词再练一套
             </Button>
-          )}
+          ) : null}
           <Button onClick={onOpenWordLibrary}>
             打开词库
           </Button>
@@ -1249,7 +1525,7 @@ function ContextLabPageContent({
       >
         <div
           className="context-lab-article"
-          onContextMenu={handleReadingContextMenu}
+          onContextMenu={isMicroMode ? undefined : handleReadingContextMenu}
         >
           {(() => {
             const articleContent = parseArticleContent(currentTask.article);
@@ -1284,7 +1560,7 @@ function ContextLabPageContent({
             );
           })()}
         </div>
-        {markedVocabulary.length > 0 && (
+        {!isMicroMode && markedVocabulary.length > 0 && (
           <section
             aria-label="已标记生词"
             className="context-lab-marked-vocabulary"
@@ -1438,7 +1714,7 @@ function ContextLabPageContent({
             </Tag>
           ))}
         </div>
-        {selectionMenu.open && (
+        {!isMicroMode && selectionMenu.open && (
           <div
             className="context-lab-selection-menu"
             onPointerDown={(event) => event.stopPropagation()}
@@ -1527,6 +1803,11 @@ function ContextLabPageContent({
                     <div className="context-lab-question-index">
                       第 {index + 1} 题
                     </div>
+                    {isMicroMode && question.targetWord && (
+                      <Tag className="context-lab-target-word">
+                        目标词：{question.targetWord}
+                      </Tag>
+                    )}
                     <p>{question.stem}</p>
                     {result && (
                       <Tag color={result.correct ? "green" : "red"}>
@@ -1565,7 +1846,13 @@ function ContextLabPageContent({
             {renderResultReview()}
 
             <div className="context-lab-question-actions">
-              <Button type="primary" loading={submitting} onClick={handleSubmit}>
+              <Button
+                aria-label="提交练习"
+                disabled={submitting}
+                type="primary"
+                loading={submitting}
+                onClick={handleSubmit}
+              >
                 提交练习
               </Button>
             </div>
@@ -1577,20 +1864,118 @@ function ContextLabPageContent({
 
   return (
     <>
-      <div className="context-lab-page">
+      <div
+        className={`context-lab-page${
+          isMicroMode ? " context-lab-page-micro" : ""
+        }`}
+      >
         <section className="learning-cockpit-hero context-lab-hero">
           <div>
-            <Text className="learning-cockpit-label">B. Context Lab</Text>
-            <Title level={1}>AI 语境实验室</Title>
+            <Text className="learning-cockpit-label">
+              {isMicroMode ? "Context Repair" : "B. Context Lab"}
+            </Text>
+            <Title level={1}>
+              {isMicroMode ? "错词语境巩固" : "AI 语境实验室"}
+            </Title>
             <p>
-              把薄弱词、随机词或手输词生成雅思长度阅读、选择题和例句改写，让词库变成可练习的场景。
+              {isMicroMode
+                ? "用一篇短语境和三道题，重新建立这组错词的理解线索。"
+                : "把薄弱词、随机词或手输词生成雅思长度阅读、选择题和例句改写，让词库变成可练习的场景。"}
             </p>
           </div>
           <Tag className="context-lab-hero-tag" icon={<ExperimentOutlined />}>
-            语境化练习
+            {isMicroMode ? "约 3 分钟" : "语境化练习"}
           </Tag>
         </section>
 
+        {invalidMicroEntry ? (
+          <section className="learning-cockpit-card context-lab-micro-intro">
+            <div className="learning-cockpit-card-heading">
+              <div>
+                <Text className="learning-cockpit-label">链接无效</Text>
+                <Title level={3}>修复词或来源回合无效</Title>
+                <Text type="secondary">
+                  这次不会自动降级为普通生成，请从复习结果重新进入。
+                </Text>
+              </div>
+              <Button type="primary" onClick={onBackToToday}>
+                返回今日路线
+              </Button>
+            </div>
+          </section>
+        ) : isMicroMode && microEntry ? (
+          <section className="learning-cockpit-card context-lab-micro-intro">
+            <div className="learning-cockpit-card-heading">
+              <div>
+                <Text className="learning-cockpit-label">本次目标词</Text>
+                <Title level={3}>先在短语境里再认一次</Title>
+              </div>
+              <Button
+                onClick={() =>
+                  onBackToReciteResult?.(microEntry.reciteSessionId)
+                }
+              >
+                返回复习结果
+              </Button>
+            </div>
+            <div className="learning-cockpit-word-strip">
+              {microEntry.words.map((word) => (
+                <Tag color="blue" key={word}>
+                  {word}
+                </Tag>
+              ))}
+            </div>
+            {creating && (
+              <div className="context-lab-history-empty">
+                <Spin />
+                <Text type="secondary">正在生成专属短语境...</Text>
+              </div>
+            )}
+            {microWaitLong && isContextLabTaskActive(currentTask?.status ?? "failed") && (
+              <div className="context-lab-micro-retry">
+                <Text type="secondary">仍在生成，你可以刷新状态或先返回结果页。</Text>
+                <Space>
+                  <Button onClick={() => void refreshCurrentMicroTask()}>
+                    刷新状态
+                  </Button>
+                  <Button
+                    onClick={() =>
+                      onBackToReciteResult?.(microEntry.reciteSessionId)
+                    }
+                  >
+                    返回复习结果
+                  </Button>
+                </Space>
+              </div>
+            )}
+            {currentTask && renderTaskStatus(currentTask)}
+            {(microCreateError || currentTask?.status === "failed") && (
+              <div className="context-lab-micro-retry">
+                {microCreateError && (
+                  <Text type="danger">{microCreateError}</Text>
+                )}
+                <Button
+                  type="primary"
+                  loading={creating}
+                  onClick={() =>
+                    void createMicroTask(currentTask?.status === "failed")
+                  }
+                >
+                  重新生成
+                </Button>
+              </div>
+            )}
+            {currentTask?.status === "succeeded" && (
+              <Button
+                type="primary"
+                icon={<PlayCircleOutlined />}
+                onClick={() => handleOpenTask(currentTask)}
+              >
+                开始语境巩固
+              </Button>
+            )}
+          </section>
+        ) : (
         <div className="context-lab-grid">
         <section className="learning-cockpit-card context-lab-generator-card">
           <div className="learning-cockpit-card-heading">
@@ -1836,6 +2221,7 @@ function ContextLabPageContent({
           </div>
         </section>
       </div>
+        )}
       </div>
 
       <Drawer
@@ -2124,7 +2510,7 @@ function ContextLabPageContent({
         open={practiceModalOpen}
         title={
           <div className="context-lab-practice-modal-title">
-            <span>AI 语境练习</span>
+            <span>{isMicroMode ? "错词语境巩固" : "AI 语境练习"}</span>
             <Button
               aria-label={practiceFullscreen ? "退出满屏" : "占满屏幕"}
               icon={
@@ -2173,6 +2559,15 @@ function ContextLabPageRouter() {
     <ContextLabPageContent
       initialSearch={location.search}
       onOpenWordLibrary={() => navigate("/englishWorld/words")}
+      onBackToReciteResult={(sessionId) =>
+        navigate(`/englishWorld/recite?view=result&sessionId=${sessionId}`)
+      }
+      onMicroTaskReady={(taskId) => {
+        const params = new URLSearchParams(location.search);
+        params.set("taskId", String(taskId));
+        navigate(`${location.pathname}?${params.toString()}`, { replace: true });
+      }}
+      onBackToToday={() => navigate("/englishWorld")}
     />
   );
 }
@@ -2191,6 +2586,21 @@ export function ContextLabPage() {
     <ContextLabPageContent
       initialSearch={initialSearch}
       onOpenWordLibrary={() => window.location.assign("/englishWorld/words")}
+      onBackToReciteResult={(sessionId) =>
+        window.location.assign(
+          `/englishWorld/recite?view=result&sessionId=${sessionId}`,
+        )
+      }
+      onMicroTaskReady={(taskId) => {
+        const params = new URLSearchParams(window.location.search);
+        params.set("taskId", String(taskId));
+        window.history.replaceState(
+          null,
+          "",
+          `${window.location.pathname}?${params.toString()}`,
+        );
+      }}
+      onBackToToday={() => window.location.assign("/englishWorld")}
     />
   );
 }

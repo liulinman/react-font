@@ -51,8 +51,13 @@ export interface DirectionStat {
 
 export interface SubmitAnswerResponse {
   sessionId: number;
+  direction?: number;
   results: AnswerResult[];
   statistics: Statistics;
+}
+
+export interface GetReciteSessionResultParams {
+  sessionId: number;
 }
 
 export interface HistoryWordItem {

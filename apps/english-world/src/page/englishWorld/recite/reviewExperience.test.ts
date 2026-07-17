@@ -4,6 +4,8 @@ import {
   createReviewCardState,
   createReviewProgress,
   createReviewResultInsight,
+  buildMicroContextPath,
+  getContextRepairWords,
   getWrongWordIds,
   orderResultsForReview,
 } from "./reviewExperience";
@@ -143,5 +145,64 @@ describe("reviewExperience", () => {
     expect(orderResultsForReview(results).map((item) => item.wordId)).toEqual([
       2, 4, 1, 3,
     ]);
+  });
+
+  it("提取前三个真实错词并按大小写去重保序", () => {
+    const results = [
+      {
+        wordId: 2,
+        englishWord: " fragile ",
+        correctAnswer: "fragile",
+        userAnswer: "",
+        isCorrect: false,
+      },
+      {
+        wordId: 3,
+        englishWord: "FRAGILE",
+        correctAnswer: "fragile",
+        userAnswer: "",
+        isCorrect: false,
+      },
+      {
+        wordId: 5,
+        englishWord: "resilient",
+        correctAnswer: "resilient",
+        userAnswer: "resilient",
+        isCorrect: true,
+      },
+      {
+        wordId: 9,
+        englishWord: "gradient",
+        correctAnswer: "gradient",
+        userAnswer: "",
+        isCorrect: false,
+      },
+      {
+        wordId: 12,
+        englishWord: "artisan",
+        correctAnswer: "artisan",
+        userAnswer: "",
+        isCorrect: false,
+      },
+      {
+        wordId: 13,
+        englishWord: "culinary",
+        correctAnswer: "culinary",
+        userAnswer: "",
+        isCorrect: false,
+      },
+    ] satisfies AnswerResult[];
+
+    expect(getContextRepairWords(results)).toEqual([
+      "fragile",
+      "gradient",
+      "artisan",
+    ]);
+  });
+
+  it("生成包含本人回合和修复词的微语境路径", () => {
+    expect(buildMicroContextPath(91, ["fragile", "urban farming"])).toBe(
+      "/englishWorld/context-lab?mode=micro&source=recite-result&reciteSessionId=91&words=fragile%2Curban%20farming",
+    );
   });
 });

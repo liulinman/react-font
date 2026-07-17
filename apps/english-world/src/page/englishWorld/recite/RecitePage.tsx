@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import {
   Button,
   Card,
@@ -26,6 +26,7 @@ import {
   HistoryOutlined,
   BarChartOutlined,
   ThunderboltOutlined,
+  ExperimentOutlined,
 } from "@ant-design/icons";
 import { useLocation, useNavigate } from "react-router-dom";
 import { EnglishWorldLayout } from "../layout/EnglishWorldLayout";
@@ -35,6 +36,7 @@ import {
   submitAnswer,
   getReciteHistory,
   getReciteStats,
+  getReciteSessionResult,
   type StartReciteResponse,
   type SubmitAnswerResponse,
   type Question,
@@ -51,14 +53,24 @@ import {
   createReviewResultInsight,
   createReviewCardState,
   getWrongWordIds,
+  getContextRepairWords,
+  buildMicroContextPath,
   orderResultsForReview,
 } from "./reviewExperience";
 import { BritishPronunciationButton } from "../component/BritishPronunciationButton";
 import { parsePlanReviewSearch } from "./planReview";
+import {
+  buildLearningEventUid,
+  recordLearningEvent,
+} from "../analytics/learningEvents";
 
 const { Title, Text } = Typography;
 
 type ReciteStatus = "idle" | "practicing" | "submitted" | "loading";
+
+const createFlowId = () =>
+  globalThis.crypto?.randomUUID?.() ??
+  `flow-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
 export const RecitePage: React.FC = () => {
   const navigate = useNavigate();
@@ -78,6 +90,11 @@ export const RecitePage: React.FC = () => {
   const [historyPage, setHistoryPage] = useState(1);
   const [historyTotal, setHistoryTotal] = useState(0);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [recoveryError, setRecoveryError] = useState(false);
+  const [recoveryAttempt, setRecoveryAttempt] = useState(0);
+  const flowIdRef = useRef(createFlowId());
+  const submitInFlightRef = useRef(false);
+  const recoveredSessionRef = useRef<number | null>(null);
 
   const answeredCount = questions.filter(
     (question) => answers[question.wordId]?.trim(),
@@ -92,6 +109,10 @@ export const RecitePage: React.FC = () => {
   const orderedResults = results ? orderResultsForReview(results.results) : [];
   const wrongWordIds = useMemo(
     () => (results ? getWrongWordIds(results.results) : []),
+    [results],
+  );
+  const contextRepairWords = useMemo(
+    () => (results ? getContextRepairWords(results.results) : []),
     [results],
   );
   const currentQuestion = questions[currentIndex];
@@ -109,6 +130,64 @@ export const RecitePage: React.FC = () => {
   );
   const isPlanReview = planReview.wordIds.length > 0;
   const displayedPlanWordCount = Math.min(planReview.wordIds.length, 50);
+  const isNextDayRepair = planReview.title === "复查昨日错词";
+  const recoverySessionId = useMemo(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get("view") !== "result") return null;
+    const sessionId = Number(params.get("sessionId"));
+    return Number.isInteger(sessionId) && sessionId > 0 ? sessionId : null;
+  }, [location.search]);
+
+  useEffect(() => {
+    if (!recoverySessionId) {
+      if (recoveredSessionRef.current !== null) {
+        recoveredSessionRef.current = null;
+        setResults(null);
+        setRecoveryError(false);
+        setStatus("idle");
+      }
+      return;
+    }
+    let active = true;
+    const timer = window.setTimeout(() => {
+      if (!active) return;
+      setRecoveryError(false);
+      setStatus("loading");
+      void request<SubmitAnswerResponse>(
+        getReciteSessionResult({ sessionId: recoverySessionId }),
+      )
+        .then((response) => {
+          if (!active) return;
+          recoveredSessionRef.current = response.sessionId;
+          setResults(response);
+          setDirection(response.direction ?? 0);
+          setStatus("submitted");
+          const words = getContextRepairWords(response.results);
+          if (words.length > 0) {
+            void recordLearningEvent({
+              eventUid: buildLearningEventUid(
+                "eligible_wrong_result_viewed",
+                response.sessionId,
+              ),
+              eventType: "eligible_wrong_result_viewed",
+              reciteSessionId: response.sessionId,
+              wordCount: words.length,
+              timezoneOffsetMinutes: -new Date().getTimezoneOffset(),
+              status: "viewed",
+            });
+          }
+        })
+        .catch(() => {
+          if (!active) return;
+          setRecoveryError(true);
+          setStatus("idle");
+        });
+    }, 0);
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+    };
+  }, [recoveryAttempt, recoverySessionId]);
 
   // 开始默写
   const handleStartRecite = useCallback(async () => {
@@ -139,7 +218,28 @@ export const RecitePage: React.FC = () => {
       setCurrentIndex(0);
       setStatus("practicing");
       form.resetFields();
-
+      flowIdRef.current = createFlowId();
+      void recordLearningEvent({
+        eventUid: buildLearningEventUid("recite_started", flowIdRef.current),
+        eventType: "recite_started",
+        flowId: flowIdRef.current,
+        wordCount: response.totalCount,
+        timezoneOffsetMinutes: -new Date().getTimezoneOffset(),
+        status: "started",
+      });
+      if (isNextDayRepair) {
+        void recordLearningEvent({
+          eventUid: buildLearningEventUid(
+            "next_day_repair_started",
+            flowIdRef.current,
+          ),
+          eventType: "next_day_repair_started",
+          flowId: flowIdRef.current,
+          wordCount: response.totalCount,
+          timezoneOffsetMinutes: -new Date().getTimezoneOffset(),
+          status: "started",
+        });
+      }
     } catch (error: unknown) {
       console.error("开始默写失败:", error);
       const errorMessage =
@@ -149,10 +249,12 @@ export const RecitePage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [form, isPlanReview, planReview.wordIds]);
+  }, [form, isNextDayRepair, isPlanReview, planReview.wordIds]);
 
   // 提交答案
   const handleSubmit = useCallback(async () => {
+    if (submitInFlightRef.current) return;
+    submitInFlightRef.current = true;
     try {
       // 所有题目都提交，空答案默认为 ''
       const answerItems: AnswerItem[] = questions.map((q) => {
@@ -176,15 +278,76 @@ export const RecitePage: React.FC = () => {
       setResults(response);
       setStatus("submitted");
       message.success("今日复习完成");
+      const repairWords = getContextRepairWords(response.results);
+      void recordLearningEvent({
+        eventUid: buildLearningEventUid("recite_completed", response.sessionId),
+        eventType: "recite_completed",
+        flowId: flowIdRef.current,
+        reciteSessionId: response.sessionId,
+        wordCount: response.statistics.totalCount,
+        correctCount: response.statistics.correctCount,
+        timezoneOffsetMinutes: -new Date().getTimezoneOffset(),
+        status: "completed",
+      });
+      if (repairWords.length > 0) {
+        void recordLearningEvent({
+          eventUid: buildLearningEventUid(
+            "eligible_wrong_result_viewed",
+            response.sessionId,
+          ),
+          eventType: "eligible_wrong_result_viewed",
+          reciteSessionId: response.sessionId,
+          wordCount: repairWords.length,
+          timezoneOffsetMinutes: -new Date().getTimezoneOffset(),
+          status: "viewed",
+        });
+      }
+      if (isNextDayRepair && response.statistics.correctCount > 0) {
+        void recordLearningEvent({
+          eventUid: buildLearningEventUid(
+            "next_day_repair_correct",
+            response.sessionId,
+          ),
+          eventType: "next_day_repair_correct",
+          flowId: flowIdRef.current,
+          reciteSessionId: response.sessionId,
+          wordCount: response.statistics.totalCount,
+          correctCount: response.statistics.correctCount,
+          timezoneOffsetMinutes: -new Date().getTimezoneOffset(),
+          status: "completed",
+        });
+      }
+      navigate(
+        `/englishWorld/recite?view=result&sessionId=${response.sessionId}`,
+        { replace: true },
+      );
     } catch (error: unknown) {
       console.error("提交答案失败:", error);
       const errorMessage =
         error instanceof Error ? error.message : "提交复习结果失败，请重试";
       message.error(errorMessage);
     } finally {
+      submitInFlightRef.current = false;
       setLoading(false);
     }
-  }, [questions, answers, direction]);
+  }, [questions, answers, direction, isNextDayRepair, navigate]);
+
+  const handleContextRepair = useCallback(() => {
+    if (!results || contextRepairWords.length === 0) return;
+    void recordLearningEvent({
+      eventUid: buildLearningEventUid(
+        "micro_context_started",
+        results.sessionId,
+      ),
+      eventType: "micro_context_started",
+      flowId: flowIdRef.current,
+      reciteSessionId: results.sessionId,
+      wordCount: contextRepairWords.length,
+      timezoneOffsetMinutes: -new Date().getTimezoneOffset(),
+      status: "started",
+    });
+    navigate(buildMicroContextPath(results.sessionId, contextRepairWords));
+  }, [contextRepairWords, navigate, results]);
 
   const handleRepairWrongWords = useCallback(async () => {
     if (wrongWordIds.length === 0) {
@@ -210,6 +373,15 @@ export const RecitePage: React.FC = () => {
       setCurrentIndex(0);
       setStatus("practicing");
       form.resetFields();
+      flowIdRef.current = createFlowId();
+      void recordLearningEvent({
+        eventUid: buildLearningEventUid("recite_started", flowIdRef.current),
+        eventType: "recite_started",
+        flowId: flowIdRef.current,
+        wordCount: response.totalCount,
+        timezoneOffsetMinutes: -new Date().getTimezoneOffset(),
+        status: "started",
+      });
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : "错词复习加载失败，请重试";
@@ -548,6 +720,16 @@ export const RecitePage: React.FC = () => {
                         ? "再练错词"
                         : "完成，回到今日路线"}
                     </Button>
+                    {contextRepairWords.length > 0 && (
+                      <Button
+                        className="recite-context-repair-action"
+                        size="large"
+                        icon={<ExperimentOutlined aria-label="语境练习" />}
+                        onClick={handleContextRepair}
+                      >
+                        用错词做语境练习 · {contextRepairWords.length} 个词 · 约 3 分钟
+                      </Button>
+                    )}
                     <Button
                       size="large"
                       onClick={() => navigate("/englishWorld")}
@@ -657,6 +839,24 @@ export const RecitePage: React.FC = () => {
         {status === "idle" && (
           <Card className="recite-intro-panel">
             <div className="flex flex-col gap-6">
+              {recoveryError && (
+                <Alert
+                  type="warning"
+                  showIcon
+                  message="本次复习记录不可用"
+                  description="记录可能已失效，请返回今日路线重新开始。"
+                  action={
+                    <Space>
+                      <Button onClick={() => setRecoveryAttempt((value) => value + 1)}>
+                        重试加载
+                      </Button>
+                      <Button onClick={() => navigate("/englishWorld")}>
+                        返回今日路线
+                      </Button>
+                    </Space>
+                  }
+                />
+              )}
               <div>
                 <Tag color="blue" icon={<ThunderboltOutlined />}>
                   今日任务

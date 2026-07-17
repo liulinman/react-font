@@ -5,6 +5,7 @@ export interface ExerciseQuestion {
   id: string;
   stem: string;
   options: string[];
+  targetWord?: string;
 }
 
 /** 生成练习响应 */
@@ -32,6 +33,8 @@ export interface ExerciseGenerateRandom {
 export interface ExerciseGenerateCustom {
   sourceType: "custom";
   words: string[];
+  mode?: "standard" | "micro";
+  reciteSessionId?: number;
 }
 
 export type ExerciseGenerateParams =
@@ -52,6 +55,7 @@ export interface ExerciseResultItem {
   correctIndex: number;
   userSelectedIndex: number;
   explanation: string;
+  targetWord?: string;
 }
 
 export interface ExerciseSubmitResponse {

@@ -29,8 +29,15 @@ let taskEventHandler:
       status: "pending" | "processing" | "succeeded" | "failed";
       sourceType: "proficiency" | "random" | "custom";
       words: string[];
+      mode?: "standard" | "micro";
+      reciteSessionId?: number;
       article?: string;
-      questions?: Array<{ id: string; stem: string; options: string[] }>;
+      questions?: Array<{
+        id: string;
+        stem: string;
+        options: string[];
+        targetWord?: string;
+      }>;
     }) => void)
   | undefined;
 
@@ -115,6 +122,417 @@ describe("ContextLabPage", () => {
     expect(
       await screen.findByDisplayValue("fragile, resilient"),
     ).toBeInTheDocument();
+  });
+
+  it("auto-starts one focused micro task and hides standard configuration", async () => {
+    requestMock.mockImplementation((config) => {
+      if (config.url === "/context-lab/generate-task") {
+        return Promise.resolve({
+          id: 21,
+          taskId: 21,
+          status: "pending",
+          sourceType: "custom",
+          mode: "micro",
+          reciteSessionId: 91,
+          words: ["fragile", "resilient"],
+        });
+      }
+      if (config.url === "/learning-loop/events") {
+        return Promise.resolve({ id: 1 });
+      }
+      return Promise.resolve({ list: [], total: 0, page: 1, pageSize: 10 });
+    });
+
+    render(
+      <MemoryRouter
+        initialEntries={[
+          "/englishWorld/context-lab?mode=micro&source=recite-result&reciteSessionId=91&words=fragile,resilient",
+        ]}
+      >
+        <ContextLabPage />
+        <LocationProbe />
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByText("错词语境巩固")).toBeInTheDocument();
+    expect(screen.getByText("fragile")).toBeInTheDocument();
+    expect(screen.getByText("resilient")).toBeInTheDocument();
+    expect(screen.queryByText("今日薄弱词")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /下载 PDF 模板/ }),
+    ).not.toBeInTheDocument();
+    await waitFor(() => {
+      const createCalls = requestMock.mock.calls.filter(
+        ([config]) => config.url === "/context-lab/generate-task",
+      );
+      expect(createCalls).toHaveLength(1);
+      expect(createCalls[0][0]).toEqual(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            sourceType: "custom",
+            mode: "micro",
+            reciteSessionId: 91,
+            words: ["fragile", "resilient"],
+            requestUid: expect.any(String),
+          }),
+        }),
+      );
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId("location")).toHaveTextContent("taskId=21");
+    });
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "返回复习结果" }),
+    );
+    expect(screen.getByTestId("location")).toHaveTextContent(
+      "/englishWorld/recite?view=result&sessionId=91",
+    );
+  });
+
+  it("shows a recovery action instead of silently opening standard mode for an invalid micro link", async () => {
+    render(
+      <MemoryRouter
+        initialEntries={["/englishWorld/context-lab?mode=micro&words="]}
+      >
+        <ContextLabPage />
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByText("修复词或来源回合无效")).toBeInTheDocument();
+    expect(screen.queryByText("生成练习")).not.toBeInTheDocument();
+    expect(requestMock).not.toHaveBeenCalledWith(
+      expect.objectContaining({ url: "/context-lab/generate-task" }),
+    );
+  });
+
+  it("restores a micro task and its latest attempt from the task id", async () => {
+    const restoredTask = {
+      id: 21,
+      taskId: 21,
+      status: "succeeded",
+      sourceType: "custom",
+      mode: "micro",
+      reciteSessionId: 91,
+      words: ["fragile"],
+      articleExerciseId: 88,
+      article: "Fragile Systems\n\nA fragile system can recover with care.",
+      questions: [1, 2, 3].map((index) => ({
+        id: `q${index}`,
+        stem: `Question ${index}`,
+        options: ["One", "Two", "Three", "Four"],
+        targetWord: "fragile",
+      })),
+      latestAttempt: {
+        id: 501,
+        attemptId: 501,
+        taskId: 21,
+        articleExerciseId: 88,
+        score: 100,
+        correctCount: 3,
+        wrongCount: 0,
+        weakWords: [],
+        nextSuggestions: [],
+        answers: [],
+        results: [],
+      },
+    };
+    requestMock.mockImplementation((config) => {
+      if (config.url === "/context-lab/detail") return Promise.resolve(restoredTask);
+      if (config.url === "/learning-loop/events") return Promise.resolve({ id: 1 });
+      return Promise.resolve({});
+    });
+
+    render(
+      <MemoryRouter
+        initialEntries={[
+          "/englishWorld/context-lab?mode=micro&source=recite-result&reciteSessionId=91&words=fragile&taskId=21",
+        ]}
+      >
+        <ContextLabPage />
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByRole("dialog", { name: /错词语境巩固/ })).toBeInTheDocument();
+    expect(
+      requestMock.mock.calls.filter(([config]) => config.url === "/context-lab/generate-task"),
+    ).toHaveLength(0);
+    expect(screen.getAllByText("目标词：fragile")).toHaveLength(3);
+  });
+
+  it("polls task detail when the success SSE update is missed", async () => {
+    const pendingTask = {
+      id: 25,
+      taskId: 25,
+      status: "pending",
+      sourceType: "custom",
+      mode: "micro",
+      reciteSessionId: 91,
+      words: ["fragile"],
+    };
+    const succeededTask = {
+      ...pendingTask,
+      status: "succeeded",
+      articleExerciseId: 99,
+      article: "Fragile Systems\n\nA fragile system can recover with care.",
+      questions: [1, 2, 3].map((index) => ({
+        id: `q${index}`,
+        stem: `Question ${index}`,
+        options: ["One", "Two", "Three", "Four"],
+        targetWord: "fragile",
+      })),
+    };
+    requestMock.mockImplementation((config) => {
+      if (config.url === "/context-lab/generate-task") return Promise.resolve(pendingTask);
+      if (config.url === "/context-lab/detail") return Promise.resolve(succeededTask);
+      if (config.url === "/learning-loop/events") return Promise.resolve({ id: 1 });
+      return Promise.resolve({});
+    });
+
+    render(
+      <MemoryRouter
+        initialEntries={[
+          "/englishWorld/context-lab?mode=micro&source=recite-result&reciteSessionId=91&words=fragile",
+        ]}
+      >
+        <ContextLabPage />
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByRole("dialog", { name: /错词语境巩固/ })).toBeInTheDocument();
+    expect(requestMock).toHaveBeenCalledWith(
+      expect.objectContaining({ url: "/context-lab/detail", data: { taskId: 25 } }),
+    );
+  });
+
+  it("opens succeeded micro content, shows target words and records only the first completion", async () => {
+    const microTask = {
+      id: 21,
+      taskId: 21,
+      status: "succeeded" as const,
+      sourceType: "custom" as const,
+      mode: "micro" as const,
+      reciteSessionId: 91,
+      words: ["fragile"],
+      articleExerciseId: 88,
+      article: "Fragile Systems\n\nA fragile system can still recover with care.",
+      questions: [1, 2, 3].map((index) => ({
+        id: `q${index}`,
+        stem: `Question ${index}`,
+        options: ["One", "Two", "Three", "Four"],
+        targetWord: "fragile",
+      })),
+    };
+    requestMock.mockImplementation((config) => {
+      if (config.url === "/context-lab/generate-task") {
+        return Promise.resolve(microTask);
+      }
+      if (config.url === "/context-lab/submit") {
+        return Promise.resolve({
+          attemptId: 501,
+          results: microTask.questions.map((question) => ({
+            questionId: question.id,
+            correct: true,
+            correctIndex: 0,
+            userSelectedIndex: 0,
+            explanation: "",
+            targetWord: "fragile",
+          })),
+          score: 100,
+          correctCount: 3,
+          wrongCount: 0,
+          weakWords: [],
+          nextSuggestions: [],
+        });
+      }
+      if (config.url === "/learning-loop/events") {
+        return Promise.resolve({ id: 1 });
+      }
+      return Promise.resolve({ list: [], total: 0, page: 1, pageSize: 10 });
+    });
+
+    render(
+      <MemoryRouter
+        initialEntries={[
+          "/englishWorld/context-lab?mode=micro&source=recite-result&reciteSessionId=91&words=fragile",
+        ]}
+      >
+        <ContextLabPage />
+      </MemoryRouter>,
+    );
+
+    expect(
+      await screen.findByRole("dialog", { name: /错词语境巩固/ }),
+    ).toBeInTheDocument();
+    expect(screen.getAllByText("目标词：fragile")).toHaveLength(3);
+    for (const option of screen.getAllByLabelText("A. One")) {
+      await userEvent.click(option);
+    }
+    await userEvent.click(screen.getByRole("button", { name: "提交练习" }));
+
+    expect(await screen.findByText("语境通过")).toBeInTheDocument();
+    expect(screen.getByText("下一自然日再确认")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(requestMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          url: "/learning-loop/events",
+          data: expect.objectContaining({
+            eventUid: "micro_context_completed:21",
+            eventType: "micro_context_completed",
+            reciteSessionId: 91,
+            contextTaskId: 21,
+            attemptId: 501,
+          }),
+        }),
+      );
+    });
+    await userEvent.click(
+      screen.getByRole("button", { name: "整组再答一次" }),
+    );
+    expect(screen.queryByText("下一自然日再确认")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "提交练习" })).toBeInTheDocument();
+  });
+
+  it("keeps micro submit disabled while the first submission is pending", async () => {
+    let resolveSubmit: ((value: unknown) => void) | undefined;
+    const microTask = {
+      id: 31,
+      taskId: 31,
+      status: "succeeded" as const,
+      sourceType: "custom" as const,
+      mode: "micro" as const,
+      reciteSessionId: 91,
+      words: ["fragile"],
+      articleExerciseId: 98,
+      article: "Fragile Systems\n\nA fragile system can recover with care.",
+      questions: [1, 2, 3].map((index) => ({
+        id: `q${index}`,
+        stem: `Question ${index}`,
+        options: ["One", "Two", "Three", "Four"],
+        targetWord: "fragile",
+      })),
+    };
+    requestMock.mockImplementation((config) => {
+      if (config.url === "/context-lab/generate-task") {
+        return Promise.resolve(microTask);
+      }
+      if (config.url === "/context-lab/submit") {
+        return new Promise((resolve) => {
+          resolveSubmit = resolve;
+        });
+      }
+      if (config.url === "/learning-loop/events") {
+        return Promise.resolve({ id: 1 });
+      }
+      return Promise.resolve({ list: [], total: 0, page: 1, pageSize: 10 });
+    });
+
+    render(
+      <MemoryRouter
+        initialEntries={[
+          "/englishWorld/context-lab?mode=micro&source=recite-result&reciteSessionId=91&words=fragile",
+        ]}
+      >
+        <ContextLabPage />
+      </MemoryRouter>,
+    );
+
+    await screen.findByRole("dialog", { name: /错词语境巩固/ });
+    for (const option of screen.getAllByLabelText("A. One")) {
+      await userEvent.click(option);
+    }
+    const submitButton = screen.getByRole("button", { name: "提交练习" });
+    await userEvent.click(submitButton);
+    expect(submitButton).toBeDisabled();
+    await userEvent.click(submitButton);
+    expect(
+      requestMock.mock.calls.filter(
+        ([config]) => config.url === "/context-lab/submit",
+      ),
+    ).toHaveLength(1);
+
+    await act(async () => {
+      resolveSubmit?.({
+        attemptId: 701,
+        results: [],
+        score: 100,
+        correctCount: 3,
+        wrongCount: 0,
+        weakWords: [],
+        nextSuggestions: [],
+      });
+    });
+  });
+
+  it("offers one-click replacement after a micro task fails", async () => {
+    requestMock.mockImplementation((config) => {
+      if (config.url === "/context-lab/generate-task") {
+        const createCount = requestMock.mock.calls.filter(
+          ([call]) => call.url === "/context-lab/generate-task",
+        ).length;
+        return Promise.resolve({
+          id: createCount === 1 ? 41 : 42,
+          taskId: createCount === 1 ? 41 : 42,
+          status: "pending",
+          sourceType: "custom",
+          mode: "micro",
+          reciteSessionId: 91,
+          words: ["fragile"],
+        });
+      }
+      return Promise.resolve({ list: [], total: 0, page: 1, pageSize: 10 });
+    });
+
+    render(
+      <MemoryRouter
+        initialEntries={[
+          "/englishWorld/context-lab?mode=micro&source=recite-result&reciteSessionId=91&words=fragile",
+        ]}
+      >
+        <ContextLabPage />
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findAllByText("等待回调")).not.toHaveLength(0);
+    act(() => {
+      taskEventHandler?.({
+        id: 41,
+        taskId: 41,
+        status: "failed",
+        sourceType: "custom",
+        mode: "micro",
+        reciteSessionId: 91,
+        words: ["fragile"],
+      });
+    });
+    await userEvent.click(
+      await screen.findByRole("button", { name: "重新生成" }),
+    );
+
+    await waitFor(() => {
+      expect(
+        requestMock.mock.calls.filter(
+          ([config]) => config.url === "/context-lab/generate-task",
+        ),
+      ).toHaveLength(2);
+    });
+
+    act(() => {
+      taskEventHandler?.({
+        id: 41,
+        taskId: 41,
+        status: "succeeded",
+        sourceType: "custom",
+        mode: "micro",
+        reciteSessionId: 91,
+        words: ["fragile"],
+        article: "Stale fragile response",
+        questions: [],
+      });
+    });
+    expect(
+      screen.queryByRole("dialog", { name: /错词语境巩固/ }),
+    ).not.toBeInTheDocument();
   });
 
   it("opens a referenced article as source preview without starting practice", async () => {
