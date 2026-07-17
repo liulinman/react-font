@@ -44,6 +44,9 @@ describe("word card visual hierarchy", () => {
       /\.learning-cockpit-task-item\s*\{[^}]*border:\s*1px solid var\(--ew-border\);[^}]*border-radius:\s*var\(--ew-radius-md\);/s,
     );
     expect(styles).toMatch(
+      /\.learning-cockpit-task-item-primary\s*\{[^}]*border-color:\s*var\(--ew-border\);[^}]*background:\s*var\(--ew-surface\);/s,
+    );
+    expect(styles).toMatch(
       /\.learning-cockpit-task-item-primary \.learning-cockpit-task-index\s*\{[^}]*color:\s*#fff;[^}]*background:\s*var\(--ew-accent\);/s,
     );
     expect(styles).toMatch(

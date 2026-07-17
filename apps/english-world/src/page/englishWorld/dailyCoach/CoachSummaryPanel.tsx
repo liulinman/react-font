@@ -96,7 +96,7 @@ export function CoachSummaryPanel({
                 {action.estimatedMinutes} min
               </Tag>
               <Button
-                type={index === 0 ? "primary" : "text"}
+                type={index === 0 ? "primary" : "default"}
                 className="learning-cockpit-task-action"
                 icon={
                   isReviewAction(action) ? (

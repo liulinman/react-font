@@ -124,6 +124,13 @@ describe("LearningCockpitPage", () => {
     expect(
       container.querySelector(".learning-cockpit-support-rail .learning-snapshot"),
     ).toBeInTheDocument();
+    const route = screen.getByRole("list", { name: "今日行动清单" });
+    expect(within(route).getByRole("button", { name: "定向复习" })).toHaveClass(
+      "ant-btn-primary",
+    );
+    expect(within(route).getByRole("button", { name: "进入练习" })).toHaveClass(
+      "ant-btn-default",
+    );
     expect(requestMock).toHaveBeenCalledTimes(2);
   });
 

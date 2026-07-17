@@ -33,7 +33,7 @@
 - Modify: `apps/english-world/src/page/englishWorld/memoryMap/MemoryMapSummary.tsx`
 - Modify: `apps/english-world/src/page/englishWorld/EnglishWorld.css`
 
-- [x] Group task content/actions and add active versus pending semantics.
+- [x] Group task content/actions, keep their containers consistent, and distinguish the current step through its index and button.
 - [x] Split the memory footer into mastery, clue, and action zones.
 - [x] Add the restrained surfaces, pills, hover motion, responsive rules, and reduced-motion overrides.
 - [x] Run focused tests until green.

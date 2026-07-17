@@ -7,8 +7,8 @@ Refine the two visually weak areas identified in the desktop Today page while pr
 ## Task route
 
 - Render every suggested action as the same rounded step card.
-- Keep the first step visually active with an accent surface, solid index, and primary action.
-- Render later steps as quiet bordered cards with an outlined index and text action.
+- Keep every step on the same surface with the same border, radius, height, and hover behavior.
+- Mark the first step only with a solid index and primary action; render later steps with outlined indexes and visible outlined actions.
 - Group each step into a content cluster and an action cluster so title, duration, and button remain aligned at 1440px.
 - Add a restrained hover state and a short arrow translation for later steps.
 
@@ -28,8 +28,8 @@ Refine the two visually weak areas identified in the desktop Today page while pr
 
 ## Acceptance criteria
 
-1. Both actions use rounded card containers with distinct active and pending states.
-2. The pending action uses a text button and right arrow without competing with the primary action.
+1. Both actions use visually identical rounded card containers at rest.
+2. The later action uses a visible outlined button and right arrow without competing with the primary action.
 3. The memory summary displays the mastery percentage exactly once.
 4. Recent mistakes use low-saturation custom pills and include a section heading.
 5. Existing review, Context Lab, and memory-map navigation behavior remains unchanged.

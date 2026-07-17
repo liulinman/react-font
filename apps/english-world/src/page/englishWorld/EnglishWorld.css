@@ -1307,12 +1307,12 @@
 }
 
 .learning-cockpit-task-item-primary {
-  border-color: color-mix(in srgb, var(--ew-accent) 18%, var(--ew-border));
-  background: var(--ew-accent-soft);
-  box-shadow: 0 8px 18px color-mix(in srgb, var(--ew-accent) 8%, transparent);
+  border-color: var(--ew-border);
+  background: var(--ew-surface);
+  box-shadow: none;
 }
 
-.learning-cockpit-task-item:not(.learning-cockpit-task-item-primary):hover {
+.learning-cockpit-task-item:hover {
   border-color: color-mix(in srgb, var(--ew-accent) 26%, var(--ew-border));
   background: var(--ew-surface-muted);
   box-shadow: 0 8px 20px rgba(24, 39, 75, 0.055);
@@ -1380,11 +1380,6 @@
   font-size: 12px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-}
-
-.learning-cockpit-task-item-primary .learning-cockpit-task-duration.ant-tag {
-  color: var(--ew-accent);
-  background: color-mix(in srgb, var(--ew-accent) 10%, var(--ew-surface));
 }
 
 .learning-cockpit-task-action.ant-btn {
