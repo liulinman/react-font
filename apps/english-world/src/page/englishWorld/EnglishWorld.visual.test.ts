@@ -13,13 +13,13 @@ describe("word card visual hierarchy", () => {
       /\.english-world-card-view\s*\{[^}]*padding:\s*14px;[^}]*background:\s*#f6f8fc;/s,
     );
     expect(styles).toMatch(
-      /\.word-card\s*\{[^}]*border:\s*1px solid #d8e1ee;[^}]*border-radius:\s*10px;[^}]*box-shadow:\s*0 3px 10px rgba\(15, 23, 42, 0\.055\);/s,
+      /\.word-card\s*\{[^}]*border:\s*1px solid #e1e7ef;[^}]*border-radius:\s*12px;[^}]*box-shadow:\s*0 1px 2px rgba\(15, 23, 42, 0\.025\);/s,
     );
     expect(styles).toMatch(
-      /\.word-card:hover\s*\{[^}]*transform:\s*translateY\(-1px\);/s,
+      /\.word-card:hover\s*\{[^}]*border-color:\s*#cbd5e1;[^}]*box-shadow:\s*0 6px 16px rgba\(15, 23, 42, 0\.065\);/s,
     );
     expect(styles).toMatch(
-      /@media \(prefers-reduced-motion: reduce\)\s*\{[\s\S]*?\.word-card:hover,[\s\S]*?transform:\s*none;/,
+      /@media \(prefers-reduced-motion: reduce\)\s*\{[\s\S]*?\.word-card\s*\{[^}]*transition:\s*none;/,
     );
   });
 });
