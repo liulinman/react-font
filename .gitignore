@@ -13,6 +13,7 @@ dist-ssr
 *.local
 .turbo/
 .superpowers/
+.worktrees/
 **/cypress/screenshots/
 **/cypress/videos/
 **/cypress/reports/
