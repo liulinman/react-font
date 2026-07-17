@@ -25,7 +25,7 @@ describe("LearningCockpitPage", () => {
     requestMock.mockClear();
   });
 
-  it("renders the AI learning cockpit with all three MVP pillars", async () => {
+  it("renders one primary learning route with a supporting memory summary", async () => {
     requestMock.mockImplementation((requestConfig: unknown) => {
       const config = requestConfig as { url?: string };
       if (config.url === "/daily-coach/summary") {
@@ -60,8 +60,9 @@ describe("LearningCockpitPage", () => {
     expect(await screen.findByLabelText("今日学习状态")).toBeInTheDocument();
     expect(document.querySelector(".learning-cockpit-stats")).not.toBeInTheDocument();
     expect(await screen.findByText("今天先做这一步")).toBeInTheDocument();
-    expect(await screen.findByText("AI 语境实验室")).toBeInTheDocument();
     expect(await screen.findByText("记忆地图")).toBeInTheDocument();
+    expect(screen.queryByText("AI 语境实验室")).not.toBeInTheDocument();
+    expect(screen.queryByText("常用工具")).not.toBeInTheDocument();
   });
 
   it("presents the cockpit as a route-first learning page", async () => {
@@ -113,8 +114,8 @@ describe("LearningCockpitPage", () => {
     );
 
     expect(await screen.findByText("今天先做这一步")).toBeInTheDocument();
-    expect(await screen.findByText("A. Review")).toBeInTheDocument();
-    expect(await screen.findByText("B. Context Lab")).toBeInTheDocument();
+    expect(await screen.findByText("今日重点")).toBeInTheDocument();
+    expect(screen.queryByText("B. Context Lab")).not.toBeInTheDocument();
     expect(container.querySelector(".learning-cockpit-route-board")).toBeInTheDocument();
     expect(container.querySelector(".learning-cockpit-status-compact")).toBeInTheDocument();
     expect(container.querySelectorAll(".learning-cockpit-status-item")).toHaveLength(3);

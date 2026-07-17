@@ -29,6 +29,6 @@ describe("MemoryMapSummary", () => {
     );
 
     expect(screen.getByText(/fragile/)).toBeInTheDocument();
-    expect(screen.getByText(/low-mastery/)).toBeInTheDocument();
+    expect(screen.getByText(/低掌握/)).toBeInTheDocument();
   });
 });

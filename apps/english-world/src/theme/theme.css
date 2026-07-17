@@ -1,0 +1,340 @@
+:root {
+  --ew-accent: #2563eb;
+  --ew-accent-soft: #eff6ff;
+  --ew-page-bg: #f5f7fb;
+  --ew-surface: #ffffff;
+  --ew-surface-muted: #f8fafc;
+  --ew-text: #182235;
+  --ew-text-secondary: #64748b;
+  --ew-border: #dfe7f2;
+}
+
+:root[data-accent="green"] {
+  --ew-accent: #16a34a;
+  --ew-accent-soft: #f0fdf4;
+}
+
+:root[data-accent="purple"] {
+  --ew-accent: #7c3aed;
+  --ew-accent-soft: #f5f3ff;
+}
+
+:root[data-theme="dark"] {
+  --ew-page-bg: #0b1120;
+  --ew-surface: #111827;
+  --ew-surface-muted: #172033;
+  --ew-text: #e5edf8;
+  --ew-text-secondary: #9aa9bf;
+  --ew-border: #28364d;
+}
+
+html[data-theme="dark"] body,
+html[data-theme="dark"] #root,
+html[data-theme="dark"] .english-world-shell,
+html[data-theme="dark"] .english-world-main {
+  color: var(--ew-text);
+  background: var(--ew-page-bg);
+}
+
+html[data-theme="dark"] .english-world-header {
+  border-right: 1px solid #243149;
+  background: #0f172a;
+}
+
+html[data-theme="dark"] .english-world-page-header h1,
+html[data-theme="dark"] .english-world-page-header h2,
+html[data-theme="dark"] .english-world-empty-copy strong,
+html[data-theme="dark"] .word-card-title,
+html[data-theme="dark"] .word-card-meaning,
+html[data-theme="dark"] .ant-typography,
+html[data-theme="dark"] .ant-table-cell {
+  color: var(--ew-text);
+}
+
+html[data-theme="dark"] .english-world-page-header p,
+html[data-theme="dark"] .word-card-phonetic,
+html[data-theme="dark"] .word-card-meta,
+html[data-theme="dark"] .english-world-empty-copy {
+  color: var(--ew-text-secondary);
+}
+
+html[data-theme="dark"] .english-world-filter-form-compact .ant-form-item-label,
+html[data-theme="dark"] .english-world-table-title strong {
+  color: var(--ew-text);
+}
+
+html[data-theme="dark"] .english-world-table-title span {
+  color: var(--ew-text-secondary);
+}
+
+html[data-theme="dark"] .english-world-filter-panel,
+html[data-theme="dark"] .english-world-table-panel,
+html[data-theme="dark"] .english-world-state-panel,
+html[data-theme="dark"] .english-stats-summary-card,
+html[data-theme="dark"] .english-stats-chart-card,
+html[data-theme="dark"] .system-settings-surface,
+html[data-theme="dark"] .word-card,
+html[data-theme="dark"] .learning-cockpit-card,
+html[data-theme="dark"] .context-lab-card,
+html[data-theme="dark"] .memory-map-card {
+  border-color: var(--ew-border);
+  background: var(--ew-surface);
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.24);
+}
+
+html[data-theme="dark"] .english-world-card-view,
+html[data-theme="dark"] .word-card-batch-toolbar,
+html[data-theme="dark"] .word-level-quick-edit {
+  border-color: var(--ew-border);
+  background: var(--ew-surface-muted);
+  color: var(--ew-text);
+}
+
+html[data-theme="dark"] .word-card-selected {
+  border-color: var(--ew-accent);
+  background: color-mix(in srgb, var(--ew-accent) 12%, var(--ew-surface));
+}
+
+html[data-theme="dark"] .english-world-filter-form-compact .ant-input,
+html[data-theme="dark"] .english-world-filter-form-compact .ant-select-selector,
+html[data-theme="dark"] .english-world-filter-form-compact .ant-picker,
+html[data-theme="dark"] .english-world-filter-form-compact .ant-input:hover,
+html[data-theme="dark"] .english-world-filter-form-compact .ant-select-selector:hover,
+html[data-theme="dark"] .english-world-filter-form-compact .ant-picker:hover,
+html[data-theme="dark"] .english-world-filter-form-compact .ant-input:focus,
+html[data-theme="dark"] .english-world-filter-form-compact .ant-picker-focused,
+html[data-theme="dark"]
+  .english-world-filter-form-compact
+  .ant-select-focused
+  .ant-select-selector {
+  border-color: var(--ew-border);
+  background: var(--ew-surface-muted);
+  color: var(--ew-text);
+}
+
+html[data-theme="dark"]
+  .english-world-filter-form-compact
+  .ant-picker-input
+  > input,
+html[data-theme="dark"]
+  .english-world-filter-form-compact
+  .ant-picker-range-separator,
+html[data-theme="dark"] .english-world-filter-form-compact .ant-picker-suffix {
+  color: var(--ew-text);
+}
+
+html[data-theme="dark"] .english-world-table-wrap .ant-table,
+html[data-theme="dark"] .english-world-table-wrap .ant-table-container,
+html[data-theme="dark"] .english-world-table-wrap .ant-table-content,
+html[data-theme="dark"] .english-world-table-wrap .ant-table-tbody > tr > td {
+  border-color: var(--ew-border);
+  background: var(--ew-surface);
+  color: var(--ew-text);
+}
+
+html[data-theme="dark"] .english-world-table-wrap .ant-table-thead > tr > th {
+  border-color: var(--ew-border);
+  background: var(--ew-surface-muted);
+  color: var(--ew-text);
+}
+
+html[data-theme="dark"]
+  .english-world-table-wrap
+  .ant-table-tbody
+  > tr:nth-child(even)
+  > td {
+  background: color-mix(in srgb, var(--ew-surface-muted) 62%, var(--ew-surface));
+}
+
+html[data-theme="dark"]
+  .english-world-table-wrap
+  .ant-table-tbody
+  > tr:hover
+  > td {
+  background: color-mix(in srgb, var(--ew-accent) 10%, var(--ew-surface));
+}
+
+html[data-theme="dark"] .word-card-copy .word-link {
+  color: var(--ew-text);
+}
+
+html[data-theme="dark"] .word-card-copy .word-link:hover,
+html[data-theme="dark"] .word-card-copy .word-link:focus-visible {
+  color: var(--ew-accent);
+}
+
+html[data-theme="dark"] .word-card-copy .word-phonetic,
+html[data-theme="dark"] .word-card-classification,
+html[data-theme="dark"] .word-card-meta {
+  color: var(--ew-text-secondary);
+}
+
+html[data-theme="dark"] .word-card-meta {
+  border-color: var(--ew-border);
+}
+
+html[data-theme="dark"] .word-card-more-button.ant-btn,
+html[data-theme="dark"] .word-card-copy .british-pronunciation-button.ant-btn,
+html[data-theme="dark"] .english-world-card-view .ant-empty {
+  border-color: var(--ew-border);
+  background: var(--ew-surface-muted);
+  color: var(--ew-text-secondary);
+}
+
+html[data-theme="dark"] .recite-intro-panel,
+html[data-theme="dark"] .recite-question-panel,
+html[data-theme="dark"] .recite-result-panel {
+  border-color: var(--ew-border);
+  background: var(--ew-surface);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.24);
+}
+
+html[data-theme="dark"] .recite-studio-shell {
+  background: var(--ew-surface);
+}
+
+html[data-theme="dark"] .recite-studio-grid {
+  background: var(--ew-page-bg);
+}
+
+html[data-theme="dark"] .recite-question-canvas,
+html[data-theme="dark"] .recite-prompt-card,
+html[data-theme="dark"] .recite-rail-card,
+html[data-theme="dark"] .recite-result-next,
+html[data-theme="dark"] .recite-result-item {
+  border-color: var(--ew-border);
+  background: var(--ew-surface);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2);
+}
+
+html[data-theme="dark"] .recite-answer-dock,
+html[data-theme="dark"] .recite-answer-form .ant-input {
+  border-color: var(--ew-border);
+  background: var(--ew-surface-muted);
+  color: var(--ew-text);
+}
+
+html[data-theme="dark"] .recite-question-topline,
+html[data-theme="dark"] .recite-progress-meta {
+  color: var(--ew-text-secondary);
+}
+
+html[data-theme="dark"] .recite-progress-dot {
+  background: #334155;
+}
+
+html[data-theme="dark"] .recite-progress-dot-active {
+  background: var(--ew-accent);
+}
+
+html[data-theme="dark"] .recite-progress-dot-current {
+  background: #f59e0b;
+}
+
+html[data-theme="dark"] .recite-result-item-wrong {
+  border-color: #7f1d1d;
+  background: color-mix(in srgb, #7f1d1d 24%, var(--ew-surface));
+}
+
+html[data-theme="dark"] .recite-result-item-correct {
+  border-color: #166534;
+  background: color-mix(in srgb, #166534 22%, var(--ew-surface));
+}
+
+html[data-theme="dark"] .learning-cockpit-status-strip,
+html[data-theme="dark"] .learning-cockpit-status-strip > div,
+html[data-theme="dark"] .learning-cockpit-card-primary,
+html[data-theme="dark"] .learning-cockpit-context-card,
+html[data-theme="dark"] .learning-cockpit-focus-row,
+html[data-theme="dark"] .learning-cockpit-task-item {
+  border-color: var(--ew-border);
+  background: var(--ew-surface);
+}
+
+html[data-theme="dark"] .learning-cockpit-hero h1.ant-typography,
+html[data-theme="dark"] .learning-cockpit-status-strip strong,
+html[data-theme="dark"] .learning-cockpit-task-copy strong {
+  color: var(--ew-text);
+}
+
+html[data-theme="dark"] .learning-cockpit-hero p,
+html[data-theme="dark"] .learning-cockpit-status-strip span,
+html[data-theme="dark"] .learning-cockpit-card-copy,
+html[data-theme="dark"] .learning-cockpit-task-copy span {
+  color: var(--ew-text-secondary);
+}
+
+html[data-theme="dark"] .learning-cockpit-card-icon,
+html[data-theme="dark"] .learning-cockpit-side-quiet .learning-cockpit-card-icon,
+html[data-theme="dark"] .learning-cockpit-task-index {
+  color: var(--ew-accent);
+  background: color-mix(in srgb, var(--ew-accent) 18%, var(--ew-surface));
+}
+
+html[data-theme="dark"] .learning-cockpit-unavailable {
+  border-color: #92400e;
+  background: color-mix(in srgb, #92400e 22%, var(--ew-surface));
+}
+
+.english-world-page-eyebrow,
+.word-card-title,
+.word-reference-link,
+.english-world-filter-more-button.ant-btn {
+  color: var(--ew-accent);
+}
+
+.english-world-nav-button.ant-btn-primary {
+  background: var(--ew-accent);
+}
+
+.theme-settings-section {
+  display: grid;
+  gap: 12px;
+  padding: 12px 0;
+}
+
+.theme-settings-section + .theme-settings-section {
+  margin-top: 4px;
+  border-top: 1px solid var(--ew-border);
+}
+
+.theme-accent-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.theme-accent-options .ant-radio-button-wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 40px;
+  border: 1px solid var(--ew-border);
+  border-radius: 8px;
+}
+
+.theme-accent-options .ant-radio-button-wrapper::before {
+  display: none;
+}
+
+.theme-accent-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.16);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  body,
+  .english-world-shell,
+  .english-world-main,
+  .english-world-filter-panel,
+  .english-world-table-panel,
+  .word-card {
+    transition:
+      color 160ms ease,
+      background-color 160ms ease,
+      border-color 160ms ease;
+  }
+}

@@ -5,55 +5,54 @@ import {
   SettingOutlined,
   UserOutlined,
   LogoutOutlined,
-  RobotOutlined,
   DashboardOutlined,
-  NodeIndexOutlined,
-  TranslationOutlined,
+  BgColorsOutlined,
+  LeftOutlined,
+  RightOutlined,
 } from "@ant-design/icons";
 import { Button, Dropdown, Modal } from "antd";
+import { useState } from "react";
 import type { MenuProps } from "antd";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { getPathForNav, normalizeActiveKey } from "../navigation";
+import { ThemeSettingsModal } from "@/theme/ThemeSettingsModal";
 
-const navGroups = [
-  {
-    title: "主流程",
-    items: [
-      { key: "cockpit", icon: <DashboardOutlined />, label: "今日任务" },
-      { key: "words", icon: <UnorderedListOutlined />, label: "词库" },
-      { key: "aiWord", icon: <TranslationOutlined />, label: "AI 单词查询" },
-      { key: "contextLab", icon: <RobotOutlined />, label: "语境实验室" },
-    ],
-  },
-  {
-    title: "学习",
-    items: [
-      { key: "recite", icon: <BookFilled />, label: "今日复习" },
-      { key: "memoryMap", icon: <NodeIndexOutlined />, label: "记忆地图" },
-      { key: "stats", icon: <BarChartOutlined />, label: "学习统计" },
-    ],
-  },
-  {
-    title: "配置",
-    items: [
-      { key: "setting", icon: <SettingOutlined />, label: "系统设置" },
-    ],
-  },
+const primaryNavItems = [
+  { key: "cockpit", icon: <DashboardOutlined />, label: "今天" },
+  { key: "words", icon: <UnorderedListOutlined />, label: "词库" },
+  { key: "recite", icon: <BookFilled />, label: "学习" },
+  { key: "stats", icon: <BarChartOutlined />, label: "数据" },
 ];
+
+function getPrimaryActiveKey(activeKey: string) {
+  const normalizedKey = normalizeActiveKey(activeKey);
+  if (normalizedKey === "aiWord" || normalizedKey === "memoryMap") {
+    return "words";
+  }
+  if (normalizedKey === "contextLab") {
+    return "recite";
+  }
+  return normalizedKey;
+}
 
 type EnglishHeaderProps = {
   activeKey?: string;
+  collapsed?: boolean;
+  onCollapsedChange?: (collapsed: boolean) => void;
   onNavClick?: (key: string) => void;
 };
 
 export const EnglishHeader = ({
   activeKey = "cockpit",
+  collapsed = false,
+  onCollapsedChange,
   onNavClick,
 }: EnglishHeaderProps) => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const normalizedActiveKey = normalizeActiveKey(activeKey);
+  const [themeSettingsOpen, setThemeSettingsOpen] = useState(false);
+  const normalizedActiveKey = getPrimaryActiveKey(activeKey);
 
   const handleLogout = () => {
     Modal.confirm({
@@ -93,6 +92,18 @@ export const EnglishHeader = ({
       type: "divider",
     },
     {
+      key: "settings",
+      icon: <SettingOutlined />,
+      label: "系统设置",
+      onClick: () => navigate("/englishWorld/settings"),
+    },
+    {
+      key: "theme",
+      icon: <BgColorsOutlined />,
+      label: "主题设置",
+      onClick: () => setThemeSettingsOpen(true),
+    },
+    {
       key: "logout",
       label: (
         <div className="flex items-center gap-2">
@@ -111,7 +122,11 @@ export const EnglishHeader = ({
   };
 
   return (
-    <aside className="english-world-header">
+    <aside
+      className={`english-world-header${
+        collapsed ? " english-world-header-collapsed" : ""
+      }`}
+    >
       <div className="english-world-header-inner">
         {/* Logo */}
         <div className="english-world-brand">
@@ -120,42 +135,63 @@ export const EnglishHeader = ({
           </span>
           <span className="english-world-brand-copy">
             <span className="english-world-brand-title">English World</span>
-            <span className="english-world-brand-subtitle">字段保留版</span>
+            <span className="english-world-brand-subtitle">专注词汇成长</span>
           </span>
         </div>
 
         {/* Navigation */}
         <nav className="english-world-nav">
-          {navGroups.map((group) => (
-            <div className="english-world-nav-group" key={group.title}>
-              <div className="english-world-nav-title">{group.title}</div>
-              {group.items.map(({ key, icon, label }) => (
-                <Button
-                  key={key}
-                  type={key === normalizedActiveKey ? "primary" : "text"}
-                  icon={icon}
-                  className="english-world-nav-button"
-                  onClick={() => handleNavClick(key)}
-                >
-                  {label}
-                </Button>
-              ))}
-            </div>
-          ))}
+          <div className="english-world-nav-group">
+            {primaryNavItems.map(({ key, icon, label }) => (
+              <Button
+                key={key}
+                type={key === normalizedActiveKey ? "primary" : "text"}
+                icon={icon}
+                className="english-world-nav-button"
+                title={label}
+                onClick={() => handleNavClick(key)}
+              >
+                {label}
+              </Button>
+            ))}
+          </div>
         </nav>
 
         {/* User Info */}
-        <Dropdown menu={{ items: userMenuItems }} placement="topLeft">
-          <div className="english-world-user">
+        <Dropdown
+          menu={{ items: userMenuItems }}
+          placement="topLeft"
+          trigger={["click"]}
+        >
+          <button
+            type="button"
+            className="english-world-user"
+            aria-label={`用户菜单：${user?.username || "管理员"}`}
+          >
             <div className="english-world-user-avatar">
               <UserOutlined />
             </div>
             <span className="english-world-user-name">
               {user?.username || "管理员"}
             </span>
-          </div>
+          </button>
         </Dropdown>
       </div>
+      <button
+        type="button"
+        className="english-world-sidebar-toggle"
+        aria-label={collapsed ? "展开侧栏" : "收起侧栏"}
+        title={collapsed ? "展开侧栏" : "收起侧栏"}
+        onClick={() => onCollapsedChange?.(!collapsed)}
+      >
+        {collapsed ? <RightOutlined /> : <LeftOutlined />}
+      </button>
+      {themeSettingsOpen && (
+        <ThemeSettingsModal
+          open
+          onClose={() => setThemeSettingsOpen(false)}
+        />
+      )}
     </aside>
   );
 };

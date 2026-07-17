@@ -28,7 +28,7 @@ import {
   ThunderboltOutlined,
 } from "@ant-design/icons";
 import { useLocation, useNavigate } from "react-router-dom";
-import { EnglishHeader } from "../component/EnglishHeader";
+import { EnglishWorldLayout } from "../layout/EnglishWorldLayout";
 import request from "@font/api";
 import {
   startRecite,
@@ -291,9 +291,7 @@ export const RecitePage: React.FC = () => {
   };
 
   return (
-    <div className="english-world-shell">
-      <EnglishHeader activeKey="recite" />
-      <main className="english-world-main">
+    <EnglishWorldLayout activeKey="recite">
       <div className="recite-loop">
         {/* 标题和操作按钮 */}
         <section className="recite-loop-topbar">
@@ -1035,7 +1033,6 @@ export const RecitePage: React.FC = () => {
           </Spin>
         </Modal>
       </div>
-      </main>
-    </div>
+    </EnglishWorldLayout>
   );
 };

@@ -123,6 +123,7 @@ describe("RecitePage plan review", () => {
 
   afterEach(() => {
     cleanup();
+    window.localStorage.clear();
     requestMock.mockClear();
     submitShouldReject = false;
     useThreeQuestionSession = false;
@@ -158,7 +159,8 @@ describe("RecitePage plan review", () => {
     expect(await screen.findByText("脆弱的")).toBeInTheDocument();
   });
 
-  it("uses the desktop shell content area so the sidebar does not cover review content", () => {
+  it("uses the shared collapsible shell so the sidebar does not cover review content", async () => {
+    const user = userEvent.setup();
     const { container } = render(
       <MemoryRouter initialEntries={["/englishWorld/recite"]}>
         <RecitePage />
@@ -166,6 +168,9 @@ describe("RecitePage plan review", () => {
     );
 
     expect(container.querySelector(".english-world-main")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "收起侧栏" }));
+    expect(container.querySelector(".english-world-shell-collapsed")).toBeInTheDocument();
+    expect(screen.getByText("今日复习")).toBeInTheDocument();
   });
 
   it("uses a client-ready review studio instead of a form-like review card", async () => {

@@ -1,13 +1,28 @@
-import { Modal, Form, Input, Select, Upload, Button, message, Tag } from "antd";
+import {
+  Modal,
+  Form,
+  Input,
+  Select,
+  Upload,
+  Button,
+  message,
+  Tag,
+  Spin,
+} from "antd";
 import type { UploadProps } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
 import TextArea from "antd/es/input/TextArea";
 import { WordList } from "@/server/word/word.type";
 import request from "@font/api";
 import { uploadFile } from "@/server";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { enumToOptions } from "@font/utils";
 import { EnglishAbsorb, EnglishType } from "../enum";
+import {
+  wordAgentQuery,
+  type WordAgentItem,
+  type WordAgentResponse,
+} from "@/server/wordAgent/wordAgent";
 
 /** 新增时的预填数据（如从 AI 查询结果带入） */
 export type AddInitialValues = Partial<Omit<WordList, "id">>;
@@ -35,12 +50,119 @@ type FormValues = {
   englishReference?: string;
 };
 
+const AI_COMPLETION_DEBOUNCE_MS = 600;
+
+function normalizeWordInput(value: unknown) {
+  return String(value ?? "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function getWordType(word: string) {
+  return word.includes(" ") ? 1 : 0;
+}
+
+function isLikelyEnglishLookupInput(value: string) {
+  const text = normalizeWordInput(value);
+  if (!text) return false;
+  if (!/^[A-Za-z][A-Za-z\s'-]*$/.test(text)) return false;
+
+  const letters = text.replace(/[^A-Za-z]/g, "");
+  if (/^[aAiI]$/.test(letters)) return true;
+  if (/^[A-Z]{2,8}$/.test(letters)) return true;
+  if (["hmm", "shh", "psst"].includes(letters.toLocaleLowerCase())) {
+    return true;
+  }
+
+  return /[aeiouy]/i.test(letters);
+}
+
+function hasFieldValue(value: unknown) {
+  if (Array.isArray(value)) return value.length > 0;
+  return value !== undefined && value !== null && String(value).trim() !== "";
+}
+
+function getEditDistance(a: string, b: string) {
+  const rows = Array.from({ length: a.length + 1 }, (_, index) =>
+    Array.from({ length: b.length + 1 }, (_unused, innerIndex) =>
+      index === 0 ? innerIndex : innerIndex === 0 ? index : 0,
+    ),
+  );
+
+  for (let i = 1; i <= a.length; i += 1) {
+    for (let j = 1; j <= b.length; j += 1) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      rows[i][j] = Math.min(
+        rows[i - 1][j] + 1,
+        rows[i][j - 1] + 1,
+        rows[i - 1][j - 1] + cost,
+      );
+    }
+  }
+
+  return rows[a.length][b.length];
+}
+
+function isRelevantAiCompletion(item: WordAgentItem, lookupWord: string) {
+  const input = normalizeWordInput(lookupWord).toLocaleLowerCase();
+  const output = normalizeWordInput(item.word).toLocaleLowerCase();
+  if (!input || !output) return false;
+  if (input === output) return true;
+  if (input[0] !== output[0]) return false;
+  if (input.startsWith(output) && output.length >= 3) return true;
+  return getEditDistance(input, output) <= 2;
+}
+
+function buildAiCompletionPatch(
+  item: WordAgentItem,
+  lookupWord: string,
+  currentValues: FormValues,
+): Partial<FormValues> {
+  const aiWord = normalizeWordInput(item.word || lookupWord);
+  const nextWord = aiWord || lookupWord;
+  const patch: Partial<FormValues> = {};
+
+  if (!hasFieldValue(currentValues.englishPhonetic) && item.phonetic) {
+    patch.englishPhonetic = item.phonetic;
+  }
+  if (!hasFieldValue(currentValues.englishChinese) && item.meaning) {
+    patch.englishChinese = item.meaning;
+  }
+  if (
+    !hasFieldValue(currentValues.englishPartSpeech) &&
+    item.partOfSpeech?.length
+  ) {
+    patch.englishPartSpeech = item.partOfSpeech;
+  }
+  if (
+    currentValues.englishLevel === undefined ||
+    currentValues.englishLevel === null
+  ) {
+    patch.englishLevel = 0;
+  }
+
+  const lookupDefaultType = getWordType(lookupWord);
+  if (
+    currentValues.englishType === undefined ||
+    currentValues.englishType === null ||
+    currentValues.englishType === lookupDefaultType
+  ) {
+    patch.englishType = getWordType(nextWord);
+  }
+
+  return patch;
+}
+
 export const EditAddModal = (props: Props) => {
   const { isModalVisible, currentRecord, addInitialValues, type, onOk, onCancel } = props;
 
   // 初始化表单数据
   const [form] = Form.useForm();
   const [selectedPartSpeech, setSelectedPartSpeech] = useState<number[]>([]);
+  const [aiLookupWord, setAiLookupWord] = useState("");
+  const [aiCompleting, setAiCompleting] = useState(false);
+  const aiLookupRequestIdRef = useRef(0);
+  const completedLookupWordRef = useRef<string | null>(null);
 
   // 词性选项
   const partSpeechOptions = [
@@ -68,10 +190,72 @@ export const EditAddModal = (props: Props) => {
         form.resetFields();
         setSelectedPartSpeech([]);
       }
+      setAiLookupWord("");
+      setAiCompleting(false);
+      completedLookupWordRef.current = null;
     }, 0);
 
     return () => window.clearTimeout(timer);
   }, [type, currentRecord, addInitialValues, form, isModalVisible]);
+
+  useEffect(() => {
+    const lookupWord = normalizeWordInput(aiLookupWord);
+    const requestId = aiLookupRequestIdRef.current + 1;
+    aiLookupRequestIdRef.current = requestId;
+
+    if (
+      !isModalVisible ||
+      type !== "add" ||
+      !lookupWord ||
+      !isLikelyEnglishLookupInput(lookupWord)
+    ) {
+      setAiCompleting(false);
+      return;
+    }
+
+    const lookupKey = lookupWord.toLocaleLowerCase();
+    if (completedLookupWordRef.current === lookupKey) {
+      return;
+    }
+
+    const timer = window.setTimeout(async () => {
+      setAiCompleting(true);
+      try {
+        const data = await request<WordAgentResponse>(
+          wordAgentQuery({ word: lookupWord }),
+        );
+        if (aiLookupRequestIdRef.current !== requestId) return;
+
+        const item = data?.words?.[0];
+        if (!item) return;
+        if (!isRelevantAiCompletion(item, lookupWord)) return;
+
+        const currentWord = normalizeWordInput(form.getFieldValue("englishWord"));
+        if (currentWord.toLocaleLowerCase() !== lookupKey) return;
+
+        const currentValues = form.getFieldsValue() as FormValues;
+        const patch = buildAiCompletionPatch(item, lookupWord, currentValues);
+        if (Object.keys(patch).length > 0) {
+          form.setFieldsValue(patch);
+          if (patch.englishPartSpeech?.length) {
+            setSelectedPartSpeech(patch.englishPartSpeech);
+          }
+        }
+        completedLookupWordRef.current = lookupKey;
+      } catch (error: unknown) {
+        if (aiLookupRequestIdRef.current !== requestId) return;
+        message.warning(
+          error instanceof Error ? error.message : "AI 补全失败，可以手动填写",
+        );
+      } finally {
+        if (aiLookupRequestIdRef.current === requestId) {
+          setAiCompleting(false);
+        }
+      }
+    }, AI_COMPLETION_DEBOUNCE_MS);
+
+    return () => window.clearTimeout(timer);
+  }, [aiLookupWord, form, isModalVisible, type]);
 
   const handleModalOk = async () => {
     try {
@@ -95,14 +279,17 @@ export const EditAddModal = (props: Props) => {
     onCancel();
   };
 
-  const onValuesChange = (changedValues: FormValues) => {
-    const { englishWord } = changedValues;
-    if (englishWord) {
+  const onValuesChange = (changedValues: Partial<FormValues>) => {
+    if (Object.prototype.hasOwnProperty.call(changedValues, "englishWord")) {
+      const englishWord = normalizeWordInput(changedValues.englishWord);
+      if (type === "add") {
+        setAiLookupWord(englishWord);
+      }
+      if (!englishWord) return;
       // 开始决定掌握程度和类型
-      const isPhrase = englishWord.trim().includes(" ");
       form.setFieldsValue({
         englishLevel: 0,
-        englishType: isPhrase ? 1 : 0,
+        englishType: getWordType(englishWord),
       });
     }
   };
@@ -196,7 +383,14 @@ export const EditAddModal = (props: Props) => {
             rules={[{ required: true, message: "请输入单词名" }]}
             style={{ flex: 1 }}
           >
-            <Input allowClear />
+            <Input
+              allowClear
+              suffix={
+                aiCompleting ? (
+                  <Spin aria-label="AI补全中" size="small" />
+                ) : undefined
+              }
+            />
           </Form.Item>
           <Form.Item
             label="掌握程度"

@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
 import {
   Button,
+  Checkbox,
   DatePicker,
+  Dropdown,
   Empty,
   Form,
   Image,
@@ -11,7 +13,6 @@ import {
   Pagination,
   Segmented,
   Select,
-  Space,
   Spin,
   Table,
   Tag,
@@ -19,12 +20,18 @@ import {
 } from "antd";
 import { EditAddModal } from "./component/EditAddModal";
 import request, { useMutation } from "@font/api";
-import { wordAdd, wordDel, wordExist, wordUpdate } from "@/server/word/word";
+import {
+  wordAdd,
+  wordDel,
+  wordExist,
+  wordUpdate,
+  wordUpdateLevel,
+} from "@/server/word/word";
 import { WordList } from "@/server/word/word.type";
 import { useColumns } from "./useColumns";
-import { EnglishHeader } from "./component/EnglishHeader";
 import { FormFieldGroup } from "./component/FormFieldGroup";
 import { EnglishStats } from "./component/EnglishStats";
+import { EnglishWorldPageHeader } from "./component/EnglishWorldPageHeader";
 import { LearningCockpitPage } from "./cockpit/LearningCockpitPage";
 import { MemoryMapPage } from "./memoryMap/MemoryMapPage";
 import { ContextLabPage } from "./contextLab/ContextLabPage";
@@ -34,13 +41,14 @@ import type { ContextLabTask } from "./types/learning";
 import {
   AppstoreOutlined,
   BarsOutlined,
-  DeleteFilled,
   DownOutlined,
-  EditFilled,
   FullscreenExitOutlined,
   FullscreenOutlined,
+  MoreOutlined,
   PlayCircleOutlined,
   PlusOutlined,
+  NodeIndexOutlined,
+  TranslationOutlined,
   UpOutlined,
 } from "@ant-design/icons";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -53,6 +61,8 @@ import {
   getTypeLabel,
 } from "./utils/wordLabels";
 import { BritishPronunciationButton } from "./component/BritishPronunciationButton";
+import { WordLevelQuickEdit } from "./component/WordLevelQuickEdit";
+import { EnglishWorldLayout } from "./layout/EnglishWorldLayout";
 import {
   getContextLabReferenceLabel,
   type ParsedContextLabReference,
@@ -62,6 +72,7 @@ import "./EnglishWorld.css";
 const { RangePicker } = DatePicker;
 const { Text, Title } = Typography;
 const WORD_TABLE_SCROLL_Y = 620;
+const WORD_LEVEL_VALUES = [0, 1, 2, 3] as const;
 type WordLibraryView = "list" | "card";
 
 function splitContextLabArticleParagraphs(article: string) {
@@ -91,6 +102,10 @@ const EnglishWorld: React.FC = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [wordRecord, setWordRecord] = useState<WordList>();
   const [libraryView, setLibraryView] = useState<WordLibraryView>("list");
+  const [cardBatchMode, setCardBatchMode] = useState(false);
+  const [selectedCardIds, setSelectedCardIds] = useState<number[]>([]);
+  const [levelUpdatingIds, setLevelUpdatingIds] = useState<number[]>([]);
+  const [batchLevelUpdating, setBatchLevelUpdating] = useState(false);
   const [sourcePreviewOpen, setSourcePreviewOpen] = useState(false);
   const [sourcePreviewFullscreen, setSourcePreviewFullscreen] = useState(false);
   const [sourcePreviewLoading, setSourcePreviewLoading] = useState(false);
@@ -120,6 +135,7 @@ const EnglishWorld: React.FC = () => {
     reset,
     refresh,
     changePage,
+    updateWordLevels,
   } = useWordList(10);
 
   useEffect(() => {
@@ -137,38 +153,18 @@ const EnglishWorld: React.FC = () => {
 
   const filterFields = [
     {
-      key: "time",
+      key: "englishWord",
       node: (
-        <Form.Item label="时间范围" name="time">
-          <RangePicker
-            allowClear
-            placeholder={["开始时间", "结束时间"]}
-            style={{ width: "100%" }}
-          />
+        <Form.Item label="英文" name="englishWord">
+          <Input placeholder="搜索单词或短语" allowClear />
         </Form.Item>
       ),
     },
     {
       key: "englishChinese",
       node: (
-        <Form.Item label="中文名" name="englishChinese">
-          <Input placeholder="请输入中文名" allowClear />
-        </Form.Item>
-      ),
-    },
-    {
-      key: "englishWord",
-      node: (
-        <Form.Item label="英文名" name="englishWord">
-          <Input placeholder="请输入英文名" allowClear />
-        </Form.Item>
-      ),
-    },
-    {
-      key: "englishPhonetic",
-      node: (
-        <Form.Item label="音标" name="englishPhonetic">
-          <Input placeholder="请输入音标" allowClear />
+        <Form.Item label="中文" name="englishChinese">
+          <Input placeholder="搜索中文释义" allowClear />
         </Form.Item>
       ),
     },
@@ -185,6 +181,26 @@ const EnglishWorld: React.FC = () => {
               { label: "句子", value: 2 },
             ]}
           />
+        </Form.Item>
+      ),
+    },
+    {
+      key: "time",
+      node: (
+        <Form.Item label="时间范围" name="time">
+          <RangePicker
+            allowClear
+            placeholder={["开始时间", "结束时间"]}
+            style={{ width: "100%" }}
+          />
+        </Form.Item>
+      ),
+    },
+    {
+      key: "englishPhonetic",
+      node: (
+        <Form.Item label="音标" name="englishPhonetic">
+          <Input placeholder="搜索音标" allowClear />
         </Form.Item>
       ),
     },
@@ -287,11 +303,13 @@ const EnglishWorld: React.FC = () => {
 
   // 查询数据
   const handleSearch = async () => {
+    setSelectedCardIds([]);
     await search(normalizeDesktopWordFilters(form.getFieldsValue()));
   };
 
   // 重置表单
   const handleReset = async () => {
+    setSelectedCardIds([]);
     form.resetFields();
     await reset();
   };
@@ -350,7 +368,143 @@ const EnglishWorld: React.FC = () => {
   };
 
   const handlePageChange = (page: number, pageSize: number) => {
+    setSelectedCardIds([]);
     changePage(page, pageSize);
+  };
+
+  const handleLibraryViewChange = (view: WordLibraryView) => {
+    setLibraryView(view);
+    setCardBatchMode(false);
+    setSelectedCardIds([]);
+  };
+
+  const handleToggleCardBatchMode = () => {
+    setCardBatchMode((current) => !current);
+    setSelectedCardIds([]);
+  };
+
+  const handleSelectCard = (id: number, checked: boolean) => {
+    setSelectedCardIds((current) =>
+      checked
+        ? Array.from(new Set([...current, id]))
+        : current.filter((currentId) => currentId !== id),
+    );
+  };
+
+  const allCurrentPageCardsSelected =
+    wordList.length > 0 &&
+    wordList.every((word) => selectedCardIds.includes(word.id));
+
+  const handleSelectCurrentPage = () => {
+    setSelectedCardIds(
+      allCurrentPageCardsSelected ? [] : wordList.map((word) => word.id),
+    );
+  };
+
+  const handleQuickLevelChange = async (
+    record: WordList,
+    englishLevel: number,
+  ) => {
+    const previousLevel = record.englishLevel ?? 0;
+    if (
+      previousLevel === englishLevel ||
+      levelUpdatingIds.includes(record.id)
+    ) {
+      return;
+    }
+
+    updateWordLevels([{ id: record.id, englishLevel }]);
+    setLevelUpdatingIds((current) => [...current, record.id]);
+    try {
+      const success = await request<boolean>(
+        {
+          ...wordUpdateLevel({ id: record.id, englishLevel }),
+          config: { suppressErrorMessage: true },
+        },
+      );
+      if (!success) {
+        throw new Error("level update failed");
+      }
+      await refresh();
+      message.success({
+        content: `${record.englishWord} 已设为${getLevelLabel(englishLevel).label}`,
+        key: `word-level-${record.id}`,
+        duration: 1.2,
+      });
+    } catch {
+      updateWordLevels([{ id: record.id, englishLevel: previousLevel }]);
+      message.error({
+        content: "掌握程度修改失败，已恢复原状态",
+        key: `word-level-${record.id}`,
+      });
+    } finally {
+      setLevelUpdatingIds((current) =>
+        current.filter((id) => id !== record.id),
+      );
+    }
+  };
+
+  const handleBatchLevelChange = async (englishLevel: number) => {
+    const selectedRecords = wordList.filter((word) =>
+      selectedCardIds.includes(word.id),
+    );
+    if (selectedRecords.length === 0 || batchLevelUpdating) return;
+
+    const previousLevels = new Map(
+      selectedRecords.map((word) => [word.id, word.englishLevel ?? 0]),
+    );
+    const targetIds = selectedRecords.map((word) => word.id);
+
+    updateWordLevels(
+      selectedRecords.map((word) => ({ id: word.id, englishLevel })),
+    );
+    setBatchLevelUpdating(true);
+    setLevelUpdatingIds((current) =>
+      Array.from(new Set([...current, ...targetIds])),
+    );
+
+    const results = await Promise.allSettled(
+      selectedRecords.map(async (record) => {
+        const success = await request<boolean>(
+          {
+            ...wordUpdateLevel({ id: record.id, englishLevel }),
+            config: { suppressErrorMessage: true },
+          },
+        );
+        if (!success) throw new Error("level update failed");
+        return record.id;
+      }),
+    );
+    const failedIds = results.flatMap((result, index) =>
+      result.status === "rejected" ? [selectedRecords[index].id] : [],
+    );
+
+    if (failedIds.length > 0) {
+      updateWordLevels(
+        failedIds.map((id) => ({
+          id,
+          englishLevel: previousLevels.get(id) ?? 0,
+        })),
+      );
+      setSelectedCardIds(failedIds);
+      message.warning(
+        failedIds.length === selectedRecords.length
+          ? "批量修改失败，已恢复原状态"
+          : `${selectedRecords.length - failedIds.length} 项修改成功，${failedIds.length} 项失败`,
+      );
+    } else {
+      setSelectedCardIds([]);
+      message.success(
+        `${selectedRecords.length} 项已设为${getLevelLabel(englishLevel).label}`,
+      );
+    }
+
+    await refresh();
+
+    setLevelUpdatingIds((current) =>
+      current.filter((id) => !targetIds.includes(id)),
+    );
+    setBatchLevelUpdating(false);
   };
 
   const renderSourcePreviewText = (text: string) => {
@@ -431,36 +585,34 @@ const EnglishWorld: React.FC = () => {
     );
   };
 
-  const renderWordCard = (record: WordList, index: number) => {
-    const serialNumber = (page - 1) * pageSize + index + 1;
+  const renderWordCard = (record: WordList) => {
     const typeInfo = getTypeLabel(record.englishType);
-    const levelInfo = getLevelLabel(record.englishLevel);
     const partSpeechList = record.englishPartSpeech ?? [];
+    const partSpeechLabels = partSpeechList
+      .slice(0, 4)
+      .map((partSpeech) => getPartSpeechLabel(partSpeech).label);
+    const classification = [typeInfo.label, ...partSpeechLabels].join(" · ");
+    const cardSelected = selectedCardIds.includes(record.id);
     const contextLabReference = parseContextLabReference(
       record.englishReference,
     );
 
     return (
-      <article className="word-card" key={record.id}>
-        <div className="word-card-head">
-          <span className="word-index">#{serialNumber}</span>
-          <Space size={6} wrap>
-            <Tag color={typeInfo.color}>{typeInfo.label}</Tag>
-            <Tag color={levelInfo.color}>{levelInfo.label}</Tag>
-          </Space>
-        </div>
-
-        <div className="word-card-main">
-          {record.englishImg && (
-            <Image
-              src={record.englishImg}
-              width={58}
-              height={58}
-              alt={record.englishWord}
-              className="word-card-image"
+      <article
+        className={`word-card${cardSelected ? " word-card-selected" : ""}`}
+        key={record.id}
+      >
+        <div className="word-card-title-row">
+          {cardBatchMode && (
+            <Checkbox
+              aria-label={`选择 ${record.englishWord}`}
+              checked={cardSelected}
+              disabled={batchLevelUpdating}
+              onChange={(event) =>
+                handleSelectCard(record.id, event.target.checked)
+              }
             />
           )}
-
           <div className="word-card-copy">
             <span className="word-title-cell">
               <a
@@ -480,78 +632,102 @@ const EnglishWorld: React.FC = () => {
               {record.englishPhonetic || "-"}
             </span>
           </div>
-        </div>
-
-        <p className="word-card-meaning">{record.englishChinese || "-"}</p>
-
-        <div className="word-card-tag-row">
-          {partSpeechList.length > 0 ? (
-            partSpeechList.slice(0, 4).map((partSpeech) => {
-              const info = getPartSpeechLabel(partSpeech);
-              return (
-                <Tag key={partSpeech} color={info.color}>
-                  {info.label}
-                </Tag>
-              );
-            })
-          ) : (
-            <span className="word-muted">暂无词性</span>
-          )}
-          {partSpeechList.length > 4 && (
-            <Tag color="default">+{partSpeechList.length - 4}</Tag>
-          )}
-        </div>
-
-        <div className="word-card-meta">
-          <span>{record.englishNote ? "有笔记" : "无笔记"}</span>
-          {contextLabReference ? (
-            <button
-              type="button"
-              className="word-reference-link word-reference-link-internal"
-              onClick={(event) => {
-                event.stopPropagation();
-                void handleOpenContextLabReference(
-                  contextLabReference,
-                  record,
-                );
-              }}
-            >
-              {getContextLabReferenceLabel(contextLabReference)}
-            </button>
-          ) : (
-            <span>{record.englishReference ? "有引用" : "无引用"}</span>
-          )}
-        </div>
-
-        <div className="word-card-actions">
-          <Button
-            type="text"
-            size="small"
-            onClick={() => handleEdit(record)}
-            icon={<EditFilled />}
-            className="word-action-button"
+          <Dropdown
+            disabled={cardBatchMode}
+            menu={{
+              items: [
+                { key: "edit", label: "编辑" },
+                { key: "query", label: "百度查询" },
+                { type: "divider" },
+                { key: "delete", label: "删除", danger: true },
+              ],
+              onClick: ({ key, domEvent }) => {
+                domEvent.stopPropagation();
+                if (key === "edit") {
+                  handleEdit(record);
+                } else if (key === "query") {
+                  window.open(
+                    `https://www.baidu.com/s?wd=${encodeURIComponent(
+                      record.englishWord,
+                    )}`,
+                    "_blank",
+                    "noopener,noreferrer",
+                  );
+                } else if (key === "delete") {
+                  handleDelete(record.id);
+                }
+              },
+            }}
+            trigger={["click"]}
           >
-            编辑
-          </Button>
-          <Button
-            type="text"
-            danger
-            size="small"
-            onClick={() => handleDelete(record.id)}
-            icon={<DeleteFilled />}
-            className="word-action-button"
-          >
-            删除
-          </Button>
+            <Button
+              aria-label={`${record.englishWord} 更多操作`}
+              className="word-card-more-button"
+              disabled={cardBatchMode}
+              icon={<MoreOutlined />}
+              type="text"
+              onClick={(event) => event.stopPropagation()}
+            />
+          </Dropdown>
         </div>
+
+        <div className="word-card-meaning-row">
+          <p className="word-card-meaning">{record.englishChinese || "-"}</p>
+          {record.englishImg && (
+            <Image
+              src={record.englishImg}
+              width={52}
+              height={52}
+              alt={`${record.englishWord} 图片`}
+              className="word-card-image"
+            />
+          )}
+        </div>
+
+        <div className="word-card-status-row">
+          <WordLevelQuickEdit
+            word={record.englishWord}
+            value={record.englishLevel}
+            loading={levelUpdatingIds.includes(record.id)}
+            disabled={cardBatchMode}
+            onChange={(level) => void handleQuickLevelChange(record, level)}
+          />
+          <span className="word-card-classification">
+            {classification}
+            {partSpeechList.length > 4
+              ? ` · +${partSpeechList.length - 4}`
+              : ""}
+          </span>
+        </div>
+
+        {(record.englishNote || record.englishReference) && (
+          <div className="word-card-meta">
+            {record.englishNote && <span>有笔记</span>}
+            {contextLabReference ? (
+              <button
+                type="button"
+                className="word-reference-link word-reference-link-internal"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  void handleOpenContextLabReference(
+                    contextLabReference,
+                    record,
+                  );
+                }}
+              >
+                {getContextLabReferenceLabel(contextLabReference)}
+              </button>
+            ) : record.englishReference ? (
+              <span>有引用</span>
+            ) : null}
+          </div>
+        )}
       </article>
     );
   };
 
   return (
-    <div className="english-world-shell">
-      <EnglishHeader activeKey={activeNav} onNavClick={handleNavClick} />
-      <main className="english-world-main">
+    <EnglishWorldLayout activeKey={activeNav} onNavClick={handleNavClick}>
         {activeNav === "cockpit" ? (
           <LearningCockpitPage />
         ) : activeNav === "contextLab" ? (
@@ -564,6 +740,37 @@ const EnglishWorld: React.FC = () => {
           <EnglishStats />
         ) : (
           <div className="english-world-stack">
+            <EnglishWorldPageHeader
+              eyebrow="词汇资产"
+              title="词库"
+              description="集中管理释义、音标、掌握程度和学习来源。"
+              actions={
+                <>
+                  <Button
+                    aria-label="AI 查词"
+                    icon={<TranslationOutlined />}
+                    onClick={() => navigate("/englishWorld/ai-word")}
+                  >
+                    AI 查词
+                  </Button>
+                  <Button
+                    aria-label="记忆地图"
+                    icon={<NodeIndexOutlined />}
+                    onClick={() => navigate("/englishWorld/memory-map")}
+                  >
+                    记忆地图
+                  </Button>
+                  <Button
+                    type="primary"
+                    onClick={handleAdd}
+                    loading={buttonPending}
+                    icon={<PlusOutlined />}
+                  >
+                    添加单词
+                  </Button>
+                </>
+              }
+            />
             <section className="english-world-filter-panel" aria-label="词库筛选">
               <Form
                 form={form}
@@ -618,13 +825,13 @@ const EnglishWorld: React.FC = () => {
             <section className="english-world-table-panel">
               <div className="english-world-table-toolbar">
                 <div className="english-world-table-title">
-                  <strong>词库管理</strong>
-                  <span>保留筛选字段、表格列和添加/编辑单词字段</span>
+                  <strong>全部词条</strong>
+                  <span>查看和维护词汇内容与学习状态</span>
                 </div>
                 <div className="english-world-table-tools">
                   <Segmented<WordLibraryView>
                     value={libraryView}
-                    onChange={setLibraryView}
+                    onChange={handleLibraryViewChange}
                     options={[
                       {
                         label: "列表",
@@ -638,15 +845,14 @@ const EnglishWorld: React.FC = () => {
                       },
                     ]}
                   />
-                  <Button
-                    type="primary"
-                    onClick={handleAdd}
-                    size="middle"
-                    loading={buttonPending}
-                    icon={<PlusOutlined />}
-                  >
-                    添加单词
-                  </Button>
+                  {libraryView === "card" && (
+                    <Button
+                      type={cardBatchMode ? "primary" : "default"}
+                      onClick={handleToggleCardBatchMode}
+                    >
+                      {cardBatchMode ? "退出批量" : "批量管理"}
+                    </Button>
+                  )}
                 </div>
               </div>
 
@@ -662,6 +868,18 @@ const EnglishWorld: React.FC = () => {
                     columns={columns}
                     dataSource={wordList}
                     rowKey="id"
+                    locale={{
+                      emptyText: (
+                        <Empty
+                          image={Empty.PRESENTED_IMAGE_SIMPLE}
+                          description="词库还是空的"
+                        >
+                          <Button type="primary" onClick={handleAdd}>
+                            添加第一个单词
+                          </Button>
+                        </Empty>
+                      ),
+                    }}
                     virtual
                     scroll={{ x: 1360, y: WORD_TABLE_SCROLL_Y }}
                     pagination={{
@@ -681,12 +899,51 @@ const EnglishWorld: React.FC = () => {
                   className="english-world-card-view"
                   aria-label="词库卡片视图"
                 >
+                  {cardBatchMode && (
+                    <div className="word-card-batch-toolbar">
+                      <div className="word-card-batch-summary">
+                        <strong>已选 {selectedCardIds.length} 项</strong>
+                        <Button
+                          disabled={batchLevelUpdating || wordList.length === 0}
+                          onClick={handleSelectCurrentPage}
+                        >
+                          {allCurrentPageCardsSelected
+                            ? "取消全选"
+                            : "全选当前页"}
+                        </Button>
+                      </div>
+                      <div className="word-card-batch-actions">
+                        <span>批量设为</span>
+                        {WORD_LEVEL_VALUES.map((level) => {
+                          const info = getLevelLabel(level);
+                          return (
+                            <Button
+                              aria-label={`批量设为${info.label}`}
+                              disabled={selectedCardIds.length === 0}
+                              key={level}
+                              loading={batchLevelUpdating}
+                              onClick={() => void handleBatchLevelChange(level)}
+                            >
+                              {info.label}
+                            </Button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                   {wordList.length > 0 ? (
                     <div className="english-world-card-grid">
                       {wordList.map(renderWordCard)}
                     </div>
                   ) : (
-                    <Empty description="暂无单词" />
+                    <Empty
+                      image={Empty.PRESENTED_IMAGE_SIMPLE}
+                      description="词库还是空的"
+                    >
+                      <Button type="primary" onClick={handleAdd}>
+                        添加第一个单词
+                      </Button>
+                    </Empty>
                   )}
                   <Pagination
                     current={page}
@@ -798,8 +1055,7 @@ const EnglishWorld: React.FC = () => {
             </Modal>
           </div>
         )}
-      </main>
-    </div>
+    </EnglishWorldLayout>
   );
 };
 

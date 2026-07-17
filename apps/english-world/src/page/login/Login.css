@@ -308,6 +308,7 @@
   border-color: rgba(148, 163, 184, 0.28);
   border-radius: 12px;
   background: rgba(15, 23, 42, 0.76);
+  background-color: rgba(15, 23, 42, 0.76);
   color: #f8fbff;
 }
 
@@ -328,7 +329,47 @@
 .login-card .ant-input-affix-wrapper-focused,
 .login-card .ant-input:focus {
   border-color: #67e8f9;
+  background-color: rgba(15, 23, 42, 0.82);
+  color: #f8fbff;
   box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.16);
+}
+
+.login-card .ant-input-affix-wrapper-focused input,
+.login-card .ant-input-affix-wrapper:focus-within input {
+  color: #f8fbff;
+}
+
+.login-card .ant-input-affix-wrapper-status-error,
+.login-card .ant-input-affix-wrapper-status-error:not(.ant-input-affix-wrapper-disabled),
+.login-card .ant-input-outlined.ant-input-status-error,
+.login-card .ant-input-outlined.ant-input-status-error:not(.ant-input-disabled),
+.login-card .ant-input-status-error,
+.login-card .ant-input-status-error:not(.ant-input-disabled) {
+  border-color: #fb7185 !important;
+  background: rgba(15, 23, 42, 0.86) !important;
+  background-color: rgba(15, 23, 42, 0.86) !important;
+  color: #f8fbff !important;
+}
+
+.login-card .ant-input-affix-wrapper-status-error input,
+.login-card .ant-input-affix-wrapper-status-error:not(.ant-input-affix-wrapper-disabled) input,
+.login-card .ant-input-outlined.ant-input-status-error,
+.login-card .ant-input-status-error {
+  background-color: transparent !important;
+  color: #f8fbff !important;
+}
+
+.login-card .ant-input-affix-wrapper-status-error:hover,
+.login-card .ant-input-status-error:hover {
+  border-color: #fb7185 !important;
+}
+
+.login-card .ant-input-affix-wrapper-status-error.ant-input-affix-wrapper-focused,
+.login-card .ant-input-status-error:focus {
+  border-color: #fb7185 !important;
+  background-color: rgba(15, 23, 42, 0.9) !important;
+  color: #f8fbff !important;
+  box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.18);
 }
 
 .login-card .ant-input-prefix,
@@ -338,12 +379,27 @@
 
 .login-card .ant-input::placeholder,
 .login-card .ant-input input::placeholder {
-  color: rgba(203, 213, 225, 0.52);
+  color: rgba(203, 213, 225, 0.72);
+}
+
+.login-card .ant-input-affix-wrapper-status-error input::placeholder,
+.login-card .ant-input-status-error::placeholder {
+  color: rgba(226, 232, 240, 0.78) !important;
 }
 
 .login-card .ant-input-affix-wrapper input {
   background: transparent;
+  background-color: transparent;
   color: #f8fbff;
+  caret-color: #f8fbff;
+}
+
+.login-card .ant-input-affix-wrapper input:-webkit-autofill,
+.login-card .ant-input-affix-wrapper input:-webkit-autofill:hover,
+.login-card .ant-input-affix-wrapper input:-webkit-autofill:focus {
+  box-shadow: 0 0 0 1000px rgba(15, 23, 42, 0.82) inset;
+  -webkit-text-fill-color: #f8fbff;
+  caret-color: #f8fbff;
 }
 
 .login-card .ant-form-item-explain-error {

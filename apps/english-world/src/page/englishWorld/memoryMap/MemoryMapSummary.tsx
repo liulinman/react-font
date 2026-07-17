@@ -1,6 +1,7 @@
 import { Button, Progress, Tag, Typography } from "antd";
 import { NodeIndexOutlined } from "@ant-design/icons";
 import type { MemoryMapOverview } from "../types/learning";
+import { getMemoryClusterLabel } from "./memoryClusterLabels";
 
 const { Text, Title } = Typography;
 
@@ -23,16 +24,16 @@ export function MemoryMapSummary({
     <section className="learning-cockpit-card">
       <div className="learning-cockpit-card-heading">
         <div>
-          <Text className="learning-cockpit-label">C. Memory OS</Text>
+          <Text className="learning-cockpit-label">复习线索</Text>
           <Title level={4}>记忆地图</Title>
         </div>
         <NodeIndexOutlined className="learning-cockpit-card-icon" />
       </div>
 
       <div className="memory-map-orbit" aria-label="记忆地图摘要">
-        <span className="memory-node memory-node-weak">weak</span>
-        <span className="memory-node memory-node-similar">similar</span>
-        <span className="memory-node memory-node-mastered">mastered</span>
+        <span className="memory-node memory-node-weak">薄弱</span>
+        <span className="memory-node memory-node-similar">易混</span>
+        <span className="memory-node memory-node-mastered">掌握</span>
       </div>
 
       <div className="learning-cockpit-progress-row">
@@ -44,7 +45,7 @@ export function MemoryMapSummary({
       <div className="learning-cockpit-word-strip">
         {overview.recentMistakes.slice(0, 4).map((item) => (
           <Tag key={item.wordId} color="volcano">
-            {item.word} · {item.cluster}
+            {item.word} · {getMemoryClusterLabel(item.cluster)}
           </Tag>
         ))}
       </div>

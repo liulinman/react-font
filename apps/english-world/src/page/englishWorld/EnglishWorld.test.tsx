@@ -18,6 +18,7 @@ vi.mock("antd", async () => {
     Table: (props: Record<string, unknown>) => {
       tablePropsMock(props);
       const columns = (props.columns ?? []) as Array<{ title?: unknown }>;
+      const locale = props.locale as { emptyText?: React.ReactNode } | undefined;
       return (
         <div data-testid="word-table">
           {columns.map((column, index) =>
@@ -25,6 +26,7 @@ vi.mock("antd", async () => {
               <span key={`${column.title}-${index}`}>{column.title}</span>
             ) : null,
           )}
+          {locale?.emptyText}
         </div>
       );
     },
@@ -68,6 +70,7 @@ vi.mock("./memoryMap/MemoryMapPage", () => ({
 
 describe("EnglishWorld ToC routing", () => {
   beforeEach(() => {
+    requestMock.mockReset();
     requestMock.mockResolvedValue({
       list: [],
       total: 0,
@@ -94,6 +97,7 @@ describe("EnglishWorld ToC routing", () => {
 
   afterEach(() => {
     cleanup();
+    window.localStorage.clear();
   });
 
   it("renders the word library when pathname is /englishWorld/words", () => {
@@ -103,17 +107,45 @@ describe("EnglishWorld ToC routing", () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByText("词库管理")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "词库" })).toBeInTheDocument();
+    expect(screen.getByText("全部词条")).toBeInTheDocument();
     expect(
-      screen.getByText("保留筛选字段、表格列和添加/编辑单词字段"),
-    ).toBeInTheDocument();
+      screen.queryByText("保留筛选字段、表格列和添加/编辑单词字段"),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "AI 查词" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "记忆地图" })).toBeInTheDocument();
     expect(screen.getByText("时间范围")).toBeInTheDocument();
-    expect(screen.getByText("中文名")).toBeInTheDocument();
-    expect(screen.getByText("英文名")).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "中文" })).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "英文" })).toBeInTheDocument();
     expect(screen.getAllByText("音标").length).toBeGreaterThan(0);
     expect(screen.getAllByText("类型").length).toBeGreaterThan(0);
     expect(screen.getAllByText("掌握程度").length).toBeGreaterThan(0);
     expect(screen.queryByText("Mock Cockpit")).not.toBeInTheDocument();
+  });
+
+  it("uses the shared collapsible shell without hiding the word library", async () => {
+    const user = userEvent.setup();
+    const { container } = render(
+      <MemoryRouter initialEntries={["/englishWorld/words"]}>
+        <EnglishWorld />
+      </MemoryRouter>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "收起侧栏" }));
+
+    expect(container.querySelector(".english-world-shell-collapsed")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "词库" })).toBeInTheDocument();
+  });
+
+  it("shows a useful Chinese empty state for a new word library", () => {
+    render(
+      <MemoryRouter initialEntries={["/englishWorld/words"]}>
+        <EnglishWorld />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByText("词库还是空的")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "添加第一个单词" })).toBeInTheDocument();
   });
 
   it("renders the word filters as a compact management toolbar", () => {
@@ -254,7 +286,7 @@ describe("EnglishWorld ToC routing", () => {
         }),
       );
     });
-    expect(screen.getByText("词库管理")).toBeInTheDocument();
+    expect(screen.getByText("全部词条")).toBeInTheDocument();
     const dialog = await screen.findByRole("dialog", {
       name: /单词来源文章/,
     });
@@ -374,6 +406,206 @@ describe("EnglishWorld ToC routing", () => {
     expect(container.querySelector(".word-card-image-placeholder")).toBeNull();
   });
 
+  it("updates one card mastery level without opening the edit modal", async () => {
+    const user = userEvent.setup();
+    let persistedLevel = 1;
+    requestMock.mockImplementation((config: {
+      url?: string;
+      data?: { englishLevel?: number };
+    }) => {
+      if (config.url === "/english/updateEnglishWordLevel") {
+        persistedLevel = config.data?.englishLevel ?? persistedLevel;
+        return Promise.resolve(true);
+      }
+      return Promise.resolve({
+        list: [
+          {
+            id: 21,
+            englishWord: "humor",
+            englishChinese: "幽默",
+            englishType: 0,
+            englishLevel: persistedLevel,
+            englishPartSpeech: [1],
+          },
+        ],
+        total: 1,
+        totalPages: 1,
+      });
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/englishWorld/words"]}>
+        <EnglishWorld />
+      </MemoryRouter>,
+    );
+
+    await user.click(screen.getByText("卡片"));
+    await screen.findByText("humor");
+    await user.click(
+      screen.getByRole("button", {
+        name: "修改 humor 的掌握程度，当前一般",
+      }),
+    );
+    await user.click(await screen.findByRole("menuitem", { name: /熟练/ }));
+
+    await waitFor(() => {
+      expect(requestMock).toHaveBeenCalledWith({
+        url: "/english/updateEnglishWordLevel",
+        method: "POST",
+        data: { id: 21, englishLevel: 2 },
+        config: { suppressErrorMessage: true },
+      });
+    });
+    await waitFor(() => {
+      const listCalls = requestMock.mock.calls.filter(
+        ([config]) => config.url === "/english/filterWordList",
+      );
+      expect(listCalls).toHaveLength(2);
+    });
+    expect(
+      screen.getByRole("button", {
+        name: "修改 humor 的掌握程度，当前熟练",
+      }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("selects the current card page and updates mastery in one batch", async () => {
+    const user = userEvent.setup();
+    requestMock.mockImplementation((config: { url?: string }) => {
+      if (config.url === "/english/updateEnglishWordLevel") {
+        return Promise.resolve(true);
+      }
+      return Promise.resolve({
+        list: [
+          {
+            id: 21,
+            englishWord: "humor",
+            englishType: 0,
+            englishLevel: 1,
+          },
+          {
+            id: 22,
+            englishWord: "march",
+            englishType: 0,
+            englishLevel: 0,
+          },
+        ],
+        total: 2,
+        totalPages: 1,
+      });
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/englishWorld/words"]}>
+        <EnglishWorld />
+      </MemoryRouter>,
+    );
+
+    await user.click(screen.getByText("卡片"));
+    await screen.findByText("humor");
+    await user.click(screen.getByRole("button", { name: "批量管理" }));
+    await user.click(screen.getByRole("button", { name: "全选当前页" }));
+
+    expect(screen.getByText("已选 2 项")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "批量设为精通" }));
+
+    await waitFor(() => {
+      const levelCalls = requestMock.mock.calls.filter(
+        ([config]) => config.url === "/english/updateEnglishWordLevel",
+      );
+      expect(levelCalls).toHaveLength(2);
+      expect(levelCalls.map(([config]) => config.data)).toEqual(
+        expect.arrayContaining([
+          { id: 21, englishLevel: 3 },
+          { id: 22, englishLevel: 3 },
+        ]),
+      );
+    });
+    await waitFor(() => {
+      const listCalls = requestMock.mock.calls.filter(
+        ([config]) => config.url === "/english/filterWordList",
+      );
+      expect(listCalls).toHaveLength(2);
+    });
+  });
+
+  it("rolls back a failed card mastery update", async () => {
+    const user = userEvent.setup();
+    requestMock.mockImplementation((config: { url?: string }) => {
+      if (config.url === "/english/updateEnglishWordLevel") {
+        return Promise.resolve(false);
+      }
+      return Promise.resolve({
+        list: [
+          {
+            id: 21,
+            englishWord: "humor",
+            englishType: 0,
+            englishLevel: 1,
+          },
+        ],
+        total: 1,
+        totalPages: 1,
+      });
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/englishWorld/words"]}>
+        <EnglishWorld />
+      </MemoryRouter>,
+    );
+
+    await user.click(screen.getByText("卡片"));
+    await screen.findByText("humor");
+    await user.click(
+      screen.getByRole("button", {
+        name: "修改 humor 的掌握程度，当前一般",
+      }),
+    );
+    await user.click(await screen.findByRole("menuitem", { name: /熟练/ }));
+
+    expect(
+      await screen.findByRole("button", {
+        name: "修改 humor 的掌握程度，当前一般",
+      }),
+    ).toBeInTheDocument();
+  });
+
+  it("clears card selection when leaving card view", async () => {
+    const user = userEvent.setup();
+    requestMock.mockResolvedValue({
+      list: [
+        {
+          id: 21,
+          englishWord: "humor",
+          englishType: 0,
+          englishLevel: 1,
+        },
+      ],
+      total: 1,
+      totalPages: 1,
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/englishWorld/words"]}>
+        <EnglishWorld />
+      </MemoryRouter>,
+    );
+
+    await user.click(screen.getByText("卡片"));
+    await screen.findByText("humor");
+    await user.click(screen.getByRole("button", { name: "批量管理" }));
+    await user.click(screen.getByRole("button", { name: "全选当前页" }));
+    expect(screen.getByText("已选 1 项")).toBeInTheDocument();
+
+    await user.click(screen.getByText("列表"));
+    await user.click(screen.getByText("卡片"));
+    await user.click(screen.getByRole("button", { name: "批量管理" }));
+
+    expect(screen.getByText("已选 0 项")).toBeInTheDocument();
+  });
+
   it("renders stats when pathname is /englishWorld/stats", () => {
     render(
       <MemoryRouter initialEntries={["/englishWorld/stats"]}>
@@ -403,7 +635,7 @@ describe("EnglishWorld ToC routing", () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByText("词库管理")).toBeInTheDocument();
+    expect(screen.getByText("全部词条")).toBeInTheDocument();
 
     cleanup();
 

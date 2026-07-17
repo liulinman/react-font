@@ -3,7 +3,6 @@ import { Button, Tag, Typography } from "antd";
 import {
   BarChartOutlined,
   ExperimentOutlined,
-  UnorderedListOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { CoachSummaryPanel } from "../dailyCoach/CoachSummaryPanel";
@@ -92,7 +91,7 @@ export function LearningCockpitPage() {
     <div className="learning-cockpit">
       <section className="learning-cockpit-hero">
         <div>
-          <Text className="learning-cockpit-label">Today Route</Text>
+          <Text className="learning-cockpit-label">今天</Text>
           <Title level={1}>今日学习路线</Title>
           <p>
             按路线完成一轮短复习，再把薄弱词放进语境练习。
@@ -130,42 +129,17 @@ export function LearningCockpitPage() {
           <div className="learning-cockpit-grid learning-cockpit-route-board">
             <div className="learning-cockpit-main-column">
               {coachSummary ? (
-                <>
-                  <CoachSummaryPanel
-                    summary={coachSummary}
-                    onStartReview={openReview}
-                    onOpenContextLab={openContextLab}
-                  />
-
-                  <section className="learning-cockpit-card learning-cockpit-context-card">
-                    <div className="learning-cockpit-card-heading">
-                      <div>
-                        <Text className="learning-cockpit-label">
-                          B. Context Lab
-                        </Text>
-                        <Title level={3}>AI 语境实验室</Title>
-                      </div>
-                      <ExperimentOutlined className="learning-cockpit-card-icon" />
-                    </div>
-                    <p className="learning-cockpit-card-copy">
-                      用刚才处理过的薄弱词生成阅读、选择题和例句改写，把记忆推进到使用。
-                    </p>
-                    <div className="learning-cockpit-action-row">
-                      <Button onClick={() => openContextLab()}>
-                        准备练习
-                      </Button>
-                      <Button onClick={() => navigate("/englishWorld/words")}>
-                        手选词
-                      </Button>
-                    </div>
-                  </section>
-                </>
+                <CoachSummaryPanel
+                  summary={coachSummary}
+                  onStartReview={openReview}
+                  onOpenContextLab={openContextLab}
+                />
               ) : (
                 <section className="learning-cockpit-card learning-cockpit-unavailable">
                   <div className="learning-cockpit-card-heading">
                     <div>
                       <Text className="learning-cockpit-label">
-                        A. Daily Coach
+                        今日重点
                       </Text>
                       <Title level={3}>今日任务暂不可用</Title>
                     </div>
@@ -209,29 +183,6 @@ export function LearningCockpitPage() {
                 />
               ) : null}
 
-              <section className="learning-cockpit-card">
-                <div className="learning-cockpit-card-heading">
-                  <div>
-                    <Text className="learning-cockpit-label">Tools</Text>
-                    <Title level={4}>常用工具</Title>
-                  </div>
-                  <UnorderedListOutlined className="learning-cockpit-card-icon" />
-                </div>
-                <p className="learning-cockpit-card-copy">
-                  需要维护数据或复盘趋势时再打开，不打断今天的学习路线。
-                </p>
-                <div className="learning-cockpit-action-row">
-                  <Button onClick={() => navigate("/englishWorld/words")}>
-                    词库工作台
-                  </Button>
-                  <Button
-                    icon={<BarChartOutlined />}
-                    onClick={() => navigate("/englishWorld/stats")}
-                  >
-                    学习统计
-                  </Button>
-                </div>
-              </section>
             </aside>
           </div>
         </>

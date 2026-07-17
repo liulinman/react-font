@@ -17,6 +17,7 @@ import {
 } from "../server/learning";
 import { BritishPronunciationButton } from "../component/BritishPronunciationButton";
 import type { LearningWord, MemoryMapOverview } from "../types/learning";
+import { getMemoryClusterLabel } from "./memoryClusterLabels";
 
 const { Text, Title } = Typography;
 
@@ -385,7 +386,7 @@ export function MemoryMapPage() {
       <section className="mb-8">
         <div>
           <Text className="text-blue-500 font-bold tracking-widest uppercase text-[10px] opacity-80">
-            C. Memory OS
+            词汇关联
           </Text>
           <Title level={4} className="!mt-1 !mb-1 !font-black">
             记忆地图
@@ -567,7 +568,8 @@ export function MemoryMapPage() {
                       color="volcano"
                       className="!rounded-full text-[10px] font-medium"
                     >
-                      🚨 {item.cluster} · {item.mistakeCount} 次错误
+                      🚨 {getMemoryClusterLabel(item.cluster)} · {item.mistakeCount}{" "}
+                      次错误
                     </Tag>
                   ))}
               </div>

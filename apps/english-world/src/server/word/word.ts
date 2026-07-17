@@ -58,6 +58,17 @@ export const wordUpdate = (data: WordList) => {
   };
 };
 
+export const wordUpdateLevel = (data: {
+  id: number;
+  englishLevel: number;
+}) => {
+  return {
+    url: "/english/updateEnglishWordLevel",
+    method: "POST",
+    data,
+  };
+};
+
 export const wordFilter = (data: FilterWordList) => {
   return {
     url: "/english/filterWordList",

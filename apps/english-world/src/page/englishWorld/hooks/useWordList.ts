@@ -9,73 +9,133 @@ type ListData = {
   totalPages: number;
 };
 
+type WordLevelUpdate = {
+  id: number;
+  englishLevel: number;
+};
+
+type WordQueryState = {
+  page: number;
+  pageSize: number;
+  filters: Record<string, unknown>;
+  revision: number;
+};
+
+export function applyWordLevelUpdates(
+  words: WordList[],
+  updates: WordLevelUpdate[],
+) {
+  const levelById = new Map(
+    updates.map(({ id, englishLevel }) => [id, englishLevel]),
+  );
+
+  return words.map((word) => {
+    const englishLevel = levelById.get(word.id);
+    return englishLevel === undefined ? word : { ...word, englishLevel };
+  });
+}
+
 export function useWordList(initialPageSize = 10) {
   const [wordList, setWordList] = useState<WordList[]>([]);
   const [loading, setLoading] = useState(false);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(initialPageSize);
   const [totalNum, setTotalNum] = useState(0);
-  const filterParamsRef = useRef<Record<string, unknown>>({});
+  const [queryState, setQueryState] = useState<WordQueryState>({
+    page: 1,
+    pageSize: initialPageSize,
+    filters: {},
+    revision: 0,
+  });
+  const requestSequenceRef = useRef(0);
+  const { page, pageSize, filters, revision } = queryState;
 
-  const fetchWordData = useCallback(
-    async (
-      nextPage: number,
-      nextPageSize: number,
-      filters: Record<string, unknown> = filterParamsRef.current,
-    ) => {
+  useEffect(() => {
+    let active = true;
+    const requestSequence = requestSequenceRef.current + 1;
+    requestSequenceRef.current = requestSequence;
+
+    const loadWordData = async () => {
       setLoading(true);
       try {
         const res = await request<ListData>(
           wordFilter({
-            page: nextPage,
-            pageSize: nextPageSize,
             ...filters,
+            page,
+            pageSize,
           } as FilterWordList),
         );
-        setWordList(res.list);
+        if (!active || requestSequence !== requestSequenceRef.current) return;
+
+        const lastPage = Math.max(1, Math.ceil(res.total / pageSize));
         setTotalNum(res.total);
+        if (page > lastPage) {
+          setQueryState((current) =>
+            current.page === page && current.pageSize === pageSize
+              ? { ...current, page: lastPage }
+              : current,
+          );
+          return;
+        }
+        setWordList(res.list);
       } catch (error) {
+        if (!active || requestSequence !== requestSequenceRef.current) return;
         console.error("加载数据失败:", error);
         setWordList([]);
         setTotalNum(0);
       } finally {
-        setLoading(false);
+        if (active && requestSequence === requestSequenceRef.current) {
+          setLoading(false);
+        }
       }
-    },
-    [],
-  );
+    };
 
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      void fetchWordData(page, pageSize);
-    }, 0);
+    void loadWordData();
 
-    return () => window.clearTimeout(timer);
-  }, [fetchWordData, page, pageSize]);
+    return () => {
+      active = false;
+    };
+  }, [filters, page, pageSize, revision]);
 
   const search = async (filters: Record<string, unknown>) => {
-    filterParamsRef.current = filters;
-    setPage(1);
-    await fetchWordData(1, pageSize, filters);
+    setQueryState((current) => ({
+      ...current,
+      page: 1,
+      filters,
+      revision: current.revision + 1,
+    }));
   };
 
   const reset = async () => {
-    filterParamsRef.current = {};
-    setPage(1);
-    setPageSize(initialPageSize);
-    await fetchWordData(1, initialPageSize, {});
+    setQueryState((current) => ({
+      page: 1,
+      pageSize: initialPageSize,
+      filters: {},
+      revision: current.revision + 1,
+    }));
   };
 
   const refresh = async () => {
-    await fetchWordData(page, pageSize, filterParamsRef.current);
+    setQueryState((current) => ({
+      ...current,
+      revision: current.revision + 1,
+    }));
   };
 
   const changePage = (nextPage: number, nextPageSize: number) => {
-    setPage(nextPage);
-    setPageSize(nextPageSize);
+    setQueryState((current) => {
+      const pageSizeChanged = current.pageSize !== nextPageSize;
+      const page = pageSizeChanged ? 1 : nextPage;
+      if (current.page === page && current.pageSize === nextPageSize) {
+        return current;
+      }
+      return { ...current, page, pageSize: nextPageSize };
+    });
   };
 
-  const getCurrentFilters = () => filterParamsRef.current;
+  const updateWordLevels = useCallback((updates: WordLevelUpdate[]) => {
+    setWordList((current) => applyWordLevelUpdates(current, updates));
+  }, []);
+
+  const getCurrentFilters = () => filters;
 
   return {
     wordList,
@@ -84,10 +144,10 @@ export function useWordList(initialPageSize = 10) {
     pageSize,
     totalNum,
     getCurrentFilters,
-    fetchWordData,
     search,
     reset,
     refresh,
     changePage,
+    updateWordLevels,
   };
 }

@@ -12,7 +12,8 @@ import {
   Radio,
 } from "antd";
 import { SaveOutlined, EditOutlined } from "@ant-design/icons";
-import { EnglishHeader } from "./EnglishHeader";
+import { EnglishWorldLayout } from "../layout/EnglishWorldLayout";
+import { EnglishWorldPageHeader } from "./EnglishWorldPageHeader";
 import {
   getSystemSettings,
   saveSystemSettings,
@@ -116,21 +117,13 @@ export const SystemSettingsPage: React.FC = () => {
   };
 
   return (
-    <div style={{ background: "#f5f5f5", minHeight: "100vh" }}>
-      <EnglishHeader activeKey="setting" />
-      <div
-        style={{
-          padding: "24px",
-          paddingTop: "100px",
-          maxWidth: "900px",
-          margin: "0 auto",
-        }}
-      >
-        <Card
-          title={
-            <span style={{ fontSize: "20px", fontWeight: 600 }}>系统设置</span>
-          }
-          extra={
+    <EnglishWorldLayout activeKey="setting">
+      <div className="system-settings-page">
+        <EnglishWorldPageHeader
+          eyebrow="偏好设置"
+          title="系统设置"
+          description="管理默写和听写的默认范围，让每次学习从合适的难度开始。"
+          actions={
             <Space>
               <Button onClick={handleReset}>重置默认</Button>
               <Button
@@ -144,11 +137,8 @@ export const SystemSettingsPage: React.FC = () => {
               </Button>
             </Space>
           }
-          style={{
-            borderRadius: "12px",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-          }}
-        >
+        />
+        <Card className="system-settings-surface">
           <Form
             form={form}
             layout="vertical"
@@ -555,6 +545,6 @@ export const SystemSettingsPage: React.FC = () => {
           </Form>
         </Card>
       </div>
-    </div>
+    </EnglishWorldLayout>
   );
 };

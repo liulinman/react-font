@@ -38,7 +38,7 @@ export function CoachSummaryPanel({
     <section className="learning-cockpit-card learning-cockpit-card-primary">
       <div className="learning-cockpit-card-heading">
         <div>
-          <Text className="learning-cockpit-label">A. Review</Text>
+          <Text className="learning-cockpit-label">今日重点</Text>
           <Title level={3}>今天先做这一步</Title>
         </div>
         <Tag icon={<ThunderboltOutlined />} color="blue">
