@@ -1,6 +1,6 @@
 import { enumToOptions } from "@font/utils";
 import { useMutation } from "@font/api";
-import { Button, Card, Col, Empty, Row, Select, Spin } from "antd";
+import { Button, Card, Col, Empty, Row, Select, Spin, theme } from "antd";
 import ReactECharts from "echarts-for-react";
 import { EnglishAbsorb, EnglishPartSpeech } from "../enum";
 import { englishStats } from "@/server";
@@ -16,41 +16,28 @@ type DailyStat = {
 type SummaryStat = {
   label: string;
   value: number | string;
-  color: string;
+  tone: "primary" | "success" | "warning";
 };
 
 type PartSpeechData = {
   value: number;
   name: string;
-  color: string;
-};
-
-// 词性对应的颜色
-const partSpeechColors: Record<number, string> = {
-  1: "#1677ff", // 动词
-  2: "#52c41a", // 名词
-  3: "#faad14", // 形容词
-  4: "#9254de", // 副词
-  5: "#f5222d", // 代词
-  6: "#13c2c2", // 介词
-  7: "#fa8c16", // 连词
-  8: "#eb2f96", // 感叹词
-  9: "#8c8c8c", // 未分类
 };
 
 export const EnglishStats = () => {
   const navigate = useNavigate();
+  const { token } = theme.useToken();
   const [loading, setLoading] = useState(true);
   const [selectedLevel, setSelectedLevel] = useState<EnglishAbsorb>(
     EnglishAbsorb["一般"]
   );
   const [summaryStats, setSummaryStats] = useState<SummaryStat[]>([
-    { label: "总学习单词", value: 0, color: "#1677ff" },
-    { label: "已掌握单词", value: 0, color: "#52c41a" },
+    { label: "总学习单词", value: 0, tone: "primary" },
+    { label: "已掌握单词", value: 0, tone: "success" },
     {
       label: "掌握率",
       value: 0,
-      color: "#faad14",
+      tone: "warning",
     },
   ]);
 
@@ -58,6 +45,19 @@ export const EnglishStats = () => {
   const [wordTypeData, setWordTypeData] = useState<PartSpeechData[]>([]);
 
   const { mutateAsync: mutateEnglishStats } = useMutation(englishStats);
+  const summaryColors = {
+    primary: token.colorPrimary,
+    success: token.colorSuccess,
+    warning: token.colorWarning,
+  };
+  const chartPalette = [
+    token.colorPrimary,
+    token.colorSuccess,
+    token.colorWarning,
+    token.colorError,
+    token.colorInfo,
+    token.colorTextSecondary,
+  ];
 
   const optionBar = {
     tooltip: {
@@ -81,10 +81,10 @@ export const EnglishStats = () => {
         end: 100,
         bottom: 10,
         height: 20,
-        borderColor: "#ddd",
-        fillerColor: "rgba(22, 119, 255, 0.1)",
+        borderColor: token.colorBorderSecondary,
+        fillerColor: token.colorPrimaryBg,
         handleStyle: {
-          color: "#1677ff",
+          color: token.colorPrimary,
         },
       },
       {
@@ -103,7 +103,7 @@ export const EnglishStats = () => {
       axisTick: { show: false },
       axisLabel: {
         interval: 3,
-        color: "#666",
+        color: token.colorTextSecondary,
       },
     },
     yAxis: {
@@ -117,7 +117,7 @@ export const EnglishStats = () => {
         type: "bar",
         barWidth: 24,
         itemStyle: {
-          color: "#1677ff",
+          color: token.colorPrimary,
           borderRadius: [6, 6, 0, 0],
         },
       },
@@ -139,12 +139,12 @@ export const EnglishStats = () => {
         } = res;
 
         setSummaryStats([
-          { label: "总学习单词", value: totalCount, color: "#1677ff" },
-          { label: "已掌握单词", value: levelCount, color: "#52c41a" },
+          { label: "总学习单词", value: totalCount, tone: "primary" },
+          { label: "已掌握单词", value: levelCount, tone: "success" },
           {
             label: "掌握率",
             value: Number(percentage).toFixed(2),
-            color: "#faad14",
+            tone: "warning",
           },
         ]);
 
@@ -158,7 +158,6 @@ export const EnglishStats = () => {
           return {
             value: value as number,
             name: EnglishPartSpeech[partSpeechKey],
-            color: partSpeechColors[partSpeechKey] || "#8c8c8c",
           };
         });
 
@@ -198,7 +197,7 @@ export const EnglishStats = () => {
         avoidLabelOverlap: false,
         label: {
           formatter: "{b}\n{d}%",
-          color: "#595959",
+          color: token.colorTextSecondary,
         },
         labelLine: {
           length: 15,
@@ -206,15 +205,15 @@ export const EnglishStats = () => {
         },
         itemStyle: {
           shadowBlur: 8,
-          shadowColor: "rgba(0,0,0,0.1)",
-          borderColor: "#fff",
+          shadowColor: token.colorFillSecondary,
+          borderColor: token.colorBgContainer,
           borderWidth: 2,
         },
         data: wordTypeData.map((item, index) => ({
           value: item.value,
           name: item.name,
           itemStyle: {
-            color: item.color,
+            color: chartPalette[index % chartPalette.length],
             opacity: 0.6 + index * 0.08,
           },
         })),
@@ -286,7 +285,7 @@ export const EnglishStats = () => {
                     </div>
                     <span
                       className="text-2xl font-semibold"
-                      style={{ color: item.color }}
+                      style={{ color: summaryColors[item.tone] }}
                     >
                       {item.label === "掌握率"
                         ? `${item.value}%`
