@@ -35,4 +35,22 @@ describe("word card visual hierarchy", () => {
       /@media \(prefers-reduced-motion: reduce\)[\s\S]*?animation:\s*none/s,
     );
   });
+
+  it("gives the learning route and memory clues a refined card hierarchy", () => {
+    expect(styles).toMatch(
+      /\.learning-cockpit-task-list\s*\{[^}]*gap:\s*8px;[^}]*border-top:\s*0;/s,
+    );
+    expect(styles).toMatch(
+      /\.learning-cockpit-task-item\s*\{[^}]*border:\s*1px solid var\(--ew-border\);[^}]*border-radius:\s*var\(--ew-radius-md\);/s,
+    );
+    expect(styles).toMatch(
+      /\.learning-cockpit-task-item-primary \.learning-cockpit-task-index\s*\{[^}]*color:\s*#fff;[^}]*background:\s*var\(--ew-accent\);/s,
+    );
+    expect(styles).toMatch(
+      /\.memory-map-mastery-zone\s*\{[^}]*padding:\s*12px 0 14px;[^}]*border-bottom:\s*1px solid var\(--ew-border\);/s,
+    );
+    expect(styles).toMatch(
+      /\.memory-map-mistake-tag\s*\{[^}]*background:\s*color-mix\(in srgb, var\(--ew-danger\) 7%, var\(--ew-surface\)\);/s,
+    );
+  });
 });

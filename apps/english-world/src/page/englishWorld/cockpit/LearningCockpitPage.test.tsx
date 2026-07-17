@@ -1,5 +1,5 @@
 import "@testing-library/jest-dom/vitest";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter, useLocation } from "react-router-dom";
@@ -283,6 +283,14 @@ describe("LearningCockpitPage", () => {
     );
 
     await screen.findByRole("button", { name: "进入练习" });
+
+    const route = screen.getByRole("list", { name: "今日行动清单" });
+    expect(route).toBeInTheDocument();
+    expect(within(route).getAllByRole("listitem")).toHaveLength(1);
+    expect(within(route).getByRole("listitem")).toHaveAttribute(
+      "aria-current",
+      "step",
+    );
 
     await user.click(screen.getByRole("button", { name: "进入练习" }));
 

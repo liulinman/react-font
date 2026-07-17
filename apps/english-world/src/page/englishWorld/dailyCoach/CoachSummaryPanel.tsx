@@ -1,5 +1,9 @@
 import { Button, Progress, Tag, Typography } from "antd";
-import { PlayCircleOutlined, ThunderboltOutlined } from "@ant-design/icons";
+import {
+  ArrowRightOutlined,
+  PlayCircleOutlined,
+  ThunderboltOutlined,
+} from "@ant-design/icons";
 import type { DailyCoachAction, DailyCoachSummary } from "../types/learning";
 import { createCoachInsight } from "../utils/coachPlanning";
 
@@ -68,37 +72,55 @@ export function CoachSummaryPanel({
         </div>
       </div>
 
-      <div className="learning-cockpit-task-list" aria-label="今日行动清单">
+      <ol className="learning-cockpit-task-list" aria-label="今日行动清单">
         {actions.slice(0, 3).map((action, index) => (
-          <div
+          <li
             className={`learning-cockpit-task-item${
               index === 0 ? " learning-cockpit-task-item-primary" : ""
             }`}
             aria-current={index === 0 ? "step" : undefined}
             key={`${action.type}-${index}`}
           >
-            <div className="learning-cockpit-task-index">{index + 1}</div>
-            <div className="learning-cockpit-task-copy">
-              <strong>{action.title}</strong>
-              <span>{action.description}</span>
+            <div className="learning-cockpit-task-main">
+              <div className="learning-cockpit-task-index">{index + 1}</div>
+              <div className="learning-cockpit-task-copy">
+                <strong>{action.title}</strong>
+                <span>{action.description}</span>
+              </div>
             </div>
-            <Tag color={isReviewAction(action) ? "blue" : "purple"}>
-              {action.estimatedMinutes} min
-            </Tag>
-            <Button
-              type={index === 0 ? "primary" : "default"}
-              icon={isReviewAction(action) ? <PlayCircleOutlined /> : undefined}
-              onClick={() =>
-                isReviewAction(action)
-                  ? onStartReview?.(action)
-                  : onOpenContextLab?.(action)
-              }
-            >
-              {isReviewAction(action) ? "定向复习" : "进入练习"}
-            </Button>
-          </div>
+            <div className="learning-cockpit-task-actions">
+              <Tag
+                bordered={false}
+                className="learning-cockpit-task-duration"
+              >
+                {action.estimatedMinutes} min
+              </Tag>
+              <Button
+                type={index === 0 ? "primary" : "text"}
+                className="learning-cockpit-task-action"
+                icon={
+                  isReviewAction(action) ? (
+                    <PlayCircleOutlined aria-hidden="true" />
+                  ) : undefined
+                }
+                onClick={() =>
+                  isReviewAction(action)
+                    ? onStartReview?.(action)
+                    : onOpenContextLab?.(action)
+                }
+              >
+                {isReviewAction(action) ? "定向复习" : "进入练习"}
+                {!isReviewAction(action) ? (
+                  <ArrowRightOutlined
+                    aria-hidden="true"
+                    className="learning-cockpit-task-arrow"
+                  />
+                ) : null}
+              </Button>
+            </div>
+          </li>
         ))}
-      </div>
+      </ol>
 
       {!actions.length ? (
         <div className="learning-cockpit-action-row">

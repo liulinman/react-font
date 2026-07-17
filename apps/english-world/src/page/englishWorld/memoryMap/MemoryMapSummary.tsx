@@ -1,5 +1,5 @@
-import { Button, Progress, Tag, Typography } from "antd";
-import { NodeIndexOutlined } from "@ant-design/icons";
+import { Button, Progress, Typography } from "antd";
+import { ArrowRightOutlined, NodeIndexOutlined } from "@ant-design/icons";
 import type { MemoryMapOverview } from "../types/learning";
 import { getMemoryClusterLabel } from "./memoryClusterLabels";
 
@@ -21,7 +21,7 @@ export function MemoryMapSummary({
   const masteryPercent = total ? Math.round((mastered / total) * 100) : 0;
 
   return (
-    <section className="learning-cockpit-card">
+    <section className="learning-cockpit-card memory-map-summary-card">
       <div className="learning-cockpit-card-heading">
         <div>
           <Text className="learning-cockpit-label">复习线索</Text>
@@ -36,22 +36,55 @@ export function MemoryMapSummary({
         <span className="memory-node memory-node-mastered">掌握</span>
       </div>
 
-      <div className="learning-cockpit-progress-row">
-        <Text type="secondary">掌握路径</Text>
-        <strong>{masteryPercent}%</strong>
+      <div
+        className="memory-map-mastery-zone"
+        role="region"
+        aria-label="掌握路径"
+      >
+        <div className="learning-cockpit-progress-row">
+          <Text type="secondary">掌握路径</Text>
+          <strong>{masteryPercent}%</strong>
+        </div>
+        <Progress
+          percent={masteryPercent}
+          size="small"
+          showInfo={false}
+          strokeColor="var(--ew-accent)"
+          aria-label={`掌握进度 ${masteryPercent}%`}
+        />
       </div>
-      <Progress percent={masteryPercent} size="small" />
 
-      <div className="learning-cockpit-word-strip">
-        {overview.recentMistakes.slice(0, 4).map((item) => (
-          <Tag key={item.wordId} color="volcano">
-            {item.word} · {getMemoryClusterLabel(item.cluster)}
-          </Tag>
-        ))}
+      <div
+        className="memory-map-clues-zone"
+        role="region"
+        aria-label="近期薄弱词"
+      >
+        <div className="memory-map-clues-label">近期薄弱词</div>
+        <div className="memory-map-clue-list">
+          {overview.recentMistakes.slice(0, 4).map((item) => (
+            <span className="memory-map-mistake-tag" key={item.wordId}>
+              <strong>{item.word}</strong>
+              <span aria-hidden="true" />
+              <em>{getMemoryClusterLabel(item.cluster)}</em>
+            </span>
+          ))}
+          {!overview.recentMistakes.length ? (
+            <span className="memory-map-clues-empty">近期状态稳定</span>
+          ) : null}
+        </div>
       </div>
 
-      <Button block onClick={onOpenMemoryMap}>
+      <Button
+        block
+        className="memory-map-entry-button"
+        icon={<NodeIndexOutlined aria-hidden="true" />}
+        onClick={onOpenMemoryMap}
+      >
         查看记忆地图
+        <ArrowRightOutlined
+          aria-hidden="true"
+          className="memory-map-entry-arrow"
+        />
       </Button>
     </section>
   );

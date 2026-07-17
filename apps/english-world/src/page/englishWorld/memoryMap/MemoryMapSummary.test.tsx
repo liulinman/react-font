@@ -30,5 +30,12 @@ describe("MemoryMapSummary", () => {
 
     expect(screen.getByText(/fragile/)).toBeInTheDocument();
     expect(screen.getByText(/低掌握/)).toBeInTheDocument();
+    expect(
+      screen.getByRole("region", { name: "掌握路径" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("region", { name: "近期薄弱词" }),
+    ).toBeInTheDocument();
+    expect(screen.getAllByText("0%")).toHaveLength(1);
   });
 });
