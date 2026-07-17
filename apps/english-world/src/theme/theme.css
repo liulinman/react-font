@@ -7,6 +7,14 @@
   --ew-text: #182235;
   --ew-text-secondary: #64748b;
   --ew-border: #dfe7f2;
+  --ew-success: #16865a;
+  --ew-warning: #c97a10;
+  --ew-danger: #c2413b;
+  --ew-shadow-soft: 0 10px 32px rgba(24, 39, 75, 0.055);
+  --ew-shadow-lifted: 0 18px 55px rgba(24, 39, 75, 0.08);
+  --ew-radius-sm: 8px;
+  --ew-radius-md: 12px;
+  --ew-radius-lg: 18px;
 }
 
 :root[data-accent="green"] {
@@ -26,11 +34,18 @@
   --ew-text: #e5edf8;
   --ew-text-secondary: #9aa9bf;
   --ew-border: #28364d;
+  --ew-success: #4ade80;
+  --ew-warning: #fbbf24;
+  --ew-danger: #f87171;
+  --ew-shadow-soft: 0 12px 34px rgba(0, 0, 0, 0.2);
+  --ew-shadow-lifted: 0 20px 58px rgba(0, 0, 0, 0.28);
 }
 
 html[data-theme="dark"] body,
 html[data-theme="dark"] #root,
 html[data-theme="dark"] .english-world-shell,
+html[data-theme="dark"] .english-world-workspace,
+html[data-theme="dark"] .english-world-context-bar,
 html[data-theme="dark"] .english-world-main {
   color: var(--ew-text);
   background: var(--ew-page-bg);
@@ -241,8 +256,7 @@ html[data-theme="dark"] .recite-result-item-correct {
   background: color-mix(in srgb, #166534 22%, var(--ew-surface));
 }
 
-html[data-theme="dark"] .learning-cockpit-status-strip,
-html[data-theme="dark"] .learning-cockpit-status-strip > div,
+html[data-theme="dark"] .learning-snapshot,
 html[data-theme="dark"] .learning-cockpit-card-primary,
 html[data-theme="dark"] .learning-cockpit-context-card,
 html[data-theme="dark"] .learning-cockpit-focus-row,
@@ -252,20 +266,20 @@ html[data-theme="dark"] .learning-cockpit-task-item {
 }
 
 html[data-theme="dark"] .learning-cockpit-hero h1.ant-typography,
-html[data-theme="dark"] .learning-cockpit-status-strip strong,
+html[data-theme="dark"] .learning-snapshot strong,
 html[data-theme="dark"] .learning-cockpit-task-copy strong {
   color: var(--ew-text);
 }
 
 html[data-theme="dark"] .learning-cockpit-hero p,
-html[data-theme="dark"] .learning-cockpit-status-strip span,
+html[data-theme="dark"] .learning-snapshot span,
 html[data-theme="dark"] .learning-cockpit-card-copy,
 html[data-theme="dark"] .learning-cockpit-task-copy span {
   color: var(--ew-text-secondary);
 }
 
 html[data-theme="dark"] .learning-cockpit-card-icon,
-html[data-theme="dark"] .learning-cockpit-side-quiet .learning-cockpit-card-icon,
+html[data-theme="dark"] .learning-cockpit-support-rail .learning-cockpit-card-icon,
 html[data-theme="dark"] .learning-cockpit-task-index {
   color: var(--ew-accent);
   background: color-mix(in srgb, var(--ew-accent) 18%, var(--ew-surface));

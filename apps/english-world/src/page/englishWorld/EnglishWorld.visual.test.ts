@@ -22,4 +22,17 @@ describe("word card visual hierarchy", () => {
       /@media \(prefers-reduced-motion: reduce\)\s*\{[\s\S]*?\.word-card\s*\{[^}]*transition:\s*none;/,
     );
   });
+
+  it("uses the Focus Studio desktop grid and restrained motion", () => {
+    expect(styles).toMatch(
+      /\.english-world-main\s*\{[^}]*max-width:\s*1180px;[^}]*margin:\s*0 auto;/s,
+    );
+    expect(styles).toMatch(
+      /\.learning-cockpit-grid\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1\.55fr\) minmax\(280px, 0\.7fr\);/s,
+    );
+    expect(styles).toContain("@keyframes english-world-enter");
+    expect(styles).toMatch(
+      /@media \(prefers-reduced-motion: reduce\)[\s\S]*?animation:\s*none/s,
+    );
+  });
 });

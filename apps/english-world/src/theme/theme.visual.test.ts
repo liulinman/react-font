@@ -8,6 +8,17 @@ const styles = readFileSync(
 );
 
 describe("dark theme visual contracts", () => {
+  it("defines reusable semantic surface, feedback, elevation, and radius tokens", () => {
+    expect(styles).toContain("--ew-success:");
+    expect(styles).toContain("--ew-warning:");
+    expect(styles).toContain("--ew-danger:");
+    expect(styles).toContain("--ew-shadow-soft:");
+    expect(styles).toContain("--ew-shadow-lifted:");
+    expect(styles).toContain("--ew-radius-sm: 8px");
+    expect(styles).toContain("--ew-radius-md: 12px");
+    expect(styles).toContain("--ew-radius-lg: 18px");
+  });
+
   it("uses the real word-card selectors for readable text and dividers", () => {
     expect(styles).toMatch(
       /html\[data-theme="dark"\] \.word-card-copy \.word-link\s*\{[^}]*color:\s*var\(--ew-text\);/s,
@@ -34,10 +45,10 @@ describe("dark theme visual contracts", () => {
 
   it("removes leftover light cockpit surfaces and hard-coded dark text", () => {
     expect(styles).toMatch(
-      /html\[data-theme="dark"\] \.learning-cockpit-status-strip,[\s\S]*?\.learning-cockpit-status-strip > div,[\s\S]*?\.learning-cockpit-card-primary,[\s\S]*?\.learning-cockpit-context-card,[\s\S]*?\.learning-cockpit-focus-row,[\s\S]*?\.learning-cockpit-task-item\s*\{[^}]*border-color:\s*var\(--ew-border\);[^}]*background:\s*var\(--ew-surface\);/s,
+      /html\[data-theme="dark"\] \.learning-snapshot,[\s\S]*?\.learning-cockpit-card-primary,[\s\S]*?\.learning-cockpit-context-card,[\s\S]*?\.learning-cockpit-focus-row,[\s\S]*?\.learning-cockpit-task-item\s*\{[^}]*border-color:\s*var\(--ew-border\);[^}]*background:\s*var\(--ew-surface\);/s,
     );
     expect(styles).toMatch(
-      /html\[data-theme="dark"\] \.learning-cockpit-hero h1\.ant-typography,[\s\S]*?\.learning-cockpit-status-strip strong,[\s\S]*?\.learning-cockpit-task-copy strong\s*\{[^}]*color:\s*var\(--ew-text\);/s,
+      /html\[data-theme="dark"\] \.learning-cockpit-hero h1\.ant-typography,[\s\S]*?\.learning-snapshot strong,[\s\S]*?\.learning-cockpit-task-copy strong\s*\{[^}]*color:\s*var\(--ew-text\);/s,
     );
   });
 });

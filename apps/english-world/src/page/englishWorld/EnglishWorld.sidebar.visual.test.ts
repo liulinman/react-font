@@ -10,10 +10,16 @@ const styles = readFileSync(
 describe("English World collapsible sidebar styles", () => {
   it("uses a 72px icon rail and expands the desktop content area", () => {
     expect(styles).toMatch(
+      /\.english-world-header\s*\{[^}]*width:\s*228px;/s,
+    );
+    expect(styles).toMatch(
       /\.english-world-header-collapsed\s*\{[^}]*width:\s*72px;/s,
     );
     expect(styles).toMatch(
-      /\.english-world-shell-collapsed \.english-world-main\s*\{[^}]*padding-left:\s*102px;/s,
+      /\.english-world-workspace\s*\{[^}]*margin-left:\s*228px;/s,
+    );
+    expect(styles).toMatch(
+      /\.english-world-shell-collapsed \.english-world-workspace\s*\{[^}]*margin-left:\s*72px;/s,
     );
     expect(styles).toMatch(
       /\.english-world-header-collapsed \.english-world-brand-copy,[\s\S]*?\.english-world-header-collapsed \.english-world-user-name\s*\{[^}]*display:\s*none;/s,
@@ -31,7 +37,7 @@ describe("English World collapsible sidebar styles", () => {
 
   it("disables the new width transitions for reduced motion", () => {
     expect(styles).toMatch(
-      /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.english-world-header,[\s\S]*?\.english-world-main\s*\{[^}]*transition:\s*none;/s,
+      /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.english-world-header,[\s\S]*?\.english-world-workspace\s*\{[^}]*transition:\s*none;/s,
     );
   });
 });
