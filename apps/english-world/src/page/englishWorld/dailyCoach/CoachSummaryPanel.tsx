@@ -1,6 +1,6 @@
 import { Button, Progress, Tag, Typography } from "antd";
 import {
-  ArrowRightOutlined,
+  ExperimentOutlined,
   PlayCircleOutlined,
   ThunderboltOutlined,
 } from "@ant-design/icons";
@@ -101,7 +101,9 @@ export function CoachSummaryPanel({
                 icon={
                   isReviewAction(action) ? (
                     <PlayCircleOutlined aria-hidden="true" />
-                  ) : undefined
+                  ) : (
+                    <ExperimentOutlined aria-hidden="true" />
+                  )
                 }
                 onClick={() =>
                   isReviewAction(action)
@@ -110,12 +112,6 @@ export function CoachSummaryPanel({
                 }
               >
                 {isReviewAction(action) ? "定向复习" : "进入练习"}
-                {!isReviewAction(action) ? (
-                  <ArrowRightOutlined
-                    aria-hidden="true"
-                    className="learning-cockpit-task-arrow"
-                  />
-                ) : null}
               </Button>
             </div>
           </li>

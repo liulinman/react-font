@@ -128,9 +128,12 @@ describe("LearningCockpitPage", () => {
     expect(within(route).getByRole("button", { name: "定向复习" })).toHaveClass(
       "ant-btn-primary",
     );
-    expect(within(route).getByRole("button", { name: "进入练习" })).toHaveClass(
-      "ant-btn-default",
-    );
+    const contextAction = within(route).getByRole("button", {
+      name: "进入练习",
+    });
+    expect(contextAction).toHaveClass("ant-btn-default");
+    expect(contextAction.querySelector(".anticon-experiment")).toBeInTheDocument();
+    expect(contextAction.querySelector(".anticon-arrow-right")).not.toBeInTheDocument();
     expect(requestMock).toHaveBeenCalledTimes(2);
   });
 

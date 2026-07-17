@@ -708,7 +708,6 @@
   .learning-cockpit-card,
   .learning-snapshot,
   .learning-cockpit-task-item,
-  .learning-cockpit-task-arrow,
   .memory-map-mistake-tag,
   .memory-map-entry-button.ant-btn,
   .english-world-filter-panel,
@@ -1398,17 +1397,6 @@
   .learning-cockpit-task-action.ant-btn {
   color: var(--ew-accent);
   background: color-mix(in srgb, var(--ew-accent) 8%, transparent);
-}
-
-.learning-cockpit-task-arrow {
-  margin-left: 3px;
-  font-size: 11px;
-  transition: transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.learning-cockpit-task-item:not(.learning-cockpit-task-item-primary):hover
-  .learning-cockpit-task-arrow {
-  transform: translateX(3px);
 }
 
 .learning-cockpit-action-row {
