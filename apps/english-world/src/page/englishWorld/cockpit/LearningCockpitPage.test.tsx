@@ -56,8 +56,10 @@ describe("LearningCockpitPage", () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByText("今日学习路线")).toBeInTheDocument();
-    expect(await screen.findByLabelText("今日学习状态")).toBeInTheDocument();
+    expect(screen.getByText("今天的学习重点")).toBeInTheDocument();
+    expect(
+      await screen.findByRole("region", { name: "学习概览" }),
+    ).toBeInTheDocument();
     expect(document.querySelector(".learning-cockpit-stats")).not.toBeInTheDocument();
     expect(await screen.findByText("今天先做这一步")).toBeInTheDocument();
     expect(await screen.findByText("记忆地图")).toBeInTheDocument();
@@ -117,9 +119,12 @@ describe("LearningCockpitPage", () => {
     expect(await screen.findByText("今日重点")).toBeInTheDocument();
     expect(screen.queryByText("B. Context Lab")).not.toBeInTheDocument();
     expect(container.querySelector(".learning-cockpit-route-board")).toBeInTheDocument();
-    expect(container.querySelector(".learning-cockpit-status-compact")).toBeInTheDocument();
-    expect(container.querySelectorAll(".learning-cockpit-status-item")).toHaveLength(3);
-    expect(container.querySelector(".learning-cockpit-side-quiet")).toBeInTheDocument();
+    expect(container.querySelector(".learning-cockpit-status-strip")).not.toBeInTheDocument();
+    expect(container.querySelector(".learning-cockpit-support-rail")).toBeInTheDocument();
+    expect(
+      container.querySelector(".learning-cockpit-support-rail .learning-snapshot"),
+    ).toBeInTheDocument();
+    expect(requestMock).toHaveBeenCalledTimes(2);
   });
 
   it("requests cockpit data from the learning API contracts", () => {

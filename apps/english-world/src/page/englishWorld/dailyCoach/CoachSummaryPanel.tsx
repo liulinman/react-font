@@ -70,7 +70,13 @@ export function CoachSummaryPanel({
 
       <div className="learning-cockpit-task-list" aria-label="今日行动清单">
         {actions.slice(0, 3).map((action, index) => (
-          <div className="learning-cockpit-task-item" key={`${action.type}-${index}`}>
+          <div
+            className={`learning-cockpit-task-item${
+              index === 0 ? " learning-cockpit-task-item-primary" : ""
+            }`}
+            aria-current={index === 0 ? "step" : undefined}
+            key={`${action.type}-${index}`}
+          >
             <div className="learning-cockpit-task-index">{index + 1}</div>
             <div className="learning-cockpit-task-copy">
               <strong>{action.title}</strong>

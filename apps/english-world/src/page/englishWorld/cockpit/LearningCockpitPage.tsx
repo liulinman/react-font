@@ -15,6 +15,7 @@ import {
 } from "../server/learning";
 import { createPlanReviewSearch } from "../recite/planReview";
 import type { DailyCoachAction } from "../types/learning";
+import { LearningSnapshot } from "./LearningSnapshot";
 
 const { Text, Title } = Typography;
 
@@ -92,10 +93,8 @@ export function LearningCockpitPage() {
       <section className="learning-cockpit-hero">
         <div>
           <Text className="learning-cockpit-label">今天</Text>
-          <Title level={1}>今日学习路线</Title>
-          <p>
-            按路线完成一轮短复习，再把薄弱词放进语境练习。
-          </p>
+          <Title level={1}>今天的学习重点</Title>
+          <p>完成最重要的一步，再进入语境巩固。</p>
         </div>
         <div className="learning-cockpit-hero-actions">
           {coachUnavailable ? (
@@ -106,26 +105,6 @@ export function LearningCockpitPage() {
 
       {(coachUnavailable || coachSummary) && (
         <>
-          {coachSummary && (
-            <section
-              className="learning-cockpit-status-strip learning-cockpit-status-compact"
-              aria-label="今日学习状态"
-            >
-              <div className="learning-cockpit-status-item">
-                <span>词库总量</span>
-                <strong>{coachSummary.totalWords}</strong>
-              </div>
-              <div className="learning-cockpit-status-item">
-                <span>今日新增</span>
-                <strong>{coachSummary.todayNewWords}</strong>
-              </div>
-              <div className="learning-cockpit-status-item">
-                <span>近期正确率</span>
-                <strong>{coachSummary.reciteAccuracy}%</strong>
-              </div>
-            </section>
-          )}
-
           <div className="learning-cockpit-grid learning-cockpit-route-board">
             <div className="learning-cockpit-main-column">
               {coachSummary ? (
@@ -170,7 +149,8 @@ export function LearningCockpitPage() {
               )}
             </div>
 
-            <aside className="learning-cockpit-side-column learning-cockpit-side-quiet">
+            <aside className="learning-cockpit-side-column learning-cockpit-support-rail">
+              {coachSummary ? <LearningSnapshot summary={coachSummary} /> : null}
               {memoryUnavailable ? (
                 <section className="learning-cockpit-card learning-cockpit-unavailable">
                   <Title level={4}>记忆地图暂不可用</Title>
@@ -182,7 +162,6 @@ export function LearningCockpitPage() {
                   onOpenMemoryMap={() => navigate("/englishWorld/memory-map")}
                 />
               ) : null}
-
             </aside>
           </div>
         </>
