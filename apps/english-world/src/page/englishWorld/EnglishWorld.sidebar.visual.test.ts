@@ -22,7 +22,7 @@ describe("English World collapsible sidebar styles", () => {
       /\.english-world-shell-collapsed \.english-world-workspace\s*\{[^}]*margin-left:\s*72px;/s,
     );
     expect(styles).toMatch(
-      /\.english-world-header-collapsed \.english-world-brand-copy,[\s\S]*?\.english-world-header-collapsed \.english-world-user-name\s*\{[^}]*display:\s*none;/s,
+      /\.english-world-header-collapsed \.english-world-brand-copy\s*\{[^}]*display:\s*none;/s,
     );
     expect(styles).toMatch(
       /\.english-world-header-collapsed \.english-world-nav-button\.ant-btn\s*\{[^}]*justify-content:\s*center;/s,
@@ -32,6 +32,15 @@ describe("English World collapsible sidebar styles", () => {
   it("hides the toggle in the existing mobile top navigation", () => {
     expect(styles).toMatch(
       /@media \(max-width: 900px\)[\s\S]*?\.english-world-sidebar-toggle\s*\{[^}]*display:\s*none;/s,
+    );
+  });
+
+  it("keeps the user menu visible at the top right on mobile", () => {
+    expect(styles).toMatch(
+      /@media \(max-width: 900px\)[\s\S]*?\.english-world-context-bar\s*\{[^}]*position:\s*fixed;[^}]*inset:\s*0 10px auto auto;[^}]*z-index:\s*60;/s,
+    );
+    expect(styles).toMatch(
+      /@media \(max-width: 620px\)[\s\S]*?\.english-world-user-name\s*\{[^}]*display:\s*none;/s,
     );
   });
 

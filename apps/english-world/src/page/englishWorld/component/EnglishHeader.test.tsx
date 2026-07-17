@@ -3,7 +3,6 @@ import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter, useLocation } from "react-router-dom";
-import { ThemeProvider } from "@/theme/ThemeProvider";
 import { EnglishHeader } from "./EnglishHeader";
 
 vi.mock("@/contexts/AuthContext", () => ({
@@ -119,58 +118,5 @@ describe("EnglishHeader ToC navigation", () => {
     expect(screen.getByRole("button", { name: /词库/ })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /学习/ })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /数据/ })).toBeInTheDocument();
-  });
-
-  it("moves system settings into the user menu", async () => {
-    const user = userEvent.setup();
-
-    render(
-      <MemoryRouter initialEntries={["/englishWorld"]}>
-        <EnglishHeader activeKey="cockpit" />
-        <LocationProbe />
-      </MemoryRouter>,
-    );
-
-    await user.click(screen.getByRole("button", { name: /tester/ }));
-    await user.click(await screen.findByText("系统设置"));
-
-    expect(screen.getByTestId("location")).toHaveTextContent(
-      "/englishWorld/settings",
-    );
-  });
-
-  it("opens theme settings from the user menu", async () => {
-    const user = userEvent.setup();
-    window.localStorage.clear();
-
-    render(
-      <ThemeProvider>
-        <MemoryRouter initialEntries={["/englishWorld"]}>
-          <EnglishHeader activeKey="cockpit" />
-        </MemoryRouter>
-      </ThemeProvider>,
-    );
-
-    await user.click(screen.getByRole("button", { name: /tester/ }));
-    await user.click(await screen.findByText("主题设置"));
-
-    expect(
-      await screen.findByRole("dialog", { name: "主题设置" }),
-    ).toBeInTheDocument();
-    expect(screen.getByRole("radio", { name: "浅色" })).toBeInTheDocument();
-    expect(screen.getByRole("radio", { name: "深色" })).toBeInTheDocument();
-    expect(screen.getByRole("radio", { name: "跟随系统" })).toBeInTheDocument();
-    expect(screen.getByRole("radio", { name: "蓝色" })).toBeInTheDocument();
-    expect(screen.getByRole("radio", { name: "绿色" })).toBeInTheDocument();
-    expect(screen.getByRole("radio", { name: "紫色" })).toBeInTheDocument();
-
-    await user.click(screen.getByText("深色"));
-    await user.click(screen.getByText("紫色"));
-
-    expect(document.documentElement).toHaveAttribute("data-theme", "dark");
-    expect(document.documentElement).toHaveAttribute("data-accent", "purple");
-    expect(window.localStorage.getItem("english-world-theme")).toBe(
-      JSON.stringify({ appearance: "dark", accent: "purple" }),
-    );
   });
 });

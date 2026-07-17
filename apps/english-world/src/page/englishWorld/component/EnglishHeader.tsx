@@ -2,21 +2,13 @@ import {
   BookFilled,
   UnorderedListOutlined,
   BarChartOutlined,
-  SettingOutlined,
-  UserOutlined,
-  LogoutOutlined,
   DashboardOutlined,
-  BgColorsOutlined,
   LeftOutlined,
   RightOutlined,
 } from "@ant-design/icons";
-import { Button, Dropdown, Modal } from "antd";
-import { useState } from "react";
-import type { MenuProps } from "antd";
+import { Button } from "antd";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
 import { getPathForNav, normalizeActiveKey } from "../navigation";
-import { ThemeSettingsModal } from "@/theme/ThemeSettingsModal";
 
 const primaryNavItems = [
   { key: "cockpit", icon: <DashboardOutlined />, label: "今天" },
@@ -50,71 +42,7 @@ export const EnglishHeader = ({
   onNavClick,
 }: EnglishHeaderProps) => {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
-  const [themeSettingsOpen, setThemeSettingsOpen] = useState(false);
   const normalizedActiveKey = getPrimaryActiveKey(activeKey);
-
-  const handleLogout = () => {
-    Modal.confirm({
-      title: "确认退出",
-      content: "确定要退出登录吗？",
-      okText: "确定",
-      cancelText: "取消",
-      onOk: async () => {
-        try {
-          await logout();
-          navigate("/login", { replace: true });
-        } catch (error) {
-          console.error("退出登录失败:", error);
-        }
-      },
-    });
-  };
-
-  const userMenuItems: MenuProps["items"] = [
-    {
-      key: "userInfo",
-      label: (
-        <div className="px-2 py-1">
-          <div className="text-sm font-medium text-gray-700">
-            {user?.username || "管理员"}
-          </div>
-          {user?.username && (
-            <div className="text-xs text-gray-500 mt-1">
-              用户名: {user.username}
-            </div>
-          )}
-        </div>
-      ),
-      disabled: true,
-    },
-    {
-      type: "divider",
-    },
-    {
-      key: "settings",
-      icon: <SettingOutlined />,
-      label: "系统设置",
-      onClick: () => navigate("/englishWorld/settings"),
-    },
-    {
-      key: "theme",
-      icon: <BgColorsOutlined />,
-      label: "主题设置",
-      onClick: () => setThemeSettingsOpen(true),
-    },
-    {
-      key: "logout",
-      label: (
-        <div className="flex items-center gap-2">
-          <LogoutOutlined />
-          <span>退出登录</span>
-        </div>
-      ),
-      onClick: handleLogout,
-      danger: true,
-    },
-  ];
 
   const handleNavClick = (key: string) => {
     navigate(getPathForNav(key));
@@ -157,25 +85,6 @@ export const EnglishHeader = ({
           </div>
         </nav>
 
-        {/* User Info */}
-        <Dropdown
-          menu={{ items: userMenuItems }}
-          placement="topLeft"
-          trigger={["click"]}
-        >
-          <button
-            type="button"
-            className="english-world-user"
-            aria-label={`用户菜单：${user?.username || "管理员"}`}
-          >
-            <div className="english-world-user-avatar">
-              <UserOutlined />
-            </div>
-            <span className="english-world-user-name">
-              {user?.username || "管理员"}
-            </span>
-          </button>
-        </Dropdown>
       </div>
       <button
         type="button"
@@ -186,12 +95,6 @@ export const EnglishHeader = ({
       >
         {collapsed ? <RightOutlined /> : <LeftOutlined />}
       </button>
-      {themeSettingsOpen && (
-        <ThemeSettingsModal
-          open
-          onClose={() => setThemeSettingsOpen(false)}
-        />
-      )}
     </aside>
   );
 };

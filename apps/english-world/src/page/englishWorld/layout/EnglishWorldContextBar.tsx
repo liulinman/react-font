@@ -2,6 +2,7 @@ import {
   formatEnglishWorldDate,
   getEnglishWorldSectionLabel,
 } from "./englishWorldContext";
+import { EnglishUserMenu } from "./EnglishUserMenu";
 
 type EnglishWorldContextBarProps = {
   activeKey: string;
@@ -19,9 +20,12 @@ export function EnglishWorldContextBar({
         <span aria-hidden="true">/</span>
         <strong>{getEnglishWorldSectionLabel(activeKey)}</strong>
       </div>
-      <time className="english-world-context-date" dateTime={now.toISOString()}>
-        {formatEnglishWorldDate(now)}
-      </time>
+      <div className="english-world-context-actions">
+        <time className="english-world-context-date" dateTime={now.toISOString()}>
+          {formatEnglishWorldDate(now)}
+        </time>
+        <EnglishUserMenu />
+      </div>
     </header>
   );
 }
