@@ -38,9 +38,60 @@ describe("cypress syntax demo", () => {
         totalCount: 3,
       },
     }).as("startReview");
+
+    cy.intercept("POST", "/api/daily-coach/summary", {
+      code: 200,
+      message: "ok",
+      data: {
+        totalWords: 513,
+        todayNewWords: 4,
+        reciteAccuracy: 72,
+        levelDistribution: [
+          { level: 0, count: 18 },
+          { level: 1, count: 37 },
+        ],
+        weakWords: [
+          { id: 1, word: "memorable", level: 0 },
+          { id: 2, word: "gradient", level: 1 },
+          { id: 3, word: "resilient", level: 0 },
+        ],
+        suggestedActions: [
+          {
+            type: "review",
+            title: "开始今日复习",
+            description: "优先处理低掌握度单词，完成一轮短复习。",
+            wordIds: [1, 2, 3],
+            estimatedMinutes: 4,
+          },
+          {
+            type: "context",
+            title: "进入语境练习",
+            description: "把薄弱词放进短阅读和选择题里巩固。",
+            wordIds: [1, 2, 3],
+            estimatedMinutes: 8,
+          },
+        ],
+      },
+    }).as("dailyCoach");
+
+    cy.intercept("POST", "/api/memory-map/overview", {
+      code: 200,
+      message: "ok",
+      data: {
+        levels: [
+          { level: 0, count: 18 },
+          { level: 1, count: 37 },
+        ],
+        dueWords: [{ id: 1, word: "memorable", level: 0 }],
+        weakWords: [{ id: 3, word: "resilient", level: 0 }],
+        recentMistakes: [{ id: 2, word: "gradient", level: 1 }],
+        streakLikeStats: { recentSessions: 6, recentAccuracy: 72 },
+      },
+    }).as("memoryMap");
   });
 
-  it("shows today's review card and takes a manual screenshot", () => {
+  it("captures the desktop focus studio", () => {
+    cy.viewport(1440, 960);
     cy.visit("/login");
 
     cy.get('[data-cy="login-username"]').type("tester");
@@ -50,13 +101,22 @@ describe("cypress syntax demo", () => {
     cy.wait("@login");
     cy.location("pathname").should("eq", "/englishWorld/recite");
 
+    cy.contains("button", "今天").click();
+    cy.wait("@dailyCoach");
+    cy.wait("@memoryMap");
+    cy.contains("今天的学习重点").should("be.visible");
+    cy.contains("今天先做这一步").should("be.visible");
+    cy.screenshot("focus-studio-today", { capture: "viewport" });
+
+    cy.contains("button", "学习").click();
+
     cy.contains("今日复习").should("be.visible");
     cy.contains("开始今日复习").should("be.visible");
     cy.contains("开始今日复习").click();
     cy.wait("@settings");
     cy.wait("@startReview");
     cy.contains("网络摄像头").should("be.visible");
-    cy.contains("第 1 / 3 题").should("be.visible");
-    cy.screenshot("today-review-task");
+    cy.contains(".recite-question-topline", "第 1 题").should("be.visible");
+    cy.screenshot("focus-studio-review", { capture: "viewport" });
   });
 });
