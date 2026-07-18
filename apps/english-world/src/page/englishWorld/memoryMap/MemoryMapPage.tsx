@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Button, Empty, message, Progress, Tag, Typography } from "antd";
+import { useEffect, useRef, useState } from "react";
+import { Button, Empty, Progress, Tag, Typography } from "antd";
 import {
   ArrowRightOutlined,
   BulbOutlined,
@@ -12,12 +12,12 @@ import { useNavigate } from "react-router-dom";
 import request from "@font/api";
 import {
   memoryMapOverview,
-  memoryMapUpdateLevel,
   memoryMapWordDetail,
 } from "../server/learning";
 import { BritishPronunciationButton } from "../component/BritishPronunciationButton";
 import type { LearningWord, MemoryMapOverview } from "../types/learning";
 import { getMemoryClusterLabel } from "./memoryClusterLabels";
+import { WordJourneyPanel } from "./WordJourneyPanel";
 
 const { Text, Title } = Typography;
 
@@ -287,6 +287,7 @@ const demoOverview: MemoryMapOverview = {
 
 export function MemoryMapPage() {
   const navigate = useNavigate();
+  const detailRequestId = useRef(0);
   const [overview, setOverview] = useState(demoOverview);
   const [selectedWord, setSelectedWord] = useState<LearningWord | null>(
     demoOverview.weakWords[0] ?? null,
@@ -298,7 +299,6 @@ export function MemoryMapPage() {
     {},
   );
   const [showTranslation, setShowTranslation] = useState(false);
-  const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -307,7 +307,12 @@ export function MemoryMapPage() {
       .then((data) => {
         if (!mounted) return;
         setOverview(data);
-        setSelectedWord((current) => current ?? data.weakWords[0] ?? null);
+        setSelectedWord(
+          (current) =>
+            data.weakWords.find((word) => word.id === current?.id) ??
+            data.weakWords[0] ??
+            null,
+        );
       })
       .catch(() => {
         if (!mounted) return;
@@ -329,14 +334,15 @@ export function MemoryMapPage() {
   const masteryPercent = total ? Math.round((mastered / total) * 100) : 0;
 
   const handleSelectWord = async (word: LearningWord) => {
+    const requestId = ++detailRequestId.current;
     setSelectedWord(word);
     setMemoryExample(null);
     setShowTranslation(false);
     try {
       const detail = await request(memoryMapWordDetail({ wordId: word.id }));
-      setSelectedWord(detail);
+      if (requestId === detailRequestId.current) setSelectedWord(detail);
     } catch {
-      setSelectedWord(word);
+      if (requestId === detailRequestId.current) setSelectedWord(word);
     }
   };
 
@@ -352,32 +358,24 @@ export function MemoryMapPage() {
     setShowTranslation(false);
   };
 
-  const handleMarkMastered = async () => {
+  const handleJourneyAction = () => {
     if (!selectedWord) return;
-    setUpdating(true);
-    try {
-      await request(
-        memoryMapUpdateLevel({
-          wordId: selectedWord.id,
-          level: 3,
-        }),
-      );
-      const masteredWord: LearningWord = { ...selectedWord, level: 3 };
-      setSelectedWord(masteredWord);
-      setOverview((current) => ({
-        ...current,
-        weakWords: current.weakWords.filter(
-          (word) => word.id !== selectedWord.id,
-        ),
-        dueWords: current.dueWords.filter(
-          (word) => word.id !== selectedWord.id,
-        ),
-      }));
-      message.success("已标记为掌握");
-    } catch (error: unknown) {
-      console.error("Update memory level failed:", error);
-    } finally {
-      setUpdating(false);
+    const action = selectedWord.journey?.nextAction;
+    if (action?.type === "context") {
+      const params = new URLSearchParams({
+        source: "cockpit",
+        words: selectedWord.word,
+      });
+      navigate(`/englishWorld/context-lab?${params.toString()}`);
+      return;
+    }
+    if (action?.type !== "wait") {
+      const params = new URLSearchParams({
+        source: "repair",
+        title: `复查 ${selectedWord.word}`,
+        wordIds: String(selectedWord.id),
+      });
+      navigate(`/englishWorld/recite?${params.toString()}`);
     }
   };
 
@@ -439,7 +437,6 @@ export function MemoryMapPage() {
                   <Progress
                     percent={masteryPercent}
                     size="small"
-                    strokeWidth={4}
                     showInfo={true}
                     strokeColor="#10b981"
                   />
@@ -471,17 +468,27 @@ export function MemoryMapPage() {
                       ? "bg-white border-blue-500 shadow-sm"
                       : "bg-transparent border-transparent hover:bg-white hover:shadow-sm"
                   }`}
-                  onClick={() => void handleSelectWord(word)}
                 >
-                  <div className="flex flex-col gap-0.5">
+                  <button
+                    aria-label={`查看 ${word.word} 的掌握轨迹`}
+                    aria-pressed={selectedWord?.id === word.id}
+                    className="absolute inset-0 cursor-pointer appearance-none rounded-md border-0 bg-transparent p-0 outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-blue-500"
+                    onClick={() => void handleSelectWord(word)}
+                    type="button"
+                  />
+                  <div className="pointer-events-none relative z-10 flex flex-col gap-0.5">
                     <div className="flex items-center justify-between">
                       <strong
                         className={`text-[13px] ${selectedWord?.id === word.id ? "text-blue-600 font-bold" : "text-slate-600"}`}
                       >
                         {word.word}
                       </strong>
-                      <Tag className="!m-0 !rounded-full border-none bg-slate-200/50 text-slate-500 text-[9px]">
-                        Lv {word.level}
+                      <Tag
+                        className={`!m-0 !rounded-full !border-0 px-2 text-[10px] font-bold ${getJourneyBadgeClass(
+                          word.journey?.stage,
+                        )}`}
+                      >
+                        {word.journey?.label ?? "证据加载中"}
                       </Tag>
                     </div>
                     <div className="flex items-center gap-2">
@@ -490,7 +497,7 @@ export function MemoryMapPage() {
                           {word.phonetic}
                         </Text>
                       ) : null}
-                      <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="pointer-events-auto opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
                         <BritishPronunciationButton word={word.word} />
                       </div>
                     </div>
@@ -549,7 +556,7 @@ export function MemoryMapPage() {
                   color={selectedWord.level <= 1 ? "volcano" : "green"}
                   className="!rounded-full px-3 py-0.5 text-[10px] font-bold border-none"
                 >
-                  熟练度 Lv {selectedWord.level}
+                  词库等级 Lv {selectedWord.level}
                 </Tag>
               </div>
 
@@ -573,6 +580,8 @@ export function MemoryMapPage() {
                     </Tag>
                   ))}
               </div>
+
+              <WordJourneyPanel journey={selectedWord.journey} />
 
               <section
                 aria-label="AI 例句练习"
@@ -653,29 +662,60 @@ export function MemoryMapPage() {
               </Title>
             </div>
             <div className="flex flex-col gap-3">
-              <Button
-                className="h-10 !rounded-md !border-slate-100 hover:!border-blue-400 hover:!text-blue-600 transition-all flex items-center justify-start gap-3 text-xs font-bold bg-slate-50/50"
-                icon={<FieldTimeOutlined />}
-                onClick={() => navigate("/englishWorld/recite")}
-              >
-                今日复习
-              </Button>
-              <Button
-                className="h-10 !rounded-md shadow-sm flex items-center justify-start gap-3 text-xs font-bold !bg-blue-600"
-                icon={<ExperimentOutlined />}
-                type="primary"
-                onClick={() => navigate("/englishWorld/context-lab")}
-              >
-                语境实验室
-              </Button>
-              <Button
-                className="h-10 !rounded-md flex items-center justify-start gap-3 text-xs font-bold border-emerald-500 text-emerald-600 hover:!text-emerald-700 hover:!border-emerald-600 bg-emerald-50/30"
-                icon={<CheckCircleOutlined />}
-                loading={updating}
-                onClick={() => void handleMarkMastered()}
-              >
-                标记为已掌握
-              </Button>
+              <div className="rounded-xl border border-blue-100 bg-gradient-to-br from-blue-50 to-indigo-50 p-4">
+                <div className="mb-1 text-[9px] font-black uppercase tracking-[0.18em] text-blue-500">
+                  推荐下一步
+                </div>
+                <strong className="block text-[13px] text-slate-800">
+                  {selectedWord?.journey?.nextAction?.label ?? "继续定向复习"}
+                </strong>
+                <p className="mb-3 mt-1 text-[10px] leading-5 text-slate-500">
+                  {selectedWord?.journey?.nextAction?.description ??
+                    "轨迹暂不可用，仍可继续现有复习。"}
+                </p>
+                {selectedWord?.journey?.nextAction?.type === "wait" ? (
+                  <div className="flex items-center gap-2 rounded-lg border border-emerald-100 bg-white/80 px-3 py-2 text-[11px] font-bold text-emerald-700">
+                    <CheckCircleOutlined aria-hidden="true" />
+                    暂时无需安排新任务
+                  </div>
+                ) : (
+                  <Button
+                    block
+                    className="!h-10 !rounded-lg !border-0 !bg-blue-600 text-xs font-bold shadow-[0_8px_18px_rgba(37,99,235,0.22)]"
+                    icon={
+                      selectedWord?.journey?.nextAction?.type === "context" ? (
+                        <ExperimentOutlined aria-hidden="true" />
+                      ) : (
+                        <FieldTimeOutlined aria-hidden="true" />
+                      )
+                    }
+                    type="primary"
+                    onClick={handleJourneyAction}
+                  >
+                    {selectedWord?.journey?.nextAction?.label ?? "继续定向复习"}
+                  </Button>
+                )}
+              </div>
+
+              {selectedWord &&
+              (selectedWord.journey?.nextAction?.type === "context" ||
+                selectedWord.journey?.nextAction?.type === "wait") ? (
+                <Button
+                  className="h-10 !rounded-md !border-slate-100 bg-slate-50/50 text-xs font-bold text-slate-600"
+                  icon={<FieldTimeOutlined aria-hidden="true" />}
+                  onClick={() => {
+                    if (!selectedWord) return;
+                    const params = new URLSearchParams({
+                      source: "repair",
+                      title: `复查 ${selectedWord.word}`,
+                      wordIds: String(selectedWord.id),
+                    });
+                    navigate(`/englishWorld/recite?${params.toString()}`);
+                  }}
+                >
+                  仍要复习这个词
+                </Button>
+              ) : null}
               <Button
                 className="h-10 !rounded-md !text-slate-400 !border-dashed flex items-center justify-start gap-3 text-[11px] font-medium"
                 icon={<ArrowRightOutlined />}
@@ -689,4 +729,21 @@ export function MemoryMapPage() {
       </div>
     </div>
   );
+}
+
+function getJourneyBadgeClass(
+  stage?: NonNullable<LearningWord["journey"]>["stage"],
+) {
+  switch (stage) {
+    case "needs_review":
+      return "bg-amber-100 text-amber-700";
+    case "repairing":
+      return "bg-blue-100 text-blue-700";
+    case "check_later":
+      return "bg-indigo-100 text-indigo-700";
+    case "stabilizing":
+      return "bg-emerald-100 text-emerald-700";
+    default:
+      return "bg-slate-100 text-slate-500";
+  }
 }

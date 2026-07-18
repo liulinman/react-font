@@ -10,6 +10,41 @@ export type LearningWord = {
   level: LearningLevel;
   accuracy?: number;
   lastPracticedAt?: string | null;
+  journey?: WordJourney;
+};
+
+export type WordJourneyStage =
+  | "needs_review"
+  | "repairing"
+  | "check_later"
+  | "stabilizing"
+  | "unavailable";
+
+export type WordJourneyEvidenceType =
+  | "recall_correct"
+  | "recall_wrong"
+  | "context_passed"
+  | "context_retry";
+
+export type WordJourneyEvidence = {
+  type: WordJourneyEvidenceType;
+  title: string;
+  detail: string;
+  occurredAt: string;
+};
+
+export type WordJourney = {
+  wordId: number;
+  stage: WordJourneyStage;
+  label: string;
+  reason: string;
+  suggestedTiming: string;
+  nextAction: {
+    type: "review" | "context" | "wait";
+    label: string;
+    description: string;
+  };
+  evidence: WordJourneyEvidence[];
 };
 
 export type LearningActionType = "review" | "listening" | "context" | "repair";

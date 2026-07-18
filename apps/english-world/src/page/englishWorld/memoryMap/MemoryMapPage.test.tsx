@@ -19,9 +19,18 @@ function LocationProbe() {
   return (
     <div data-testid="location">
       {location.pathname}
+      {location.search}
       {location.hash}
     </div>
   );
+}
+
+function createDeferred<T>() {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((resolvePromise) => {
+    resolve = resolvePromise;
+  });
+  return { promise, resolve };
 }
 
 describe("MemoryMapPage", () => {
@@ -42,8 +51,59 @@ describe("MemoryMapPage", () => {
           ],
           dueWords: [],
           weakWords: [
-            { id: 1, word: "vibe", meaning: "氛围", phonetic: "/vaɪb/", level: 0 },
-            { id: 2, word: "flush", meaning: "冲洗", phonetic: "/flʌʃ/", level: 1 },
+            {
+              id: 1,
+              word: "vibe",
+              meaning: "氛围",
+              phonetic: "/vaɪb/",
+              level: 0,
+              journey: {
+                wordId: 1,
+                stage: "needs_review",
+                label: "待巩固",
+                reason: "最近一次独立回忆未通过，先用短语境修复这个词。",
+                suggestedTiming: "现在修复",
+                nextAction: {
+                  type: "context",
+                  label: "进入语境修复",
+                  description: "先在短语境里重新建立词义和用法联系。",
+                },
+                evidence: [],
+              },
+            },
+            {
+              id: 2,
+              word: "flush",
+              meaning: "冲洗",
+              phonetic: "/flʌʃ/",
+              level: 1,
+              journey: {
+                wordId: 2,
+                stage: "repairing",
+                label: "修复中",
+                reason: "答错后已在语境中通过，还需要一次间隔后的独立回忆。",
+                suggestedTiming: "至少间隔 8 小时后复查",
+                nextAction: {
+                  type: "review",
+                  label: "安排间隔复查",
+                  description: "换一个时段再独立答一次，确认不是短时记忆。",
+                },
+                evidence: [
+                  {
+                    type: "context_passed",
+                    title: "语境中已通过",
+                    detail: "目标词对应题目已答对，这是一条语境理解证据。",
+                    occurredAt: "2026-07-18T09:00:00.000Z",
+                  },
+                  {
+                    type: "recall_wrong",
+                    title: "中译英未通过",
+                    detail: "本次没有答对，阶段会以这条最新事实为准。",
+                    occurredAt: "2026-07-18T08:00:00.000Z",
+                  },
+                ],
+              },
+            },
           ],
           recentMistakes: [
             {
@@ -65,6 +125,26 @@ describe("MemoryMapPage", () => {
           meaning: "冲洗",
           phonetic: "/flʌʃ/",
           level: 1,
+          journey: {
+            wordId: 2,
+            stage: "repairing",
+            label: "修复中",
+            reason: "答错后已在语境中通过，还需要一次间隔后的独立回忆。",
+            suggestedTiming: "至少间隔 8 小时后复查",
+            nextAction: {
+              type: "review",
+              label: "安排间隔复查",
+              description: "换一个时段再独立答一次，确认不是短时记忆。",
+            },
+            evidence: [
+              {
+                type: "context_passed",
+                title: "语境中已通过",
+                detail: "目标词对应题目已答对，这是一条语境理解证据。",
+                occurredAt: "2026-07-18T09:00:00.000Z",
+              },
+            ],
+          },
         });
       }
 
@@ -74,17 +154,22 @@ describe("MemoryMapPage", () => {
     render(
       <MemoryRouter>
         <MemoryMapPage />
+        <LocationProbe />
       </MemoryRouter>,
     );
 
     expect(await screen.findByText("弱词队列")).toBeInTheDocument();
     expect(screen.getByText("当前词详情")).toBeInTheDocument();
     expect(screen.getByText("行动中心")).toBeInTheDocument();
-    expect(screen.getByText("vibe")).toBeInTheDocument();
-    expect(screen.getByText("/vaɪb/")).toBeInTheDocument();
+    expect(screen.getAllByText("vibe").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("/vaɪb/").length).toBeGreaterThan(0);
     expect(screen.getAllByLabelText("播放英式发音").length).toBeGreaterThan(0);
 
-    await userEvent.click(screen.getByText("flush"));
+    const flushSelector = screen.getByRole("button", {
+      name: "查看 flush 的掌握轨迹",
+    });
+    flushSelector.focus();
+    await userEvent.keyboard("{Enter}");
 
     await waitFor(() => {
       expect(requestMock).toHaveBeenCalledWith({
@@ -100,6 +185,12 @@ describe("MemoryMapPage", () => {
     expect(
       within(screen.getByLabelText("当前词详情")).getByText("/flʌʃ/"),
     ).toBeInTheDocument();
+    expect(screen.getAllByText("修复中").length).toBeGreaterThan(0);
+    expect(
+      screen.getByText("答错后已在语境中通过，还需要一次间隔后的独立回忆。"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("语境中已通过")).toBeInTheDocument();
+    expect(screen.getByText("至少间隔 8 小时后复查")).toBeInTheDocument();
 
     expect(screen.queryByText(/Please flush/)).not.toBeInTheDocument();
 
@@ -135,15 +226,121 @@ describe("MemoryMapPage", () => {
       ),
     ).not.toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole("button", { name: /标记为已掌握/ }));
+    expect(
+      screen.queryByRole("button", { name: /标记为已掌握/ }),
+    ).not.toBeInTheDocument();
+    await userEvent.click(
+      screen.getByRole("button", { name: /安排间隔复查/ }),
+    );
+    expect(screen.getByTestId("location")).toHaveTextContent(
+      "/englishWorld/recite?source=repair",
+    );
+    expect(screen.getByTestId("location")).toHaveTextContent("wordIds=2");
+  });
 
+  it("opens context repair with the selected word when that is the next action", async () => {
+    requestMock.mockResolvedValue({
+      levels: [{ level: 0, count: 1 }],
+      dueWords: [],
+      weakWords: [
+        {
+          id: 1,
+          word: "vibe",
+          meaning: "氛围",
+          level: 0,
+          journey: {
+            wordId: 1,
+            stage: "needs_review",
+            label: "待巩固",
+            reason: "最近一次独立回忆未通过，先用短语境修复这个词。",
+            suggestedTiming: "现在修复",
+            nextAction: {
+              type: "context",
+              label: "进入语境修复",
+              description: "先在短语境里重新建立词义和用法联系。",
+            },
+            evidence: [],
+          },
+        },
+      ],
+      recentMistakes: [],
+      streakLikeStats: { recentSessions: 1, recentAccuracy: 0 },
+    });
+
+    render(
+      <MemoryRouter>
+        <MemoryMapPage />
+        <LocationProbe />
+      </MemoryRouter>,
+    );
+
+    await userEvent.click(
+      await screen.findByRole("button", { name: /进入语境修复/ }),
+    );
+
+    expect(screen.getByTestId("location")).toHaveTextContent(
+      "/englishWorld/context-lab?source=cockpit&words=vibe",
+    );
+  });
+
+  it("does not show an inactive voluntary-review action while evidence is loading", () => {
+    requestMock.mockReturnValue(new Promise(() => {}));
+
+    render(
+      <MemoryRouter>
+        <MemoryMapPage />
+      </MemoryRouter>,
+    );
+
+    expect(
+      screen.queryByRole("button", { name: /仍要复习这个词/ }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("keeps the newest word selected when detail requests finish out of order", async () => {
+    const flushDetail = createDeferred<Record<string, unknown>>();
+    const vibeDetail = createDeferred<Record<string, unknown>>();
+    requestMock.mockImplementation(
+      (requestConfig: { url: string; data?: { wordId?: number } }) => {
+        if (requestConfig.url === "/memory-map/overview") {
+          return Promise.resolve({
+            levels: [{ level: 0, count: 2 }],
+            dueWords: [],
+            weakWords: [
+              { id: 1, word: "vibe", meaning: "氛围", level: 0 },
+              { id: 2, word: "flush", meaning: "冲洗", level: 0 },
+            ],
+            recentMistakes: [],
+            streakLikeStats: { recentSessions: 0, recentAccuracy: 0 },
+          });
+        }
+        return requestConfig.data?.wordId === 2
+          ? flushDetail.promise
+          : vibeDetail.promise;
+      },
+    );
+
+    render(
+      <MemoryRouter>
+        <MemoryMapPage />
+      </MemoryRouter>,
+    );
+
+    await userEvent.click(
+      await screen.findByRole("button", {
+        name: "查看 flush 的掌握轨迹",
+      }),
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: "查看 vibe 的掌握轨迹" }),
+    );
+
+    vibeDetail.resolve({ id: 1, word: "vibe", meaning: "最新选择", level: 0 });
+    expect(await screen.findByText(/最新选择/)).toBeInTheDocument();
+
+    flushDetail.resolve({ id: 2, word: "flush", meaning: "旧请求", level: 0 });
     await waitFor(() => {
-      expect(requestMock).toHaveBeenCalledWith({
-        url: "/memory-map/update-level",
-        method: "POST",
-        data: { wordId: 2, level: 3 },
-        __responseType: undefined,
-      });
+      expect(screen.queryByText(/旧请求/)).not.toBeInTheDocument();
     });
   });
 
