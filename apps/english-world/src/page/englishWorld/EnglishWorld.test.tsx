@@ -123,6 +123,39 @@ describe("EnglishWorld ToC routing", () => {
     expect(screen.queryByText("Mock Cockpit")).not.toBeInTheDocument();
   });
 
+  it("fills and automatically searches the word from the URL", async () => {
+    render(
+      <MemoryRouter
+        initialEntries={[
+          "/englishWorld/words?englishWord=urban+farming",
+        ]}
+      >
+        <EnglishWorld />
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByRole("textbox", { name: "英文" })).toHaveValue(
+      "urban farming",
+    );
+
+    await waitFor(() => {
+      const filterCalls = requestMock.mock.calls.filter(
+        ([config]) => config.url === "/english/filterWordList",
+      );
+      expect(filterCalls.at(-1)?.[0]).toEqual({
+        url: "/english/filterWordList",
+        method: "POST",
+        data: {
+          englishWord: "urban farming",
+          page: 1,
+          pageSize: 10,
+        },
+      });
+    });
+
+    expect(screen.getByRole("textbox", { name: "中文" })).toHaveValue("");
+  });
+
   it("uses the shared collapsible shell without hiding the word library", async () => {
     const user = userEvent.setup();
     const { container } = render(

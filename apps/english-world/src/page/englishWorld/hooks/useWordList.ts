@@ -95,14 +95,14 @@ export function useWordList(initialPageSize = 10) {
     };
   }, [filters, page, pageSize, revision]);
 
-  const search = async (filters: Record<string, unknown>) => {
+  const search = useCallback(async (filters: Record<string, unknown>) => {
     setQueryState((current) => ({
       ...current,
       page: 1,
       filters,
       revision: current.revision + 1,
     }));
-  };
+  }, []);
 
   const reset = async () => {
     setQueryState((current) => ({

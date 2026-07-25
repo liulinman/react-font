@@ -124,6 +124,8 @@ const EnglishWorld: React.FC = () => {
     location.pathname,
     location.hash || "",
   );
+  const libraryWordQuery =
+    new URLSearchParams(location.search).get("englishWord")?.trim() ?? "";
   const {
     wordList,
     loading,
@@ -148,6 +150,16 @@ const EnglishWorld: React.FC = () => {
       navigate(legacyPath, { replace: true });
     }
   }, [location.hash, location.pathname, navigate]);
+
+  useEffect(() => {
+    if (activeNav !== "words" || !libraryWordQuery) {
+      return;
+    }
+
+    form.resetFields();
+    form.setFieldValue("englishWord", libraryWordQuery);
+    void search({ englishWord: libraryWordQuery });
+  }, [activeNav, form, libraryWordQuery, search]);
 
   const handleNavClick = () => {};
 
