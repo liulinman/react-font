@@ -158,6 +158,63 @@ describe("LearningCockpitPage", () => {
     );
   });
 
+  it("opens the word library and searches the clicked weak word", async () => {
+    const user = userEvent.setup();
+    requestMock.mockImplementation((requestConfig: unknown) => {
+      const config = requestConfig as { url?: string };
+      if (config.url === "/daily-coach/summary") {
+        return Promise.resolve({
+          totalWords: 2,
+          todayNewWords: 0,
+          reciteAccuracy: 50,
+          levelDistribution: [],
+          weakWords: [
+            { id: 1, word: "urban farming", level: 0 },
+            { id: 2, word: "culinary", level: 1 },
+          ],
+          suggestedActions: [],
+        } as never);
+      }
+      if (config.url === "/memory-map/overview") {
+        return Promise.resolve({
+          levels: [],
+          dueWords: [],
+          weakWords: [],
+          recentMistakes: [],
+          streakLikeStats: { recentSessions: 0, recentAccuracy: 0 },
+        } as never);
+      }
+      return Promise.reject(new Error("offline"));
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/englishWorld"]}>
+        <LearningCockpitPage />
+        <LocationProbe />
+      </MemoryRouter>,
+    );
+
+    await user.click(
+      await screen.findByRole("button", {
+        name: "在词库中查询 urban farming",
+      }),
+    );
+
+    expect(screen.getByTestId("location")).toHaveTextContent(
+      "/englishWorld/words?englishWord=urban+farming",
+    );
+
+    const culinaryButton = screen.getByRole("button", {
+      name: "在词库中查询 culinary",
+    });
+    culinaryButton.focus();
+    await user.keyboard(" ");
+
+    expect(screen.getByTestId("location")).toHaveTextContent(
+      "/englishWorld/words?englishWord=culinary",
+    );
+  });
+
   it("opens a plan review with the weak word ids from the daily action", async () => {
     const user = userEvent.setup();
     requestMock.mockImplementation((requestConfig: unknown) => {

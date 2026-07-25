@@ -55,6 +55,11 @@ export function LearningCockpitPage() {
     navigate(`/englishWorld/recite?${createPlanReviewSearch(action)}`);
   };
 
+  const openWordLibrary = (word: string) => {
+    const search = new URLSearchParams({ englishWord: word });
+    navigate(`/englishWorld/words?${search.toString()}`);
+  };
+
   useEffect(() => {
     let mounted = true;
 
@@ -117,6 +122,7 @@ export function LearningCockpitPage() {
                   summary={coachSummary}
                   onStartReview={openReview}
                   onOpenContextLab={openContextLab}
+                  onOpenWordLibrary={openWordLibrary}
                 />
               ) : (
                 <section className="learning-cockpit-card learning-cockpit-unavailable">

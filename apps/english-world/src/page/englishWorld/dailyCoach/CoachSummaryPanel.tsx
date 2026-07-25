@@ -13,6 +13,7 @@ type CoachSummaryPanelProps = {
   summary: DailyCoachSummary;
   onStartReview?: (action?: DailyCoachAction) => void;
   onOpenContextLab?: (action?: DailyCoachAction) => void;
+  onOpenWordLibrary?: (word: string) => void;
 };
 
 function isReviewAction(action: DailyCoachAction) {
@@ -27,6 +28,7 @@ export function CoachSummaryPanel({
   summary,
   onStartReview,
   onOpenContextLab,
+  onOpenWordLibrary,
 }: CoachSummaryPanelProps) {
   const insight = createCoachInsight({
     reciteAccuracy: summary.reciteAccuracy,
@@ -64,7 +66,21 @@ export function CoachSummaryPanel({
         <span>今日薄弱词</span>
         <div className="learning-cockpit-word-strip">
           {summary.weakWords.slice(0, 6).map((word) => (
-            <Tag key={word.id} color={word.level === 0 ? "red" : "orange"}>
+            <Tag
+              key={word.id}
+              color={word.level === 0 ? "red" : "orange"}
+              role="button"
+              tabIndex={0}
+              aria-label={`在词库中查询 ${word.word}`}
+              onClick={() => onOpenWordLibrary?.(word.word)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  onOpenWordLibrary?.(word.word);
+                }
+              }}
+              style={{ cursor: "pointer" }}
+            >
               {word.word}
             </Tag>
           ))}
