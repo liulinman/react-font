@@ -290,6 +290,141 @@ html[data-theme="dark"] .learning-cockpit-unavailable {
   background: color-mix(in srgb, #92400e 22%, var(--ew-surface));
 }
 
+html[data-theme="dark"] .english-world-workspace:has(.context-lab-page) {
+  --ew-accent: #2563eb;
+  --ew-accent-soft: #eff6ff;
+  --ew-page-bg: #f5f7fb;
+  --ew-surface: #ffffff;
+  --ew-surface-muted: #f8fafc;
+  --ew-text: #182235;
+  --ew-text-secondary: #64748b;
+  --ew-border: #dfe7f2;
+  --ew-success: #16865a;
+  --ew-warning: #c97a10;
+  --ew-danger: #c2413b;
+  --ew-shadow-soft: 0 10px 32px rgba(24, 39, 75, 0.055);
+  --ew-shadow-lifted: 0 18px 55px rgba(24, 39, 75, 0.08);
+  color-scheme: light;
+  color: var(--ew-text);
+  background: var(--ew-page-bg);
+}
+
+html[data-theme="dark"]
+  .english-world-workspace:has(.context-lab-page)
+  .english-world-context-bar,
+html[data-theme="dark"]
+  .english-world-workspace:has(.context-lab-page)
+  .english-world-main,
+html[data-theme="dark"] .context-lab-page {
+  color: var(--ew-text);
+  background: var(--ew-page-bg);
+}
+
+html[data-theme="dark"] .context-lab-page .ant-typography,
+html[data-theme="dark"] .context-lab-page .ant-radio-wrapper,
+html[data-theme="dark"] .context-lab-page .ant-checkbox-wrapper {
+  color: var(--ew-text);
+}
+
+html[data-theme="dark"] .context-lab-page .ant-typography-secondary {
+  color: var(--ew-text-secondary);
+}
+
+html[data-theme="dark"] .context-lab-page .ant-input,
+html[data-theme="dark"] .context-lab-page .ant-input-number,
+html[data-theme="dark"] .context-lab-page .ant-input-number-input,
+html[data-theme="dark"] .context-lab-page .ant-input-search .ant-input-group-addon .ant-btn,
+html[data-theme="dark"] .context-lab-page .ant-btn-default {
+  border-color: #dbe4ef;
+  background: #ffffff;
+  color: #182235;
+}
+
+html[data-theme="dark"] .context-lab-page .ant-input-group-addon {
+  border-color: #dbe4ef;
+  background: #ffffff;
+  color: #182235;
+}
+
+html[data-theme="dark"]
+  .context-lab-page
+  .ant-input-search
+  .ant-input-group-addon
+  .ant-input-search-button {
+  border-color: #dbe4ef;
+  background: #ffffff;
+  color: #182235;
+  box-shadow: none;
+}
+
+html[data-theme="dark"] .context-lab-page .ant-input::placeholder {
+  color: #94a3b8;
+}
+
+html[data-theme="dark"] .context-lab-page .ant-input:hover,
+html[data-theme="dark"] .context-lab-page .ant-input:focus,
+html[data-theme="dark"] .context-lab-page .ant-input-number:hover,
+html[data-theme="dark"] .context-lab-page .ant-input-number-focused,
+html[data-theme="dark"] .context-lab-page .ant-btn-default:hover,
+html[data-theme="dark"] .context-lab-page .ant-btn-default:focus-visible {
+  border-color: #93c5fd;
+  background: #ffffff;
+  color: #2563eb;
+}
+
+html[data-theme="dark"] .context-lab-page .ant-segmented {
+  background: #eef2f7;
+  color: #64748b;
+}
+
+html[data-theme="dark"] .context-lab-page .ant-segmented-item-selected {
+  background: #ffffff;
+  color: #182235;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+}
+
+html[data-theme="dark"] .context-lab-page .ant-btn-link {
+  color: var(--ew-accent);
+}
+
+html[data-theme="dark"] .context-lab-page .context-lab-history-search .ant-input,
+html[data-theme="dark"]
+  .context-lab-page
+  .context-lab-history-search
+  .ant-input-group,
+html[data-theme="dark"]
+  .context-lab-page
+  .context-lab-history-search
+  .ant-input-wrapper,
+html[data-theme="dark"]
+  .context-lab-page
+  .context-lab-history-search
+  .ant-input-group-addon,
+html[data-theme="dark"]
+  .context-lab-page
+  .context-lab-history-search
+  .ant-input-search-button.ant-btn {
+  border-color: #dbe4ef !important;
+  background: #ffffff !important;
+  color: #182235 !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"]
+  .context-lab-page
+  .context-lab-history-search
+  .ant-input {
+  -webkit-text-fill-color: #182235;
+}
+
+html[data-theme="dark"]
+  .context-lab-page
+  .context-lab-history-search
+  .ant-input::placeholder {
+  color: #94a3b8 !important;
+  -webkit-text-fill-color: #94a3b8;
+}
+
 .english-world-page-eyebrow,
 .word-card-title,
 .word-reference-link,

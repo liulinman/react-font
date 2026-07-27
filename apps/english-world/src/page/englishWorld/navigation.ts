@@ -10,8 +10,14 @@ export const HASH_TO_NAV: Record<string, string> = {
   aiword: "aiWord",
   "word-agent": "aiWord",
   wordagent: "aiWord",
+  "bulk-import": "bulkImport",
+  bulkimport: "bulkImport",
+  "overwrite-stats": "overwriteStats",
+  overwritestats: "overwriteStats",
   "context-lab": "contextLab",
   contextlab: "contextLab",
+  "ielts-core": "ieltsCore",
+  ieltscore: "ieltsCore",
   "memory-map": "memoryMap",
   memorymap: "memoryMap",
   stat: "stats",
@@ -21,8 +27,11 @@ export const HASH_TO_NAV: Record<string, string> = {
 export const PATH_TO_NAV: Record<string, string> = {
   "/englishworld": "cockpit",
   "/englishworld/words": "words",
+  "/englishworld/bulk-import": "bulkImport",
+  "/englishworld/overwrite-stats": "overwriteStats",
   "/englishworld/stats": "stats",
   "/englishworld/ai-word": "aiWord",
+  "/englishworld/ielts-core": "ieltsCore",
 };
 
 export const LEGACY_HASH_TO_PATH: Record<string, string> = {
@@ -32,9 +41,12 @@ export const LEGACY_HASH_TO_PATH: Record<string, string> = {
 
 export const SECONDARY_NAV_KEYS = new Set([
   "cockpit",
+  "bulkImport",
+  "overwriteStats",
   "stats",
   "aiWord",
   "contextLab",
+  "ieltsCore",
   "memoryMap",
   "setting",
 ]);
@@ -84,6 +96,14 @@ export function getPathForNav(key: string): string {
     return "/englishWorld/words";
   }
 
+  if (normalizedKey === "bulkImport") {
+    return "/englishWorld/bulk-import";
+  }
+
+  if (normalizedKey === "overwriteStats") {
+    return "/englishWorld/overwrite-stats";
+  }
+
   if (normalizedKey === "stats") {
     return "/englishWorld/stats";
   }
@@ -94,6 +114,10 @@ export function getPathForNav(key: string): string {
 
   if (normalizedKey === "contextLab") {
     return "/englishWorld/context-lab";
+  }
+
+  if (normalizedKey === "ieltsCore") {
+    return "/englishWorld/ielts-core";
   }
 
   if (normalizedKey === "memoryMap") {

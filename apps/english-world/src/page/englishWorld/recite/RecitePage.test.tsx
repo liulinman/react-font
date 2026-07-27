@@ -191,6 +191,23 @@ describe("RecitePage plan review", () => {
     expect(await screen.findByText("脆弱的")).toBeInTheDocument();
   });
 
+  it("opens IELTS core review from the learning start panel", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter initialEntries={["/englishWorld/recite"]}>
+        <RecitePage />
+        <LocationProbe />
+      </MemoryRouter>,
+    );
+
+    await user.click(screen.getByRole("button", { name: /雅思核心复习/ }));
+
+    expect(screen.getByTestId("location-probe")).toHaveTextContent(
+      "/englishWorld/ielts-core",
+    );
+  });
+
   it("records next-day repair start once after the review session really starts", async () => {
     const user = userEvent.setup();
 
@@ -267,7 +284,9 @@ describe("RecitePage plan review", () => {
     expect(container.querySelector(".english-world-main")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "收起侧栏" }));
     expect(container.querySelector(".english-world-shell-collapsed")).toBeInTheDocument();
-    expect(screen.getByText("今日复习")).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "今日复习" }),
+    ).toBeInTheDocument();
   });
 
   it("uses a client-ready review studio instead of a form-like review card", async () => {

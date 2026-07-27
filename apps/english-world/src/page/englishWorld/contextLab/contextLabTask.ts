@@ -33,3 +33,12 @@ export function getContextLabStatusDescription(status: ContextLabTaskStatus) {
   };
   return descriptions[status];
 }
+
+export function getContextLabErrorMessage(errorMessage?: string) {
+  if (!errorMessage) return "生成失败，请重新生成。";
+  const messages: Record<string, string> = {
+    MICRO_OUTPUT_INVALID: "生成内容未通过格式校验，请重新生成，系统会自动纠偏重试。",
+    MICRO_GENERATION_FAILED: "AI 暂时未能生成练习，请稍后重新生成。",
+  };
+  return messages[errorMessage] ?? errorMessage;
+}

@@ -5,6 +5,7 @@ export interface ExerciseQuestion {
   id: string;
   stem: string;
   options: string[];
+  questionType?: string;
   targetWord?: string;
 }
 
@@ -21,12 +22,14 @@ export interface ExerciseGenerateProficiency {
   sourceType: "proficiency";
   proficiencyLevels: number[];
   count?: number;
+  ieltsBand?: number;
 }
 
 /** 生成练习请求：随机 */
 export interface ExerciseGenerateRandom {
   sourceType: "random";
   count?: number;
+  ieltsBand?: number;
 }
 
 /** 生成练习请求：自定义单词 */
@@ -35,6 +38,7 @@ export interface ExerciseGenerateCustom {
   words: string[];
   mode?: "standard" | "micro";
   reciteSessionId?: number;
+  ieltsBand?: number;
 }
 
 export type ExerciseGenerateParams =

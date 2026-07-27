@@ -915,6 +915,12 @@ export const RecitePage: React.FC = () => {
                 >
                   看统计
                 </Button>
+                <Button
+                  icon={<ExperimentOutlined />}
+                  onClick={() => navigate("/englishWorld/ielts-core")}
+                >
+                  雅思核心复习
+                </Button>
               </Space>
             </div>
           </Card>

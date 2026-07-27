@@ -2,6 +2,7 @@ import type { ExerciseResultItem } from "@/server/exerciseAgent/exerciseAgent";
 import type { WordAgentItem } from "@/server/wordAgent/wordAgent";
 import type { WordList } from "@/server/word/word.type";
 import type { ContextLabTask } from "@/page/englishWorld/types/learning";
+import { stripGeneratedMarkdownEmphasis } from "@/page/englishWorld/contextLab/articleText";
 
 export type MobileArticleContent = {
   topic: string;
@@ -18,7 +19,8 @@ const EDGE_PUNCTUATION =
 export function parseMobileContextArticle(
   article: string,
 ): MobileArticleContent {
-  const blocks = String(article ?? "")
+  const cleanArticle = stripGeneratedMarkdownEmphasis(String(article ?? ""));
+  const blocks = cleanArticle
     .replace(/\r\n/g, "\n")
     .split(/\n\s*\n/)
     .map((block) => block.trim())
@@ -27,7 +29,7 @@ export function parseMobileContextArticle(
   if (blocks.length <= 1) {
     return {
       topic: "",
-      paragraphs: String(article ?? "")
+      paragraphs: cleanArticle
         .split(/\n+/)
         .map((paragraph) => paragraph.trim())
         .filter(Boolean),

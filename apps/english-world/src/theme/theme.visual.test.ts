@@ -51,4 +51,22 @@ describe("dark theme visual contracts", () => {
       /html\[data-theme="dark"\] \.learning-cockpit-hero h1\.ant-typography,[\s\S]*?\.learning-snapshot strong,[\s\S]*?\.learning-cockpit-task-copy strong\s*\{[^}]*color:\s*var\(--ew-text\);/s,
     );
   });
+
+  it("keeps the context lab workspace uniformly light inside dark theme", () => {
+    expect(styles).toMatch(
+      /html\[data-theme="dark"\] \.english-world-workspace:has\(\.context-lab-page\)\s*\{[^}]*--ew-page-bg:\s*#f5f7fb;[^}]*--ew-surface:\s*#ffffff;[^}]*--ew-text:\s*#182235;[^}]*color-scheme:\s*light;/s,
+    );
+    expect(styles).toMatch(
+      /html\[data-theme="dark"\] \.context-lab-page \.ant-input,[\s\S]*?\.context-lab-page \.ant-btn-default\s*\{[^}]*border-color:\s*#dbe4ef;[^}]*background:\s*#ffffff;[^}]*color:\s*#182235;/s,
+    );
+    expect(styles).toMatch(
+      /html\[data-theme="dark"\] \.context-lab-page \.ant-input-group-addon\s*\{[^}]*border-color:\s*#dbe4ef;[^}]*background:\s*#ffffff;[^}]*color:\s*#182235;/s,
+    );
+    expect(styles).toMatch(
+      /html\[data-theme="dark"\] \.context-lab-page \.context-lab-history-search \.ant-input,[\s\S]*?\.ant-input-search-button\.ant-btn\s*\{[^}]*border-color:\s*#dbe4ef !important;[^}]*background:\s*#ffffff !important;[^}]*color:\s*#182235 !important;[^}]*box-shadow:\s*none !important;/s,
+    );
+    expect(styles).toMatch(
+      /html\[data-theme="dark"\] \.context-lab-page \.ant-segmented\s*\{[^}]*background:\s*#eef2f7;[^}]*color:\s*#64748b;/s,
+    );
+  });
 });

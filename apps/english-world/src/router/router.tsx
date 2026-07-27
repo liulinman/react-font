@@ -1,9 +1,12 @@
 import { createBrowserRouter } from "react-router-dom";
 import EnglishWorld from "@/page/englishWorld/EnglishWorld";
+import { BulkImportPage } from "@/page/englishWorld/bulkImport/BulkImportPage";
 import { SystemSettingsPage } from "@/page/englishWorld/component/SystemSettingsPage";
 import { ContextLabPage } from "@/page/englishWorld/contextLab/ContextLabPage";
 import { EnglishWorldLayout } from "@/page/englishWorld/layout/EnglishWorldLayout";
+import { IeltsCoreReviewPage } from "@/page/englishWorld/ieltsCore/IeltsCoreReviewPage";
 import { MemoryMapPage } from "@/page/englishWorld/memoryMap/MemoryMapPage";
+import { OverwriteStatsPage } from "@/page/englishWorld/overwriteStats/OverwriteStatsPage";
 import { RecitePage } from "@/page/englishWorld/recite/RecitePage";
 import { WordAgentTab } from "@/page/englishWorld/component/WordAgentTab";
 import EnglishWorldMobile from "@/page/englishWorldMobile/EnglishWorldMobile";
@@ -72,11 +75,41 @@ export const router = createBrowserRouter([
     ),
   },
   {
+    path: "/englishWorld/bulk-import",
+    element: (
+      <ProtectedWrapper>
+        <EnglishWorldLayout activeKey="bulkImport">
+          <BulkImportPage />
+        </EnglishWorldLayout>
+      </ProtectedWrapper>
+    ),
+  },
+  {
+    path: "/englishWorld/overwrite-stats",
+    element: (
+      <ProtectedWrapper>
+        <EnglishWorldLayout activeKey="overwriteStats">
+          <OverwriteStatsPage />
+        </EnglishWorldLayout>
+      </ProtectedWrapper>
+    ),
+  },
+  {
     path: "/englishWorld/context-lab",
     element: (
       <ProtectedWrapper>
         <EnglishWorldLayout activeKey="contextLab">
           <ContextLabPage />
+        </EnglishWorldLayout>
+      </ProtectedWrapper>
+    ),
+  },
+  {
+    path: "/englishWorld/ielts-core",
+    element: (
+      <ProtectedWrapper>
+        <EnglishWorldLayout activeKey="ieltsCore">
+          <IeltsCoreReviewPage />
         </EnglishWorldLayout>
       </ProtectedWrapper>
     ),

@@ -44,12 +44,14 @@ import {
   toMobileImportPayload,
   type MobileMarkedWord,
 } from "./mobileContextLab";
+import { formatContextLabQuestionTypeLabel } from "@/page/englishWorld/contextLab/contextLabQuestionType";
 
 type SourceMode = "weak" | "random" | "custom";
 
 function getSourceLabel(sourceType: ContextLabTask["sourceType"]) {
   const labels: Record<ContextLabTask["sourceType"], string> = {
     proficiency: "薄弱词",
+    "ielts-core": "雅思核心词",
     random: "随机词",
     custom: "手输词",
   };
@@ -478,11 +480,19 @@ export function MobileContextLabPage() {
                 submitSummary?.results ?? null,
                 key,
               );
+              const questionTypeLabel = formatContextLabQuestionTypeLabel(
+                question.questionType,
+              );
 
               return (
                 <Card key={key} className="mobile-context-question-card">
                   <div className="mobile-context-question-title">
                     <span>第 {index + 1} 题</span>
+                    {questionTypeLabel && (
+                      <Tag className="mobile-context-question-type">
+                        {questionTypeLabel}
+                      </Tag>
+                    )}
                     {result && (
                       <Tag color={result.correct ? "success" : "danger"}>
                         {result.correct ? "正确" : "需要复盘"}

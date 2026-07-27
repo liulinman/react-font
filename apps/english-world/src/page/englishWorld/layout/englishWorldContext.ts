@@ -4,8 +4,11 @@ const PRIMARY_LABELS: Record<string, string> = {
   recite: "学习",
   stats: "数据",
   aiWord: "词库",
+  bulkImport: "批量导入",
+  overwriteStats: "覆盖统计",
   memoryMap: "词库",
   contextLab: "学习",
+  ieltsCore: "雅思核心复习",
   setting: "设置",
 };
 

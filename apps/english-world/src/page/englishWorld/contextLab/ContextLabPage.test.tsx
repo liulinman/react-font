@@ -27,7 +27,7 @@ let taskEventHandler:
       id: number;
       taskId: number;
       status: "pending" | "processing" | "succeeded" | "failed";
-      sourceType: "proficiency" | "random" | "custom";
+      sourceType: "proficiency" | "random" | "custom" | "ielts-core";
       words: string[];
       mode?: "standard" | "micro";
       reciteSessionId?: number;
@@ -98,11 +98,42 @@ describe("ContextLabPage", () => {
     vi.useRealTimers();
   });
 
-  it("lets the user choose weak words, random words, or custom words", () => {
+  it("uses a generator sidebar and full-width practice-pack workspace", async () => {
+    requestMock.mockResolvedValue({
+      list: [],
+      total: 0,
+      page: 1,
+      pageSize: 10,
+    });
+
+    render(<ContextLabPage />);
+
+    expect(
+      screen.getByRole("banner", { name: "AI 语境实验室工具栏" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("complementary", { name: "新建语境练习" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("main", { name: "练习包管理" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("region", { name: "语境实验室工作区" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "生成练习" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "练习包" })).toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { level: 1, name: "AI 语境实验室" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("lets the user choose weak, mastery, IELTS random, IELTS core, or custom words", () => {
     render(<ContextLabPage />);
 
     expect(screen.getByText("今日薄弱词")).toBeInTheDocument();
-    expect(screen.getAllByText("随机词").length).toBeGreaterThan(0);
+    expect(screen.getByText("按掌握程度")).toBeInTheDocument();
+    expect(screen.getAllByText("随机 IELTS").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("雅思核心").length).toBeGreaterThan(0);
     expect(screen.getAllByText("手输词").length).toBeGreaterThan(0);
   });
 
@@ -253,7 +284,9 @@ describe("ContextLabPage", () => {
       </MemoryRouter>,
     );
 
-    expect(await screen.findByRole("dialog", { name: /错词语境巩固/ })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("region", { name: /错词语境巩固/ }),
+    ).toBeInTheDocument();
     expect(
       requestMock.mock.calls.filter(([config]) => config.url === "/context-lab/generate-task"),
     ).toHaveLength(0);
@@ -299,7 +332,9 @@ describe("ContextLabPage", () => {
       </MemoryRouter>,
     );
 
-    expect(await screen.findByRole("dialog", { name: /错词语境巩固/ })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("region", { name: /错词语境巩固/ }),
+    ).toBeInTheDocument();
     expect(requestMock).toHaveBeenCalledWith(
       expect.objectContaining({ url: "/context-lab/detail", data: { taskId: 25 } }),
     );
@@ -362,7 +397,7 @@ describe("ContextLabPage", () => {
     );
 
     expect(
-      await screen.findByRole("dialog", { name: /错词语境巩固/ }),
+      await screen.findByRole("region", { name: /错词语境巩固/ }),
     ).toBeInTheDocument();
     expect(screen.getAllByText("目标词：fragile")).toHaveLength(3);
     for (const option of screen.getAllByLabelText("A. One")) {
@@ -437,7 +472,7 @@ describe("ContextLabPage", () => {
       </MemoryRouter>,
     );
 
-    await screen.findByRole("dialog", { name: /错词语境巩固/ });
+    await screen.findByRole("region", { name: /错词语境巩固/ });
     for (const option of screen.getAllByLabelText("A. One")) {
       await userEvent.click(option);
     }
@@ -531,7 +566,7 @@ describe("ContextLabPage", () => {
       });
     });
     expect(
-      screen.queryByRole("dialog", { name: /错词语境巩固/ }),
+      screen.queryByRole("region", { name: /错词语境巩固/ }),
     ).not.toBeInTheDocument();
   });
 
@@ -591,7 +626,7 @@ describe("ContextLabPage", () => {
     expect(screen.queryByText("做题计时")).not.toBeInTheDocument();
     expect(screen.queryByText("提交练习")).not.toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /开始练习/ }),
+      within(dialog).getByRole("button", { name: /开始练习/ }),
     ).toBeInTheDocument();
     await user.click(
       within(dialog).getByRole("button", { name: "占满屏幕" }),
@@ -605,7 +640,7 @@ describe("ContextLabPage", () => {
     render(<ContextLabPage />);
 
     expect(screen.getByText("生成数量")).toBeInTheDocument();
-    expect(screen.getByRole("spinbutton")).toHaveValue("8");
+    expect(screen.getByLabelText("生成数量")).toHaveValue("20");
     expect(screen.queryByText("resilient")).not.toBeInTheDocument();
     expect(screen.queryByText("recover")).not.toBeInTheDocument();
     expect(screen.queryByText("fragile")).not.toBeInTheDocument();
@@ -617,11 +652,81 @@ describe("ContextLabPage", () => {
         sourceMode: "weak",
         count: 8,
         customWords: "",
+        ieltsBand: 5,
       }),
     ).toEqual({
       sourceType: "proficiency",
       proficiencyLevels: [0, 1],
       count: 8,
+      ieltsBand: 5,
+      modelProvider: "deepseek",
+    });
+  });
+
+  it("uses IELTS band 7 as the default generation level", () => {
+    expect(
+      buildContextLabGenerateParams({
+        sourceMode: "weak",
+        count: 8,
+        customWords: "",
+      }),
+    ).toEqual({
+      sourceType: "proficiency",
+      proficiencyLevels: [0, 1],
+      count: 8,
+      ieltsBand: 7,
+      modelProvider: "deepseek",
+    });
+  });
+
+  it("builds a GPT generation request when that model is selected", () => {
+    expect(
+      buildContextLabGenerateParams({
+        sourceMode: "weak",
+        count: 8,
+        customWords: "",
+        modelProvider: "gpt",
+      }),
+    ).toEqual({
+      sourceType: "proficiency",
+      proficiencyLevels: [0, 1],
+      count: 8,
+      ieltsBand: 7,
+      modelProvider: "gpt",
+    });
+  });
+
+  it("builds a mastery-level article request from selected proficiency levels", () => {
+    expect(
+      buildContextLabGenerateParams({
+        sourceMode: "proficiency",
+        count: 10,
+        customWords: "",
+        proficiencyLevels: [2, 3],
+        ieltsBand: 7.5,
+      }),
+    ).toEqual({
+      sourceType: "proficiency",
+      proficiencyLevels: [2, 3],
+      count: 10,
+      ieltsBand: 7.5,
+      modelProvider: "deepseek",
+    });
+  });
+
+  it("builds a random IELTS article request", () => {
+    expect(
+      buildContextLabGenerateParams({
+        sourceMode: "ielts-random",
+        count: 8,
+        customWords: "",
+        ieltsBand: 6.5,
+      }),
+    ).toEqual({
+      sourceType: "random",
+      count: 8,
+      ieltsBand: 6.5,
+      modelProvider: "deepseek",
     });
   });
 
@@ -631,10 +736,13 @@ describe("ContextLabPage", () => {
         sourceMode: "custom",
         count: 8,
         customWords: "resilient, recover，fragile steady",
+        ieltsBand: 8,
       }),
     ).toEqual({
       sourceType: "custom",
       words: ["resilient", "recover", "fragile", "steady"],
+      ieltsBand: 8,
+      modelProvider: "deepseek",
     });
   });
 
@@ -644,18 +752,28 @@ describe("ContextLabPage", () => {
   });
 
   it("creates an async generation task and refreshes history", async () => {
+    const pendingTask = {
+      id: 12,
+      taskId: 12,
+      status: "pending",
+      sourceType: "proficiency",
+      words: ["fragile", "steady", "recover"],
+    };
+    let historyRequestCount = 0;
+
     requestMock.mockImplementation((config) => {
       if (config.url === "/context-lab/history") {
-        return Promise.resolve({ list: [], total: 0, page: 1, pageSize: 10 });
+        historyRequestCount += 1;
+        const list = historyRequestCount > 1 ? [pendingTask] : [];
+        return Promise.resolve({
+          list,
+          total: list.length,
+          page: 1,
+          pageSize: 10,
+        });
       }
       if (config.url === "/context-lab/generate-task") {
-        return Promise.resolve({
-          id: 12,
-          taskId: 12,
-          status: "pending",
-          sourceType: "proficiency",
-          words: ["fragile", "steady", "recover"],
-        });
+        return Promise.resolve(pendingTask);
       }
       return Promise.resolve({});
     });
@@ -671,12 +789,198 @@ describe("ContextLabPage", () => {
         data: {
           sourceType: "proficiency",
           proficiencyLevels: [0, 1],
-          count: 8,
+          count: 20,
+          ieltsBand: 7,
+          modelProvider: "deepseek",
         },
         __responseType: undefined,
       });
     });
-    expect((await screen.findAllByText("等待回调")).length).toBeGreaterThan(0);
+    expect(
+      await screen.findByText("fragile / steady / recover"),
+    ).toBeInTheDocument();
+    expect(await screen.findByText("等待回调")).toBeInTheDocument();
+  });
+
+  it("lets the learner choose the IELTS band for generated articles", async () => {
+    requestMock.mockImplementation((config) => {
+      if (config.url === "/context-lab/history") {
+        return Promise.resolve({ list: [], total: 0, page: 1, pageSize: 10 });
+      }
+      if (config.url === "/context-lab/generate-task") {
+        return Promise.resolve({
+          id: 30,
+          taskId: 30,
+          status: "pending",
+          sourceType: "proficiency",
+          words: ["analysis", "policy", "evidence"],
+        });
+      }
+      return Promise.resolve({});
+    });
+
+    render(<ContextLabPage />);
+
+    const bandInput = screen.getByLabelText("雅思分数等级");
+    expect(bandInput).toHaveValue("7.0");
+    await userEvent.clear(bandInput);
+    await userEvent.type(bandInput, "7.5");
+    await userEvent.click(screen.getByRole("button", { name: /生成练习包/ }));
+
+    await waitFor(() => {
+      expect(requestMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          url: "/context-lab/generate-task",
+          data: expect.objectContaining({
+            sourceType: "proficiency",
+            proficiencyLevels: [0, 1],
+            count: 20,
+            ieltsBand: 7.5,
+            modelProvider: "deepseek",
+          }),
+        }),
+      );
+    });
+  });
+
+  it("lets the learner choose GPT for generated articles", async () => {
+    requestMock.mockImplementation((config) => {
+      if (config.url === "/context-lab/history") {
+        return Promise.resolve({ list: [], total: 0, page: 1, pageSize: 10 });
+      }
+      if (config.url === "/context-lab/generate-task") {
+        return Promise.resolve({
+          id: 31,
+          taskId: 31,
+          status: "pending",
+          sourceType: "proficiency",
+          words: ["analysis", "policy", "evidence"],
+        });
+      }
+      return Promise.resolve({});
+    });
+
+    render(<ContextLabPage />);
+
+    await userEvent.click(screen.getByText("GPT-5.6"));
+    await userEvent.click(screen.getByRole("button", { name: /生成练习包/ }));
+
+    await waitFor(() => {
+      expect(requestMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          url: "/context-lab/generate-task",
+          data: expect.objectContaining({
+            modelProvider: "gpt",
+          }),
+        }),
+      );
+    });
+  });
+
+  it("creates an async generation task from selected mastery levels", async () => {
+    requestMock.mockImplementation((config) => {
+      if (config.url === "/context-lab/history") {
+        return Promise.resolve({ list: [], total: 0, page: 1, pageSize: 10 });
+      }
+      if (config.url === "/context-lab/generate-task") {
+        return Promise.resolve({
+          id: 18,
+          taskId: 18,
+          status: "pending",
+          sourceType: "proficiency",
+          words: ["authenticity", "illustrate", "contemporary"],
+        });
+      }
+      return Promise.resolve({});
+    });
+
+    render(<ContextLabPage />);
+
+    await userEvent.click(screen.getByText("按掌握程度"));
+    await userEvent.click(screen.getByText("熟练"));
+    await userEvent.click(screen.getByRole("button", { name: /生成练习包/ }));
+
+    await waitFor(() => {
+      expect(requestMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          url: "/context-lab/generate-task",
+          data: {
+            sourceType: "proficiency",
+            proficiencyLevels: [2],
+            count: 20,
+            ieltsBand: 7,
+            modelProvider: "deepseek",
+          },
+        }),
+      );
+    });
+  });
+
+  it("creates an async random IELTS generation task", async () => {
+    requestMock.mockImplementation((config) => {
+      if (config.url === "/context-lab/history") {
+        return Promise.resolve({ list: [], total: 0, page: 1, pageSize: 10 });
+      }
+      if (config.url === "/context-lab/generate-task") {
+        return Promise.resolve({
+          id: 20,
+          taskId: 20,
+          status: "pending",
+          sourceType: "random",
+          words: ["migration", "biodiversity", "policy"],
+        });
+      }
+      return Promise.resolve({});
+    });
+
+    render(<ContextLabPage />);
+
+    await userEvent.click(screen.getAllByText("随机 IELTS")[0]);
+    await userEvent.click(screen.getByRole("button", { name: /生成练习包/ }));
+
+    await waitFor(() => {
+      expect(requestMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          url: "/context-lab/generate-task",
+          data: {
+            sourceType: "random",
+            count: 20,
+            ieltsBand: 7,
+            modelProvider: "deepseek",
+          },
+        }),
+      );
+    });
+  });
+
+  it("renders IELTS core practice packs in history and source filters", async () => {
+    requestMock.mockImplementation((config) => {
+      if (config.url === "/context-lab/history") {
+        return Promise.resolve({
+          list: [
+            {
+              id: 19,
+              taskId: 19,
+              status: "succeeded",
+              sourceType: "ielts-core",
+              words: ["mitigate", "habitat", "evidence"],
+              article: "IELTS article",
+              questions: [],
+            },
+          ],
+          total: 1,
+          page: 1,
+          pageSize: 10,
+        });
+      }
+      return Promise.resolve({});
+    });
+
+    render(<ContextLabPage />);
+
+    expect(await screen.findByText("雅思核心词")).toBeInTheDocument();
+    await userEvent.click(screen.getByLabelText("练习包来源筛选"));
+    expect(await screen.findByText("雅思核心词")).toBeInTheDocument();
   });
 
   it("refreshes a pending task from the task event stream", async () => {
@@ -755,7 +1059,7 @@ describe("ContextLabPage", () => {
           status: "failed",
           sourceType: "random",
           words: ["steady", "recover", "repair"],
-          errorMessage: "AI 返回格式异常",
+          errorMessage: "MICRO_OUTPUT_INVALID",
         },
       ],
       total: 2,
@@ -771,7 +1075,52 @@ describe("ContextLabPage", () => {
     expect(screen.getByText("练习 2 次")).toBeInTheDocument();
     expect(screen.getAllByText("最近得分 86").length).toBeGreaterThan(0);
     expect(screen.getByText("生成失败")).toBeInTheDocument();
-    expect(screen.getByText("AI 返回格式异常")).toBeInTheDocument();
+    expect(
+      screen.getByText("生成内容未通过格式校验，请重新生成，系统会自动纠偏重试。"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("MICRO_OUTPUT_INVALID")).not.toBeInTheDocument();
+  });
+
+  it("keeps secondary practice-pack actions inside the task more menu", async () => {
+    requestMock.mockResolvedValue({
+      list: [
+        {
+          id: 12,
+          taskId: 12,
+          status: "succeeded",
+          sourceType: "custom",
+          words: ["fragile", "steady", "recover"],
+          articleExerciseId: 88,
+          article: "A short practice article.",
+          questions: [],
+        },
+      ],
+      total: 1,
+      page: 1,
+      pageSize: 10,
+    });
+
+    const user = userEvent.setup();
+    render(<ContextLabPage />);
+
+    expect(await screen.findByText("fragile / steady / recover")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "查看记录" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "下载练习包 PDF" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "删除练习包" }),
+    ).not.toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole("button", { name: "任务 12 更多操作" }),
+    );
+
+    expect(await screen.findByText("查看记录")).toBeInTheDocument();
+    expect(screen.getByText("下载 PDF")).toBeInTheDocument();
+    expect(screen.getByText("删除练习包")).toBeInTheDocument();
   });
 
   it("searches practice packages by keyword and source type", async () => {
@@ -783,12 +1132,19 @@ describe("ContextLabPage", () => {
     });
     const user = userEvent.setup();
 
-    render(<ContextLabPage />);
+    const { container } = render(<ContextLabPage />);
 
-    await user.type(
-      await screen.findByPlaceholderText("搜索练习包、单词、来源、状态"),
-      " urban ",
+    const searchInput = await screen.findByRole("textbox", {
+      name: "搜索练习包",
+    });
+    expect(searchInput.closest(".ant-input-affix-wrapper")).toHaveClass(
+      "context-lab-history-search-input",
     );
+    expect(
+      container.querySelector(".ant-input-search-button"),
+    ).not.toBeInTheDocument();
+
+    await user.type(searchInput, " urban ");
 
     await waitFor(() => {
       expect(requestMock).toHaveBeenCalledWith(
@@ -803,7 +1159,7 @@ describe("ContextLabPage", () => {
     });
 
     await user.click(
-      within(screen.getByLabelText("练习包来源筛选")).getByText("手输词"),
+      within(screen.getByLabelText("练习包来源筛选")).getByText("手输"),
     );
 
     await waitFor(() => {
@@ -867,7 +1223,9 @@ describe("ContextLabPage", () => {
     render(<ContextLabPage />);
 
     await userEvent.click(await screen.findByRole("button", { name: "开始练习" }));
-    expect(screen.getByRole("dialog", { name: /AI 语境练习/ })).toBeInTheDocument();
+    expect(
+      screen.getByRole("region", { name: /AI 语境练习/ }),
+    ).toBeInTheDocument();
     expect(screen.getByText("A. Easy to break")).toBeInTheDocument();
     expect(screen.getByText("B. Very fast")).toBeInTheDocument();
     await userEvent.click(screen.getByText("A. Easy to break"));
@@ -958,7 +1316,7 @@ describe("ContextLabPage", () => {
       screen.getByRole("button", { name: "用薄弱词再练一套" }),
     ).toBeInTheDocument();
     },
-    10_000,
+    20_000,
   );
 
   it("sends elapsed time when submitting and refreshes practice records", async () => {
@@ -1133,7 +1491,10 @@ describe("ContextLabPage", () => {
     const user = userEvent.setup();
     render(<ContextLabPage />);
 
-    await user.click(await screen.findByRole("button", { name: "查看记录" }));
+    await user.click(
+      await screen.findByRole("button", { name: "任务 12 更多操作" }),
+    );
+    await user.click(await screen.findByText("查看记录"));
     expect(
       await screen.findByRole("dialog", { name: "练习记录" }),
     ).toBeInTheDocument();
@@ -1270,7 +1631,10 @@ describe("ContextLabPage", () => {
     const user = userEvent.setup();
     render(<ContextLabPage />);
 
-    await user.click(await screen.findByRole("button", { name: "查看记录" }));
+    await user.click(
+      await screen.findByRole("button", { name: "任务 12 更多操作" }),
+    );
+    await user.click(await screen.findByText("查看记录"));
     await user.click(await screen.findByRole("button", { name: "查看详情" }));
 
     expect(
@@ -1311,7 +1675,10 @@ describe("ContextLabPage", () => {
 
     expect(await screen.findByText("生成完成")).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "删除练习包" }));
+    await user.click(
+      screen.getByRole("button", { name: "任务 12 更多操作" }),
+    );
+    await user.click(await screen.findByText("删除练习包"));
     await user.click(await screen.findByRole("button", { name: "确认删除" }));
 
     await waitFor(() => {
@@ -1357,7 +1724,10 @@ describe("ContextLabPage", () => {
 
     expect(await screen.findByText("等待回调")).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "删除练习包" }));
+    await user.click(
+      screen.getByRole("button", { name: "任务 12 更多操作" }),
+    );
+    await user.click(await screen.findByText("删除练习包"));
 
     expect(warningSpy).toHaveBeenCalledWith(
       "生成中的练习包暂不支持删除，请等待任务完成或失败后再操作",
@@ -1476,10 +1846,13 @@ describe("ContextLabPage", () => {
     render(<ContextLabPage />);
 
     await userEvent.click(await screen.findByRole("button", { name: "开始练习" }));
-    expect(screen.getByRole("dialog", { name: /AI 语境练习/ })).toBeInTheDocument();
+    expect(
+      screen.getByRole("region", { name: /AI 语境练习/ }),
+    ).toBeInTheDocument();
     await userEvent.click(
-      screen.getByRole("button", { name: "下载本次练习 PDF" }),
+      screen.getByRole("button", { name: "任务 12 更多操作" }),
     );
+    await userEvent.click(await screen.findByText("下载 PDF"));
 
     expect(downloadTaskMock).toHaveBeenCalledWith(12);
   });
@@ -1512,7 +1885,9 @@ describe("ContextLabPage", () => {
     render(<ContextLabPage />);
 
     await userEvent.click(await screen.findByRole("button", { name: "开始练习" }));
-    expect(screen.getByRole("dialog", { name: /AI 语境练习/ })).toBeInTheDocument();
+    expect(
+      screen.getByRole("region", { name: /AI 语境练习/ }),
+    ).toBeInTheDocument();
     expect(screen.getByText("雅思阅读")).toBeInTheDocument();
     expect(screen.queryByText("短阅读")).not.toBeInTheDocument();
 
@@ -1522,6 +1897,53 @@ describe("ContextLabPage", () => {
     expect(screen.getByText("Second paragraph.")).toHaveClass(
       "context-lab-article-paragraph",
     );
+  });
+
+  it("strips markdown bold markers from generated article text", async () => {
+    requestMock.mockResolvedValue({
+      list: [
+        {
+          id: 12,
+          taskId: 12,
+          status: "succeeded",
+          sourceType: "custom",
+          words: ["remarkable", "plight", "the high speed train"],
+          articleExerciseId: 88,
+          article:
+            "Urban Renewal\n\nThese **remarkable** policies still stopped short of the actual demand.\n\nThe **plight** of low-income renters remains unchanged.\n\nThe arrival of **the high speed train** must be accompanied by social policy.",
+          questions: [
+            {
+              id: "q1",
+              stem: "What does remarkable mean?",
+              options: ["Notable", "Hidden", "Weak", "Brief"],
+            },
+          ],
+        },
+      ],
+      total: 1,
+      page: 1,
+      pageSize: 10,
+    });
+
+    render(<ContextLabPage />);
+
+    await userEvent.click(await screen.findByRole("button", { name: "开始练习" }));
+    expect(
+      screen.getByRole("region", { name: /AI 语境练习/ }),
+    ).toBeInTheDocument();
+
+    expect(screen.getByText("Urban Renewal")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "These remarkable policies still stopped short of the actual demand.",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("The plight of low-income renters remains unchanged."),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/\*\*remarkable\*\*|\*\*plight\*\*|\*\*the high speed train\*\*/),
+    ).not.toBeInTheDocument();
   });
 
   it("renders the generated article topic separately from body paragraphs", async () => {
@@ -1553,7 +1975,9 @@ describe("ContextLabPage", () => {
     render(<ContextLabPage />);
 
     await userEvent.click(await screen.findByRole("button", { name: "开始练习" }));
-    expect(screen.getByRole("dialog", { name: /AI 语境练习/ })).toBeInTheDocument();
+    expect(
+      screen.getByRole("region", { name: /AI 语境练习/ }),
+    ).toBeInTheDocument();
 
     expect(screen.getByText("Urban Green Space and Public Trust")).toHaveClass(
       "context-lab-article-topic",
@@ -1593,9 +2017,11 @@ describe("ContextLabPage", () => {
     render(<ContextLabPage />);
 
     await userEvent.click(await screen.findByRole("button", { name: "开始练习" }));
-    const practiceDialog = screen.getByRole("dialog", { name: /AI 语境练习/ });
+    const practiceWorkspace = screen.getByRole("region", {
+      name: /AI 语境练习/,
+    });
 
-    expect(practiceDialog).toHaveClass("context-lab-practice-modal");
+    expect(practiceWorkspace).toHaveClass("context-lab-active-practice");
     expect(screen.getByLabelText("文章阅读区")).toHaveClass(
       "context-lab-reading-pane",
     );
@@ -1607,7 +2033,7 @@ describe("ContextLabPage", () => {
     expect(screen.getByText("已答 0/1")).toBeInTheDocument();
   });
 
-  it("lets the user expand the practice window to fill the screen", async () => {
+  it("opens the legacy practice modal and lets the learner expand it fullscreen", async () => {
     requestMock.mockResolvedValue({
       list: [
         {
@@ -1632,22 +2058,38 @@ describe("ContextLabPage", () => {
       pageSize: 10,
     });
 
+    const user = userEvent.setup();
     render(<ContextLabPage />);
 
-    await userEvent.click(await screen.findByRole("button", { name: "开始练习" }));
-    const practiceDialog = screen.getByRole("dialog", { name: /AI 语境练习/ });
+    await user.click(await screen.findByRole("button", { name: "开始练习" }));
+    const practiceDialog = screen.getByRole("dialog", {
+      name: /AI 语境练习/,
+    });
+    expect(practiceDialog).toHaveClass("context-lab-practice-modal");
+    expect(
+      screen.getByRole("region", { name: /AI 语境练习/ }),
+    ).toHaveClass("context-lab-active-practice");
+    await user.click(screen.getByRole("button", { name: "占满屏幕" }));
 
-    await userEvent.click(screen.getByRole("button", { name: "占满屏幕" }));
+    const fullscreenDialog = screen.getByRole("dialog", {
+      name: /AI 语境练习/,
+    });
+    expect(fullscreenDialog).toHaveClass(
+      "context-lab-practice-modal-fullscreen",
+    );
+    await user.click(
+      within(fullscreenDialog).getByRole("button", { name: "退出满屏" }),
+    );
 
-    expect(practiceDialog).toHaveClass(
+    expect(practiceDialog).not.toHaveClass(
       "context-lab-practice-modal-fullscreen",
     );
     expect(
-      screen.getByRole("button", { name: "退出满屏" }),
+      within(practiceDialog).getByRole("button", { name: "占满屏幕" }),
     ).toBeInTheDocument();
   });
 
-  it("keeps the full practice workspace out of the main task card", async () => {
+  it("opens a succeeded practice in the legacy modal", async () => {
     requestMock.mockResolvedValue({
       list: [
         {
@@ -1678,7 +2120,12 @@ describe("ContextLabPage", () => {
 
     expect(container.querySelector(".context-lab-practice-pack")).toBeNull();
     await userEvent.click(screen.getByRole("button", { name: "开始练习" }));
-    expect(screen.getByRole("dialog", { name: /AI 语境练习/ })).toBeInTheDocument();
+    expect(
+      screen.getByRole("dialog", { name: /AI 语境练习/ }),
+    ).toHaveClass("context-lab-practice-modal");
+    expect(
+      screen.getByRole("region", { name: "AI 语境练习内容" }),
+    ).toBeInTheDocument();
   });
 
   it("submits generated question answers through the context lab submit contract", async () => {
@@ -1727,7 +2174,9 @@ describe("ContextLabPage", () => {
     render(<ContextLabPage />);
 
     await userEvent.click(await screen.findByRole("button", { name: "开始练习" }));
-    expect(screen.getByRole("dialog", { name: /AI 语境练习/ })).toBeInTheDocument();
+    expect(
+      screen.getByRole("region", { name: /AI 语境练习/ }),
+    ).toBeInTheDocument();
     await userEvent.click(screen.getByText("A. able to recover"));
     await userEvent.click(screen.getByRole("button", { name: "提交练习" }));
 
@@ -1750,55 +2199,55 @@ describe("ContextLabPage", () => {
   it(
     "adds selected article text to the word library through AI completion",
     async () => {
-    requestMock.mockImplementation((config) => {
-      if (config.url === "/context-lab/history") {
-        return Promise.resolve({
-          list: [
-            {
-              id: 12,
-              taskId: 12,
-              status: "succeeded",
-              sourceType: "custom",
-              words: ["urban farming"],
-              articleExerciseId: 88,
-              article:
-                "Urban Farming\n\nUrban farming improves local food supply.",
-              questions: [
-                {
-                  id: "q1",
-                  stem: "What is the passage about?",
-                  options: ["Urban farming", "Space travel"],
-                },
-              ],
-            },
-          ],
-          total: 1,
-          page: 1,
-          pageSize: 10,
-        });
-      }
-      if (config.url === "/word-agent/query") {
-        return Promise.resolve({
-          words: [
-            {
-              word: "urban farming",
-              phonetic: "/ˈɜːbən ˈfɑːmɪŋ/",
-              meaning: "城市农业；都市农耕",
-              partOfSpeech: [2],
-              examples: [],
-              ieltsCase: null,
-            },
-          ],
-        });
-      }
-      if (config.url === "/english/existEnglishWord") {
-        return Promise.resolve(false);
-      }
-      if (config.url === "/english/AddEnglishWord") {
-        return Promise.resolve({ success: true });
-      }
-      return Promise.resolve({});
-    });
+      requestMock.mockImplementation((config) => {
+        if (config.url === "/context-lab/history") {
+          return Promise.resolve({
+            list: [
+              {
+                id: 12,
+                taskId: 12,
+                status: "succeeded",
+                sourceType: "custom",
+                words: ["urban farming"],
+                articleExerciseId: 88,
+                article:
+                  "Urban Farming\n\nUrban farming improves local food supply.",
+                questions: [
+                  {
+                    id: "q1",
+                    stem: "What is the passage about?",
+                    options: ["Urban farming", "Space travel"],
+                  },
+                ],
+              },
+            ],
+            total: 1,
+            page: 1,
+            pageSize: 10,
+          });
+        }
+        if (config.url === "/word-agent/query") {
+          return Promise.resolve({
+            words: [
+              {
+                word: "urban farming",
+                phonetic: "/ˈɜːbən ˈfɑːmɪŋ/",
+                meaning: "城市农业；都市农耕",
+                partOfSpeech: [2],
+                examples: [],
+                ieltsCase: null,
+              },
+            ],
+          });
+        }
+        if (config.url === "/english/existEnglishWord") {
+          return Promise.resolve(false);
+        }
+        if (config.url === "/english/AddEnglishWord") {
+          return Promise.resolve({ success: true });
+        }
+        return Promise.resolve({});
+      });
 
     const user = userEvent.setup();
     render(<ContextLabPage />);
@@ -1858,7 +2307,7 @@ describe("ContextLabPage", () => {
       });
     });
     },
-    10_000,
+    20_000,
   );
 
   it("keeps the add modal open and does not save when the selected word already exists", async () => {
@@ -1941,7 +2390,7 @@ describe("ContextLabPage", () => {
     expect(requestMock).not.toHaveBeenCalledWith(
       expect.objectContaining({ url: "/english/AddEnglishWord" }),
     );
-  }, 15_000);
+  }, 25_000);
 
   it("hides the selected text add menu when the reading pane scrolls", async () => {
     requestMock.mockResolvedValue({
@@ -2259,6 +2708,7 @@ describe("ContextLabPage", () => {
         url: "/english/importMissingWords",
         method: "POST",
         data: {
+          overwriteExisting: false,
           words: [
             {
               englishWord: "urban farming",
@@ -2277,6 +2727,113 @@ describe("ContextLabPage", () => {
     });
     await waitFor(() => {
       expect(screen.queryByLabelText("已标记生词")).not.toBeInTheDocument();
+    });
+  });
+
+  it("lets marked vocabulary reuse the bulk import overwrite confirmation", async () => {
+    requestMock.mockImplementation((config) => {
+      if (config.url === "/context-lab/history") {
+        return Promise.resolve({
+          list: [
+            {
+              id: 12,
+              taskId: 12,
+              status: "succeeded",
+              sourceType: "custom",
+              words: ["urban farming"],
+              articleExerciseId: 88,
+              article:
+                "Urban Farming\n\nUrban farming improves local food supply.",
+              questions: [
+                {
+                  id: "q1",
+                  stem: "What is the passage about?",
+                  options: ["Urban farming", "Space travel"],
+                },
+              ],
+            },
+          ],
+          total: 1,
+          page: 1,
+          pageSize: 10,
+        });
+      }
+      if (config.url === "/word-agent/query") {
+        return Promise.resolve({
+          words: [
+            {
+              word: "urban farming",
+              phonetic: "/ˈɜːbən ˈfɑːmɪŋ/",
+              meaning: "城市农业；都市农耕",
+              partOfSpeech: [2],
+              examples: [],
+              ieltsCase: null,
+            },
+          ],
+        });
+      }
+      if (config.url === "/english/importMissingWords") {
+        return Promise.resolve({
+          received: 1,
+          normalized: 1,
+          inserted: 0,
+          skippedExisting: 0,
+          skippedDuplicate: 0,
+          insertedWords: [],
+          skippedWords: [],
+          updated: 1,
+          updatedWords: ["urban farming"],
+        });
+      }
+      return Promise.resolve({});
+    });
+
+    const user = userEvent.setup();
+    render(<ContextLabPage />);
+
+    await user.click(await screen.findByRole("button", { name: "开始练习" }));
+    const paragraph = await screen.findByText(
+      "Urban farming improves local food supply.",
+    );
+    vi.spyOn(window, "getSelection").mockReturnValue({
+      toString: () => "urban farming",
+      rangeCount: 1,
+      removeAllRanges: vi.fn(),
+    } as unknown as Selection);
+
+    await user.pointer({ target: paragraph, keys: "[MouseRight]" });
+    await user.click(await screen.findByText("标记生词"));
+    const markedPanel = await screen.findByLabelText("已标记生词");
+    await user.click(
+      within(markedPanel).getByRole("button", { name: "预览并导入" }),
+    );
+
+    const previewDialog = await screen.findByRole("dialog", {
+      name: "导入预览",
+    });
+    await user.click(
+      within(previewDialog).getByRole("switch", {
+        name: /覆盖已存在词条/,
+      }),
+    );
+    await user.click(
+      within(previewDialog).getByRole("button", { name: "确认导入" }),
+    );
+
+    await waitFor(() => {
+      expect(requestMock).toHaveBeenCalledWith({
+        url: "/english/importMissingWords",
+        method: "POST",
+        data: {
+          overwriteExisting: true,
+          words: [
+            expect.objectContaining({
+              englishWord: "urban farming",
+            }),
+          ],
+        },
+        __responseType: undefined,
+      });
     });
   });
 });

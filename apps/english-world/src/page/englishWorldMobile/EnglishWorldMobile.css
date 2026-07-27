@@ -768,10 +768,18 @@
 .mobile-context-question-title {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 8px;
+  flex-wrap: wrap;
   color: #607086;
   font-size: 13px;
+}
+
+.mobile-context-question-type.adm-tag {
+  border-color: #bfdbfe;
+  background: #eff6ff;
+  color: #2563eb;
+  font-weight: 700;
 }
 
 .mobile-context-option {

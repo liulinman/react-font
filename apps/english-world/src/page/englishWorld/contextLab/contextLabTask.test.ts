@@ -6,6 +6,7 @@ import {
   subscribeContextLabTaskEvents,
 } from "../server/learning";
 import {
+  getContextLabErrorMessage,
   getContextLabStatusLabel,
   getContextLabStatusTone,
   isContextLabTaskActive,
@@ -31,6 +32,14 @@ describe("contextLabTask", () => {
     expect(getContextLabStatusTone("succeeded")).toBe("success");
   });
 
+  it("turns micro validation codes into an actionable user message", () => {
+    const message = getContextLabErrorMessage("MICRO_OUTPUT_INVALID");
+
+    expect(message).toBe("生成内容未通过格式校验，请重新生成，系统会自动纠偏重试。");
+    expect(message).not.toContain("MICRO_OUTPUT_INVALID");
+    expect(getContextLabErrorMessage("AI 服务不可用")).toBe("AI 服务不可用");
+  });
+
   it("builds context lab async API request contracts", () => {
     const body = {
       sourceType: "custom" as const,
@@ -41,6 +50,21 @@ describe("contextLabTask", () => {
       url: "/context-lab/generate-task",
       method: "POST",
       data: body,
+    });
+    expect(
+      contextLabCreateTask({
+        sourceType: "ielts-core",
+        proficiencyLevels: [0, 1],
+        count: 8,
+      }),
+    ).toMatchObject({
+      url: "/context-lab/generate-task",
+      method: "POST",
+      data: {
+        sourceType: "ielts-core",
+        proficiencyLevels: [0, 1],
+        count: 8,
+      },
     });
     expect(contextLabHistory({ page: 1, pageSize: 10 })).toMatchObject({
       url: "/context-lab/history",
@@ -75,8 +99,10 @@ describe("contextLabTask", () => {
       },
     });
     const fetchMock = vi.fn(
-      async (_input: RequestInfo | URL, _init?: RequestInit) =>
-        new Response(stream),
+      async (...args: [RequestInfo | URL, RequestInit?]) => {
+        void args;
+        return new Response(stream);
+      },
     );
     vi.stubGlobal("fetch", fetchMock);
 

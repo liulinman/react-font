@@ -17,6 +17,15 @@ describe("english world navigation helpers", () => {
   it("resolves active nav from paths before legacy hashes", () => {
     expect(getNavFromLocation("/englishWorld/words", "")).toBe("words");
     expect(getNavFromLocation("/englishWorld/stats", "")).toBe("stats");
+    expect(getNavFromLocation("/englishWorld/bulk-import", "")).toBe(
+      "bulkImport",
+    );
+    expect(getNavFromLocation("/englishWorld/overwrite-stats", "")).toBe(
+      "overwriteStats",
+    );
+    expect(getNavFromLocation("/englishWorld/ielts-core", "")).toBe(
+      "ieltsCore",
+    );
     expect(getNavFromLocation("/englishWorld", "#memory-map")).toBe(
       "memoryMap",
     );
@@ -25,7 +34,12 @@ describe("english world navigation helpers", () => {
   it("returns real routes for nav keys", () => {
     expect(getPathForNav("list")).toBe("/englishWorld/words");
     expect(getPathForNav("stat")).toBe("/englishWorld/stats");
+    expect(getPathForNav("bulkImport")).toBe("/englishWorld/bulk-import");
+    expect(getPathForNav("overwriteStats")).toBe(
+      "/englishWorld/overwrite-stats",
+    );
     expect(getPathForNav("contextLab")).toBe("/englishWorld/context-lab");
+    expect(getPathForNav("ieltsCore")).toBe("/englishWorld/ielts-core");
     expect(getPathForNav("unknown")).toBe("/englishWorld");
   });
 });

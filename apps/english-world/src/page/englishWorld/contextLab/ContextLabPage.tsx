@@ -8,19 +8,23 @@ import {
 } from "react";
 import {
   Button,
+  Checkbox,
+  ConfigProvider,
   Drawer,
+  Dropdown,
   Empty,
   InputNumber,
   message,
   Modal,
   Radio,
   Segmented,
-  Select,
   Space,
   Spin,
   Tag,
   Typography,
   Input,
+  theme as antdTheme,
+  type ThemeConfig,
 } from "antd";
 import {
   DeleteOutlined,
@@ -30,8 +34,10 @@ import {
   FullscreenExitOutlined,
   FullscreenOutlined,
   HistoryOutlined,
+  MoreOutlined,
   PlayCircleOutlined,
   ReloadOutlined,
+  SearchOutlined,
   SendOutlined,
 } from "@ant-design/icons";
 import request from "@font/api";
@@ -56,17 +62,25 @@ import {
 } from "../server/learning";
 import type {
   ContextLabGenerateParams,
+  ContextLabModelProvider,
   ContextLabSubmitResult,
   ContextLabAttempt,
   ContextLabTask,
 } from "../types/learning";
 import type { ExerciseResultItem } from "@/server/exerciseAgent/exerciseAgent";
 import {
+  DEFAULT_CONTEXT_LAB_MODEL_PROVIDER,
+  DEFAULT_IELTS_BAND,
+  IELTS_BAND_MAX,
+  IELTS_BAND_MIN,
+  IELTS_BAND_STEP,
   buildContextLabGenerateParams,
+  normalizeIeltsBand,
   type ContextLabSourceMode,
 } from "./contextLabPlanning";
 import { useInRouterContext, useLocation, useNavigate } from "react-router-dom";
 import {
+  getContextLabErrorMessage,
   getContextLabStatusDescription,
   getContextLabStatusLabel,
   getContextLabStatusTone,
@@ -77,7 +91,6 @@ import {
   buildContextLabReference,
   parseContextLabReference,
 } from "../utils/contextLabReference";
-import { getPartSpeechLabel } from "../utils/wordLabels";
 import {
   buildMicroGenerateParams,
   isInvalidMicroContextEntry,
@@ -87,10 +100,31 @@ import {
   buildLearningEventUid,
   recordLearningEvent,
 } from "../analytics/learningEvents";
+import { BulkImportPreviewModal } from "../bulkImport/BulkImportPreviewModal";
+import {
+  getBulkImportMessage,
+  toBulkImportWordPayload,
+} from "../bulkImport/bulkImportPreview";
+import { stripGeneratedMarkdownEmphasis } from "./articleText";
+import { formatContextLabQuestionTypeLabel } from "./contextLabQuestionType";
 
 const { Text, Title } = Typography;
 const { TextArea } = Input;
+
+const CONTEXT_LAB_LIGHT_THEME = {
+  algorithm: antdTheme.defaultAlgorithm,
+  token: {
+    colorPrimary: "#2563eb",
+    borderRadius: 8,
+  },
+} satisfies ThemeConfig;
 const ANSWER_LETTERS = ["A", "B", "C", "D"];
+const PROFICIENCY_OPTIONS = [
+  { label: "不会", value: 0 },
+  { label: "一般", value: 1 },
+  { label: "熟练", value: 2 },
+  { label: "精通", value: 3 },
+];
 const ACTIVE_TASK_DELETE_MESSAGE =
   "生成中的练习包暂不支持删除，请等待任务完成或失败后再操作";
 
@@ -125,10 +159,6 @@ type ContextLabHistorySourceFilter = "all" | ContextLabTask["sourceType"];
 type MarkedVocabularyItem = Omit<WordList, "id"> & {
   key: string;
 };
-const PART_SPEECH_OPTIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9].map((value) => ({
-  value,
-  label: getPartSpeechLabel(value).label,
-}));
 
 function isPlainRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -201,19 +231,8 @@ function buildMarkedVocabularyItem(
 }
 
 function toImportWordPayload(item: MarkedVocabularyItem): Omit<WordList, "id"> {
-  return {
-    englishWord: item.englishWord,
-    ...(item.englishPhonetic ? { englishPhonetic: item.englishPhonetic } : {}),
-    ...(item.englishChinese ? { englishChinese: item.englishChinese } : {}),
-    ...(item.englishPartSpeech?.length
-      ? { englishPartSpeech: item.englishPartSpeech }
-      : {}),
-    englishLevel: item.englishLevel,
-    englishType: item.englishType,
-    ...(item.englishReference
-      ? { englishReference: item.englishReference }
-      : {}),
-  };
+  const { key: _key, ...word } = item;
+  return toBulkImportWordPayload(word, item.englishLevel ?? 0);
 }
 
 function mergeImportPreviewWithAi(
@@ -265,7 +284,7 @@ function mergeImportPreviewWithAi(
 }
 
 function splitArticleParagraphs(article: string) {
-  return article
+  return stripGeneratedMarkdownEmphasis(article)
     .split(/\n\s*\n/)
     .map((paragraph) => paragraph.trim())
     .filter(Boolean);
@@ -292,8 +311,9 @@ function getContextLabQuestionLabel(task: ContextLabTask | null, questionId: str
 function getContextLabSourceLabel(sourceType: ContextLabTask["sourceType"]) {
   const labels: Record<ContextLabTask["sourceType"], string> = {
     custom: "手输词组",
+    "ielts-core": "雅思核心词",
     proficiency: "薄弱词",
-    random: "随机词",
+    random: "随机 IELTS",
   };
   return labels[sourceType] ?? "练习包";
 }
@@ -327,8 +347,15 @@ function ContextLabPageContent({
   onBackToToday?: () => void;
 }) {
   const [sourceMode, setSourceMode] = useState<ContextLabSourceMode>("weak");
-  const [count, setCount] = useState(8);
+  const [count, setCount] = useState(20);
+  const [proficiencyLevels, setProficiencyLevels] = useState<number[]>([]);
   const [customWords, setCustomWords] = useState("");
+  const [ieltsBand, setIeltsBand] = useState<number | null>(
+    DEFAULT_IELTS_BAND,
+  );
+  const [modelProvider, setModelProvider] = useState<ContextLabModelProvider>(
+    DEFAULT_CONTEXT_LAB_MODEL_PROVIDER,
+  );
   const [creating, setCreating] = useState(false);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [history, setHistory] = useState<ContextLabTask[]>([]);
@@ -374,6 +401,7 @@ function ContextLabPageContent({
   const [importPreviewWords, setImportPreviewWords] = useState<
     MarkedVocabularyItem[]
   >([]);
+  const [importOverwriteExisting, setImportOverwriteExisting] = useState(false);
   const [addingSelectedWord, setAddingSelectedWord] = useState(false);
   const [translatingSelectedWord, setTranslatingSelectedWord] = useState(false);
   const [importingMarkedWords, setImportingMarkedWords] = useState(false);
@@ -420,8 +448,23 @@ function ContextLabPageContent({
         microEntry.words,
       );
     }
-    return buildContextLabGenerateParams({ sourceMode, count, customWords });
-  }, [count, customWords, microEntry, sourceMode]);
+    return buildContextLabGenerateParams({
+      sourceMode,
+      count,
+      customWords,
+      proficiencyLevels,
+      ieltsBand,
+      modelProvider,
+    });
+  }, [
+    count,
+    customWords,
+    ieltsBand,
+    microEntry,
+    modelProvider,
+    proficiencyLevels,
+    sourceMode,
+  ]);
 
   const recordMicroGenerated = useCallback(async (task: ContextLabTask) => {
     if (!microEntry || generatedMicroTaskIdsRef.current.has(task.taskId)) return;
@@ -520,7 +563,8 @@ function ContextLabPageContent({
             : {}),
         }),
       );
-      setHistory(response.list ?? []);
+      const nextHistory = response.list ?? [];
+      setHistory(nextHistory);
       setCurrentTask((prev) => {
         if (!prev) return prev;
         return (
@@ -754,7 +798,6 @@ function ContextLabPageContent({
         setResults([]);
         setSubmitSummary(null);
         setElapsedSeconds(0);
-        setPracticeFullscreen(false);
         setSourcePreviewFullscreen(false);
         setHighlightWord(reference.word ?? "");
         setPracticeModalOpen(false);
@@ -852,9 +895,9 @@ function ContextLabPageContent({
     setSubmitSummary(null);
     setElapsedSeconds(0);
     setHighlightWord("");
-    setPracticeFullscreen(false);
     setSourcePreviewFullscreen(false);
     setSourcePreviewOpen(false);
+    setPracticeFullscreen(false);
     setPracticeModalOpen(true);
   };
 
@@ -864,9 +907,9 @@ function ContextLabPageContent({
     setResults([]);
     setSubmitSummary(null);
     setElapsedSeconds(0);
-    setPracticeFullscreen(false);
     setSourcePreviewFullscreen(false);
     setSourcePreviewOpen(false);
+    setPracticeFullscreen(false);
     setPracticeModalOpen(true);
   };
 
@@ -1044,6 +1087,7 @@ function ContextLabPageContent({
     ]);
     setImportPreviewWords([]);
     setImportPreviewOpen(false);
+    setImportOverwriteExisting(false);
     message.success("已标记，稍后可一键导入");
     closeSelectionMenu();
     window.getSelection()?.removeAllRanges();
@@ -1053,39 +1097,20 @@ function ContextLabPageContent({
     setMarkedVocabulary((prev) => prev.filter((item) => item.key !== key));
     setImportPreviewWords([]);
     setImportPreviewOpen(false);
+    setImportOverwriteExisting(false);
   };
 
   const handleClearMarkedVocabulary = () => {
     setMarkedVocabulary([]);
     setImportPreviewWords([]);
     setImportPreviewOpen(false);
+    setImportOverwriteExisting(false);
   };
 
   const handleCloseImportPreview = () => {
     setImportPreviewOpen(false);
     setImportPreviewWords([]);
-  };
-
-  const handleUpdateImportPreviewWord = (
-    key: string,
-    patch: Partial<MarkedVocabularyItem>,
-  ) => {
-    setImportPreviewWords((prev) =>
-      prev.map((item) =>
-        item.key === key
-          ? {
-              ...item,
-              ...patch,
-              englishType:
-                patch.englishWord !== undefined
-                  ? cleanSelectedVocabularyText(patch.englishWord).includes(" ")
-                    ? 1
-                    : 0
-                  : item.englishType,
-            }
-          : item,
-      ),
-    );
+    setImportOverwriteExisting(false);
   };
 
   const handleImportMarkedVocabulary = async () => {
@@ -1096,6 +1121,7 @@ function ContextLabPageContent({
 
     const wordsSnapshot = markedVocabulary;
     setImportPreviewWords(wordsSnapshot);
+    setImportOverwriteExisting(false);
     setImportPreviewOpen(true);
     setImportingMarkedWords(true);
     try {
@@ -1128,16 +1154,13 @@ function ContextLabPageContent({
     try {
       const response = await request(
         wordImportMissing({
+          overwriteExisting: importOverwriteExisting,
           words: importPreviewWords.map(toImportWordPayload),
         }),
       );
-      const skipped = response.skippedExisting + response.skippedDuplicate;
-      if (response.inserted > 0) {
-        message.success(
-          skipped > 0
-            ? `已导入 ${response.inserted} 个生词，跳过 ${skipped} 个已有/重复词`
-            : `已导入 ${response.inserted} 个生词`,
-        );
+      const updated = response.updated ?? 0;
+      if (response.inserted > 0 || updated > 0) {
+        message.success(getBulkImportMessage(response));
       } else {
         message.info("标记词都已在词库，无需重复导入");
       }
@@ -1275,7 +1298,9 @@ function ContextLabPageContent({
         <Text className="learning-cockpit-label">Task #{task.taskId}</Text>
         <Title level={4}>{getContextLabStatusLabel(task.status)}</Title>
         <Text type="secondary">
-          {task.errorMessage || getContextLabStatusDescription(task.status)}
+          {task.errorMessage
+            ? getContextLabErrorMessage(task.errorMessage)
+            : getContextLabStatusDescription(task.status)}
         </Text>
       </div>
       <Space>
@@ -1312,7 +1337,7 @@ function ContextLabPageContent({
     }
 
     if (task.status === "failed") {
-      return <span>{task.errorMessage || "生成失败，换一组词再试试"}</span>;
+      return <span>{getContextLabErrorMessage(task.errorMessage)}</span>;
     }
 
     if (isContextLabTaskActive(task.status)) {
@@ -1320,22 +1345,6 @@ function ContextLabPageContent({
     }
 
     return <span>还没有提交记录，开始练习后会出现在这里。</span>;
-  };
-
-  const renderTaskWordChips = (task: ContextLabTask) => {
-    const visibleWords = task.words.slice(0, 5);
-    const hiddenCount = Math.max(0, task.words.length - visibleWords.length);
-
-    return (
-      <>
-        {visibleWords.map((word) => (
-          <span key={word}>{word}</span>
-        ))}
-        {hiddenCount > 0 && (
-          <span className="context-lab-history-word-more">+{hiddenCount}</span>
-        )}
-      </>
-    );
   };
 
   const renderHighlightedArticleText = (text: string) => {
@@ -1605,108 +1614,6 @@ function ContextLabPageContent({
             </div>
           </section>
         )}
-        <Modal
-          aria-label="导入预览"
-          destroyOnHidden
-          centered
-          className="context-lab-import-preview-modal"
-          footer={null}
-          onCancel={handleCloseImportPreview}
-          open={importPreviewOpen}
-          title="导入预览"
-          width={720}
-        >
-          <div
-            aria-label="导入预览"
-            className="context-lab-import-preview"
-            role="dialog"
-          >
-            <div className="context-lab-import-preview-status">
-              <Text type="secondary">
-                {importingMarkedWords
-                  ? "预览已打开，AI 正在补全音标、释义和词性；你也可以先手动编辑。"
-                  : "AI 已补齐标记词内容，你可以先修改再确认导入；系统只会插入词库中不存在的词。"}
-              </Text>
-              {importingMarkedWords && <Tag color="processing">AI 补全中</Tag>}
-            </div>
-            <div className="context-lab-import-preview-list">
-              {importPreviewWords.map((item, index) => (
-                <section
-                  aria-label={`待导入词 ${index + 1}`}
-                  className="context-lab-import-preview-item"
-                  key={item.key}
-                >
-                  <div className="context-lab-import-preview-grid">
-                    <label className="context-lab-import-preview-field">
-                      <span>单词/短语</span>
-                      <Input
-                        aria-label={`第 ${index + 1} 个词单词`}
-                        value={item.englishWord}
-                        onChange={(event) =>
-                          handleUpdateImportPreviewWord(item.key, {
-                            englishWord: event.target.value,
-                          })
-                        }
-                      />
-                    </label>
-                    <label className="context-lab-import-preview-field">
-                      <span>音标</span>
-                      <Input
-                        aria-label={`第 ${index + 1} 个词音标`}
-                        placeholder="可留空"
-                        value={item.englishPhonetic ?? ""}
-                        onChange={(event) =>
-                          handleUpdateImportPreviewWord(item.key, {
-                            englishPhonetic: event.target.value,
-                          })
-                        }
-                      />
-                    </label>
-                  </div>
-                  <label className="context-lab-import-preview-field">
-                    <span>释义</span>
-                    <TextArea
-                      aria-label={`第 ${index + 1} 个词释义`}
-                      autoSize={{ minRows: 2, maxRows: 4 }}
-                      placeholder="AI 暂未补齐释义，可手动填写"
-                      value={item.englishChinese ?? ""}
-                      onChange={(event) =>
-                        handleUpdateImportPreviewWord(item.key, {
-                          englishChinese: event.target.value,
-                        })
-                      }
-                    />
-                  </label>
-                  <div className="context-lab-import-preview-field">
-                    <span>词性</span>
-                    <Select
-                      aria-label={`第 ${index + 1} 个词词性`}
-                      mode="multiple"
-                      options={PART_SPEECH_OPTIONS}
-                      placeholder="选择词性"
-                      value={item.englishPartSpeech ?? []}
-                      onChange={(value) =>
-                        handleUpdateImportPreviewWord(item.key, {
-                          englishPartSpeech: value,
-                        })
-                      }
-                    />
-                  </div>
-                </section>
-              ))}
-            </div>
-            <Space className="context-lab-import-preview-actions" wrap>
-              <Button onClick={handleCloseImportPreview}>继续标记</Button>
-              <Button
-                loading={confirmingMarkedImport}
-                type="primary"
-                onClick={handleConfirmMarkedVocabularyImport}
-              >
-                确认导入
-              </Button>
-            </Space>
-          </div>
-        </Modal>
         <div className="learning-cockpit-word-strip">
           {currentTask.words.map((word) => (
             <Tag key={word} color="blue">
@@ -1795,13 +1702,23 @@ function ContextLabPageContent({
                 const result = results.find(
                   (item) => item.questionId === questionKey,
                 );
+                const questionTypeLabel = formatContextLabQuestionTypeLabel(
+                  question.questionType,
+                );
                 return (
                   <section
                     className="context-lab-question-card"
                     key={questionKey}
                   >
-                    <div className="context-lab-question-index">
-                      第 {index + 1} 题
+                    <div className="context-lab-question-meta">
+                      <div className="context-lab-question-index">
+                        第 {index + 1} 题
+                      </div>
+                      {questionTypeLabel && (
+                        <Tag className="context-lab-question-type">
+                          {questionTypeLabel}
+                        </Tag>
+                      )}
                     </div>
                     {isMicroMode && question.targetWord && (
                       <Tag className="context-lab-target-word">
@@ -1869,24 +1786,18 @@ function ContextLabPageContent({
           isMicroMode ? " context-lab-page-micro" : ""
         }`}
       >
-        <section className="learning-cockpit-hero context-lab-hero">
-          <div>
-            <Text className="learning-cockpit-label">
-              {isMicroMode ? "Context Repair" : "B. Context Lab"}
-            </Text>
-            <Title level={1}>
-              {isMicroMode ? "错词语境巩固" : "AI 语境实验室"}
-            </Title>
-            <p>
-              {isMicroMode
-                ? "用一篇短语境和三道题，重新建立这组错词的理解线索。"
-                : "把薄弱词、随机词或手输词生成雅思长度阅读、选择题和例句改写，让词库变成可练习的场景。"}
-            </p>
-          </div>
-          <Tag className="context-lab-hero-tag" icon={<ExperimentOutlined />}>
-            {isMicroMode ? "约 3 分钟" : "语境化练习"}
-          </Tag>
-        </section>
+        {isMicroMode && (
+          <section className="learning-cockpit-hero context-lab-hero">
+            <div>
+              <Text className="learning-cockpit-label">Context Repair</Text>
+              <Title level={1}>错词语境巩固</Title>
+              <p>用一篇短语境和三道题，重新建立这组错词的理解线索。</p>
+            </div>
+            <Tag className="context-lab-hero-tag" icon={<ExperimentOutlined />}>
+              约 3 分钟
+            </Tag>
+          </section>
+        )}
 
         {invalidMicroEntry ? (
           <section className="learning-cockpit-card context-lab-micro-intro">
@@ -1976,8 +1887,46 @@ function ContextLabPageContent({
             )}
           </section>
         ) : (
-        <div className="context-lab-grid">
-        <section className="learning-cockpit-card context-lab-generator-card">
+          <div className="context-lab-shell">
+            <header
+              aria-label="AI 语境实验室工具栏"
+              className="context-lab-utility-header"
+            >
+              <div className="context-lab-utility-title">
+                <ExperimentOutlined aria-hidden="true" />
+                <div>
+                  <Title level={2}>AI 语境实验室</Title>
+                  <Text type="secondary">
+                    创建练习包，在弹窗中完成阅读、答题与复盘
+                  </Text>
+                </div>
+              </div>
+              <Space size={8}>
+                <Button
+                  icon={<ReloadOutlined aria-hidden="true" />}
+                  loading={historyLoading}
+                  onClick={loadHistory}
+                >
+                  刷新
+                </Button>
+                <Button
+                  icon={<DownloadOutlined aria-hidden="true" />}
+                  loading={downloading}
+                  onClick={handleDownloadTemplate}
+                >
+                  下载 PDF 模板
+                </Button>
+              </Space>
+            </header>
+
+            <div className="context-lab-shell-body">
+              <aside
+                aria-label="新建语境练习"
+                className="context-lab-sidebar"
+              >
+        <section
+          className="context-lab-generator-card"
+        >
           <div className="learning-cockpit-card-heading">
             <div>
               <Text className="learning-cockpit-label">Create</Text>
@@ -1988,22 +1937,32 @@ function ContextLabPageContent({
             </div>
           </div>
 
-          <Segmented
-            block
+          <Radio.Group
+            aria-label="词汇来源"
+            buttonStyle="solid"
+            className="context-lab-source-mode"
+            optionType="button"
             value={sourceMode}
-            onChange={(value) => setSourceMode(value as ContextLabSourceMode)}
+            onChange={(event) =>
+              setSourceMode(event.target.value as ContextLabSourceMode)
+            }
             options={[
               { label: "今日薄弱词", value: "weak" },
-              { label: "随机词", value: "random" },
+              { label: "按掌握程度", value: "proficiency" },
+              { label: "雅思核心", value: "ielts-core" },
+              { label: "随机 IELTS", value: "ielts-random" },
               { label: "手输词", value: "custom" },
             ]}
           />
 
           <div className="context-lab-source-panel">
-            {sourceMode === "weak" && (
+            {(sourceMode === "weak" ||
+              sourceMode === "ielts-core" ||
+              sourceMode === "ielts-random") && (
               <Space>
                 <Text>生成数量</Text>
                 <InputNumber
+                  aria-label="生成数量"
                   min={3}
                   max={20}
                   value={count}
@@ -2012,10 +1971,73 @@ function ContextLabPageContent({
               </Space>
             )}
 
-            {sourceMode === "random" && (
+            <Space direction="vertical" size={6}>
+              <Text>生成模型</Text>
+              <Segmented
+                aria-label="生成模型"
+                value={modelProvider}
+                onChange={(value) =>
+                  setModelProvider(value as ContextLabModelProvider)
+                }
+                options={[
+                  { label: "DeepSeek", value: "deepseek" },
+                  { label: "GPT-5.6", value: "gpt" },
+                ]}
+              />
+            </Space>
+
+            <Space
+              className="context-lab-ielts-band-field"
+              direction="vertical"
+              size={6}
+            >
+              <Text>雅思分数等级</Text>
+              <InputNumber
+                aria-label="雅思分数等级"
+                min={IELTS_BAND_MIN}
+                max={IELTS_BAND_MAX}
+                step={IELTS_BAND_STEP}
+                value={ieltsBand}
+                onBlur={() =>
+                  setIeltsBand((value) => normalizeIeltsBand(value))
+                }
+                onChange={(value) =>
+                  setIeltsBand(
+                    value === null || value === undefined
+                      ? null
+                      : normalizeIeltsBand(value),
+                  )
+                }
+              />
+              <Text type="secondary">
+                5 到 9 分，每 0.5 分一档，控制文章和题目的雅思难度。
+              </Text>
+            </Space>
+
+            {(sourceMode === "proficiency" || sourceMode === "ielts-core") && (
+              <Space direction="vertical" size={8}>
+                <Text>掌握程度</Text>
+                <Checkbox.Group
+                  className="context-lab-level-picker"
+                  options={PROFICIENCY_OPTIONS}
+                  value={proficiencyLevels}
+                  onChange={(value) =>
+                    setProficiencyLevels(value.map((item) => Number(item)))
+                  }
+                />
+                <Text type="secondary">
+                  {sourceMode === "ielts-core"
+                    ? "从这些掌握程度里筛选你的雅思核心词。"
+                    : "从这些掌握程度里抽词生成一篇文章。未选择时默认不会和一般。"}
+                </Text>
+              </Space>
+            )}
+
+            {sourceMode === "proficiency" && (
               <Space>
                 <Text>生成数量</Text>
                 <InputNumber
+                  aria-label="生成数量"
                   min={3}
                   max={20}
                   value={count}
@@ -2036,6 +2058,7 @@ function ContextLabPageContent({
 
           <div className="context-lab-generator-actions">
             <Button
+              block
               type="primary"
               icon={<SendOutlined />}
               loading={creating}
@@ -2043,40 +2066,33 @@ function ContextLabPageContent({
             >
               生成练习包
             </Button>
-            <Button
-              type="link"
-              icon={<DownloadOutlined aria-hidden="true" />}
-              loading={downloading}
-              onClick={handleDownloadTemplate}
-            >
-              下载 PDF 模板
-            </Button>
           </div>
         </section>
+              </aside>
 
-        <section className="learning-cockpit-card context-lab-queue-card">
+              <main
+                aria-label="练习包管理"
+                className="context-lab-pack-workspace"
+              >
+        <section
+          className="context-lab-queue-card"
+        >
           <div className="learning-cockpit-card-heading">
             <div>
               <Text className="learning-cockpit-label">Tasks</Text>
               <Title level={3}>练习包</Title>
             </div>
-            <Button
-              icon={<ReloadOutlined aria-hidden="true" />}
-              loading={historyLoading}
-              onClick={loadHistory}
-            >
-              刷新状态
-            </Button>
           </div>
 
           <div className="context-lab-history-search">
-            <Input.Search
+            <Input
               allowClear
               aria-label="搜索练习包"
+              className="context-lab-history-search-input"
               placeholder="搜索练习包、单词、来源、状态"
+              prefix={<SearchOutlined aria-hidden />}
               value={historyKeyword}
               onChange={(event) => setHistoryKeyword(event.target.value)}
-              onSearch={(value) => setHistoryKeyword(value)}
             />
             <Segmented<ContextLabHistorySourceFilter>
               aria-label="练习包来源筛选"
@@ -2085,8 +2101,9 @@ function ContextLabPageContent({
               options={[
                 { label: "全部", value: "all" },
                 { label: "薄弱词", value: "proficiency" },
-                { label: "随机词", value: "random" },
-                { label: "手输词", value: "custom" },
+                { label: "核心", value: "ielts-core" },
+                { label: "随机", value: "random" },
+                { label: "手输", value: "custom" },
               ]}
             />
             {historySearchActive && (
@@ -2106,16 +2123,14 @@ function ContextLabPageContent({
             )}
           </div>
 
-          {currentTask && renderTaskStatus(currentTask)}
-
-          {!currentTask && historyLoading && (
+          {historyLoading && (
             <div className="context-lab-history-empty">
               <Spin />
               <Text type="secondary">正在读取生成历史...</Text>
             </div>
           )}
 
-          {!currentTask && !historyLoading && history.length === 0 && (
+          {!historyLoading && history.length === 0 && (
             <Empty
               description={
                 historySearchActive
@@ -2140,8 +2155,17 @@ function ContextLabPageContent({
           <div className="context-lab-history-list">
             {history.map((task) => (
               <article
-                className={`context-lab-history-item context-lab-history-item-${task.status}`}
+                className={`context-lab-history-item context-lab-history-item-${task.status}${
+                  currentTask?.taskId === task.taskId
+                    ? " context-lab-history-item-selected"
+                    : ""
+                }`}
                 key={task.taskId}
+                onClick={() => {
+                  if (task.status === "succeeded") {
+                    handleOpenTask(task);
+                  }
+                }}
               >
                 <div className="context-lab-history-main">
                   <div className="context-lab-history-kicker">
@@ -2155,74 +2179,153 @@ function ContextLabPageContent({
                     {task.words.slice(0, 5).join(" / ")}
                     {task.words.length > 5 ? " / ..." : ""}
                   </h4>
-                  <div className="context-lab-history-words">
-                    {renderTaskWordChips(task)}
-                  </div>
                   <div className="context-lab-history-metrics">
                     {renderTaskMetrics(task)}
                   </div>
                 </div>
                 <div className="context-lab-history-actions">
-                  {isContextLabTaskActive(task.status) && (
+                  {task.status === "succeeded" && (
                     <Button
+                      type="primary"
                       size="small"
-                      icon={<ReloadOutlined aria-hidden="true" />}
-                      onClick={loadHistory}
+                      icon={<PlayCircleOutlined aria-hidden="true" />}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        handleOpenTask(task);
+                      }}
                     >
-                      刷新
+                      开始练习
                     </Button>
                   )}
-                  {task.status === "succeeded" && (
-                    <>
-                      <Button
-                        type="primary"
-                        size="small"
-                        icon={<PlayCircleOutlined aria-hidden="true" />}
-                        onClick={() => handleOpenTask(task)}
-                      >
-                        开始练习
-                      </Button>
-                      <Button
-                        size="small"
-                        aria-label="查看记录"
-                        icon={<HistoryOutlined aria-hidden="true" />}
-                        onClick={() => void loadAttempts(task)}
-                      >
-                        记录
-                      </Button>
-                      <Button
-                        aria-label="下载练习包 PDF"
-                        icon={<FilePdfOutlined aria-hidden="true" />}
-                        size="small"
-                        onClick={() => handleDownloadTaskPdf(task)}
-                      >
-                        PDF
-                      </Button>
-                    </>
-                  )}
                   {task.status === "failed" && (
-                    <Button size="small" type="primary" onClick={handleGenerate}>
+                    <Button
+                      size="small"
+                      type="primary"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        void handleGenerate();
+                      }}
+                    >
                       重新生成
                     </Button>
                   )}
-                  <Button
-                    danger
-                    aria-label="删除练习包"
-                    size="small"
-                    type="text"
-                    icon={<DeleteOutlined aria-hidden="true" />}
-                    onClick={() => handleDeleteTask(task)}
+                  <Dropdown
+                    menu={{
+                      items: [
+                        ...(isContextLabTaskActive(task.status)
+                          ? [
+                              {
+                                key: "refresh",
+                                icon: <ReloadOutlined />,
+                                label: "刷新状态",
+                              },
+                            ]
+                          : []),
+                        ...(task.status === "succeeded"
+                          ? [
+                              {
+                                key: "attempts",
+                                icon: <HistoryOutlined />,
+                                label: "查看记录",
+                              },
+                              {
+                                key: "pdf",
+                                icon: <FilePdfOutlined />,
+                                label:
+                                  downloadingTaskId === task.taskId
+                                    ? "正在下载"
+                                    : "下载 PDF",
+                                disabled: downloadingTaskId === task.taskId,
+                              },
+                            ]
+                          : []),
+                        {
+                          type: "divider",
+                        },
+                        {
+                          danger: true,
+                          key: "delete",
+                          icon: <DeleteOutlined />,
+                          label: "删除练习包",
+                        },
+                      ],
+                      onClick: ({ domEvent, key }) => {
+                        domEvent.stopPropagation();
+                        if (key === "refresh") {
+                          void loadHistory();
+                        } else if (key === "attempts") {
+                          void loadAttempts(task);
+                        } else if (key === "pdf") {
+                          void handleDownloadTaskPdf(task);
+                        } else if (key === "delete") {
+                          handleDeleteTask(task);
+                        }
+                      },
+                    }}
+                    trigger={["click"]}
                   >
-                    删除
-                  </Button>
+                    <Button
+                      aria-label={`任务 ${task.taskId} 更多操作`}
+                      icon={<MoreOutlined aria-hidden="true" />}
+                      size="small"
+                      type="text"
+                      onClick={(event) => event.stopPropagation()}
+                    />
+                  </Dropdown>
                 </div>
               </article>
             ))}
           </div>
         </section>
-      </div>
+              </main>
+            </div>
+          </div>
         )}
       </div>
+
+      <Modal
+        aria-label={isMicroMode ? "错词语境巩固" : "AI 语境练习"}
+        className={`context-lab-practice-modal${
+          practiceFullscreen ? " context-lab-practice-modal-fullscreen" : ""
+        }`}
+        destroyOnHidden={false}
+        footer={null}
+        open={practiceModalOpen}
+        title={
+          <div className="context-lab-practice-modal-title">
+            <span>{isMicroMode ? "错词语境巩固" : "AI 语境练习"}</span>
+            <Button
+              aria-label={practiceFullscreen ? "退出满屏" : "占满屏幕"}
+              icon={
+                practiceFullscreen ? (
+                  <FullscreenExitOutlined />
+                ) : (
+                  <FullscreenOutlined />
+                )
+              }
+              size="small"
+              type="text"
+              onClick={() => setPracticeFullscreen((value) => !value)}
+            >
+              {practiceFullscreen ? "退出满屏" : "占满屏幕"}
+            </Button>
+          </div>
+        }
+        width={practiceFullscreen ? "100vw" : "min(1280px, 96vw)"}
+        onCancel={() => {
+          closeSelectionMenu();
+          setHighlightWord("");
+          setPracticeFullscreen(false);
+          setPracticeModalOpen(false);
+        }}
+      >
+        <section
+          aria-label={isMicroMode ? "错词语境巩固内容" : "AI 语境练习内容"}
+          className="context-lab-active-practice"
+        >
+          {renderPracticeWorkspace()}
+        </section>
+      </Modal>
 
       <Drawer
         aria-label="练习记录"
@@ -2501,42 +2604,48 @@ function ContextLabPageContent({
         </div>
       </Modal>
 
-      <Modal
-        className={`context-lab-practice-modal${
-          practiceFullscreen ? " context-lab-practice-modal-fullscreen" : ""
-        }`}
-        destroyOnHidden={false}
-        footer={null}
-        open={practiceModalOpen}
-        title={
-          <div className="context-lab-practice-modal-title">
-            <span>{isMicroMode ? "错词语境巩固" : "AI 语境练习"}</span>
-            <Button
-              aria-label={practiceFullscreen ? "退出满屏" : "占满屏幕"}
-              icon={
-                practiceFullscreen ? (
-                  <FullscreenExitOutlined />
-                ) : (
-                  <FullscreenOutlined />
-                )
-              }
-              size="small"
-              type="text"
-              onClick={() => setPracticeFullscreen((value) => !value)}
-            >
-              {practiceFullscreen ? "退出满屏" : "占满屏幕"}
-            </Button>
-          </div>
+      <BulkImportPreviewModal
+        ariaLabel="导入预览"
+        bodyClassName="context-lab-import-preview"
+        bodyDialogLabel="导入预览"
+        cancelText="继续标记"
+        centered
+        className="bulk-import-preview-modal context-lab-import-preview-modal"
+        confirming={confirmingMarkedImport}
+        defaultLevel={0}
+        description={
+          <>
+            <Text type="secondary">
+              {importingMarkedWords
+                ? "预览已打开，AI 正在补全音标、释义和词性；你也可以先手动编辑。"
+                : "AI 已补齐标记词内容，你可以先修改再确认导入；开启覆盖后会更新已有词条并计入覆盖统计。"}
+            </Text>
+            {importingMarkedWords && <Tag color="processing">AI 补全中</Tag>}
+          </>
         }
-        width={practiceFullscreen ? "100vw" : "min(1280px, 96vw)"}
-        onCancel={() => {
-          closeSelectionMenu();
-          setHighlightWord("");
-          setPracticeModalOpen(false);
+        destroyOnHidden
+        fieldAriaLabel={(_item, index, field) => {
+          const labels = {
+            word: "单词",
+            phonetic: "音标",
+            chinese: "释义",
+            note: "备注",
+          };
+          return `第 ${index + 1} 个词${labels[field]}`;
         }}
-      >
-        {renderPracticeWorkspace()}
-      </Modal>
+        getWordKey={(item) => item.key}
+        inlineFooter
+        inlineFooterClassName="context-lab-import-preview-actions"
+        onCancel={handleCloseImportPreview}
+        onConfirm={handleConfirmMarkedVocabularyImport}
+        onOverwriteExistingChange={setImportOverwriteExisting}
+        onWordsChange={setImportPreviewWords}
+        open={importPreviewOpen}
+        overwriteExisting={importOverwriteExisting}
+        title="导入预览"
+        width={720}
+        words={importPreviewWords}
+      />
 
       {addModalVisible && (
         <EditAddModal
@@ -2576,31 +2685,37 @@ export function ContextLabPage() {
   const inRouterContext = useInRouterContext();
 
   if (inRouterContext) {
-    return <ContextLabPageRouter />;
+    return (
+      <ConfigProvider theme={CONTEXT_LAB_LIGHT_THEME}>
+        <ContextLabPageRouter />
+      </ConfigProvider>
+    );
   }
 
   const initialSearch =
     typeof window !== "undefined" ? window.location.search : "";
 
   return (
-    <ContextLabPageContent
-      initialSearch={initialSearch}
-      onOpenWordLibrary={() => window.location.assign("/englishWorld/words")}
-      onBackToReciteResult={(sessionId) =>
-        window.location.assign(
-          `/englishWorld/recite?view=result&sessionId=${sessionId}`,
-        )
-      }
-      onMicroTaskReady={(taskId) => {
-        const params = new URLSearchParams(window.location.search);
-        params.set("taskId", String(taskId));
-        window.history.replaceState(
-          null,
-          "",
-          `${window.location.pathname}?${params.toString()}`,
-        );
-      }}
-      onBackToToday={() => window.location.assign("/englishWorld")}
-    />
+    <ConfigProvider theme={CONTEXT_LAB_LIGHT_THEME}>
+      <ContextLabPageContent
+        initialSearch={initialSearch}
+        onOpenWordLibrary={() => window.location.assign("/englishWorld/words")}
+        onBackToReciteResult={(sessionId) =>
+          window.location.assign(
+            `/englishWorld/recite?view=result&sessionId=${sessionId}`,
+          )
+        }
+        onMicroTaskReady={(taskId) => {
+          const params = new URLSearchParams(window.location.search);
+          params.set("taskId", String(taskId));
+          window.history.replaceState(
+            null,
+            "",
+            `${window.location.pathname}?${params.toString()}`,
+          );
+        }}
+        onBackToToday={() => window.location.assign("/englishWorld")}
+      />
+    </ConfigProvider>
   );
 }

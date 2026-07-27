@@ -111,23 +111,42 @@ export type MemoryMapUpdateLevelParams = {
   level: LearningLevel;
 };
 
+type ContextLabIeltsBandOptions = {
+  ieltsBand?: number;
+};
+
+export type ContextLabModelProvider = "deepseek" | "gpt";
+
+type ContextLabModelOptions = {
+  modelProvider?: ContextLabModelProvider;
+};
+
 export type ContextLabGenerateParams =
-  | {
+  | ({
       sourceType: "proficiency";
       proficiencyLevels: number[];
       count?: number;
-    }
-  | {
+    } & ContextLabIeltsBandOptions &
+      ContextLabModelOptions)
+  | ({
+      sourceType: "ielts-core";
+      proficiencyLevels?: number[];
+      count?: number;
+    } & ContextLabIeltsBandOptions &
+      ContextLabModelOptions)
+  | ({
       sourceType: "random";
       count?: number;
-    }
-  | {
+    } & ContextLabIeltsBandOptions &
+      ContextLabModelOptions)
+  | ({
       sourceType: "custom";
       words: string[];
       mode?: ContextLabMode;
       reciteSessionId?: number;
       requestUid?: string;
-    };
+    } & ContextLabIeltsBandOptions &
+      ContextLabModelOptions);
 
 export type ContextLabMode = "standard" | "micro";
 
@@ -208,6 +227,7 @@ export type ContextLabQuestion = {
   id: string;
   stem: string;
   options: string[];
+  questionType?: string;
   targetWord?: string;
 };
 

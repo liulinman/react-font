@@ -22,6 +22,20 @@ describe("mobileContextLab helpers", () => {
     });
   });
 
+  it("strips markdown bold markers when parsing article text", () => {
+    expect(
+      parseMobileContextArticle(
+        "Urban Renewal\n\nA **remarkable** policy response.\n\nThe **plight** remains.",
+      ),
+    ).toEqual({
+      topic: "Urban Renewal",
+      paragraphs: [
+        "A remarkable policy response.",
+        "The plight remains.",
+      ],
+    });
+  });
+
   it("cleans selected vocabulary text and creates stable keys", () => {
     expect(cleanMobileSelectedText(" “Urban farming,” ")).toBe("Urban farming");
     expect(getMobileVocabularyKey("Urban   Farming")).toBe("urban farming");

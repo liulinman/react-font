@@ -8,8 +8,11 @@ describe("English World desktop context", () => {
   it("maps primary and contextual routes to stable product sections", () => {
     expect(getEnglishWorldSectionLabel("cockpit")).toBe("今天");
     expect(getEnglishWorldSectionLabel("words")).toBe("词库");
+    expect(getEnglishWorldSectionLabel("bulkImport")).toBe("批量导入");
+    expect(getEnglishWorldSectionLabel("overwriteStats")).toBe("覆盖统计");
     expect(getEnglishWorldSectionLabel("memoryMap")).toBe("词库");
     expect(getEnglishWorldSectionLabel("contextLab")).toBe("学习");
+    expect(getEnglishWorldSectionLabel("ieltsCore")).toBe("雅思核心复习");
     expect(getEnglishWorldSectionLabel("unknown")).toBe("English World");
   });
 

@@ -1,17 +1,28 @@
 import { enumToOptions } from "@font/utils";
 import { useMutation } from "@font/api";
-import { Button, Card, Col, Empty, Row, Select, Spin, theme } from "antd";
+import {
+  Button,
+  Card,
+  Col,
+  Empty,
+  Row,
+  Segmented,
+  Select,
+  Spin,
+  theme,
+} from "antd";
 import ReactECharts from "echarts-for-react";
 import { EnglishAbsorb, EnglishPartSpeech } from "../enum";
 import { englishStats } from "@/server";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { EnglishWorldPageHeader } from "./EnglishWorldPageHeader";
-
-type DailyStat = {
-  date: string;
-  count: number;
-};
+import {
+  aggregateDailyStats,
+  getDefaultStatsGranularity,
+  type DailyStat,
+  type StatsGranularity,
+} from "./statsTimeline";
 
 type SummaryStat = {
   label: string;
@@ -42,6 +53,8 @@ export const EnglishStats = () => {
   ]);
 
   const [dailyStats, setDailyStats] = useState<DailyStat[]>([]);
+  const [statsGranularity, setStatsGranularity] =
+    useState<StatsGranularity>("day");
   const [wordTypeData, setWordTypeData] = useState<PartSpeechData[]>([]);
 
   const { mutateAsync: mutateEnglishStats } = useMutation(englishStats);
@@ -58,67 +71,101 @@ export const EnglishStats = () => {
     token.colorInfo,
     token.colorTextSecondary,
   ];
+  const aggregatedStats = useMemo(
+    () => aggregateDailyStats(dailyStats, statsGranularity),
+    [dailyStats, statsGranularity],
+  );
+  const showTimelineZoom = aggregatedStats.length > 14;
+  const zoomStart = showTimelineZoom
+    ? ((aggregatedStats.length - 14) / aggregatedStats.length) * 100
+    : 0;
 
   const optionBar = {
     tooltip: {
       trigger: "axis",
+      formatter: (
+        params: Array<{ dataIndex: number; marker?: string }>,
+      ) => {
+        const point = aggregatedStats[params[0]?.dataIndex];
+        if (!point) return "";
+        return `${point.rangeLabel}<br/>${params[0]?.marker ?? ""}新增单词&nbsp;&nbsp;<strong>${point.count}</strong>`;
+      },
     },
     grid: {
-      left: 30,
-      right: 20,
-      top: 40,
-      bottom: 60,
+      left: 42,
+      right: 16,
+      top: 28,
+      bottom: showTimelineZoom ? 68 : 38,
     },
-    dataZoom: [
-      {
-        type: "slider",
-        show: true,
-        xAxisIndex: [0],
-        start:
-          dailyStats.length > 14
-            ? ((dailyStats.length - 14) / dailyStats.length) * 100
-            : 0,
-        end: 100,
-        bottom: 10,
-        height: 20,
-        borderColor: token.colorBorderSecondary,
-        fillerColor: token.colorPrimaryBg,
-        handleStyle: {
-          color: token.colorPrimary,
-        },
-      },
-      {
-        type: "inside",
-        xAxisIndex: [0],
-        start:
-          dailyStats.length > 14
-            ? ((dailyStats.length - 14) / dailyStats.length) * 100
-            : 0,
-        end: 100,
-      },
-    ],
+    dataZoom: showTimelineZoom
+      ? [
+          {
+            type: "slider",
+            show: true,
+            xAxisIndex: [0],
+            start: zoomStart,
+            end: 100,
+            bottom: 8,
+            height: 18,
+            showDetail: false,
+            borderColor: token.colorBorderSecondary,
+            backgroundColor: token.colorFillTertiary,
+            fillerColor: token.colorPrimaryBg,
+            handleSize: "80%",
+            handleStyle: {
+              color: token.colorPrimary,
+              borderColor: token.colorPrimary,
+            },
+            moveHandleStyle: {
+              color: token.colorPrimary,
+            },
+          },
+          {
+            type: "inside",
+            xAxisIndex: [0],
+            start: zoomStart,
+            end: 100,
+          },
+        ]
+      : [],
     xAxis: {
       type: "category",
-      data: dailyStats.map((item) => item.date),
+      data: aggregatedStats.map((item) => item.label),
       axisTick: { show: false },
+      axisLine: {
+        lineStyle: { color: token.colorBorderSecondary },
+      },
       axisLabel: {
-        interval: 3,
+        interval: "auto",
+        hideOverlap: true,
+        margin: 12,
         color: token.colorTextSecondary,
+        fontSize: 11,
       },
     },
     yAxis: {
       type: "value",
       name: "新增单词",
-      minInterval: 5,
+      minInterval: 1,
+      nameTextStyle: {
+        color: token.colorTextSecondary,
+        align: "left",
+      },
+      axisLabel: {
+        color: token.colorTextSecondary,
+      },
+      splitLine: {
+        lineStyle: { color: token.colorBorderSecondary, opacity: 0.58 },
+      },
     },
     series: [
       {
-        data: dailyStats.map((item) => item.count),
+        data: aggregatedStats.map((item) => item.count),
         type: "bar",
-        barWidth: 24,
+        barMaxWidth: 24,
         itemStyle: {
           color: token.colorPrimary,
-          borderRadius: [6, 6, 0, 0],
+          borderRadius: [4, 4, 0, 0],
         },
       },
     ],
@@ -149,6 +196,7 @@ export const EnglishStats = () => {
         ]);
 
         setDailyStats(dailyStats);
+        setStatsGranularity(getDefaultStatsGranularity(dailyStats));
 
         // 处理词性统计数据
         const partSpeechData: PartSpeechData[] = Object.entries(
@@ -299,7 +347,24 @@ export const EnglishStats = () => {
 
           <Row gutter={16} style={{ marginTop: 16 }}>
             <Col xs={24} lg={12}>
-              <Card className="english-stats-chart-card" title="每日新增单词">
+              <Card
+                className="english-stats-chart-card english-stats-timeline-card"
+                title="新增单词趋势"
+                extra={
+                  <Segmented<StatsGranularity>
+                    className="english-stats-chart-range"
+                    aria-label="统计时间粒度"
+                    size="small"
+                    options={[
+                      { label: "日", value: "day" },
+                      { label: "周", value: "week" },
+                      { label: "月", value: "month" },
+                    ]}
+                    value={statsGranularity}
+                    onChange={setStatsGranularity}
+                  />
+                }
+              >
                 <ReactECharts option={optionBar} style={{ height: 320 }} />
               </Card>
             </Col>
