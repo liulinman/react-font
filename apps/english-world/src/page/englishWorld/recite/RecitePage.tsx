@@ -148,6 +148,9 @@ export const RecitePage: React.FC = () => {
       }
       return;
     }
+    if (recoveredSessionRef.current === recoverySessionId) {
+      return;
+    }
     let active = true;
     const timer = window.setTimeout(() => {
       if (!active) return;
@@ -275,6 +278,7 @@ export const RecitePage: React.FC = () => {
         })
       );
 
+      recoveredSessionRef.current = response.sessionId;
       setResults(response);
       setStatus("submitted");
       message.success("今日复习完成");

@@ -2576,7 +2576,7 @@ describe("ContextLabPage", () => {
       within(markedPanel).getByRole("button", { name: "预览并导入" }),
     );
 
-    const previewDialog = await screen.findByRole("dialog", {
+    const previewDialog = await screen.findByRole("region", {
       name: "导入预览",
     });
     expect(
@@ -2683,7 +2683,7 @@ describe("ContextLabPage", () => {
         __responseType: undefined,
       });
     });
-    const previewDialog = await screen.findByRole("dialog", {
+    const previewDialog = await screen.findByRole("region", {
       name: "导入预览",
     });
     expect(within(previewDialog).getByDisplayValue("urban farming")).toBeInTheDocument();
@@ -2808,7 +2808,7 @@ describe("ContextLabPage", () => {
       within(markedPanel).getByRole("button", { name: "预览并导入" }),
     );
 
-    const previewDialog = await screen.findByRole("dialog", {
+    const previewDialog = await screen.findByRole("region", {
       name: "导入预览",
     });
     await user.click(

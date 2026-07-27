@@ -25,7 +25,7 @@ describe("English World collapsible sidebar styles", () => {
       /\.english-world-header-collapsed \.english-world-brand-copy\s*\{[^}]*display:\s*none;/s,
     );
     expect(styles).toMatch(
-      /\.english-world-header-collapsed \.english-world-nav-button\.ant-btn\s*\{[^}]*justify-content:\s*center;/s,
+      /\.english-world-header-collapsed[\s\S]*?\.english-world-nav-menu\.ant-menu[\s\S]*?\.ant-menu-item,[\s\S]*?\.english-world-header-collapsed[\s\S]*?\.ant-menu-submenu-title\s*\{[^}]*justify-content:\s*center;/s,
     );
   });
 
