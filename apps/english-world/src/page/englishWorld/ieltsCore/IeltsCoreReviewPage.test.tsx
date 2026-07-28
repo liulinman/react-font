@@ -179,9 +179,11 @@ describe("IeltsCoreReviewPage", () => {
         __responseType: undefined,
       });
     });
-    expect(screen.getByTestId("location")).toHaveTextContent(
-      "/englishWorld/context-lab",
-    );
+    await waitFor(() => {
+      expect(screen.getByTestId("location")).toHaveTextContent(
+        "/englishWorld/context-lab",
+      );
+    });
   });
 
   it("paginates the vocabulary source audit list", async () => {
