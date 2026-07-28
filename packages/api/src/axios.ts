@@ -23,9 +23,7 @@ export interface YTRequest<T = unknown> {
 }
 
 const viteEnv = import.meta.env;
-const API_BASE =
-  viteEnv.VITE_API_BASE_URL ||
-  (viteEnv.DEV ? "/api" : "http://47.108.140.63:3001");
+const API_BASE = viteEnv.VITE_API_BASE_URL || "/api";
 
 /** 供 fetch 等非 axios 请求使用（如 SSE 流式接口） */
 export const getApiBaseUrl = () => API_BASE;

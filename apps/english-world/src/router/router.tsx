@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 import EnglishWorld from "@/page/englishWorld/EnglishWorld";
 import { BulkImportPage } from "@/page/englishWorld/bulkImport/BulkImportPage";
 import { SystemSettingsPage } from "@/page/englishWorld/component/SystemSettingsPage";
@@ -31,6 +31,7 @@ function ProtectedWrapper({ children }: { children: React.ReactNode }) {
 }
 
 export const router = createBrowserRouter([
+  { path: "/", element: <Navigate to="/login" replace /> },
   { path: "/login", element: <Login /> },
   {
     path: "/englishWorld",
@@ -142,4 +143,5 @@ export const router = createBrowserRouter([
       </ErrorBoundary>
     ),
   },
+  { path: "*", element: <Navigate to="/login" replace /> },
 ]);

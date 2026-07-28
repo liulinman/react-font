@@ -4,10 +4,11 @@ FROM node:23.3.0 AS build
 WORKDIR /app
 
 # 安装 pnpm（用 npm 安装避免 corepack 签名校验与镜像不兼容）
-RUN npm install -g pnpm@10.8.1
+RUN npm config set registry https://registry.npmmirror.com \
+    && npm install -g pnpm@10.8.1
 
 # 复制 workspace 配置
-COPY package.json pnpm-workspace.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/english-world/package.json ./apps/english-world/
 COPY apps/web-utils/package.json ./apps/web-utils/
 COPY packages/api/package.json ./packages/api/
@@ -15,7 +16,8 @@ COPY packages/utils/package.json ./packages/utils/
 COPY packages/ui/package.json ./packages/ui/
 
 # 安装依赖（仅 production 可省略 devDependencies，这里保留以便 build）
-RUN pnpm install
+RUN pnpm config set registry https://registry.npmmirror.com \
+    && pnpm install --frozen-lockfile
 
 # 复制源码
 COPY . .

@@ -1,0 +1,12 @@
+.git
+.DS_Store
+node_modules
+**/node_modules
+**/dist
+**/coverage
+**/cypress/downloads
+**/cypress/reports
+**/cypress/screenshots
+**/cypress/videos
+.env
+.env.*
