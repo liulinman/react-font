@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   wordBulkImport,
   wordBulkImportPreview,
+  wordImportMissingEnrichPreview,
+  wordImportMissingPreview,
   wordOverwriteStats,
   wordIeltsCoreReview,
   wordIeltsCoreVocabularyList,
@@ -55,6 +57,58 @@ describe("wordBulkImportPreview", () => {
       method: "POST",
       data: {
         rawText: "mitigate",
+        defaultLevel: 0,
+        useAi: true,
+      },
+      __responseType: undefined,
+    });
+  });
+});
+
+describe("wordImportMissingPreview", () => {
+  it("uses the read-only duplicate check endpoint", () => {
+    expect(
+      wordImportMissingPreview({
+        words: [{ englishWord: "mitigate", englishLevel: 0 }],
+      }),
+    ).toEqual({
+      url: "/english/importMissingWords/preview",
+      method: "POST",
+      data: {
+        words: [{ englishWord: "mitigate", englishLevel: 0 }],
+      },
+      __responseType: undefined,
+    });
+  });
+});
+
+describe("wordImportMissingEnrichPreview", () => {
+  it("uses the shared AI enrichment endpoint and keeps article references", () => {
+    expect(
+      wordImportMissingEnrichPreview({
+        words: [
+          {
+            englishWord: "insects",
+            englishLevel: 0,
+            englishReference:
+              "/englishWorld/context-lab?taskId=12&articleExerciseId=88&word=insects",
+          },
+        ],
+        defaultLevel: 0,
+        useAi: true,
+      }),
+    ).toEqual({
+      url: "/english/importMissingWords/enrich-preview",
+      method: "POST",
+      data: {
+        words: [
+          {
+            englishWord: "insects",
+            englishLevel: 0,
+            englishReference:
+              "/englishWorld/context-lab?taskId=12&articleExerciseId=88&word=insects",
+          },
+        ],
         defaultLevel: 0,
         useAi: true,
       },

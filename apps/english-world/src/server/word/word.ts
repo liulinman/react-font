@@ -12,6 +12,9 @@ import {
   IeltsCoreReviewParams,
   IeltsCoreReviewResponse,
   ImportMissingWordsResult,
+  ImportMissingWordsEnrichPreviewParams,
+  ImportMissingWordsEnrichPreviewResult,
+  ImportMissingWordsPreviewResult,
   OverwriteStatsParams,
   OverwriteStatsResponse,
   WordList,
@@ -43,6 +46,28 @@ export const wordImportMissing = (data: {
     data,
     method: "POST",
     __responseType: undefined as unknown as ImportMissingWordsResult,
+  };
+};
+
+export const wordImportMissingPreview = (data: {
+  words: Array<Omit<WordList, "id">>;
+}): YTRequest<ImportMissingWordsPreviewResult> => {
+  return {
+    url: "/english/importMissingWords/preview",
+    data,
+    method: "POST",
+    __responseType: undefined as unknown as ImportMissingWordsPreviewResult,
+  };
+};
+
+export const wordImportMissingEnrichPreview = (
+  data: ImportMissingWordsEnrichPreviewParams,
+): YTRequest<ImportMissingWordsEnrichPreviewResult> => {
+  return {
+    url: "/english/importMissingWords/enrich-preview",
+    data,
+    method: "POST",
+    __responseType: undefined as unknown as ImportMissingWordsEnrichPreviewResult,
   };
 };
 

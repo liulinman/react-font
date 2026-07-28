@@ -45,8 +45,19 @@ import {
   wordAgentQuery,
   type WordAgentItem,
 } from "@/server/wordAgent/wordAgent";
-import { wordAdd, wordExist, wordImportMissing } from "@/server/word/word";
-import type { WordList } from "@/server/word/word.type";
+import {
+  wordAdd,
+  wordExist,
+  wordImportMissing,
+  wordImportMissingEnrichPreview,
+  wordImportMissingPreview,
+} from "@/server/word/word";
+import type {
+  BulkImportPreviewItem,
+  ImportMissingWordsEnrichPreviewResult,
+  ImportMissingWordsPreviewResult,
+  WordList,
+} from "@/server/word/word.type";
 import {
   contextLabCreateTask,
   contextLabDeleteAttempt,
@@ -101,6 +112,7 @@ import {
   recordLearningEvent,
 } from "../analytics/learningEvents";
 import { BulkImportPreviewModal } from "../bulkImport/BulkImportPreviewModal";
+import { BulkImportConflictModal } from "../bulkImport/BulkImportConflictModal";
 import {
   getBulkImportMessage,
   toBulkImportWordPayload,
@@ -231,32 +243,32 @@ function buildMarkedVocabularyItem(
 }
 
 function toImportWordPayload(item: MarkedVocabularyItem): Omit<WordList, "id"> {
-  const { key: _key, ...word } = item;
-  return toBulkImportWordPayload(word, item.englishLevel ?? 0);
+  const { key, ...word } = item;
+  return toBulkImportWordPayload(
+    { ...word, englishWord: word.englishWord || key },
+    item.englishLevel ?? 0,
+  );
 }
 
-function mergeImportPreviewWithAi(
+function mergeImportPreviewWithEnrichment(
   currentWords: MarkedVocabularyItem[],
   originalWords: MarkedVocabularyItem[],
-  aiWords: WordAgentItem[],
+  enrichedWords: BulkImportPreviewItem[],
 ) {
-  const aiWordsByKey = new Map(
-    aiWords
-      .filter((item) => item.word)
-      .map((item) => [getVocabularyKey(item.word), item]),
-  );
-  const originalWordsByKey = new Map(
-    originalWords.map((item) => [item.key, item]),
+  const originalsByKey = new Map(
+    originalWords.map((item, index) => [item.key, { item, index }]),
   );
 
-  return currentWords.map((currentWord, index) => {
-    const originalWord = originalWordsByKey.get(currentWord.key);
-    const aiWord = aiWordsByKey.get(currentWord.key) ?? aiWords[index];
-    if (!aiWord) return currentWord;
+  return currentWords.map((currentWord) => {
+    const original = originalsByKey.get(currentWord.key);
+    const originalWord = original?.item;
+    const enrichedWord =
+      original === undefined ? undefined : enrichedWords[original.index];
+    if (!enrichedWord) return currentWord;
 
     const originalEnglishWord = originalWord?.englishWord ?? "";
-    const aiEnglishWord = cleanSelectedVocabularyText(
-      aiWord.word || currentWord.englishWord,
+    const enrichedEnglishWord = cleanSelectedVocabularyText(
+      enrichedWord.englishWord || currentWord.englishWord,
     );
     const currentEnglishWord = cleanSelectedVocabularyText(
       currentWord.englishWord,
@@ -264,21 +276,32 @@ function mergeImportPreviewWithAi(
     const canUpdateWord =
       currentEnglishWord === cleanSelectedVocabularyText(originalEnglishWord);
     const nextEnglishWord = canUpdateWord
-      ? aiEnglishWord
+      ? enrichedEnglishWord
       : currentWord.englishWord;
 
     return {
       ...currentWord,
       englishWord: nextEnglishWord,
       englishPhonetic:
-        currentWord.englishPhonetic || aiWord.phonetic || undefined,
-      englishChinese: currentWord.englishChinese || aiWord.meaning || undefined,
+        currentWord.englishPhonetic ||
+        enrichedWord.englishPhonetic ||
+        undefined,
+      englishChinese:
+        currentWord.englishChinese ||
+        enrichedWord.englishChinese ||
+        undefined,
+      englishNote:
+        currentWord.englishNote || enrichedWord.englishNote || undefined,
       englishPartSpeech: currentWord.englishPartSpeech?.length
         ? currentWord.englishPartSpeech
-        : aiWord.partOfSpeech?.length
-          ? aiWord.partOfSpeech
+        : enrichedWord.englishPartSpeech?.length
+          ? enrichedWord.englishPartSpeech
           : currentWord.englishPartSpeech,
       englishType: nextEnglishWord.includes(" ") ? 1 : 0,
+      englishReference:
+        originalWord?.englishReference ??
+        currentWord.englishReference ??
+        enrichedWord.englishReference,
     };
   });
 }
@@ -402,6 +425,8 @@ function ContextLabPageContent({
     MarkedVocabularyItem[]
   >([]);
   const [importOverwriteExisting, setImportOverwriteExisting] = useState(false);
+  const [importConflict, setImportConflict] =
+    useState<ImportMissingWordsPreviewResult | null>(null);
   const [addingSelectedWord, setAddingSelectedWord] = useState(false);
   const [translatingSelectedWord, setTranslatingSelectedWord] = useState(false);
   const [importingMarkedWords, setImportingMarkedWords] = useState(false);
@@ -1098,6 +1123,7 @@ function ContextLabPageContent({
     setImportPreviewWords([]);
     setImportPreviewOpen(false);
     setImportOverwriteExisting(false);
+    setImportConflict(null);
   };
 
   const handleClearMarkedVocabulary = () => {
@@ -1105,12 +1131,14 @@ function ContextLabPageContent({
     setImportPreviewWords([]);
     setImportPreviewOpen(false);
     setImportOverwriteExisting(false);
+    setImportConflict(null);
   };
 
   const handleCloseImportPreview = () => {
     setImportPreviewOpen(false);
     setImportPreviewWords([]);
     setImportOverwriteExisting(false);
+    setImportConflict(null);
   };
 
   const handleImportMarkedVocabulary = async () => {
@@ -1125,16 +1153,18 @@ function ContextLabPageContent({
     setImportPreviewOpen(true);
     setImportingMarkedWords(true);
     try {
-      const response = await request(
-        wordAgentQuery({
-          words: wordsSnapshot.map((item) => item.englishWord),
+      const response = await request<ImportMissingWordsEnrichPreviewResult>(
+        wordImportMissingEnrichPreview({
+          words: wordsSnapshot.map(toImportWordPayload),
+          defaultLevel: 0,
+          useAi: true,
         }),
       );
       setImportPreviewWords((prev) =>
-        mergeImportPreviewWithAi(
+        mergeImportPreviewWithEnrichment(
           prev.length ? prev : wordsSnapshot,
           wordsSnapshot,
-          response.words ?? [],
+          response.items ?? [],
         ),
       );
     } catch (error: unknown) {
@@ -1142,6 +1172,26 @@ function ContextLabPageContent({
     } finally {
       setImportingMarkedWords(false);
     }
+  };
+
+  const importMarkedVocabulary = async (
+    words: Array<Omit<WordList, "id">>,
+  ) => {
+    const response = await request(
+      wordImportMissing({
+        overwriteExisting: importOverwriteExisting,
+        words,
+      }),
+    );
+    const updated = response.updated ?? 0;
+    if (response.inserted > 0 || updated > 0) {
+      message.success(getBulkImportMessage(response));
+    } else {
+      message.info("标记词都已在词库，无需重复导入");
+    }
+    handleClearMarkedVocabulary();
+    setImportPreviewWords([]);
+    setImportConflict(null);
   };
 
   const handleConfirmMarkedVocabularyImport = async () => {
@@ -1152,20 +1202,30 @@ function ContextLabPageContent({
 
     setConfirmingMarkedImport(true);
     try {
-      const response = await request(
-        wordImportMissing({
-          overwriteExisting: importOverwriteExisting,
-          words: importPreviewWords.map(toImportWordPayload),
-        }),
-      );
-      const updated = response.updated ?? 0;
-      if (response.inserted > 0 || updated > 0) {
-        message.success(getBulkImportMessage(response));
-      } else {
-        message.info("标记词都已在词库，无需重复导入");
+      const words = importPreviewWords.map(toImportWordPayload);
+      if (!importOverwriteExisting) {
+        const check = await request<ImportMissingWordsPreviewResult>(
+          wordImportMissingPreview({ words }),
+        );
+        if (check.skippedExisting > 0 || check.skippedDuplicate > 0) {
+          setImportConflict(check);
+          return;
+        }
       }
-      handleClearMarkedVocabulary();
-      setImportPreviewWords([]);
+      await importMarkedVocabulary(words);
+    } catch (error: unknown) {
+      message.error(error instanceof Error ? error.message : "导入标记词失败");
+    } finally {
+      setConfirmingMarkedImport(false);
+    }
+  };
+
+  const handleContinueMarkedVocabularyImport = async () => {
+    setConfirmingMarkedImport(true);
+    try {
+      await importMarkedVocabulary(
+        importPreviewWords.map(toImportWordPayload),
+      );
     } catch (error: unknown) {
       message.error(error instanceof Error ? error.message : "导入标记词失败");
     } finally {
@@ -2645,6 +2705,12 @@ function ContextLabPageContent({
         title="导入预览"
         width={720}
         words={importPreviewWords}
+      />
+      <BulkImportConflictModal
+        confirming={confirmingMarkedImport}
+        conflict={importConflict}
+        onCancel={() => setImportConflict(null)}
+        onContinue={handleContinueMarkedVocabularyImport}
       />
 
       {addModalVisible && (

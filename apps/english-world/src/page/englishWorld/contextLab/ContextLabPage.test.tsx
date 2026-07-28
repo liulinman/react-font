@@ -2518,9 +2518,9 @@ describe("ContextLabPage", () => {
   });
 
   it("opens the import preview immediately while AI completion is still loading", async () => {
-    let resolveWordAgent: (value: unknown) => void = () => undefined;
-    const pendingWordAgent = new Promise((resolve) => {
-      resolveWordAgent = resolve;
+    let resolveEnrichment: (value: unknown) => void = () => undefined;
+    const pendingEnrichment = new Promise((resolve) => {
+      resolveEnrichment = resolve;
     });
 
     requestMock.mockImplementation((config) => {
@@ -2550,8 +2550,8 @@ describe("ContextLabPage", () => {
           pageSize: 10,
         });
       }
-      if (config.url === "/word-agent/query") {
-        return pendingWordAgent;
+      if (config.url === "/english/importMissingWords/enrich-preview") {
+        return pendingEnrichment;
       }
       return Promise.resolve({});
     });
@@ -2584,7 +2584,7 @@ describe("ContextLabPage", () => {
     ).toBeInTheDocument();
     expect(within(previewDialog).getByText("AI 补全中")).toBeInTheDocument();
 
-    resolveWordAgent({ words: [] });
+    resolveEnrichment({ received: 1, aiEnhanced: true, items: [] });
   });
 
   it("opens editable AI-completed word preview before importing marked words", async () => {
@@ -2615,18 +2615,32 @@ describe("ContextLabPage", () => {
           pageSize: 10,
         });
       }
-      if (config.url === "/word-agent/query") {
+      if (config.url === "/english/importMissingWords/enrich-preview") {
         return Promise.resolve({
-          words: [
+          received: 1,
+          aiEnhanced: true,
+          items: [
             {
-              word: "urban farming",
-              phonetic: "/ˈɜːbən ˈfɑːmɪŋ/",
-              meaning: "城市农业；都市农耕",
-              partOfSpeech: [2],
-              examples: [],
-              ieltsCase: null,
+              englishWord: "urban farming",
+              englishPhonetic: "/ˈɜːbən ˈfɑːmɪŋ/",
+              englishChinese: "城市农业；都市农耕",
+              englishPartSpeech: [2],
+              englishLevel: 0,
+              englishType: 1,
+              englishReference: "AI 批量导入",
             },
           ],
+        });
+      }
+      if (config.url === "/english/importMissingWords/preview") {
+        return Promise.resolve({
+          received: 1,
+          normalized: 1,
+          importable: 1,
+          skippedExisting: 0,
+          skippedDuplicate: 0,
+          existingWords: [],
+          duplicateWords: [],
         });
       }
       if (config.url === "/english/importMissingWords") {
@@ -2677,9 +2691,22 @@ describe("ContextLabPage", () => {
 
     await waitFor(() => {
       expect(requestMock).toHaveBeenCalledWith({
-        url: "/word-agent/query",
+        url: "/english/importMissingWords/enrich-preview",
         method: "POST",
-        data: { words: ["urban farming"] },
+        data: {
+          words: [
+            {
+              englishWord: "urban farming",
+              englishLevel: 0,
+              englishType: 1,
+              englishPartSpeech: [9],
+              englishReference:
+                "/englishWorld/context-lab?taskId=12&articleExerciseId=88&word=urban+farming",
+            },
+          ],
+          defaultLevel: 0,
+          useAi: true,
+        },
         __responseType: undefined,
       });
     });
@@ -2730,6 +2757,121 @@ describe("ContextLabPage", () => {
     });
   });
 
+  it("warns about existing marked words before importing when overwrite is off", async () => {
+    requestMock.mockImplementation((config) => {
+      if (config.url === "/context-lab/history") {
+        return Promise.resolve({
+          list: [
+            {
+              id: 12,
+              taskId: 12,
+              status: "succeeded",
+              sourceType: "custom",
+              words: ["urban farming"],
+              articleExerciseId: 88,
+              article:
+                "Urban Farming\n\nUrban farming improves local food supply.",
+              questions: [
+                {
+                  id: "q1",
+                  stem: "What is the passage about?",
+                  options: ["Urban farming", "Space travel"],
+                },
+              ],
+            },
+          ],
+          total: 1,
+          page: 1,
+          pageSize: 10,
+        });
+      }
+      if (config.url === "/english/importMissingWords/enrich-preview") {
+        return Promise.resolve({
+          received: 1,
+          aiEnhanced: true,
+          items: [
+            {
+              englishWord: "urban farming",
+              englishChinese: "城市农业",
+              englishLevel: 0,
+              englishType: 1,
+              englishReference:
+                "/englishWorld/context-lab?taskId=12&articleExerciseId=88&word=urban+farming",
+            },
+          ],
+        });
+      }
+      if (config.url === "/english/importMissingWords/preview") {
+        return Promise.resolve({
+          received: 1,
+          normalized: 1,
+          importable: 0,
+          skippedExisting: 1,
+          skippedDuplicate: 0,
+          existingWords: ["urban farming"],
+          duplicateWords: [],
+        });
+      }
+      if (config.url === "/english/importMissingWords") {
+        return Promise.resolve({
+          received: 1,
+          normalized: 1,
+          inserted: 0,
+          skippedExisting: 1,
+          skippedDuplicate: 0,
+          insertedWords: [],
+          skippedWords: ["urban farming"],
+        });
+      }
+      return Promise.resolve({});
+    });
+
+    const user = userEvent.setup();
+    render(<ContextLabPage />);
+
+    await user.click(await screen.findByRole("button", { name: "开始练习" }));
+    const paragraph = await screen.findByText(
+      "Urban farming improves local food supply.",
+    );
+    vi.spyOn(window, "getSelection").mockReturnValue({
+      toString: () => "urban farming",
+      rangeCount: 1,
+      removeAllRanges: vi.fn(),
+    } as unknown as Selection);
+
+    await user.pointer({ target: paragraph, keys: "[MouseRight]" });
+    await user.click(await screen.findByText("标记生词"));
+    const markedPanel = await screen.findByLabelText("已标记生词");
+    await user.click(
+      within(markedPanel).getByRole("button", { name: "预览并导入" }),
+    );
+    const previewDialog = await screen.findByRole("region", {
+      name: "导入预览",
+    });
+    await user.click(
+      within(previewDialog).getByRole("button", { name: "确认导入" }),
+    );
+
+    expect(
+      await screen.findByText("发现已有或重复词条，是否继续？"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("词库中已存在 1 个，本次输入重复 0 个。继续后将新增 0 个词条，被跳过的词不会覆盖原内容。")).toBeInTheDocument();
+    expect(requestMock).not.toHaveBeenCalledWith(
+      expect.objectContaining({ url: "/english/importMissingWords" }),
+    );
+
+    await user.click(screen.getByRole("button", { name: "继续导入" }));
+
+    await waitFor(() => {
+      expect(requestMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          url: "/english/importMissingWords",
+          data: expect.objectContaining({ overwriteExisting: false }),
+        }),
+      );
+    });
+  });
+
   it("lets marked vocabulary reuse the bulk import overwrite confirmation", async () => {
     requestMock.mockImplementation((config) => {
       if (config.url === "/context-lab/history") {
@@ -2758,16 +2900,20 @@ describe("ContextLabPage", () => {
           pageSize: 10,
         });
       }
-      if (config.url === "/word-agent/query") {
+      if (config.url === "/english/importMissingWords/enrich-preview") {
         return Promise.resolve({
-          words: [
+          received: 1,
+          aiEnhanced: true,
+          items: [
             {
-              word: "urban farming",
-              phonetic: "/ˈɜːbən ˈfɑːmɪŋ/",
-              meaning: "城市农业；都市农耕",
-              partOfSpeech: [2],
-              examples: [],
-              ieltsCase: null,
+              englishWord: "urban farming",
+              englishPhonetic: "/ˈɜːbən ˈfɑːmɪŋ/",
+              englishChinese: "城市农业；都市农耕",
+              englishPartSpeech: [2],
+              englishLevel: 0,
+              englishType: 1,
+              englishReference:
+                "/englishWorld/context-lab?taskId=12&articleExerciseId=88&word=urban+farming",
             },
           ],
         });

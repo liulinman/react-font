@@ -21,13 +21,19 @@ import {
   RobotOutlined,
 } from "@ant-design/icons";
 import request from "@font/api";
-import { wordBulkImportPreview, wordImportMissing } from "@/server/word/word";
+import {
+  wordBulkImportPreview,
+  wordImportMissing,
+  wordImportMissingPreview,
+} from "@/server/word/word";
 import type {
   BulkImportPreviewItem,
   BulkImportWordItem,
   BulkImportWordsPreviewResult,
   BulkImportWordsResult,
+  ImportMissingWordsPreviewResult,
   ImportMissingWordsResult,
+  WordList,
 } from "@/server/word/word.type";
 import {
   getLevelLabel,
@@ -35,6 +41,7 @@ import {
   getTypeLabel,
 } from "../utils/wordLabels";
 import { BulkImportPreviewModal } from "./BulkImportPreviewModal";
+import { BulkImportConflictModal } from "./BulkImportConflictModal";
 import {
   getBulkImportMessage,
   getBulkImportStatus,
@@ -83,6 +90,8 @@ export function BulkImportPage() {
     null,
   );
   const [previewWords, setPreviewWords] = useState<BulkImportPreviewItem[]>([]);
+  const [conflict, setConflict] =
+    useState<ImportMissingWordsPreviewResult | null>(null);
   const [result, setResult] = useState<BulkImportWordsResult | null>(null);
   const levelOptions = useMemo(() => getLevelOptions(), []);
   const trimmedText = rawText.trim();
@@ -188,6 +197,7 @@ export function BulkImportPage() {
       );
       setPreview(response);
       setPreviewWords(response.items);
+      setConflict(null);
       setOverwriteExisting(false);
       if (response.items.length > 0) {
         setPreviewOpen(true);
@@ -201,6 +211,35 @@ export function BulkImportPage() {
     }
   };
 
+  const importPreviewWords = async (
+    words: Array<Omit<WordList, "id">>,
+  ) => {
+    const response = await request<ImportMissingWordsResult>(
+      wordImportMissing({
+        overwriteExisting,
+        words,
+      }),
+    );
+    const messageText = getBulkImportMessage(response);
+    setResult({
+      ...response,
+      receivedTextLength: preview?.receivedTextLength ?? trimmedText.length,
+      extracted: preview?.extracted ?? previewWords.length,
+      aiEnhanced: preview?.aiEnhanced ?? false,
+      items: previewWords.map((item) => ({
+        ...item,
+        status: getBulkImportStatus(item, response),
+      })),
+      message: messageText,
+    });
+    setPreviewOpen(false);
+    setConflict(null);
+    message.success(messageText);
+  };
+
+  const getImportWords = () =>
+    previewWords.map((item) => toBulkImportWordPayload(item, defaultLevel));
+
   const handleConfirmImport = async () => {
     if (previewWords.length === 0) {
       message.warning("没有可导入的预览词条");
@@ -209,28 +248,29 @@ export function BulkImportPage() {
 
     setConfirming(true);
     try {
-      const response = await request<ImportMissingWordsResult>(
-        wordImportMissing({
-          overwriteExisting,
-          words: previewWords.map((item) =>
-            toBulkImportWordPayload(item, defaultLevel),
-          ),
-        }),
-      );
-      const messageText = getBulkImportMessage(response);
-      setResult({
-        ...response,
-        receivedTextLength: preview?.receivedTextLength ?? trimmedText.length,
-        extracted: preview?.extracted ?? previewWords.length,
-        aiEnhanced: preview?.aiEnhanced ?? false,
-        items: previewWords.map((item) => ({
-          ...item,
-          status: getBulkImportStatus(item, response),
-        })),
-        message: messageText,
-      });
-      setPreviewOpen(false);
-      message.success(messageText);
+      const words = getImportWords();
+      if (!overwriteExisting) {
+        const check = await request<ImportMissingWordsPreviewResult>(
+          wordImportMissingPreview({ words }),
+        );
+        if (check.skippedExisting > 0 || check.skippedDuplicate > 0) {
+          setConflict(check);
+          return;
+        }
+      }
+
+      await importPreviewWords(words);
+    } catch (error: unknown) {
+      message.error(error instanceof Error ? error.message : "确认导入失败");
+    } finally {
+      setConfirming(false);
+    }
+  };
+
+  const handleContinueImport = async () => {
+    setConfirming(true);
+    try {
+      await importPreviewWords(getImportWords());
     } catch (error: unknown) {
       message.error(error instanceof Error ? error.message : "确认导入失败");
     } finally {
@@ -383,13 +423,22 @@ export function BulkImportPage() {
         aiFallbackReason={preview?.aiFallbackReason}
         confirming={confirming}
         defaultLevel={defaultLevel}
-        onCancel={() => setPreviewOpen(false)}
+        onCancel={() => {
+          setPreviewOpen(false);
+          setConflict(null);
+        }}
         onConfirm={handleConfirmImport}
         onOverwriteExistingChange={setOverwriteExisting}
         onWordsChange={setPreviewWords}
         open={previewOpen}
         overwriteExisting={overwriteExisting}
         words={previewWords}
+      />
+      <BulkImportConflictModal
+        confirming={confirming}
+        conflict={conflict}
+        onCancel={() => setConflict(null)}
+        onContinue={handleContinueImport}
       />
     </div>
   );

@@ -42,6 +42,29 @@ export type ImportMissingWordsResult = {
   updatedWords?: string[];
 };
 
+export type ImportMissingWordsPreviewResult = {
+  received: number;
+  normalized: number;
+  importable: number;
+  skippedExisting: number;
+  skippedDuplicate: number;
+  existingWords: string[];
+  duplicateWords: string[];
+};
+
+export type ImportMissingWordsEnrichPreviewParams = {
+  words: Array<Omit<WordList, "id">>;
+  defaultLevel?: number;
+  useAi?: boolean;
+};
+
+export type ImportMissingWordsEnrichPreviewResult = {
+  received: number;
+  aiEnhanced: boolean;
+  aiFallbackReason?: BulkImportAiFallbackReason;
+  items: BulkImportPreviewItem[];
+};
+
 export type BulkImportWordsParams = {
   rawText: string;
   defaultLevel?: number;

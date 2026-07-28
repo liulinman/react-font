@@ -75,6 +75,18 @@ describe("BulkImportPage", () => {
         });
       }
 
+      if (config.url === "/english/importMissingWords/preview") {
+        return Promise.resolve({
+          received: 2,
+          normalized: 2,
+          importable: 2,
+          skippedExisting: 0,
+          skippedDuplicate: 0,
+          existingWords: [],
+          duplicateWords: [],
+        });
+      }
+
       return Promise.reject(new Error("unexpected request"));
     });
 
@@ -202,6 +214,86 @@ describe("BulkImportPage", () => {
       expect(importCall?.[0].data.words[0]).not.toHaveProperty("englishImg");
     });
     expect(await screen.findByText("已覆盖")).toBeInTheDocument();
+  });
+
+  it("asks before skipping existing or repeated words when overwrite is off", async () => {
+    const user = userEvent.setup();
+    requestMock.mockImplementation((config) => {
+      if (config.url === "/english/bulkImportWords/preview") {
+        return Promise.resolve({
+          receivedTextLength: 27,
+          extracted: 3,
+          aiEnhanced: false,
+          items: [
+            { englishWord: "mitigate" },
+            { englishWord: "resilient" },
+            { englishWord: "Mitigate" },
+          ],
+        });
+      }
+
+      if (config.url === "/english/importMissingWords/preview") {
+        return Promise.resolve({
+          received: 3,
+          normalized: 2,
+          importable: 1,
+          skippedExisting: 1,
+          skippedDuplicate: 1,
+          existingWords: ["resilient"],
+          duplicateWords: ["mitigate"],
+        });
+      }
+
+      if (config.url === "/english/importMissingWords") {
+        return Promise.resolve({
+          received: 3,
+          normalized: 2,
+          inserted: 1,
+          skippedExisting: 1,
+          skippedDuplicate: 1,
+          insertedWords: ["mitigate"],
+          skippedWords: ["resilient"],
+          updated: 0,
+          updatedWords: [],
+        });
+      }
+
+      return Promise.reject(new Error("unexpected request"));
+    });
+
+    render(<BulkImportPage />);
+
+    await user.type(
+      screen.getByPlaceholderText("支持换行、逗号、序号、英文 + 中文释义混合粘贴"),
+      "mitigate\nresilient\nMitigate",
+    );
+    await user.click(screen.getByRole("button", { name: /解析预览/ }));
+    await screen.findByRole("dialog");
+    await user.click(screen.getByRole("button", { name: /确认导入/ }));
+
+    expect(
+      await screen.findByText("发现已有或重复词条，是否继续？"),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/词库中已存在 1 个/)).toBeInTheDocument();
+    expect(screen.getByText(/本次输入重复 1 个/)).toBeInTheDocument();
+    expect(screen.getByText(/继续后将新增 1 个词条/)).toBeInTheDocument();
+    expect(screen.getByText("resilient")).toBeInTheDocument();
+    expect(screen.getByText("mitigate")).toBeInTheDocument();
+    expect(
+      requestMock.mock.calls.some(
+        ([config]) => config.url === "/english/importMissingWords",
+      ),
+    ).toBe(false);
+
+    await user.click(screen.getByRole("button", { name: "继续导入" }));
+
+    await waitFor(() => {
+      expect(
+        requestMock.mock.calls.some(
+          ([config]) => config.url === "/english/importMissingWords",
+        ),
+      ).toBe(true);
+    });
   });
 
   it("renders AI preview values inside editable fields before confirmation", async () => {

@@ -1065,6 +1065,23 @@
   grid-column: 1 / -1;
 }
 
+.bulk-import-conflict-content {
+  display: grid;
+  gap: 16px;
+  padding-top: 4px;
+}
+
+.bulk-import-conflict-group {
+  display: grid;
+  gap: 8px;
+}
+
+.bulk-import-conflict-words {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
 .ielts-core-evidence-title {
   display: flex;
   flex-wrap: wrap;
@@ -4317,8 +4334,13 @@
 }
 
 .context-lab-practice-modal .ant-modal-body {
+  height: min(760px, calc(100vh - 112px));
   max-height: calc(100vh - 96px);
   overflow: hidden;
+}
+
+.context-lab-practice-modal .context-lab-active-practice {
+  height: 100%;
 }
 
 .context-lab-practice-modal-fullscreen {
@@ -4335,6 +4357,7 @@
 }
 
 .context-lab-practice-modal-fullscreen .ant-modal-body {
+  height: calc(100vh - 52px);
   max-height: calc(100vh - 52px);
 }
 
@@ -4582,6 +4605,7 @@
   }
 
   .context-lab-practice-modal .ant-modal-body {
+    height: auto;
     max-height: calc(100vh - 70px);
     overflow: auto;
   }
@@ -5452,6 +5476,37 @@
 
 .context-lab-active-practice .context-lab-reading-pane {
   border-right: 1px solid #e2e8f0;
+}
+
+@media (min-width: 992px) {
+  .context-lab-active-practice .context-lab-reading-pane,
+  .context-lab-active-practice .context-lab-question-pane {
+    scrollbar-color: #94a3b8 #f1f5f9;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+  }
+
+  .context-lab-active-practice .context-lab-reading-pane::-webkit-scrollbar,
+  .context-lab-active-practice .context-lab-question-pane::-webkit-scrollbar {
+    width: 10px;
+  }
+
+  .context-lab-active-practice .context-lab-reading-pane::-webkit-scrollbar-track,
+  .context-lab-active-practice .context-lab-question-pane::-webkit-scrollbar-track {
+    background: #f1f5f9;
+  }
+
+  .context-lab-active-practice .context-lab-reading-pane::-webkit-scrollbar-thumb,
+  .context-lab-active-practice .context-lab-question-pane::-webkit-scrollbar-thumb {
+    border: 2px solid #f1f5f9;
+    border-radius: 999px;
+    background: #94a3b8;
+  }
+
+  .context-lab-active-practice .context-lab-reading-pane::-webkit-scrollbar-thumb:hover,
+  .context-lab-active-practice .context-lab-question-pane::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+  }
 }
 
 @media (max-width: 1279px) {
