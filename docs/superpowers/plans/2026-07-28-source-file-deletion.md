@@ -22,17 +22,22 @@
 **Files:**
 - Modify: `nestjs/src/interface/upload/source-file-storage.service.ts`
 - Modify: `nestjs/src/interface/upload/source-file-storage.service.spec.ts`
+- Create: `nestjs/src/interface/upload/source-file-reference.service.ts`
+- Create: `nestjs/src/interface/upload/source-file-reference.service.spec.ts`
 - Modify: `nestjs/src/interface/upload/upload.controller.ts`
 - Modify: `nestjs/src/interface/upload/upload.controller.spec.ts`
+- Modify: `nestjs/src/interface/upload/upload.module.ts`
 
 **Interfaces:**
 - Produces: `SourceFileStorageService.deleteSourceFile(ownerId: number, storageName: string): Promise<void>`
+- Produces: `SourceFileReferenceService.isReferenced(ownerId: number, storageName: string): Promise<boolean>`
 - Produces: `DELETE /upload/source-file/:storageName`
 
 - [ ] **Step 1: Write failing storage and controller tests**
 
 Add tests that save a PDF, call `deleteSourceFile`, and assert both the PDF and
-JSON sidecar are absent. Add controller tests that verify the authenticated
+JSON sidecar are absent. Add a reference-service test that checks the current
+user and exact protected URL. Add controller tests that verify the authenticated
 user ID is passed to deletion and a referenced URL raises `ConflictException`.
 
 - [ ] **Step 2: Run focused backend tests and verify failure**
@@ -40,7 +45,7 @@ user ID is passed to deletion and a referenced URL raises `ConflictException`.
 Run:
 
 ```bash
-pnpm exec jest src/interface/upload/source-file-storage.service.spec.ts src/interface/upload/upload.controller.spec.ts --runInBand
+pnpm exec jest src/interface/upload/source-file-storage.service.spec.ts src/interface/upload/source-file-reference.service.spec.ts src/interface/upload/upload.controller.spec.ts --runInBand
 ```
 
 Expected: failure because `deleteSourceFile` and the controller route do not
@@ -50,7 +55,8 @@ exist.
 
 Validate `storageName` with the existing storage-name pattern, verify the file
 exists under the authenticated owner directory, and remove the file plus its
-metadata. Before deletion, query the current user's vocabulary for:
+metadata. Keep the vocabulary query in `SourceFileReferenceService`; before
+deletion it checks:
 
 ```ts
 {
@@ -66,7 +72,7 @@ Return HTTP 409 when the reference count is non-zero.
 Run:
 
 ```bash
-pnpm exec jest src/interface/upload/source-file-storage.service.spec.ts src/interface/upload/upload.controller.spec.ts --runInBand
+pnpm exec jest src/interface/upload/source-file-storage.service.spec.ts src/interface/upload/source-file-reference.service.spec.ts src/interface/upload/upload.controller.spec.ts --runInBand
 pnpm exec jest --runInBand
 pnpm build
 ```
