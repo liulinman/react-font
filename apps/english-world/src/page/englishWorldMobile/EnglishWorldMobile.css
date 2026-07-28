@@ -1,5 +1,10 @@
 .english-world-mobile {
+  --mobile-nav-height: 64px;
+  --mobile-safe-bottom: env(safe-area-inset-bottom, 0px);
   height: 100vh;
+  height: 100dvh;
+  min-width: 0;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   background-color: #f5f5f5;
@@ -19,8 +24,31 @@
 
 .mobile-content {
   flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow-x: hidden;
   overflow-y: auto;
-  padding-bottom: 80px;
+  padding-bottom: calc(
+    var(--mobile-nav-height) + var(--mobile-safe-bottom) + 16px
+  );
+  -webkit-overflow-scrolling: touch;
+}
+
+.mobile-bottom-nav {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 80;
+  background: rgba(255, 255, 255, 0.98);
+  border-top: 1px solid #e5e7eb;
+  padding-bottom: var(--mobile-safe-bottom);
+}
+
+.mobile-bottom-nav [role="tab"],
+.mobile-header-action {
+  min-width: 44px;
+  min-height: 44px;
 }
 
 .mobile-study-home {

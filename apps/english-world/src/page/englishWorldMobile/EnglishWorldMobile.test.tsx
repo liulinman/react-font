@@ -61,14 +61,39 @@ describe("EnglishWorldMobile ToC entry", () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByText("今日学习")).toBeInTheDocument();
+    expect(document.querySelector(".adm-nav-bar-title")).toHaveTextContent(
+      "今日学习",
+    );
     expect(screen.getByText("今日复习")).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "开始今日复习" }),
     ).toBeInTheDocument();
-    expect(screen.getByText("词库")).toBeInTheDocument();
+    expect(document.querySelector(".mobile-study-card-title")).toHaveTextContent(
+      "词库",
+    );
     expect(screen.queryByText("单词管理")).not.toBeInTheDocument();
     expect(request).not.toHaveBeenCalled();
+  });
+
+  it("switches the primary mobile destination from the persistent tab bar", async () => {
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter>
+        <EnglishWorldMobile />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole("tab", { name: "今日学习" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    expect(screen.getByRole("tab", { name: "词库" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "统计" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "工具" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("tab", { name: "词库" }));
+
+    expect(screen.getByPlaceholderText("搜索单词或中文")).toBeInTheDocument();
   });
 
   it("opens mobile Context Lab from the home context card", async () => {

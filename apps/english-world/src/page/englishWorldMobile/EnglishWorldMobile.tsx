@@ -20,6 +20,7 @@ import {
   Loading,
   ImageUploader,
   Tabs,
+  TabBar,
 } from "antd-mobile";
 import type { ImageUploadItem } from "antd-mobile/es/components/image-uploader";
 import type { PickerActions } from "antd-mobile/es/components/picker";
@@ -30,6 +31,8 @@ import {
   FilterOutline,
   AppOutline,
   AppstoreOutline,
+  HistogramOutline,
+  UnorderedListOutline,
 } from "antd-mobile-icons";
 import request, { useMutation } from "@font/api";
 import {
@@ -74,6 +77,13 @@ type ListData = {
   total: number;
   totalPages: number;
 };
+
+const mobileDestinations = [
+  { key: "review", title: "今日学习", icon: <AppOutline /> },
+  { key: "list", title: "词库", icon: <UnorderedListOutline /> },
+  { key: "stats", title: "统计", icon: <HistogramOutline /> },
+  { key: "aiTool", title: "工具", icon: <AppstoreOutline /> },
+] as const;
 
 const EnglishWorldMobile: React.FC = () => {
   const navigate = useNavigate();
@@ -407,70 +417,16 @@ const EnglishWorldMobile: React.FC = () => {
       <NavBar
         back={null}
         right={
-          <Space>
-            {activeView === "review" ? (
-              <>
-                <Button
-                  fill="none"
-                  size="small"
-                  onClick={() => {
-                    setActiveToolTab("word");
-                    setActiveView("aiTool");
-                  }}
-                  style={{ padding: "4px 8px" }}
-                >
-                  工具
-                </Button>
-                <Button
-                  fill="none"
-                  size="small"
-                  onClick={() => setActiveView("stats")}
-                  style={{ padding: "4px 8px" }}
-                >
-                  统计
-                </Button>
-              </>
-            ) : activeView === "list" ? (
-              <>
-                <Button
-                fill="none"
-                size="small"
-                onClick={() => {
-                  setActiveToolTab("word");
-                  setActiveView("aiTool");
-                }}
-                style={{ padding: "4px 8px" }}
-              >
-                  <AppstoreOutline />
-                </Button>
-                <Button
-                  fill="none"
-                  size="small"
-                  onClick={() => setActiveView("stats")}
-                  style={{ padding: "4px 8px" }}
-                >
-                  <AppOutline />
-                </Button>
-                <Button
-                  fill="none"
-                  size="small"
-                  onClick={() => setShowFilter(true)}
-                  style={{ padding: "4px 8px" }}
-                >
-                  <FilterOutline />
-                </Button>
-              </>
-            ) : (
-              <Button
-                fill="none"
-                size="small"
-                onClick={() => setActiveView("review")}
-                style={{ padding: "4px 8px" }}
-              >
-                今日学习
-              </Button>
-            )}
-          </Space>
+          activeView === "list" ? (
+            <Button
+              aria-label="筛选单词"
+              className="mobile-header-action"
+              fill="none"
+              onClick={() => setShowFilter(true)}
+            >
+              <FilterOutline />
+            </Button>
+          ) : null
         }
       >
         {getMobileViewTitle(activeView)}
@@ -1181,6 +1137,33 @@ const EnglishWorldMobile: React.FC = () => {
             </div>
           </div>
         </Popup>
+      </div>
+
+      <div className="mobile-bottom-nav" aria-label="主要导航" role="tablist">
+        <TabBar
+          activeKey={activeView}
+          onChange={(key) =>
+            setActiveView(key as "review" | "list" | "stats" | "aiTool")
+          }
+        >
+          {mobileDestinations.map((item) => (
+            <TabBar.Item
+              key={item.key}
+              aria-label={item.title}
+              aria-selected={activeView === item.key}
+              icon={item.icon}
+              title={
+                <span
+                  aria-selected={activeView === item.key}
+                  role="tab"
+                  tabIndex={activeView === item.key ? 0 : -1}
+                >
+                  {item.title}
+                </span>
+              }
+            />
+          ))}
+        </TabBar>
       </div>
     </div>
   );
