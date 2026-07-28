@@ -112,6 +112,7 @@ jobs:
           tar -xzf "$ARCHIVE" -C "$temp_dir"
           sudo mkdir -p "$TARGET"
           sudo rsync -a --delete --exclude='.env*' "$temp_dir/" "$TARGET/"
+          sudo install -m 0644 "$TARGET/nginx.conf" "$COMPOSE_DIR/nginx.conf"
 
           cd "$COMPOSE_DIR"
           sudo docker compose build "$SERVICE"
