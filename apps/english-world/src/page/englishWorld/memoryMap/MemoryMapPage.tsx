@@ -380,18 +380,12 @@ export function MemoryMapPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f0f2f5] p-6 lg:p-10 text-slate-700">
-      <section className="mb-8">
+    <div className="memory-map-page text-slate-700">
+      <section className="memory-map-title">
         <div>
-          <Text className="text-blue-500 font-bold tracking-widest uppercase text-[10px] opacity-80">
-            词汇关联
-          </Text>
           <Title level={4} className="!mt-1 !mb-1 !font-black">
             记忆地图
           </Title>
-          <p className="text-slate-400 text-xs max-w-2xl font-medium">
-            整合错词关联与掌握路径，可视化你的核心记忆资产。
-          </p>
         </div>
       </section>
 
@@ -451,9 +445,6 @@ export function MemoryMapPage() {
         {/* 左侧：弱词队列 */}
         <section className="lg:col-span-3 bg-white rounded-lg shadow-sm overflow-hidden h-[650px] flex flex-col border-none">
           <div className="p-4 border-b border-slate-50 bg-white">
-            <Text className="text-blue-600 font-bold text-[10px] uppercase tracking-widest">
-              Queue
-            </Text>
             <Title level={5} className="!m-0 !font-bold">
               弱词队列
             </Title>
@@ -522,9 +513,6 @@ export function MemoryMapPage() {
           className="lg:col-span-6 bg-white rounded-lg shadow-md border-t-4 border-t-blue-500 p-8 min-h-[500px]"
         >
           <div className="mb-6">
-            <Text className="text-blue-500 font-bold text-[10px] uppercase tracking-widest">
-              Focus
-            </Text>
             <Title level={5} className="!m-0 !font-bold">
               当前词详情
             </Title>
@@ -654,9 +642,6 @@ export function MemoryMapPage() {
         <section className="lg:col-span-3 space-y-4">
           <div className="bg-white rounded-lg shadow-sm p-6 border-none">
             <div className="mb-4">
-              <Text className="text-slate-400 font-bold text-[10px] uppercase tracking-widest">
-                Next
-              </Text>
               <Title level={5} className="!m-0 !font-bold">
                 行动中心
               </Title>

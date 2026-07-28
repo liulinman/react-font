@@ -766,9 +766,8 @@ const EnglishWorld: React.FC = () => {
         ) : (
           <div className="english-world-stack">
             <EnglishWorldPageHeader
-              eyebrow="词汇资产"
+              compact
               title="词库"
-              description="集中管理释义、音标、掌握程度和学习来源。"
               actions={
                 <>
                   <Button

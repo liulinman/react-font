@@ -147,8 +147,12 @@ describe("IeltsCoreReviewPage", () => {
     );
 
     expect((await screen.findAllByText("mitigate")).length).toBeGreaterThan(0);
+    expect(screen.queryByText("IELTS Core Review")).not.toBeInTheDocument();
+    expect(screen.queryByText("Filter")).not.toBeInTheDocument();
+    expect(screen.queryByText("Queue")).not.toBeInTheDocument();
     await user.click(screen.getByRole("tab", { name: /词库来源/ }));
     expect(await screen.findByText("Climate policy coverage pattern")).toBeInTheDocument();
+    expect(screen.queryByText("Vocabulary Audit")).not.toBeInTheDocument();
     expect(screen.getByText("公共报刊")).toBeInTheDocument();
     expect(screen.getByText("AI 建议")).toBeInTheDocument();
     expect(screen.getByText(/词库 120 个/)).toBeInTheDocument();

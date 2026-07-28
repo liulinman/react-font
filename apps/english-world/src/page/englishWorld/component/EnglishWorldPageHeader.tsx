@@ -3,8 +3,9 @@ import type { ReactNode } from "react";
 type EnglishWorldPageHeaderProps = {
   eyebrow?: string;
   title: string;
-  description: string;
+  description?: string;
   actions?: ReactNode;
+  compact?: boolean;
 };
 
 export function EnglishWorldPageHeader({
@@ -12,15 +13,20 @@ export function EnglishWorldPageHeader({
   title,
   description,
   actions,
+  compact = false,
 }: EnglishWorldPageHeaderProps) {
   return (
-    <header className="english-world-page-header">
+    <header
+      className={`english-world-page-header${
+        compact ? " english-world-page-header-compact" : ""
+      }`}
+    >
       <div className="english-world-page-header-copy">
         {eyebrow ? (
           <span className="english-world-page-eyebrow">{eyebrow}</span>
         ) : null}
         <h1>{title}</h1>
-        <p>{description}</p>
+        {description ? <p>{description}</p> : null}
       </div>
       {actions ? (
         <div className="english-world-page-actions">{actions}</div>

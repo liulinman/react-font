@@ -48,6 +48,7 @@ describe("SystemSettingsPage", () => {
     expect(container.querySelector(".english-world-shell")).toBeInTheDocument();
     expect(container.querySelector(".system-settings-page")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "系统设置" })).toBeInTheDocument();
+    expect(screen.queryByText("偏好设置")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: /保存配置/ })).toBeInTheDocument();
   });
 });

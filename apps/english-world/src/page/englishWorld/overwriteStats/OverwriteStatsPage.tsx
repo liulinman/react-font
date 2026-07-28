@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Empty, Table, Tag, Typography, message } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { FireOutlined, RiseOutlined } from "@ant-design/icons";
+import { RiseOutlined } from "@ant-design/icons";
 import request from "@font/api";
 import { wordOverwriteStats } from "@/server/word/word";
 import type {
@@ -131,20 +131,16 @@ export function OverwriteStatsPage() {
   return (
     <div className="overwrite-stats-page">
       <section className="learning-cockpit-hero overwrite-stats-hero">
-        <Tag className="context-lab-hero-tag" icon={<FireOutlined />}>
-          高频覆盖
-        </Tag>
-        <Title level={1}>覆盖统计</Title>
-        <Text>
-          批量导入中反复出现并被覆盖的词，会在这里按次数排序，适合作为核心记忆候选。
-        </Text>
+        <div className="learning-cockpit-hero-copy">
+          <Title level={1}>覆盖统计</Title>
+          <Text>按覆盖次数排序，优先复习反复出现的词。</Text>
+        </div>
       </section>
 
       <section className="learning-cockpit-card overwrite-stats-panel">
         <div className="learning-cockpit-card-heading">
           <div>
-            <Text className="learning-cockpit-label">MEMORY PRIORITY</Text>
-            <Title level={3}>核心记忆优先级</Title>
+            <Title level={3}>高频覆盖词</Title>
           </div>
           {topWord && (
             <Tag color="blue" icon={<RiseOutlined />}>
@@ -163,7 +159,7 @@ export function OverwriteStatsPage() {
             emptyText: (
               <Empty
                 image={Empty.PRESENTED_IMAGE_SIMPLE}
-                description="还没有被覆盖过的词"
+                description="暂无覆盖记录"
               />
             ),
           }}
@@ -172,6 +168,7 @@ export function OverwriteStatsPage() {
             pageSize,
             total: stats.total,
             showSizeChanger: true,
+            locale: { items_per_page: "条/页" },
             onChange: (nextPage, nextPageSize) => {
               setPage(nextPage);
               setPageSize(nextPageSize);

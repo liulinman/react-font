@@ -344,20 +344,18 @@ export function BulkImportPage() {
   return (
     <div className="bulk-import-page">
       <section className="learning-cockpit-hero bulk-import-hero">
-        <Tag className="context-lab-hero-tag" icon={<CloudUploadOutlined />}>
-          批量新增
-        </Tag>
-        <Title level={1}>AI 批量导入单词</Title>
-        <Text>
-          粘贴外部收集的词表，系统会抽取英文词条、补齐学习字段，并跳过已存在的词。
-        </Text>
+        <div className="learning-cockpit-hero-copy">
+          <Title level={1}>批量导入</Title>
+          <Text>
+            粘贴词表，预览后导入；可自动补全字段并跳过已存在词。
+          </Text>
+        </div>
       </section>
 
       <div className="bulk-import-grid">
         <section className="learning-cockpit-card bulk-import-input-card">
           <div className="learning-cockpit-card-heading">
             <div>
-              <Text className="learning-cockpit-label">IMPORT SOURCE</Text>
               <Title level={3}>粘贴词表</Title>
             </div>
             <span className="learning-cockpit-card-icon">
@@ -370,7 +368,7 @@ export function BulkImportPage() {
             value={rawText}
             onChange={(event) => setRawText(event.target.value)}
             placeholder="支持换行、逗号、序号、英文 + 中文释义混合粘贴"
-            autoSize={{ minRows: 13, maxRows: 18 }}
+            autoSize={{ minRows: 11, maxRows: 16 }}
           />
 
           <div className="bulk-import-controls">
@@ -420,7 +418,6 @@ export function BulkImportPage() {
         <section className="learning-cockpit-card bulk-import-result-card">
           <div className="learning-cockpit-card-heading">
             <div>
-              <Text className="learning-cockpit-label">IMPORT RESULT</Text>
               <Title level={3}>导入结果</Title>
             </div>
             {result?.aiEnhanced && (
@@ -468,7 +465,11 @@ export function BulkImportPage() {
                 rowKey={getItemKey}
                 columns={columns}
                 dataSource={result.items}
-                pagination={{ pageSize: 10, showSizeChanger: true }}
+                pagination={{
+                  pageSize: 10,
+                  showSizeChanger: true,
+                  locale: { items_per_page: "条/页" },
+                }}
                 scroll={{ x: 980 }}
               />
             </>
@@ -476,7 +477,7 @@ export function BulkImportPage() {
             <Empty
               className="bulk-import-empty"
               image={Empty.PRESENTED_IMAGE_SIMPLE}
-              description="导入完成后会在这里查看补全字段和跳过原因"
+              description="暂无导入结果"
             />
           )}
         </section>

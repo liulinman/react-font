@@ -440,12 +440,7 @@ export function IeltsCoreReviewPage() {
     <div className="ielts-core-page">
       <section className="learning-cockpit-hero ielts-core-hero">
         <div>
-          <Text className="learning-cockpit-label">IELTS Core Review</Text>
           <Title level={1}>雅思核心复习</Title>
-          <p>
-            从你的词库里筛出最值得回忆的雅思核心词，确认队列后回到 Context Lab
-            生成阅读练习包。
-          </p>
         </div>
         <Tag className="context-lab-hero-tag" icon={<ExperimentOutlined />}>
           核心词优先
@@ -464,7 +459,6 @@ export function IeltsCoreReviewPage() {
                 <section className="learning-cockpit-card ielts-core-controls">
                   <div className="learning-cockpit-card-heading">
                     <div>
-                      <Text className="learning-cockpit-label">Filter</Text>
                       <Title level={3}>选择复习范围</Title>
                       <Text type="secondary">
                         默认优先处理不会和一般，也可以把熟练/精通加入抽查。
@@ -536,7 +530,6 @@ export function IeltsCoreReviewPage() {
                 <section className="learning-cockpit-card ielts-core-queue">
                   <div className="learning-cockpit-card-heading">
                     <div>
-                      <Text className="learning-cockpit-label">Queue</Text>
                       <Title level={3}>核心词队列</Title>
                       <Text type="secondary">
                         已命中 {review?.totalMatched ?? 0} 个核心词，当前展示{" "}
@@ -621,9 +614,6 @@ export function IeltsCoreReviewPage() {
               <section className="learning-cockpit-card ielts-core-source-panel">
                 <div className="learning-cockpit-card-heading ielts-core-source-heading">
                   <div>
-                    <Text className="learning-cockpit-label">
-                      Vocabulary Audit
-                    </Text>
                     <Title level={3}>核心词库审计</Title>
                     <Text type="secondary">
                       {vocabularyList?.total ?? 0} 个词条，当前第{" "}

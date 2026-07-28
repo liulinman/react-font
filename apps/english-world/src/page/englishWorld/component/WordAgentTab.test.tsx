@@ -17,6 +17,12 @@ describe("WordAgentTab", () => {
     render(<WordAgentTab />);
 
     expect(screen.getByRole("heading", { name: "查词" })).toBeInTheDocument();
+    expect(screen.queryByText("AI 单词查询")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        "输入单词、短语或一组薄弱词，返回释义、音标、例句和雅思语境。",
+      ),
+    ).not.toBeInTheDocument();
     expect(screen.getByLabelText("单词或短语")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "confront" })).toBeInTheDocument();
     expect(screen.queryByText("等待查询")).not.toBeInTheDocument();

@@ -527,7 +527,6 @@ export const RecitePage: React.FC = () => {
           <Card className="recite-question-panel recite-studio-shell">
             <div className="recite-session-header">
               <div>
-                <Text className="recite-session-kicker">REVIEW STUDIO</Text>
                 <Title level={3}>默写训练舱</Title>
                 <Text type="secondary">
                   {direction === PracticeDirection.ChineseToEnglish

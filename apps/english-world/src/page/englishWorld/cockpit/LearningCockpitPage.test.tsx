@@ -56,7 +56,10 @@ describe("LearningCockpitPage", () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByText("今天的学习重点")).toBeInTheDocument();
+    expect(screen.queryByText("今天的学习重点")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("完成最重要的一步，再进入语境巩固。"),
+    ).not.toBeInTheDocument();
     expect(
       await screen.findByRole("region", { name: "学习概览" }),
     ).toBeInTheDocument();

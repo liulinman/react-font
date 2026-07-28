@@ -1956,9 +1956,6 @@ function ContextLabPageContent({
                 <ExperimentOutlined aria-hidden="true" />
                 <div>
                   <Title level={2}>AI 语境实验室</Title>
-                  <Text type="secondary">
-                    创建练习包，在弹窗中完成阅读、答题与复盘
-                  </Text>
                 </div>
               </div>
               <Space size={8}>
@@ -1989,11 +1986,7 @@ function ContextLabPageContent({
         >
           <div className="learning-cockpit-card-heading">
             <div>
-              <Text className="learning-cockpit-label">Create</Text>
               <Title level={3}>生成练习</Title>
-              <Text type="secondary">
-                选择一组词，生成一套可阅读、可做题、可复盘的练习包。
-              </Text>
             </div>
           </div>
 
@@ -2139,7 +2132,6 @@ function ContextLabPageContent({
         >
           <div className="learning-cockpit-card-heading">
             <div>
-              <Text className="learning-cockpit-label">Tasks</Text>
               <Title level={3}>练习包</Title>
             </div>
           </div>

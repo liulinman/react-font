@@ -109,6 +109,10 @@ describe("EnglishWorld ToC routing", () => {
 
     expect(screen.getByRole("heading", { name: "词库" })).toBeInTheDocument();
     expect(screen.getByText("全部词条")).toBeInTheDocument();
+    expect(screen.queryByText("词汇资产")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("集中管理释义、音标、掌握程度和学习来源。"),
+    ).not.toBeInTheDocument();
     expect(
       screen.queryByText("保留筛选字段、表格列和添加/编辑单词字段"),
     ).not.toBeInTheDocument();

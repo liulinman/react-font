@@ -248,11 +248,7 @@ export const WordAgentTab: React.FC = () => {
   return (
     <div className="word-agent-page">
       <section className="word-agent-hero" aria-label="AI 单词查询">
-        <span className="word-agent-kicker">AI 单词查询</span>
         <h1>查词</h1>
-        <p>
-          输入单词、短语或一组薄弱词，返回释义、音标、例句和雅思语境。
-        </p>
       </section>
 
       <section className="word-agent-workspace">

@@ -120,9 +120,8 @@ export const SystemSettingsPage: React.FC = () => {
     <EnglishWorldLayout activeKey="setting">
       <div className="system-settings-page">
         <EnglishWorldPageHeader
-          eyebrow="偏好设置"
+          compact
           title="系统设置"
-          description="管理默写和听写的默认范围，让每次学习从合适的难度开始。"
           actions={
             <Space>
               <Button onClick={handleReset}>重置默认</Button>

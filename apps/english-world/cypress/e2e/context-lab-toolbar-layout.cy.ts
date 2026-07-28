@@ -42,4 +42,23 @@ describe("context lab compact search toolbar layout", () => {
       );
     });
   });
+
+  it("keeps the mobile utility title readable above its actions", () => {
+    cy.viewport(390, 844);
+    cy.visit("/englishWorld/context-lab");
+    cy.wait("@currentUser");
+    cy.wait("@contextHistory");
+
+    cy.get(".context-lab-utility-title h2").then(($title) => {
+      const title = $title[0];
+      expect(title.scrollWidth).to.be.at.most(title.clientWidth);
+    });
+    cy.get(".context-lab-utility-header").then(($header) => {
+      const headerRect = $header[0].getBoundingClientRect();
+      cy.contains("button", "下载 PDF 模板").then(($button) => {
+        const buttonRect = $button[0].getBoundingClientRect();
+        expect(buttonRect.bottom).to.be.at.most(headerRect.bottom);
+      });
+    });
+  });
 });

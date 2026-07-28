@@ -303,6 +303,10 @@ describe("RecitePage plan review", () => {
     );
 
     expect(await screen.findByText("脆弱的")).toBeInTheDocument();
+    expect(screen.queryByText("REVIEW STUDIO")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "默写训练舱" }),
+    ).toBeInTheDocument();
     expect(container.querySelector(".recite-studio-shell")).toBeInTheDocument();
     expect(container.querySelector(".recite-session-header")).toBeInTheDocument();
     expect(container.querySelector(".recite-question-canvas")).toBeInTheDocument();

@@ -73,6 +73,7 @@ describe("EnglishStats", () => {
     );
 
     expect(await screen.findByText("还没有学习数据")).toBeInTheDocument();
+    expect(screen.queryByText("学习反馈")).not.toBeInTheDocument();
     expect(screen.queryByText("每日新增单词")).not.toBeInTheDocument();
     expect(screen.queryByTestId("chart")).not.toBeInTheDocument();
   });

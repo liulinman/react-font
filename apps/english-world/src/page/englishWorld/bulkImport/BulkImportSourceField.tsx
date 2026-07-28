@@ -172,8 +172,7 @@ export function BulkImportSourceField({
   return (
     <div className="bulk-import-source-field">
       <div className="bulk-import-source-heading">
-        <span>统一来源</span>
-        <Text type="secondary">本批所有词条共用</Text>
+        <span>来源</span>
       </div>
       <Segmented
         block
@@ -238,22 +237,24 @@ export function BulkImportSourceField({
               </Popconfirm>
             </Space>
           ) : (
-            <Upload
-              accept=".pdf,.png,.jpg,.jpeg,.webp"
-              beforeUpload={beforeUpload}
-              customRequest={customRequest}
-              maxCount={1}
-              showUploadList={false}
-            >
-              <Button
-                icon={<UploadOutlined />}
-                loading={uploading}
+            <>
+              <Upload
+                accept=".pdf,.png,.jpg,.jpeg,.webp"
+                beforeUpload={beforeUpload}
+                customRequest={customRequest}
+                maxCount={1}
+                showUploadList={false}
               >
-                上传来源文件
-              </Button>
-            </Upload>
+                <Button
+                  icon={<UploadOutlined />}
+                  loading={uploading}
+                >
+                  上传来源文件
+                </Button>
+              </Upload>
+              <Text type="secondary">PDF/图片，20MB 内</Text>
+            </>
           )}
-          <Text type="secondary">PDF 或图片，最大 20MB，仅登录后可查看</Text>
         </div>
       )}
     </div>

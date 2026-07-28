@@ -73,7 +73,7 @@ describe("OverwriteStatsPage", () => {
 
     expect(await screen.findByText("preserve")).toBeInTheDocument();
     expect(screen.getByText("覆盖 3 次")).toBeInTheDocument();
-    expect(screen.getByText("核心记忆优先级")).toBeInTheDocument();
+    expect(screen.getByText("高频覆盖词")).toBeInTheDocument();
     expect(screen.getByText("mitigate")).toBeInTheDocument();
   });
 });

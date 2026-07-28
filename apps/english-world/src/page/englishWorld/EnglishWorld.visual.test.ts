@@ -25,10 +25,23 @@ describe("word card visual hierarchy", () => {
 
   it("uses the Focus Studio desktop grid and restrained motion", () => {
     expect(styles).toMatch(
-      /\.english-world-main\s*\{[^}]*max-width:\s*1180px;[^}]*margin:\s*0 auto;/s,
+      /\.english-world-main\s*\{[^}]*max-width:\s*1560px;[^}]*margin:\s*0 auto;/s,
     );
     expect(styles).toMatch(
-      /\.learning-cockpit-grid\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1\.55fr\) minmax\(280px, 0\.7fr\);/s,
+      /\.learning-cockpit-grid\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\) minmax\(320px, 360px\);/s,
+    );
+    expect(styles).toMatch(/\.recite-loop\s*\{[^}]*max-width:\s*1120px;/s);
+    expect(styles).toMatch(
+      /\.system-settings-page\s*\{[^}]*max-width:\s*1080px;/s,
+    );
+    expect(styles).toMatch(
+      /\.system-settings-form\s*\{[^}]*max-width:\s*860px;/s,
+    );
+    expect(styles).toMatch(
+      /\.ielts-core-hero\s*\{[^}]*padding:\s*2px 0 0;[^}]*background:\s*transparent;/s,
+    );
+    expect(styles).toMatch(
+      /\.learning-cockpit-hero\.ielts-core-hero h1\.ant-typography\s*\{[^}]*font-size:\s*24px;/s,
     );
     expect(styles).toContain("@keyframes english-world-enter");
     expect(styles).toMatch(

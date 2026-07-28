@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Button, Tag, Typography } from "antd";
+import { Button, Typography } from "antd";
 import {
   BarChartOutlined,
   ExperimentOutlined,
@@ -100,19 +100,6 @@ export function LearningCockpitPage() {
 
   return (
     <div className="learning-cockpit">
-      <section className="learning-cockpit-hero">
-        <div>
-          <Text className="learning-cockpit-label">今天</Text>
-          <Title level={1}>今天的学习重点</Title>
-          <p>完成最重要的一步，再进入语境巩固。</p>
-        </div>
-        <div className="learning-cockpit-hero-actions">
-          {coachUnavailable ? (
-            <Tag color="orange">学习数据暂不可用</Tag>
-          ) : null}
-        </div>
-      </section>
-
       {(coachUnavailable || coachSummary) && (
         <>
           <div className="learning-cockpit-grid learning-cockpit-route-board">

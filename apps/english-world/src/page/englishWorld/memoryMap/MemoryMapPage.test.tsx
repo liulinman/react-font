@@ -151,13 +151,21 @@ describe("MemoryMapPage", () => {
       return Promise.resolve(true);
     });
 
-    render(
+    const { container } = render(
       <MemoryRouter>
         <MemoryMapPage />
         <LocationProbe />
       </MemoryRouter>,
     );
 
+    expect(
+      screen.getByRole("heading", { name: "记忆地图" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("词汇关联")).not.toBeInTheDocument();
+    expect(screen.queryByText("Queue")).not.toBeInTheDocument();
+    expect(screen.queryByText("Focus")).not.toBeInTheDocument();
+    expect(screen.queryByText("Next")).not.toBeInTheDocument();
+    expect(container.querySelector(".memory-map-page")).toBeInTheDocument();
     expect(await screen.findByText("弱词队列")).toBeInTheDocument();
     expect(screen.getByText("当前词详情")).toBeInTheDocument();
     expect(screen.getByText("行动中心")).toBeInTheDocument();

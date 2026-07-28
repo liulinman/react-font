@@ -122,6 +122,16 @@ describe("ContextLabPage", () => {
     ).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "生成练习" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "练习包" })).toBeInTheDocument();
+    expect(screen.queryByText("Create")).not.toBeInTheDocument();
+    expect(screen.queryByText("Tasks")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("创建练习包，在弹窗中完成阅读、答题与复盘"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        "选择一组词，生成一套可阅读、可做题、可复盘的练习包。",
+      ),
+    ).not.toBeInTheDocument();
     expect(
       screen.queryByRole("heading", { level: 1, name: "AI 语境实验室" }),
     ).not.toBeInTheDocument();

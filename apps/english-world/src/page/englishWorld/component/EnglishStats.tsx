@@ -281,9 +281,8 @@ export const EnglishStats = () => {
   return (
     <div className="english-stats-page">
       <EnglishWorldPageHeader
-        eyebrow="学习反馈"
+        compact
         title="学习数据"
-        description="看清词库积累、掌握进度和近期学习节奏。"
       />
 
       {loading ? (
