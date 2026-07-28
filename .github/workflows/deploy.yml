@@ -20,6 +20,7 @@ env:
   DEPLOY_COMPOSE_DIR: /opt/english-world/deploy
   DEPLOY_SERVICE: frontend
   DEPLOY_CONTAINER: english-world-frontend
+  SSH_CONTROL_PATH: /tmp/english-world-${{ github.run_id }}-${{ github.run_attempt }}
 
 jobs:
   verify:
@@ -61,7 +62,7 @@ jobs:
       - name: Trust production host
         run: |
           mkdir -p ~/.ssh
-          ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts
+          ssh-keyscan -t ed25519 -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts
 
       - name: Package and upload source
         run: |
@@ -77,12 +78,24 @@ jobs:
             --exclude='.env*' \
             -czf "$archive" .
           scp -o BatchMode=yes \
+            -o ConnectTimeout=15 \
+            -o ConnectionAttempts=5 \
+            -o ControlMaster=auto \
+            -o ControlPath="$SSH_CONTROL_PATH" \
+            -o ControlPersist=300 \
             "$archive" \
             "${DEPLOY_USER}@${DEPLOY_HOST}:/tmp/react-font-${GITHUB_SHA}.tar.gz"
 
       - name: Deploy frontend without restarting dependencies
         run: |
-          ssh -o BatchMode=yes "${DEPLOY_USER}@${DEPLOY_HOST}" \
+          ssh -o BatchMode=yes \
+            -o ConnectTimeout=15 \
+            -o ConnectionAttempts=5 \
+            -o ControlMaster=auto \
+            -o ControlPath="$SSH_CONTROL_PATH" \
+            -o ControlPersist=300 \
+            -o ServerAliveInterval=15 \
+            "${DEPLOY_USER}@${DEPLOY_HOST}" \
             "ARCHIVE=/tmp/react-font-${GITHUB_SHA}.tar.gz \
             TARGET=${DEPLOY_TARGET} \
             COMPOSE_DIR=${DEPLOY_COMPOSE_DIR} \
