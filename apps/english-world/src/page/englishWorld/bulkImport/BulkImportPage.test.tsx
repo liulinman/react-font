@@ -455,4 +455,94 @@ describe("BulkImportPage", () => {
       ]);
     });
   });
+
+  it("clears a committed uploaded source without deleting its server file", async () => {
+    const user = userEvent.setup();
+    requestMock.mockImplementation((config) => {
+      if (config.url === "/upload/source-file") {
+        return Promise.resolve({
+          url: "/api/upload/source-file/7/11111111-1111-4111-8111-111111111111.pdf",
+          storageName: "11111111-1111-4111-8111-111111111111.pdf",
+          originalName: "reading.pdf",
+          mimeType: "application/pdf",
+          size: 3,
+        });
+      }
+      if (config.url === "/english/bulkImportWords/preview") {
+        return Promise.resolve({
+          receivedTextLength: 8,
+          extracted: 1,
+          aiEnhanced: false,
+          items: [{ englishWord: "mitigate" }],
+        });
+      }
+      if (config.url === "/english/importMissingWords/preview") {
+        return Promise.resolve({
+          received: 1,
+          normalized: 1,
+          importable: 1,
+          skippedExisting: 0,
+          skippedDuplicate: 0,
+          existingWords: [],
+          duplicateWords: [],
+        });
+      }
+      if (config.url === "/english/importMissingWords") {
+        return Promise.resolve({
+          received: 1,
+          normalized: 1,
+          inserted: 1,
+          skippedExisting: 0,
+          skippedDuplicate: 0,
+          insertedWords: ["mitigate"],
+          skippedWords: [],
+          updated: 0,
+          updatedWords: [],
+        });
+      }
+      return Promise.reject(new Error("unexpected request"));
+    });
+
+    const { container } = render(<BulkImportPage />);
+    await user.click(screen.getByText("上传文件"));
+    const fileInput = container.querySelector<HTMLInputElement>(
+      'input[type="file"]',
+    );
+    expect(fileInput).not.toBeNull();
+    await user.upload(
+      fileInput!,
+      new File(["pdf"], "reading.pdf", {
+        type: "application/pdf",
+      }),
+    );
+    expect(
+      await screen.findByRole("link", { name: "reading.pdf" }),
+    ).toBeInTheDocument();
+
+    await user.type(
+      screen.getByPlaceholderText("支持换行、逗号、序号、英文 + 中文释义混合粘贴"),
+      "mitigate",
+    );
+    await user.click(screen.getByRole("button", { name: /解析预览/ }));
+    await screen.findByRole("dialog");
+    await user.click(screen.getByRole("button", { name: /确认导入/ }));
+
+    await waitFor(() => {
+      expect(
+        requestMock.mock.calls.some(
+          ([config]) => config.url === "/english/importMissingWords",
+        ),
+      ).toBe(true);
+    });
+    expect(
+      await screen.findByRole("button", {
+        name: /上\s*传\s*来\s*源\s*文\s*件/,
+      }),
+    ).toBeInTheDocument();
+    expect(
+      requestMock.mock.calls.some(
+        ([config]) => config.method === "DELETE",
+      ),
+    ).toBe(false);
+  });
 });

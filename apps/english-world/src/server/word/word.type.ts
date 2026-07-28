@@ -32,9 +32,14 @@ export type DailyStat = {
 
 export type SourceFileUploadResult = {
   url: string;
+  storageName: string;
   originalName: string;
   mimeType: string;
   size: number;
+};
+
+export type SourceFileDeleteResult = {
+  deleted: true;
 };
 
 export type ImportMissingWordsResult = {

@@ -1,6 +1,8 @@
 import {
   Button,
   Input,
+  Modal,
+  Popconfirm,
   Segmented,
   Space,
   Typography,
@@ -15,7 +17,10 @@ import {
   UploadOutlined,
 } from "@ant-design/icons";
 import request from "@font/api";
-import { sourceFileUpload } from "@/server/word/word";
+import {
+  sourceFileDelete,
+  sourceFileUpload,
+} from "@/server/word/word";
 import type { SourceFileUploadResult } from "@/server/word/word.type";
 import { useState } from "react";
 import {
@@ -43,6 +48,7 @@ export function BulkImportSourceField({
   onChange,
 }: BulkImportSourceFieldProps) {
   const [urlTouched, setUrlTouched] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [uploading, setUploading] = useState(false);
   const cleanUrl = value.url.trim();
   const showUrlError =
@@ -51,9 +57,71 @@ export function BulkImportSourceField({
     Boolean(cleanUrl) &&
     !isValidImportSourceUrl(cleanUrl);
 
-  const handleModeChange = (mode: SharedImportSource["mode"]) => {
+  const getStorageName = () => {
+    if (value.storageName) return value.storageName;
+    const matched = value.url.match(
+      /\/api\/upload\/source-file\/\d+\/([^/?#]+)$/,
+    );
+    return matched?.[1] ? decodeURIComponent(matched[1]) : "";
+  };
+
+  const deleteUploadedFile = async () => {
+    const storageName = getStorageName();
+    if (!storageName) {
+      throw new Error("无法识别来源文件，请刷新后重试");
+    }
+    await request(sourceFileDelete(storageName));
+  };
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      await deleteUploadedFile();
+      onChange({ mode: "file", url: "" });
+      message.success("来源文件已删除");
+    } catch (error) {
+      message.error(
+        error instanceof Error ? error.message : "来源文件删除失败",
+      );
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const applyModeChange = (mode: SharedImportSource["mode"]) => {
     setUrlTouched(false);
     onChange({ mode, url: "" });
+  };
+
+  const handleModeChange = (mode: SharedImportSource["mode"]) => {
+    if (value.mode === "file" && value.url && mode !== "file") {
+      Modal.confirm({
+        title: "切换来源并删除已上传文件？",
+        content: "该文件尚未用于导入，切换来源后将从服务器删除。",
+        okText: "删除并切换",
+        cancelText: "取消",
+        okButtonProps: { danger: true },
+        onOk: async () => {
+          setDeleting(true);
+          try {
+            await deleteUploadedFile();
+            applyModeChange(mode);
+            message.success("来源文件已删除");
+          } catch (error) {
+            message.error(
+              error instanceof Error
+                ? error.message
+                : "来源文件删除失败",
+            );
+            throw error;
+          } finally {
+            setDeleting(false);
+          }
+        },
+      });
+      return;
+    }
+    applyModeChange(mode);
   };
 
   const beforeUpload: UploadProps["beforeUpload"] = (file) => {
@@ -87,6 +155,7 @@ export function BulkImportSourceField({
         mode: "file",
         url: result.url,
         name: result.originalName,
+        storageName: result.storageName,
       });
       onSuccess?.(result);
       message.success("来源文件上传成功");
@@ -151,13 +220,22 @@ export function BulkImportSourceField({
               <a href={value.url} target="_blank" rel="noreferrer">
                 {value.name || "查看已上传来源"}
               </a>
-              <Button
-                type="text"
-                danger
-                icon={<DeleteOutlined />}
-                aria-label="移除来源文件"
-                onClick={() => onChange({ mode: "file", url: "" })}
-              />
+              <Popconfirm
+                title="删除已上传的来源文件？"
+                description="删除后无法恢复。"
+                okText="删除"
+                cancelText="取消"
+                okButtonProps={{ danger: true }}
+                onConfirm={handleDelete}
+              >
+                <Button
+                  type="text"
+                  danger
+                  icon={<DeleteOutlined />}
+                  aria-label="移除来源文件"
+                  loading={deleting}
+                />
+              </Popconfirm>
             </Space>
           ) : (
             <Upload

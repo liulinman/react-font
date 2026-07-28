@@ -265,6 +265,12 @@ export function BulkImportPage() {
     });
     setPreviewOpen(false);
     setConflict(null);
+    if (
+      sharedSource.mode === "file" &&
+      (response.inserted > 0 || (response.updated ?? 0) > 0)
+    ) {
+      setSharedSource({ mode: "file", url: "" });
+    }
     message.success(messageText);
   };
 

@@ -17,6 +17,7 @@ import {
   ImportMissingWordsPreviewResult,
   OverwriteStatsParams,
   OverwriteStatsResponse,
+  SourceFileDeleteResult,
   SourceFileUploadResult,
   WordList,
 } from "./word.type";
@@ -197,6 +198,16 @@ export const sourceFileUpload = (
     method: "POST",
     data,
     __responseType: undefined as unknown as SourceFileUploadResult,
+  };
+};
+
+export const sourceFileDelete = (
+  storageName: string,
+): YTRequest<SourceFileDeleteResult> => {
+  return {
+    url: `/upload/source-file/${encodeURIComponent(storageName)}`,
+    method: "DELETE",
+    __responseType: undefined as unknown as SourceFileDeleteResult,
   };
 };
 

@@ -98,6 +98,7 @@ describe("BulkImportSourceField", () => {
     const onChange = vi.fn();
     requestMock.mockResolvedValue({
       url: "/api/upload/source-file/7/11111111-1111-4111-8111-111111111111.pdf",
+      storageName: "11111111-1111-4111-8111-111111111111.pdf",
       originalName: "reading.pdf",
       mimeType: "application/pdf",
       size: 3,
@@ -131,7 +132,110 @@ describe("BulkImportSourceField", () => {
         mode: "file",
         url: "/api/upload/source-file/7/11111111-1111-4111-8111-111111111111.pdf",
         name: "reading.pdf",
+        storageName: "11111111-1111-4111-8111-111111111111.pdf",
       });
+    });
+  });
+
+  it("deletes the uploaded source on the server after confirmation", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    requestMock.mockResolvedValue({ deleted: true });
+    render(
+      <ControlledSourceField
+        initialValue={{
+          mode: "file",
+          url: "/api/upload/source-file/7/11111111-1111-4111-8111-111111111111.pdf",
+          name: "reading.pdf",
+          storageName: "11111111-1111-4111-8111-111111111111.pdf",
+        } as SharedImportSource & { storageName: string }}
+        onChange={onChange}
+      />,
+    );
+
+    await user.click(
+      screen.getByRole("button", { name: "移除来源文件" }),
+    );
+    await user.click(
+      await screen.findByRole("button", { name: /删\s*除/ }),
+    );
+
+    await waitFor(() => {
+      expect(requestMock).toHaveBeenCalledWith({
+        url: "/upload/source-file/11111111-1111-4111-8111-111111111111.pdf",
+        method: "DELETE",
+        __responseType: undefined,
+      });
+      expect(onChange).toHaveBeenLastCalledWith({
+        mode: "file",
+        url: "",
+      });
+    });
+  });
+
+  it("keeps the uploaded source selected when server deletion fails", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    requestMock.mockRejectedValue(new Error("删除失败"));
+    render(
+      <ControlledSourceField
+        initialValue={{
+          mode: "file",
+          url: "/api/upload/source-file/7/11111111-1111-4111-8111-111111111111.pdf",
+          name: "reading.pdf",
+          storageName: "11111111-1111-4111-8111-111111111111.pdf",
+        } as SharedImportSource & { storageName: string }}
+        onChange={onChange}
+      />,
+    );
+
+    await user.click(
+      screen.getByRole("button", { name: "移除来源文件" }),
+    );
+    await user.click(
+      await screen.findByRole("button", { name: /删\s*除/ }),
+    );
+
+    await waitFor(() => {
+      expect(requestMock).toHaveBeenCalledTimes(1);
+    });
+    expect(
+      screen.getByRole("link", { name: "reading.pdf" }),
+    ).toBeInTheDocument();
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it("deletes an uncommitted upload before switching source modes", async () => {
+    const user = userEvent.setup();
+    requestMock.mockResolvedValue({ deleted: true });
+    render(
+      <ControlledSourceField
+        initialValue={{
+          mode: "file",
+          url: "/api/upload/source-file/7/11111111-1111-4111-8111-111111111111.pdf",
+          name: "reading.pdf",
+          storageName: "11111111-1111-4111-8111-111111111111.pdf",
+        } as SharedImportSource & { storageName: string }}
+      />,
+    );
+
+    await user.click(screen.getByText("网页链接"));
+    expect(
+      await screen.findByText("切换来源并删除已上传文件？"),
+    ).toBeInTheDocument();
+    await user.click(
+      screen.getByRole("button", { name: "删除并切换" }),
+    );
+
+    expect(
+      await screen.findByPlaceholderText(
+        "粘贴文章网页地址，例如 https://...",
+      ),
+    ).toBeInTheDocument();
+    expect(requestMock).toHaveBeenCalledWith({
+      url: "/upload/source-file/11111111-1111-4111-8111-111111111111.pdf",
+      method: "DELETE",
+      __responseType: undefined,
     });
   });
 });
