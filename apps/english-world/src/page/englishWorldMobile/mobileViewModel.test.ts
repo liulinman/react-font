@@ -50,5 +50,6 @@ describe("mobile view model helpers", () => {
     expect(getMobileViewTitle("list")).toBe("词库");
     expect(getMobileViewTitle("stats")).toBe("学习统计");
     expect(getMobileViewTitle("aiTool")).toBe("学习工具");
+    expect(getMobileViewTitle("more")).toBe("更多功能");
   });
 });

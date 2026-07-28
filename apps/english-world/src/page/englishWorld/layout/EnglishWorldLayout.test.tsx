@@ -15,7 +15,12 @@ vi.mock("@/contexts/AuthContext", () => ({
 
 function LocationProbe() {
   const location = useLocation();
-  return <div data-testid="location">{location.pathname}</div>;
+  return (
+    <div data-testid="location">
+      {location.pathname}
+      {location.search}
+    </div>
+  );
 }
 
 describe("EnglishWorldLayout sidebar state", () => {
@@ -124,5 +129,28 @@ describe("EnglishWorldLayout sidebar state", () => {
     expect(
       await screen.findByRole("dialog", { name: "主题设置" }),
     ).toBeInTheDocument();
+  });
+
+  it("returns advanced pages to the mobile feature center", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter
+        initialEntries={["/englishWorld/bulk-import?source=mobile"]}
+      >
+        <EnglishWorldLayout activeKey="bulkImport">
+          content
+        </EnglishWorldLayout>
+        <LocationProbe />
+      </MemoryRouter>,
+    );
+
+    await user.click(
+      screen.getByRole("button", { name: "返回移动版" }),
+    );
+
+    expect(screen.getByTestId("location")).toHaveTextContent(
+      "/englishWorldMobile?view=more",
+    );
   });
 });

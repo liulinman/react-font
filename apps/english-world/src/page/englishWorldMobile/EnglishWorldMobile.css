@@ -151,6 +151,171 @@
   font-weight: 600;
 }
 
+.mobile-more-page {
+  min-height: 100%;
+  padding: 14px 12px 28px;
+  background: #f5f7fa;
+}
+
+.mobile-more-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 76px;
+  padding: 14px 16px;
+  border: 1px solid #e5eaf0;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 3px 12px rgba(15, 23, 42, 0.05);
+}
+
+.mobile-more-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  color: #fff;
+  background: #1677ff;
+  font-size: 24px;
+}
+
+.mobile-more-profile-copy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 3px;
+}
+
+.mobile-more-profile-copy strong {
+  overflow: hidden;
+  color: #172033;
+  font-size: 17px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mobile-more-profile-copy span {
+  color: #758195;
+  font-size: 13px;
+}
+
+.mobile-more-section {
+  margin-top: 18px;
+}
+
+.mobile-more-section h2 {
+  margin: 0 4px 8px;
+  color: #667085;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.mobile-more-list {
+  overflow: hidden;
+  border: 1px solid #e5eaf0;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.mobile-more-item {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) 18px;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  min-height: 68px;
+  padding: 10px 14px;
+  border: 0;
+  border-bottom: 1px solid #edf0f4;
+  color: inherit;
+  background: #fff;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.mobile-more-item:last-child {
+  border-bottom: 0;
+}
+
+.mobile-more-item:active {
+  background: #f7f9fc;
+}
+
+.mobile-more-item-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  font-size: 21px;
+}
+
+.mobile-more-item-icon-blue {
+  color: #1565c0;
+  background: #e9f3ff;
+}
+
+.mobile-more-item-icon-green {
+  color: #15805d;
+  background: #e8f7f1;
+}
+
+.mobile-more-item-icon-amber {
+  color: #9a6700;
+  background: #fff4d6;
+}
+
+.mobile-more-item-icon-violet {
+  color: #6d4aff;
+  background: #f0edff;
+}
+
+.mobile-more-item-icon-slate {
+  color: #526074;
+  background: #eef1f5;
+}
+
+.mobile-more-item-copy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 3px;
+}
+
+.mobile-more-item-copy strong {
+  color: #172033;
+  font-size: 15px;
+  line-height: 1.35;
+}
+
+.mobile-more-item-copy span {
+  color: #758195;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.mobile-more-item-chevron {
+  color: #a4adba;
+  font-size: 15px;
+}
+
+.mobile-more-logout {
+  width: 100%;
+  min-height: 48px;
+  margin-top: 18px;
+  border: 1px solid #f1c4c4;
+  border-radius: 8px;
+  color: #c93636;
+  background: #fff;
+  font-size: 15px;
+  font-weight: 700;
+}
+
 .mobile-exercise-page {
   min-height: 100%;
   max-width: 100%;

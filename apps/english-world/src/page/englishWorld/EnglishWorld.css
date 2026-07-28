@@ -314,6 +314,37 @@
   margin-left: 72px;
 }
 
+.english-world-mobile-return {
+  position: fixed;
+  right: 16px;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  z-index: 90;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 44px;
+  padding: 0 15px;
+  border: 1px solid #bfd7ff;
+  border-radius: 8px;
+  color: #125eb4;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.16);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+}
+
+.english-world-mobile-return:hover,
+.english-world-mobile-return:focus-visible {
+  border-color: #1677ff;
+  color: #0f57a6;
+  outline: 3px solid rgba(22, 119, 255, 0.14);
+  outline-offset: 2px;
+}
+
 .english-world-context-bar {
   position: sticky;
   top: 0;

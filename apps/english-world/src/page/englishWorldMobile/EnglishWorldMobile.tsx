@@ -32,6 +32,7 @@ import {
   AppOutline,
   AppstoreOutline,
   HistogramOutline,
+  MoreOutline,
   UnorderedListOutline,
 } from "antd-mobile-icons";
 import request, { useMutation } from "@font/api";
@@ -50,7 +51,7 @@ import { enumToOptions, type CommonRecord } from "@font/utils";
 import ReactECharts from "echarts-for-react";
 import { PhotoProvider, PhotoView } from "react-photo-view";
 import "react-photo-view/dist/react-photo-view.css";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { WordAgentTabMobile } from "./WordAgentTabMobile";
 import { ExerciseAgentTabMobile } from "./ExerciseAgentTabMobile";
 import {
@@ -67,9 +68,11 @@ import {
   createSummaryStats,
   getMobileViewTitle,
   initialSummaryStats,
+  type MobileView,
   type PartSpeechData,
   type SummaryStat,
 } from "./mobileViewModel";
+import { MobileMorePage } from "./MobileMorePage";
 import "./EnglishWorldMobile.css";
 
 type ListData = {
@@ -82,11 +85,17 @@ const mobileDestinations = [
   { key: "review", title: "今日学习", icon: <AppOutline /> },
   { key: "list", title: "词库", icon: <UnorderedListOutline /> },
   { key: "stats", title: "统计", icon: <HistogramOutline /> },
-  { key: "aiTool", title: "工具", icon: <AppstoreOutline /> },
+  { key: "aiTool", title: "AI", icon: <AppstoreOutline /> },
+  { key: "more", title: "更多", icon: <MoreOutline /> },
 ] as const;
+
+const mobileViewKeys = new Set<MobileView>(
+  mobileDestinations.map((item) => item.key),
+);
 
 const EnglishWorldMobile: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [wordList, setWordList] = useState<WordList[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const loadingRef = useRef<boolean>(false);
@@ -110,9 +119,22 @@ const EnglishWorldMobile: React.FC = () => {
   const statsLevelPickerRef = useRef<PickerActions>(null);
   const filterTypePickerRef = useRef<PickerActions>(null);
   const filterLevelPickerRef = useRef<PickerActions>(null);
-  const [activeView, setActiveView] = useState<
-    "review" | "list" | "stats" | "aiTool"
-  >("review");
+  const requestedView = searchParams.get("view");
+  const activeView: MobileView = mobileViewKeys.has(requestedView as MobileView)
+    ? (requestedView as MobileView)
+    : "review";
+  const setActiveView = useCallback(
+    (view: MobileView) => {
+      const nextSearchParams = new URLSearchParams(searchParams);
+      if (view === "review") {
+        nextSearchParams.delete("view");
+      } else {
+        nextSearchParams.set("view", view);
+      }
+      setSearchParams(nextSearchParams, { replace: true });
+    },
+    [searchParams, setSearchParams],
+  );
   const [activeToolTab, setActiveToolTab] = useState<"word" | "contextLab">(
     "word"
   );
@@ -443,7 +465,9 @@ const EnglishWorldMobile: React.FC = () => {
                 block
                 color="primary"
                 size="large"
-                onClick={() => navigate("/englishWorld/recite")}
+                onClick={() =>
+                  navigate("/englishWorld/recite?source=mobile")
+                }
               >
                 开始今日复习
               </Button>
@@ -500,6 +524,13 @@ const EnglishWorldMobile: React.FC = () => {
               <ExerciseAgentTabMobile />
             </Tabs.Tab>
           </Tabs>
+        ) : activeView === "more" ? (
+          <MobileMorePage
+            onOpenAi={() => {
+              setActiveToolTab("word");
+              setActiveView("aiTool");
+            }}
+          />
         ) : activeView === "list" ? (
           <>
             {/* 搜索栏 */}
@@ -1082,9 +1113,7 @@ const EnglishWorldMobile: React.FC = () => {
       <div className="mobile-bottom-nav" aria-label="主要导航" role="tablist">
         <TabBar
           activeKey={activeView}
-          onChange={(key) =>
-            setActiveView(key as "review" | "list" | "stats" | "aiTool")
-          }
+          onChange={(key) => setActiveView(key as MobileView)}
         >
           {mobileDestinations.map((item) => (
             <TabBar.Item

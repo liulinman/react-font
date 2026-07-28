@@ -1,4 +1,6 @@
+import { LeftOutlined } from "@ant-design/icons";
 import { useState, type ReactNode } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { EnglishHeader } from "../component/EnglishHeader";
 import { EnglishWorldContextBar } from "./EnglishWorldContextBar";
 
@@ -26,9 +28,13 @@ export function EnglishWorldLayout({
   children,
   onNavClick,
 }: EnglishWorldLayoutProps) {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(
     getInitialSidebarCollapsed,
   );
+  const openedFromMobile =
+    new URLSearchParams(location.search).get("source") === "mobile";
 
   const handleCollapsedChange = (collapsed: boolean) => {
     setSidebarCollapsed(collapsed);
@@ -58,6 +64,16 @@ export function EnglishWorldLayout({
         <EnglishWorldContextBar activeKey={activeKey} />
         <main className="english-world-main">{children}</main>
       </div>
+      {openedFromMobile ? (
+        <button
+          type="button"
+          className="english-world-mobile-return"
+          onClick={() => navigate("/englishWorldMobile?view=more")}
+        >
+          <LeftOutlined aria-hidden="true" />
+          返回移动版
+        </button>
+      ) : null}
     </div>
   );
 }

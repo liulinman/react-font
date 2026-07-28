@@ -14,6 +14,8 @@ export type PartSpeechData = {
   color: string;
 };
 
+export type MobileView = "review" | "list" | "stats" | "aiTool" | "more";
+
 const PART_SPEECH_COLORS: Record<number, string> = {
   1: "#1677ff",
   2: "#52c41a",
@@ -154,9 +156,7 @@ export function createPartSpeechPieOption(wordTypeData: PartSpeechData[]) {
   };
 }
 
-export function getMobileViewTitle(
-  activeView: "review" | "list" | "stats" | "aiTool",
-) {
+export function getMobileViewTitle(activeView: MobileView) {
   if (activeView === "review") {
     return "今日学习";
   }
@@ -167,6 +167,10 @@ export function getMobileViewTitle(
 
   if (activeView === "stats") {
     return "学习统计";
+  }
+
+  if (activeView === "more") {
+    return "更多功能";
   }
 
   return "学习工具";
