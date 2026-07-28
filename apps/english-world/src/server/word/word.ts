@@ -17,6 +17,7 @@ import {
   ImportMissingWordsPreviewResult,
   OverwriteStatsParams,
   OverwriteStatsResponse,
+  SourceFileUploadResult,
   WordList,
 } from "./word.type";
 
@@ -185,6 +186,17 @@ export const uploadFile = (data: FormData) => {
     url: "/upload/file",
     method: "POST",
     data,
+  };
+};
+
+export const sourceFileUpload = (
+  data: FormData,
+): YTRequest<SourceFileUploadResult> => {
+  return {
+    url: "/upload/source-file",
+    method: "POST",
+    data,
+    __responseType: undefined as unknown as SourceFileUploadResult,
   };
 };
 

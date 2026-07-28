@@ -65,6 +65,7 @@ import { WordLevelQuickEdit } from "./component/WordLevelQuickEdit";
 import { EnglishWorldLayout } from "./layout/EnglishWorldLayout";
 import {
   getContextLabReferenceLabel,
+  isExternalReference,
   type ParsedContextLabReference,
   parseContextLabReference,
 } from "./utils/contextLabReference";
@@ -730,7 +731,19 @@ const EnglishWorld: React.FC = () => {
                 {getContextLabReferenceLabel(contextLabReference)}
               </button>
             ) : record.englishReference ? (
-              <span>有引用</span>
+              isExternalReference(record.englishReference) ? (
+                <a
+                  className="word-reference-link"
+                  href={record.englishReference}
+                  rel="noreferrer"
+                  target="_blank"
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  查看来源
+                </a>
+              ) : (
+                <span>有引用</span>
+              )
             ) : null}
           </div>
         )}

@@ -376,4 +376,83 @@ describe("BulkImportPage", () => {
     ).toBeInTheDocument();
     expect(screen.getByLabelText("foggy 中文释义")).toHaveValue("");
   });
+
+  it("applies one shared web source to every imported word", async () => {
+    const user = userEvent.setup();
+    requestMock.mockImplementation((config) => {
+      if (config.url === "/english/bulkImportWords/preview") {
+        return Promise.resolve({
+          receivedTextLength: 18,
+          extracted: 2,
+          aiEnhanced: false,
+          items: [
+            { englishWord: "mitigate" },
+            { englishWord: "resilient" },
+          ],
+        });
+      }
+      if (config.url === "/english/importMissingWords/preview") {
+        return Promise.resolve({
+          received: 2,
+          normalized: 2,
+          importable: 2,
+          skippedExisting: 0,
+          skippedDuplicate: 0,
+          existingWords: [],
+          duplicateWords: [],
+        });
+      }
+      if (config.url === "/english/importMissingWords") {
+        return Promise.resolve({
+          received: 2,
+          normalized: 2,
+          inserted: 2,
+          skippedExisting: 0,
+          skippedDuplicate: 0,
+          insertedWords: ["mitigate", "resilient"],
+          skippedWords: [],
+          updated: 0,
+          updatedWords: [],
+        });
+      }
+      return Promise.reject(new Error("unexpected request"));
+    });
+
+    render(<BulkImportPage />);
+    await user.click(screen.getByText("网页链接"));
+    await user.type(
+      screen.getByPlaceholderText("粘贴文章网页地址，例如 https://..."),
+      "https://example.com/climate-article",
+    );
+    await user.type(
+      screen.getByPlaceholderText("支持换行、逗号、序号、英文 + 中文释义混合粘贴"),
+      "mitigate\nresilient",
+    );
+    await user.click(screen.getByRole("button", { name: /解析预览/ }));
+
+    const sourceLink = await screen.findByRole("link", {
+      name: "https://example.com/climate-article",
+    });
+    expect(sourceLink).toHaveAttribute(
+      "href",
+      "https://example.com/climate-article",
+    );
+    await user.click(screen.getByRole("button", { name: /确认导入/ }));
+
+    await waitFor(() => {
+      const importCall = requestMock.mock.calls.find(
+        ([config]) => config.url === "/english/importMissingWords",
+      );
+      expect(importCall?.[0].data.words).toEqual([
+        expect.objectContaining({
+          englishWord: "mitigate",
+          englishReference: "https://example.com/climate-article",
+        }),
+        expect.objectContaining({
+          englishWord: "resilient",
+          englishReference: "https://example.com/climate-article",
+        }),
+      ]);
+    });
+  });
 });

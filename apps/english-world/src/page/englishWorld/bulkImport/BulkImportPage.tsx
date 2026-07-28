@@ -17,6 +17,7 @@ import type { ColumnsType } from "antd/es/table";
 import {
   CheckCircleOutlined,
   CloudUploadOutlined,
+  LinkOutlined,
   FileSearchOutlined,
   RobotOutlined,
 } from "@ant-design/icons";
@@ -48,6 +49,13 @@ import {
   getLevelOptions,
   toBulkImportWordPayload,
 } from "./bulkImportPreview";
+import {
+  BulkImportSourceField,
+} from "./BulkImportSourceField";
+import {
+  isValidImportSourceUrl,
+  type SharedImportSource,
+} from "./bulkImportSource";
 
 const { Text, Title } = Typography;
 const { TextArea } = Input;
@@ -82,6 +90,10 @@ export function BulkImportPage() {
   const [defaultLevel, setDefaultLevel] = useState(0);
   const [maxItems, setMaxItems] = useState(120);
   const [useAi, setUseAi] = useState(true);
+  const [sharedSource, setSharedSource] = useState<SharedImportSource>({
+    mode: "none",
+    url: "",
+  });
   const [loading, setLoading] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [overwriteExisting, setOverwriteExisting] = useState(false);
@@ -184,6 +196,18 @@ export function BulkImportPage() {
       message.warning("请先粘贴需要导入的单词内容");
       return;
     }
+    const sourceUrl = sharedSource.url.trim();
+    if (
+      sharedSource.mode === "url" &&
+      (!sourceUrl || !isValidImportSourceUrl(sourceUrl))
+    ) {
+      message.warning("请填写有效的网页来源链接");
+      return;
+    }
+    if (sharedSource.mode === "file" && !sourceUrl) {
+      message.warning("请先上传来源文件");
+      return;
+    }
 
     setLoading(true);
     try {
@@ -196,7 +220,14 @@ export function BulkImportPage() {
         }),
       );
       setPreview(response);
-      setPreviewWords(response.items);
+      setPreviewWords(
+        response.items.map((item) => ({
+          ...item,
+          ...(sourceUrl
+            ? { englishReference: sourceUrl }
+            : {}),
+        })),
+      );
       setConflict(null);
       setOverwriteExisting(false);
       if (response.items.length > 0) {
@@ -238,7 +269,29 @@ export function BulkImportPage() {
   };
 
   const getImportWords = () =>
-    previewWords.map((item) => toBulkImportWordPayload(item, defaultLevel));
+    previewWords.map((item) => ({
+      ...toBulkImportWordPayload(item, defaultLevel),
+      ...(sharedSource.url.trim()
+        ? { englishReference: sharedSource.url.trim() }
+        : {}),
+    }));
+
+  const handleSharedSourceChange = (source: SharedImportSource) => {
+    setSharedSource(source);
+    setPreviewWords((currentWords) =>
+      currentWords.map((item) => {
+        if (source.url.trim()) {
+          return {
+            ...item,
+            englishReference: source.url.trim(),
+          };
+        }
+        const remaining = { ...item };
+        delete remaining.englishReference;
+        return remaining;
+      }),
+    );
+  };
 
   const handleConfirmImport = async () => {
     if (previewWords.length === 0) {
@@ -340,6 +393,11 @@ export function BulkImportPage() {
             </label>
           </div>
 
+          <BulkImportSourceField
+            value={sharedSource}
+            onChange={handleSharedSourceChange}
+          />
+
           <Space wrap className="bulk-import-actions">
             <Button
               type="primary"
@@ -423,6 +481,21 @@ export function BulkImportPage() {
         aiFallbackReason={preview?.aiFallbackReason}
         confirming={confirming}
         defaultLevel={defaultLevel}
+        description={
+          sharedSource.url ? (
+            <div className="bulk-import-shared-source-preview">
+              <LinkOutlined />
+              <Text type="secondary">统一来源</Text>
+              <a
+                href={sharedSource.url}
+                rel="noreferrer"
+                target="_blank"
+              >
+                {sharedSource.name || sharedSource.url}
+              </a>
+            </div>
+          ) : undefined
+        }
         onCancel={() => {
           setPreviewOpen(false);
           setConflict(null);

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildContextLabReference,
   getContextLabReferenceLabel,
+  isExternalReference,
   parseContextLabReference,
 } from "./contextLabReference";
 
@@ -43,5 +44,13 @@ describe("contextLabReference", () => {
 
     expect(parsed).not.toBeNull();
     expect(getContextLabReferenceLabel(parsed)).toBe("来自阅读 · 练习包 #12");
+  });
+
+  it("treats protected uploaded source URLs as navigable references", () => {
+    expect(
+      isExternalReference(
+        "/api/upload/source-file/7/11111111-1111-4111-8111-111111111111.pdf",
+      ),
+    ).toBe(true);
   });
 });

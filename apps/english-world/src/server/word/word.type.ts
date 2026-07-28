@@ -30,6 +30,13 @@ export type DailyStat = {
   count: number;
 };
 
+export type SourceFileUploadResult = {
+  url: string;
+  originalName: string;
+  mimeType: string;
+  size: number;
+};
+
 export type ImportMissingWordsResult = {
   received: number;
   normalized: number;

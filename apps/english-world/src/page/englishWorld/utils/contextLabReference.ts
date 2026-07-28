@@ -86,6 +86,8 @@ export function getContextLabReferenceLabel(
 
 export function isExternalReference(reference?: string | null) {
   return Boolean(
-    reference?.startsWith("http://") || reference?.startsWith("https://"),
+    reference?.startsWith("http://") ||
+      reference?.startsWith("https://") ||
+      reference?.startsWith("/api/upload/source-file/"),
   );
 }
