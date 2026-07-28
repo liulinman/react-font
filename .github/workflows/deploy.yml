@@ -43,7 +43,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Run English World tests
-        run: pnpm --filter @font/english-world exec vitest run
+        run: pnpm --filter @font/english-world exec vitest run --no-file-parallelism
 
       - name: Build English World
         run: pnpm --filter @font/english-world build
