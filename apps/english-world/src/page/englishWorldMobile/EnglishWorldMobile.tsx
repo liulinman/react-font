@@ -512,15 +512,7 @@ const EnglishWorldMobile: React.FC = () => {
                 showCancelButton
               />
               {total > 0 && (
-                <div
-                  style={{
-                    marginTop: "8px",
-                    fontSize: "12px",
-                    color: "#8c8c8c",
-                  }}
-                >
-                  共 {total} 条
-                </div>
+                <div className="word-list-total">共 {total} 条</div>
               )}
             </div>
 
@@ -551,20 +543,21 @@ const EnglishWorldMobile: React.FC = () => {
                           </div>
                         }
                         extra={
-                          <Space>
+                          <Space className="word-card-actions">
                             <Button
+                              aria-label={`编辑 ${item.englishWord}`}
                               fill="none"
                               size="small"
                               onClick={() => handleEdit(item)}
-                              style={{ padding: "4px" }}
                             >
                               <EditSOutline />
                             </Button>
                             <Button
+                              aria-label={`删除 ${item.englishWord}`}
+                              className="word-card-delete"
                               fill="none"
                               size="small"
                               onClick={() => handleDelete(item.id)}
-                              style={{ padding: "4px", color: "#ff3141" }}
                             >
                               <DeleteOutline />
                             </Button>
@@ -630,12 +623,7 @@ const EnglishWorldMobile: React.FC = () => {
                                       )}...`}
                                 </div>
                                 {item.englishNote.length > 100 && (
-                                  <div
-                                    style={{
-                                      marginTop: "8px",
-                                      textAlign: "right",
-                                    }}
-                                  >
+                                  <div className="word-note-toggle">
                                     <Button
                                       fill="none"
                                       size="mini"
@@ -684,16 +672,12 @@ const EnglishWorldMobile: React.FC = () => {
             {/* 添加按钮 */}
             <div className="fab-container">
               <Button
+                aria-label="添加单词"
+                className="mobile-add-word-button"
                 color="primary"
                 shape="rounded"
                 size="large"
                 onClick={handleAdd}
-                style={{
-                  width: "56px",
-                  height: "56px",
-                  borderRadius: "50%",
-                  boxShadow: "0 4px 12px rgba(22, 119, 255, 0.4)",
-                }}
               >
                 <AddOutline fontSize={24} />
               </Button>
@@ -702,102 +686,54 @@ const EnglishWorldMobile: React.FC = () => {
         ) : (
           <>
             {/* 统计视图 */}
-            <div
-              style={{
-                padding: "16px",
-                background: "#f5f5f5",
-                minHeight: "calc(100vh - 45px)",
-              }}
-            >
+            <div className="mobile-stats-page">
               {statsLoading ? (
-                <div style={{ textAlign: "center", padding: "40px" }}>
+                <div className="mobile-stats-loading">
                   <Loading />
                 </div>
               ) : (
                 <>
                   {/* 统计卡片 */}
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "12px",
-                      marginBottom: "16px",
-                    }}
-                  >
+                  <div className="mobile-stats-grid">
                     {summaryStats.map((item) => (
-                      <Card key={item.label} style={{ borderRadius: "12px" }}>
+                      <Card key={item.label} className="mobile-stats-card">
+                        <div className="mobile-stats-label">
+                          <span>{item.label}</span>
+                          {item.label === "已掌握单词" && (
+                            <button
+                              className="mobile-stats-level-trigger"
+                              type="button"
+                              onClick={() => {
+                                statsLevelPickerRef.current?.open();
+                              }}
+                            >
+                              {enumToOptions(EnglishAbsorb, [
+                                EnglishAbsorb["不会"],
+                              ]).find((opt) => opt.value === selectedLevel)
+                                ?.label || ""}
+                            </button>
+                          )}
+                        </div>
                         <div
-                          style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                          }}
+                          className="mobile-stats-value"
+                          style={{ color: item.color }}
                         >
-                          <div>
-                            <div
-                              style={{
-                                color: "#999",
-                                fontSize: "14px",
-                                marginBottom: "8px",
-                              }}
-                            >
-                              {item.label}
-                              {item.label === "已掌握单词" && (
-                                <span
-                                  onClick={() => {
-                                    statsLevelPickerRef.current?.open();
-                                  }}
-                                  style={{
-                                    marginLeft: "8px",
-                                    color: "#1677ff",
-                                    fontSize: "12px",
-                                    cursor: "pointer",
-                                    textDecoration: "underline",
-                                  }}
-                                >
-                                  (
-                                  {enumToOptions(EnglishAbsorb, [
-                                    EnglishAbsorb["不会"],
-                                  ]).find((opt) => opt.value === selectedLevel)
-                                    ?.label || ""}
-                                  )
-                                </span>
-                              )}
-                            </div>
-                            <div
-                              style={{
-                                color: item.color,
-                                fontSize: "24px",
-                                fontWeight: "bold",
-                              }}
-                            >
-                              {item.label === "掌握率"
-                                ? `${item.value}%`
-                                : item.value}
-                            </div>
-                          </div>
+                          {item.label === "掌握率"
+                            ? `${item.value}%`
+                            : item.value}
                         </div>
                       </Card>
                     ))}
                   </div>
 
                   {/* 每日新增单词图表 */}
-                  <Card
-                    title="每日新增单词"
-                    style={{ borderRadius: "12px", marginBottom: "16px" }}
-                  >
-                    <ReactECharts
-                      option={optionBar}
-                      style={{ height: "250px", width: "100%" }}
-                    />
+                  <Card title="每日新增单词" className="mobile-chart-card">
+                    <ReactECharts className="mobile-chart" option={optionBar} />
                   </Card>
 
                   {/* 词性分布图表 */}
-                  <Card title="词性分布" style={{ borderRadius: "12px" }}>
-                    <ReactECharts
-                      option={optionPie}
-                      style={{ height: "250px", width: "100%" }}
-                    />
+                  <Card title="词性分布" className="mobile-chart-card">
+                    <ReactECharts className="mobile-chart" option={optionPie} />
                   </Card>
 
                   {/* 掌握程度选择器（隐藏） */}
@@ -831,7 +767,8 @@ const EnglishWorldMobile: React.FC = () => {
           visible={showFilter}
           onMaskClick={() => setShowFilter(false)}
           position="right"
-          bodyStyle={{ width: "80vw", height: "100vh" }}
+          bodyClassName="mobile-filter-popup-body"
+          bodyStyle={{ width: "min(88vw, 420px)", maxWidth: "100vw" }}
         >
           <div className="filter-popup">
             <NavBar onBack={() => setShowFilter(false)}>筛选条件</NavBar>
@@ -938,9 +875,11 @@ const EnglishWorldMobile: React.FC = () => {
           visible={showEditModal}
           onMaskClick={() => setShowEditModal(false)}
           position="bottom"
+          bodyClassName="mobile-edit-popup-body"
           bodyStyle={{
-            borderTopLeftRadius: "16px",
-            borderTopRightRadius: "16px",
+            borderTopLeftRadius: "8px",
+            borderTopRightRadius: "8px",
+            maxHeight: "calc(100dvh - 12px)",
           }}
         >
           <div className="edit-modal">
@@ -948,6 +887,7 @@ const EnglishWorldMobile: React.FC = () => {
               onBack={() => setShowEditModal(false)}
               right={
                 <Button
+                  className="edit-modal-save"
                   fill="none"
                   size="small"
                   onClick={handleSubmit}

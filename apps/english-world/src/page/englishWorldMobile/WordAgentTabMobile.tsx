@@ -222,74 +222,58 @@ export const WordAgentTabMobile: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: "16px", paddingBottom: 24 }}>
-      <Card style={{ borderRadius: 12, marginBottom: 16 }}>
-        <div style={{ marginBottom: 12, color: "#667eea", fontWeight: 600 }}>
+    <div className="mobile-word-agent">
+      <Card className="mobile-word-agent-query">
+        <div className="mobile-word-agent-query-title">
           AI 单词查询
         </div>
-        <p style={{ margin: "0 0 12px 0", fontSize: 13, color: "#666" }}>
+        <p className="mobile-word-agent-query-copy">
           输入单词或短语（多个请用逗号或换行分隔），获取释义、音标等。
         </p>
         <Input
+          className="mobile-word-agent-input"
           value={input}
           onChange={setInput}
           placeholder="例如：confront 或 confront, reluctant"
-          style={{ marginBottom: 12 }}
         />
         <Button
           block
+          className="mobile-word-agent-query-button"
           color="primary"
           onClick={handleQuery}
           loading={loading}
-          style={{ borderRadius: 10 }}
         >
           <SearchOutline /> 查询
         </Button>
       </Card>
 
       {loading && words.length === 0 && !streamingWord && (
-        <div style={{ textAlign: "center", padding: 32, color: "#999" }}>
+        <div className="mobile-word-agent-loading">
           AI 正在查询…
         </div>
       )}
 
       {(words.length > 0 || streamingWord) && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <div className="mobile-word-agent-results">
           {words.map((item, index) => (
-            <Card key={`${item.word}-${index}`} style={{ borderRadius: 12 }}>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "flex-start",
-                  marginBottom: 8,
-                }}
-              >
-                <div>
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      flexWrap: "wrap",
-                      gap: 6,
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontSize: 18,
-                        fontWeight: 600,
-                        color: "#667eea",
-                      }}
-                    >
+            <Card
+              key={`${item.word}-${index}`}
+              className="mobile-word-agent-result"
+            >
+              <div className="mobile-word-agent-result-head">
+                <div className="mobile-word-agent-result-title">
+                  <div className="mobile-word-agent-word-row">
+                    <span className="mobile-word-agent-word">
                       {item.word}
                     </span>
                     <MobileBritishPronunciationButton word={item.word} />
                   </div>
-                  <span style={{ color: "#64748b", fontSize: 14 }}>
+                  <span className="mobile-word-agent-phonetic">
                     {item.phonetic}
                   </span>
                 </div>
                 <Button
+                  className="mobile-word-agent-add"
                   size="small"
                   color="primary"
                   fill="outline"
@@ -299,40 +283,24 @@ export const WordAgentTabMobile: React.FC = () => {
                 </Button>
               </div>
               {item.partOfSpeech?.length ? (
-                <div
-                  style={{
-                    display: "flex",
-                    flexWrap: "wrap",
-                    gap: 4,
-                    marginBottom: 8,
-                  }}
-                >
+                <div className="mobile-word-agent-part-speech">
                   {item.partOfSpeech.map((code) => (
-                    <span
-                      key={code}
-                      style={{
-                        padding: "2px 6px",
-                        borderRadius: 4,
-                        fontSize: 11,
-                        background: "#eef2ff",
-                        color: "#4f46e5",
-                      }}
-                    >
+                    <span key={code}>
                       {(EnglishPartSpeech as Record<number, string>)[code] ??
                         `词性${code}`}
                     </span>
                   ))}
                 </div>
               ) : null}
-              <p style={{ margin: 0, fontSize: 14, color: "#334155" }}>
+              <p className="mobile-word-agent-meaning">
                 {item.meaning}
               </p>
               {item.examples?.length > 0 && (
-                <div style={{ marginTop: 10 }}>
-                  <span style={{ fontSize: 12, color: "#64748b" }}>例句</span>
-                  <ul style={{ margin: "4px 0 0 0", paddingLeft: 16 }}>
+                <div className="mobile-word-agent-examples">
+                  <span>例句</span>
+                  <ul>
                     {item.examples.slice(0, 2).map((ex, i) => (
-                      <li key={i} style={{ fontSize: 13, color: "#475569" }}>
+                      <li key={i}>
                         {ex.en}
                         {ex.zh ? ` — ${ex.zh}` : ""}
                       </li>
@@ -343,24 +311,16 @@ export const WordAgentTabMobile: React.FC = () => {
             </Card>
           ))}
           {streamingWord && (
-            <Card style={{ borderRadius: 12, borderStyle: "dashed" }}>
-              <div style={{ marginBottom: 8 }}>
-                <span style={{ fontWeight: 600, color: "#667eea" }}>
+            <Card className="mobile-word-agent-streaming">
+              <div className="mobile-word-agent-streaming-title">
+                <span>
                   {streamingWord}
                 </span>
-                <span style={{ marginLeft: 8, fontSize: 12, color: "#94a3b8" }}>
+                <small>
                   AI 正在输出…
-                </span>
+                </small>
               </div>
-              <pre
-                style={{
-                  margin: 0,
-                  whiteSpace: "pre-wrap",
-                  wordBreak: "break-word",
-                  fontSize: 13,
-                  color: "#334155",
-                }}
-              >
+              <pre className="mobile-word-agent-streaming-content">
                 {streamingChunk || "\u00A0"}
               </pre>
             </Card>
@@ -372,18 +332,17 @@ export const WordAgentTabMobile: React.FC = () => {
         visible={addModalVisible}
         onMaskClick={() => setAddModalVisible(false)}
         position="bottom"
-        bodyStyle={{ borderTopLeftRadius: 16, borderTopRightRadius: 16 }}
+        bodyClassName="mobile-word-agent-popup"
+        bodyStyle={{
+          borderTopLeftRadius: 8,
+          borderTopRightRadius: 8,
+          maxHeight: "calc(100dvh - 12px)",
+          overflowY: "auto",
+        }}
       >
-        <div style={{ padding: 16 }}>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: 16,
-            }}
-          >
-            <span style={{ fontWeight: 600 }}>加入单词本</span>
+        <div className="mobile-word-agent-popup-content">
+          <div className="mobile-word-agent-popup-header">
+            <span>加入单词本</span>
             <Button
               fill="none"
               size="small"

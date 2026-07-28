@@ -580,7 +580,11 @@ export function MobileContextLabPage() {
           </div>
         ) : null}
         <Popup
-          bodyStyle={{ borderRadius: "8px 8px 0 0" }}
+          bodyClassName="mobile-context-popup"
+          bodyStyle={{
+            borderRadius: "8px 8px 0 0",
+            maxHeight: "calc(100dvh - 12px)",
+          }}
           onMaskClick={() => setSelectionOpen(false)}
           visible={selectionOpen}
         >
@@ -592,9 +596,10 @@ export function MobileContextLabPage() {
           </div>
         </Popup>
         <Popup
+          bodyClassName="mobile-context-popup"
           bodyStyle={{
             borderRadius: "8px 8px 0 0",
-            maxHeight: "80vh",
+            maxHeight: "calc(100dvh - 12px)",
             overflow: "auto",
           }}
           onMaskClick={() => setPreviewOpen(false)}
@@ -771,9 +776,10 @@ export function MobileContextLabPage() {
         )}
       </section>
       <Popup
+        bodyClassName="mobile-context-popup"
         bodyStyle={{
           borderRadius: "8px 8px 0 0",
-          maxHeight: "80vh",
+          maxHeight: "calc(100dvh - 12px)",
           overflow: "auto",
         }}
         onMaskClick={() => setAttemptDrawerOpen(false)}
