@@ -27,7 +27,12 @@ let taskEventHandler:
       id: number;
       taskId: number;
       status: "pending" | "processing" | "succeeded" | "failed";
-      sourceType: "proficiency" | "random" | "custom" | "ielts-core";
+      sourceType:
+        | "proficiency"
+        | "random"
+        | "custom"
+        | "ielts-core"
+        | "pasted-article";
       words: string[];
       mode?: "standard" | "micro";
       reciteSessionId?: number;
@@ -145,6 +150,7 @@ describe("ContextLabPage", () => {
     expect(screen.getAllByText("随机 IELTS").length).toBeGreaterThan(0);
     expect(screen.getAllByText("雅思核心").length).toBeGreaterThan(0);
     expect(screen.getAllByText("手输词").length).toBeGreaterThan(0);
+    expect(screen.getByText("粘贴材料")).toBeInTheDocument();
   });
 
   it("prefills cockpit custom words from a router query", async () => {
@@ -810,6 +816,55 @@ describe("ContextLabPage", () => {
       await screen.findByText("fragile / steady / recover"),
     ).toBeInTheDocument();
     expect(await screen.findByText("等待回调")).toBeInTheDocument();
+  });
+
+  it("creates a pasted article generation task with parsing preferences", async () => {
+    requestMock.mockImplementation((config) => {
+      if (config.url === "/context-lab/history") {
+        return Promise.resolve({ list: [], total: 0, page: 1, pageSize: 10 });
+      }
+      if (config.url === "/context-lab/generate-task") {
+        return Promise.resolve({
+          id: 42,
+          taskId: 42,
+          status: "pending",
+          sourceType: "pasted-article",
+          words: [],
+        });
+      }
+      return Promise.resolve({});
+    });
+
+    render(<ContextLabPage />);
+
+    await userEvent.click(screen.getByText("粘贴材料"));
+    await userEvent.type(
+      screen.getByLabelText("粘贴英文材料"),
+      "Urban transport habits have changed as hybrid workers spread their journeys across the day.\n\nQuestions\n1. Which habit changed?",
+    );
+    await userEvent.click(screen.getByText("整理自带题"));
+    await userEvent.click(screen.getByLabelText("定位细节"));
+    await userEvent.click(screen.getByLabelText("True / False / Not Given"));
+    await userEvent.click(screen.getByRole("button", { name: /生成练习包/ }));
+
+    await waitFor(() => {
+      expect(requestMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          url: "/context-lab/generate-task",
+          method: "POST",
+          data: expect.objectContaining({
+            sourceType: "pasted-article",
+            pastedContent:
+              "Urban transport habits have changed as hybrid workers spread their journeys across the day.\n\nQuestions\n1. Which habit changed?",
+            pastedQuestionMode: "parse",
+            questionTypes: ["detail", "true_false_not_given"],
+            questionCount: 8,
+            ieltsBand: 7,
+            modelProvider: "deepseek",
+          }),
+        }),
+      );
+    });
   });
 
   it("lets the learner choose the IELTS band for generated articles", async () => {

@@ -22,7 +22,12 @@ let taskEventHandler:
       id: number;
       taskId: number;
       status: "pending" | "processing" | "succeeded" | "failed";
-      sourceType: "proficiency" | "random" | "custom";
+      sourceType:
+        | "proficiency"
+        | "random"
+        | "custom"
+        | "ielts-core"
+        | "pasted-article";
       words: string[];
       articleExerciseId?: number;
     }) => void)

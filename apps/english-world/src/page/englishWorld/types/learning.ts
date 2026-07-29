@@ -121,6 +121,20 @@ type ContextLabModelOptions = {
   modelProvider?: ContextLabModelProvider;
 };
 
+export type ContextLabQuestionType =
+  | "vocabulary"
+  | "paraphrase"
+  | "detail"
+  | "inference"
+  | "main_idea"
+  | "writer_view"
+  | "matching_information"
+  | "true_false_not_given"
+  | "matching_headings"
+  | "summary_completion";
+
+export type ContextLabPastedQuestionMode = "auto" | "generate" | "parse";
+
 export type ContextLabGenerateParams =
   | ({
       sourceType: "proficiency";
@@ -145,6 +159,14 @@ export type ContextLabGenerateParams =
       mode?: ContextLabMode;
       reciteSessionId?: number;
       requestUid?: string;
+    } & ContextLabIeltsBandOptions &
+      ContextLabModelOptions)
+  | ({
+      sourceType: "pasted-article";
+      pastedContent: string;
+      pastedQuestionMode?: ContextLabPastedQuestionMode;
+      questionTypes?: ContextLabQuestionType[];
+      questionCount?: number;
     } & ContextLabIeltsBandOptions &
       ContextLabModelOptions);
 

@@ -74,19 +74,25 @@ import {
 import type {
   ContextLabGenerateParams,
   ContextLabModelProvider,
+  ContextLabPastedQuestionMode,
+  ContextLabQuestionType,
   ContextLabSubmitResult,
   ContextLabAttempt,
   ContextLabTask,
 } from "../types/learning";
 import type { ExerciseResultItem } from "@/server/exerciseAgent/exerciseAgent";
 import {
+  DEFAULT_PASTED_QUESTION_COUNT,
   DEFAULT_CONTEXT_LAB_MODEL_PROVIDER,
   DEFAULT_IELTS_BAND,
   IELTS_BAND_MAX,
   IELTS_BAND_MIN,
   IELTS_BAND_STEP,
+  PASTED_QUESTION_COUNT_MAX,
+  PASTED_QUESTION_COUNT_MIN,
   buildContextLabGenerateParams,
   normalizeIeltsBand,
+  normalizePastedQuestionCount,
   type ContextLabSourceMode,
 } from "./contextLabPlanning";
 import { useInRouterContext, useLocation, useNavigate } from "react-router-dom";
@@ -118,7 +124,10 @@ import {
   toBulkImportWordPayload,
 } from "../bulkImport/bulkImportPreview";
 import { stripGeneratedMarkdownEmphasis } from "./articleText";
-import { formatContextLabQuestionTypeLabel } from "./contextLabQuestionType";
+import {
+  CONTEXT_LAB_PASTED_QUESTION_TYPE_OPTIONS,
+  formatContextLabQuestionTypeLabel,
+} from "./contextLabQuestionType";
 
 const { Text, Title } = Typography;
 const { TextArea } = Input;
@@ -335,6 +344,7 @@ function getContextLabSourceLabel(sourceType: ContextLabTask["sourceType"]) {
   const labels: Record<ContextLabTask["sourceType"], string> = {
     custom: "手输词组",
     "ielts-core": "雅思核心词",
+    "pasted-article": "粘贴材料",
     proficiency: "薄弱词",
     random: "随机 IELTS",
   };
@@ -373,6 +383,15 @@ function ContextLabPageContent({
   const [count, setCount] = useState(20);
   const [proficiencyLevels, setProficiencyLevels] = useState<number[]>([]);
   const [customWords, setCustomWords] = useState("");
+  const [pastedContent, setPastedContent] = useState("");
+  const [pastedQuestionMode, setPastedQuestionMode] =
+    useState<ContextLabPastedQuestionMode>("auto");
+  const [pastedQuestionTypes, setPastedQuestionTypes] = useState<
+    ContextLabQuestionType[]
+  >([]);
+  const [pastedQuestionCount, setPastedQuestionCount] = useState(
+    DEFAULT_PASTED_QUESTION_COUNT,
+  );
   const [ieltsBand, setIeltsBand] = useState<number | null>(
     DEFAULT_IELTS_BAND,
   );
@@ -480,6 +499,10 @@ function ContextLabPageContent({
       proficiencyLevels,
       ieltsBand,
       modelProvider,
+      pastedContent,
+      pastedQuestionMode,
+      pastedQuestionTypes,
+      pastedQuestionCount,
     });
   }, [
     count,
@@ -487,6 +510,10 @@ function ContextLabPageContent({
     ieltsBand,
     microEntry,
     modelProvider,
+    pastedContent,
+    pastedQuestionCount,
+    pastedQuestionMode,
+    pastedQuestionTypes,
     proficiencyLevels,
     sourceMode,
   ]);
@@ -867,6 +894,11 @@ function ContextLabPageContent({
   ]);
 
   const handleGenerate = async () => {
+    if (sourceMode === "pasted-article" && !pastedContent.trim()) {
+      message.warning("请先粘贴英文文章或文章加题目。");
+      return;
+    }
+
     setCreating(true);
     setCurrentTask(null);
     setAnswers({});
@@ -2005,6 +2037,7 @@ function ContextLabPageContent({
               { label: "雅思核心", value: "ielts-core" },
               { label: "随机 IELTS", value: "ielts-random" },
               { label: "手输词", value: "custom" },
+              { label: "粘贴材料", value: "pasted-article" },
             ]}
           />
 
@@ -2107,6 +2140,76 @@ function ContextLabPageContent({
                 placeholder="输入单词，用空格、英文逗号或中文逗号分隔"
               />
             )}
+
+            {sourceMode === "pasted-article" && (
+              <Space
+                className="context-lab-pasted-source"
+                direction="vertical"
+                size={10}
+              >
+                <TextArea
+                  aria-label="粘贴英文材料"
+                  rows={9}
+                  maxLength={30000}
+                  showCount
+                  value={pastedContent}
+                  onChange={(event) => setPastedContent(event.target.value)}
+                  placeholder="粘贴英文文章；也可以把文章和你已有的问题一起粘贴进来。"
+                />
+
+                <Space
+                  className="context-lab-pasted-controls"
+                  direction="vertical"
+                  size={10}
+                >
+                  <Space direction="vertical" size={6}>
+                    <Text>题目处理</Text>
+                    <Segmented<ContextLabPastedQuestionMode>
+                      aria-label="粘贴材料题目处理"
+                      value={pastedQuestionMode}
+                      onChange={setPastedQuestionMode}
+                      options={[
+                        { label: "自动识别", value: "auto" },
+                        { label: "只生成题", value: "generate" },
+                        { label: "整理自带题", value: "parse" },
+                      ]}
+                    />
+                  </Space>
+
+                  <Space>
+                    <Text>目标题数</Text>
+                    <InputNumber
+                      aria-label="粘贴材料目标题数"
+                      min={PASTED_QUESTION_COUNT_MIN}
+                      max={PASTED_QUESTION_COUNT_MAX}
+                      value={pastedQuestionCount}
+                      onBlur={() =>
+                        setPastedQuestionCount((value) =>
+                          normalizePastedQuestionCount(value),
+                        )
+                      }
+                      onChange={(value) =>
+                        setPastedQuestionCount(
+                          normalizePastedQuestionCount(value),
+                        )
+                      }
+                    />
+                  </Space>
+
+                  <Space direction="vertical" size={8}>
+                    <Text>题型</Text>
+                    <Checkbox.Group
+                      className="context-lab-pasted-question-types"
+                      options={CONTEXT_LAB_PASTED_QUESTION_TYPE_OPTIONS}
+                      value={pastedQuestionTypes}
+                      onChange={(value) =>
+                        setPastedQuestionTypes(value as ContextLabQuestionType[])
+                      }
+                    />
+                  </Space>
+                </Space>
+              </Space>
+            )}
           </div>
 
           <div className="context-lab-generator-actions">
@@ -2156,6 +2259,7 @@ function ContextLabPageContent({
                 { label: "核心", value: "ielts-core" },
                 { label: "随机", value: "random" },
                 { label: "手输", value: "custom" },
+                { label: "粘贴", value: "pasted-article" },
               ]}
             />
             {historySearchActive && (

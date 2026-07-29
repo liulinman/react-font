@@ -5332,6 +5332,42 @@ html[data-theme="dark"] .overwrite-stats-table .ant-table-thead > tr > th {
   gap: 6px !important;
 }
 
+.context-lab-pasted-source,
+.context-lab-pasted-source .ant-input-textarea,
+.context-lab-pasted-source textarea.ant-input {
+  width: 100%;
+}
+
+.context-lab-pasted-controls {
+  width: 100%;
+}
+
+.context-lab-pasted-controls .ant-segmented {
+  max-width: 100%;
+}
+
+.context-lab-pasted-question-types {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.context-lab-pasted-question-types .ant-checkbox-wrapper {
+  min-width: 0;
+  margin-inline-start: 0;
+  padding: 4px 8px;
+  border: 1px solid #dbe4ef;
+  border-radius: 6px;
+  background: #ffffff;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.context-lab-pasted-question-types .ant-checkbox-wrapper-checked {
+  border-color: #93b4f8;
+  background: #edf4ff;
+}
+
 .context-lab-ielts-band-field .ant-typography-secondary {
   max-width: 264px;
 }

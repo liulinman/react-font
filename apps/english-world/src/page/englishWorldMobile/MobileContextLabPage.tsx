@@ -54,6 +54,7 @@ function getSourceLabel(sourceType: ContextLabTask["sourceType"]) {
     "ielts-core": "雅思核心词",
     random: "随机词",
     custom: "手输词",
+    "pasted-article": "粘贴材料",
   };
   return labels[sourceType] ?? "练习包";
 }

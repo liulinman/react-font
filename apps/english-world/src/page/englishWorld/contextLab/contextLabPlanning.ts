@@ -1,6 +1,8 @@
 import type {
   ContextLabGenerateParams,
   ContextLabModelProvider,
+  ContextLabPastedQuestionMode,
+  ContextLabQuestionType,
 } from "../types/learning";
 
 export type ContextLabSourceMode =
@@ -9,14 +11,30 @@ export type ContextLabSourceMode =
   | "ielts-core"
   | "ielts-random"
   | "random"
-  | "custom";
+  | "custom"
+  | "pasted-article";
 
 export const DEFAULT_IELTS_BAND = 7;
 export const IELTS_BAND_MIN = 5;
 export const IELTS_BAND_MAX = 9;
 export const IELTS_BAND_STEP = 0.5;
+export const DEFAULT_PASTED_QUESTION_COUNT = 8;
+export const PASTED_QUESTION_COUNT_MIN = 1;
+export const PASTED_QUESTION_COUNT_MAX = 13;
 export const DEFAULT_CONTEXT_LAB_MODEL_PROVIDER: ContextLabModelProvider =
   "deepseek";
+export const CONTEXT_LAB_SUPPORTED_QUESTION_TYPES: ContextLabQuestionType[] = [
+  "detail",
+  "paraphrase",
+  "inference",
+  "main_idea",
+  "vocabulary",
+  "true_false_not_given",
+  "matching_headings",
+  "summary_completion",
+  "writer_view",
+  "matching_information",
+];
 
 export function normalizeIeltsBand(value: unknown) {
   const numberValue = Number(value);
@@ -32,6 +50,50 @@ export function normalizeContextLabModelProvider(
   return value === "gpt" ? "gpt" : DEFAULT_CONTEXT_LAB_MODEL_PROVIDER;
 }
 
+export function normalizePastedQuestionMode(
+  value: unknown,
+): ContextLabPastedQuestionMode {
+  return value === "generate" || value === "parse" ? value : "auto";
+}
+
+export function normalizePastedQuestionCount(value: unknown) {
+  const numberValue = Number(value);
+  if (!Number.isFinite(numberValue)) return DEFAULT_PASTED_QUESTION_COUNT;
+
+  return Math.min(
+    PASTED_QUESTION_COUNT_MAX,
+    Math.max(PASTED_QUESTION_COUNT_MIN, Math.round(numberValue)),
+  );
+}
+
+export function normalizePastedQuestionTypes(
+  value: unknown,
+): ContextLabQuestionType[] {
+  if (!Array.isArray(value)) return [];
+  const supported = new Set(CONTEXT_LAB_SUPPORTED_QUESTION_TYPES);
+  const seen = new Set<ContextLabQuestionType>();
+
+  value.forEach((item) => {
+    const normalized = String(item ?? "")
+      .trim()
+      .toLowerCase()
+      .replace(/['’]/g, "")
+      .replace(/[^a-z0-9]+/g, "_")
+      .replace(/^_+|_+$/g, "");
+    const questionType =
+      normalized === "tfng"
+        ? "true_false_not_given"
+        : normalized === "yes_no_not_given"
+          ? "true_false_not_given"
+          : normalized;
+    if (supported.has(questionType as ContextLabQuestionType)) {
+      seen.add(questionType as ContextLabQuestionType);
+    }
+  });
+
+  return Array.from(seen);
+}
+
 export function buildContextLabGenerateParams({
   sourceMode,
   count,
@@ -39,6 +101,10 @@ export function buildContextLabGenerateParams({
   proficiencyLevels,
   ieltsBand,
   modelProvider,
+  pastedContent,
+  pastedQuestionMode,
+  pastedQuestionTypes,
+  pastedQuestionCount,
 }: {
   sourceMode: ContextLabSourceMode;
   count: number;
@@ -46,6 +112,10 @@ export function buildContextLabGenerateParams({
   proficiencyLevels?: number[];
   ieltsBand?: number | null;
   modelProvider?: ContextLabModelProvider;
+  pastedContent?: string;
+  pastedQuestionMode?: ContextLabPastedQuestionMode;
+  pastedQuestionTypes?: ContextLabQuestionType[];
+  pastedQuestionCount?: number | null;
 }): ContextLabGenerateParams {
   const normalizedIeltsBand = normalizeIeltsBand(ieltsBand);
   const normalizedModelProvider =
@@ -87,6 +157,18 @@ export function buildContextLabGenerateParams({
         .trim()
         .split(/[\s,，]+/)
         .filter(Boolean),
+      ieltsBand: normalizedIeltsBand,
+      modelProvider: normalizedModelProvider,
+    };
+  }
+
+  if (sourceMode === "pasted-article") {
+    return {
+      sourceType: "pasted-article",
+      pastedContent: String(pastedContent ?? "").trim(),
+      pastedQuestionMode: normalizePastedQuestionMode(pastedQuestionMode),
+      questionTypes: normalizePastedQuestionTypes(pastedQuestionTypes),
+      questionCount: normalizePastedQuestionCount(pastedQuestionCount),
       ieltsBand: normalizedIeltsBand,
       modelProvider: normalizedModelProvider,
     };
