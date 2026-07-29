@@ -18,7 +18,6 @@ export const HASH_TO_NAV: Record<string, string> = {
   contextlab: "contextLab",
   "ielts-core": "ieltsCore",
   ieltscore: "ieltsCore",
-  admin: "admin",
   "memory-map": "memoryMap",
   memorymap: "memoryMap",
   stat: "stats",
@@ -33,7 +32,6 @@ export const PATH_TO_NAV: Record<string, string> = {
   "/englishworld/stats": "stats",
   "/englishworld/ai-word": "aiWord",
   "/englishworld/ielts-core": "ieltsCore",
-  "/englishworld/admin": "admin",
 };
 
 export const LEGACY_HASH_TO_PATH: Record<string, string> = {
@@ -51,7 +49,6 @@ export const SECONDARY_NAV_KEYS = new Set([
   "ieltsCore",
   "memoryMap",
   "setting",
-  "admin",
 ]);
 
 export function getHashKey(hash: string): string {
@@ -129,10 +126,6 @@ export function getPathForNav(key: string): string {
 
   if (normalizedKey === "setting") {
     return "/englishWorld/settings";
-  }
-
-  if (normalizedKey === "admin") {
-    return "/englishWorld/admin";
   }
 
   return ENGLISH_WORLD_HOME_PATH;

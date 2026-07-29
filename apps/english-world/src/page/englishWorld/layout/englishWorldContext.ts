@@ -10,7 +10,6 @@ const PRIMARY_LABELS: Record<string, string> = {
   contextLab: "学习",
   ieltsCore: "雅思核心复习",
   setting: "设置",
-  admin: "后台",
 };
 
 export function getEnglishWorldSectionLabel(activeKey: string) {

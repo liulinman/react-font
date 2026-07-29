@@ -1,6 +1,19 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  BellOutlined,
+  DeleteOutlined,
+  HistoryOutlined,
+  LogoutOutlined,
+  PlayCircleOutlined,
+  ReloadOutlined,
+  RobotOutlined,
+  ScheduleOutlined,
+  SendOutlined,
+  TeamOutlined,
+} from "@ant-design/icons";
 import {
   Button,
+  DatePicker,
   Form,
   Input,
   InputNumber,
@@ -10,29 +23,38 @@ import {
   Table,
   Tabs,
   Tag,
+  Typography,
   message,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
+import type { Dayjs } from "dayjs";
 import request from "@font/api";
-import { EnglishWorldLayout } from "../layout/EnglishWorldLayout";
-import { EnglishWorldPageHeader } from "../component/EnglishWorldPageHeader";
 import {
   adminAiPreview,
   adminBanUser,
   adminCreateSchedule,
+  adminDeleteNotification,
+  adminDeleteSchedule,
   adminListNotifications,
   adminListSchedules,
   adminListUsers,
   adminLogin,
+  adminLogout,
+  adminMe,
   adminPublishNotification,
+  adminRunScheduleNow,
   adminUnbanUser,
-} from "@/server/notification/notification";
+} from "./api/notification";
 import type {
   AdminUserItem,
   NotificationItem,
   NotificationScheduleItem,
   NotificationScheduleParams,
-} from "@/server/notification/notification.type";
+} from "./api/notification.type";
+
+type ScheduleFormValues = Omit<NotificationScheduleParams, "runAt"> & {
+  runAt?: Dayjs;
+};
 
 const categoryOptions = [
   { label: "雅思每日文案", value: "ielts_daily" },
@@ -47,10 +69,24 @@ const aiModeOptions = [
   { label: "不使用 AI", value: "off" },
 ];
 
-export function AdminPage() {
+function toScheduleParams(values: ScheduleFormValues): NotificationScheduleParams {
+  return {
+    ...values,
+    runAt: values.runAt?.toISOString(),
+  };
+}
+
+function formatDate(value?: string | null) {
+  if (!value) return "-";
+  const date = new Date(value);
+  return Number.isFinite(date.getTime()) ? date.toLocaleString("zh-CN") : "-";
+}
+
+export function AdminApp() {
   const [loginForm] = Form.useForm();
   const [announcementForm] = Form.useForm();
-  const [scheduleForm] = Form.useForm<NotificationScheduleParams>();
+  const [scheduleForm] = Form.useForm<ScheduleFormValues>();
+  const cadence = Form.useWatch("cadence", scheduleForm);
   const [authed, setAuthed] = useState(false);
   const [checking, setChecking] = useState(true);
   const [users, setUsers] = useState<AdminUserItem[]>([]);
@@ -60,9 +96,9 @@ export function AdminPage() {
 
   const loadAdminData = useCallback(async () => {
     const [userResult, scheduleResult, notificationResult] = await Promise.all([
-      request(adminListUsers({ page: 1, pageSize: 20 })),
+      request(adminListUsers({ page: 1, pageSize: 50 })),
       request(adminListSchedules()),
-      request(adminListNotifications({ page: 1, pageSize: 20 })),
+      request(adminListNotifications({ page: 1, pageSize: 50 })),
     ]);
     setUsers(userResult.list);
     setSchedules(scheduleResult.list ?? []);
@@ -71,7 +107,7 @@ export function AdminPage() {
 
   useEffect(() => {
     let mounted = true;
-    request({ url: "/admin/me", method: "GET" })
+    request(adminMe())
       .then(async () => {
         if (!mounted) return;
         setAuthed(true);
@@ -88,6 +124,15 @@ export function AdminPage() {
     };
   }, [loadAdminData]);
 
+  const refresh = async () => {
+    setLoading(true);
+    try {
+      await loadAdminData();
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleLogin = async () => {
     const values = await loginForm.validateFields();
     setLoading(true);
@@ -100,16 +145,21 @@ export function AdminPage() {
     }
   };
 
+  const handleLogout = async () => {
+    await request(adminLogout());
+    setAuthed(false);
+  };
+
   const handleBan = async (userId: number) => {
     await request(adminBanUser({ id: userId, reason: "管理员封禁" }));
     message.success("已封禁用户");
-    await loadAdminData();
+    await refresh();
   };
 
   const handleUnban = async (userId: number) => {
     await request(adminUnbanUser({ id: userId }));
     message.success("已解封用户");
-    await loadAdminData();
+    await refresh();
   };
 
   const handlePublish = async () => {
@@ -117,7 +167,7 @@ export function AdminPage() {
     await request(adminPublishNotification(values));
     message.success("公告已发送");
     announcementForm.resetFields();
-    await loadAdminData();
+    await refresh();
   };
 
   const handleAiPreview = async () => {
@@ -138,92 +188,191 @@ export function AdminPage() {
 
   const handleCreateSchedule = async () => {
     const values = await scheduleForm.validateFields();
-    await request(adminCreateSchedule(values));
+    await request(adminCreateSchedule(toScheduleParams(values)));
     message.success("定时任务已保存");
-    await loadAdminData();
+    await refresh();
   };
 
-  const userColumns: ColumnsType<AdminUserItem> = [
-    { title: "用户", dataIndex: "username" },
-    {
-      title: "状态",
-      dataIndex: "status",
-      render: (status: AdminUserItem["status"]) => (
-        <Tag color={status === "banned" ? "red" : "green"}>
-          {status === "banned" ? "已封禁" : "正常"}
-        </Tag>
-      ),
-    },
-    { title: "封禁原因", dataIndex: "banReason" },
+  const handleRunSchedule = async (id: number) => {
+    await request(adminRunScheduleNow({ id }));
+    message.success("任务已执行");
+    await refresh();
+  };
+
+  const handleDeleteSchedule = async (id: number) => {
+    await request(adminDeleteSchedule({ id }));
+    message.success("定时任务已删除");
+    await refresh();
+  };
+
+  const handleDeleteNotification = async (id: number) => {
+    await request(adminDeleteNotification({ id }));
+    message.success("公告已删除");
+    await refresh();
+  };
+
+  const userColumns: ColumnsType<AdminUserItem> = useMemo(
+    () => [
+      { title: "用户", dataIndex: "username" },
+      {
+        title: "状态",
+        dataIndex: "status",
+        render: (status: AdminUserItem["status"]) => (
+          <Tag color={status === "banned" ? "red" : "green"}>
+            {status === "banned" ? "已封禁" : "正常"}
+          </Tag>
+        ),
+      },
+      { title: "封禁原因", dataIndex: "banReason", render: (value) => value || "-" },
+      {
+        title: "操作",
+        render: (_, row) =>
+          row.status === "banned" ? (
+            <Button size="small" onClick={() => void handleUnban(row.id)}>
+              解封
+            </Button>
+          ) : (
+            <Button size="small" danger onClick={() => void handleBan(row.id)}>
+              封禁
+            </Button>
+          ),
+      },
+    ],
+    [],
+  );
+
+  const scheduleColumns: ColumnsType<NotificationScheduleItem> = [
+    { title: "任务", dataIndex: "name" },
+    { title: "类型", dataIndex: "category" },
+    { title: "频率", dataIndex: "cadence" },
+    { title: "下次运行", dataIndex: "nextRunAt", render: formatDate },
     {
       title: "操作",
-      render: (_, row) =>
-        row.status === "banned" ? (
+      render: (_, row) => (
+        <Space>
           <Button
-            aria-label="解封"
+            aria-label="立即执行"
             size="small"
-            onClick={() => void handleUnban(row.id)}
-          >
-            解封
-          </Button>
-        ) : (
+            icon={<PlayCircleOutlined />}
+            onClick={() => void handleRunSchedule(row.id)}
+          />
           <Button
-            aria-label="封禁"
+            aria-label="删除任务"
             size="small"
             danger
-            onClick={() => void handleBan(row.id)}
-          >
-            封禁
-          </Button>
-        ),
+            icon={<DeleteOutlined />}
+            onClick={() => void handleDeleteSchedule(row.id)}
+          />
+        </Space>
+      ),
     },
   ];
 
-  if (!authed && !checking) {
+  const notificationColumns: ColumnsType<NotificationItem> = [
+    { title: "标题", dataIndex: "title" },
+    { title: "类型", dataIndex: "category" },
+    { title: "发布时间", dataIndex: "publishedAt", render: formatDate },
+    {
+      title: "操作",
+      render: (_, row) => (
+        <Button
+          aria-label="删除公告"
+          size="small"
+          danger
+          icon={<DeleteOutlined />}
+          onClick={() => void handleDeleteNotification(row.id)}
+        />
+      ),
+    },
+  ];
+
+  if (checking) {
     return (
-      <EnglishWorldLayout activeKey="admin">
-        <div className="english-world-admin-page">
-          <EnglishWorldPageHeader compact title="后台登录" />
-          <div className="english-world-admin-login">
-            <Form form={loginForm} layout="vertical">
-              <Form.Item
-                label="账号"
-                name="username"
-                rules={[{ required: true, message: "请输入账号" }]}
-              >
-                <Input autoComplete="username" />
-              </Form.Item>
-              <Form.Item
-                label="密码"
-                name="password"
-                rules={[{ required: true, message: "请输入密码" }]}
-              >
-                <Input.Password autoComplete="current-password" />
-              </Form.Item>
-              <Button type="primary" loading={loading} onClick={handleLogin}>
-                登录后台
-              </Button>
-            </Form>
-          </div>
-        </div>
-      </EnglishWorldLayout>
+      <main className="admin-login-page">
+        <section className="admin-login-panel">
+          <div className="admin-brand-mark">EW</div>
+          <Typography.Title level={1}>正在进入后台</Typography.Title>
+          <Typography.Paragraph>正在检查登录状态。</Typography.Paragraph>
+        </section>
+      </main>
+    );
+  }
+
+  if (!authed) {
+    return (
+      <main className="admin-login-page">
+        <section className="admin-login-panel">
+          <div className="admin-brand-mark">EW</div>
+          <Typography.Title level={1}>后台登录</Typography.Title>
+          <Typography.Paragraph>
+            管理用户状态、发布公告，并维护 AI 定时内容。
+          </Typography.Paragraph>
+          <Form form={loginForm} layout="vertical">
+            <Form.Item
+              label="账号"
+              name="username"
+              rules={[{ required: true, message: "请输入账号" }]}
+            >
+              <Input autoComplete="username" />
+            </Form.Item>
+            <Form.Item
+              label="密码"
+              name="password"
+              rules={[{ required: true, message: "请输入密码" }]}
+            >
+              <Input.Password autoComplete="current-password" />
+            </Form.Item>
+            <Button type="primary" loading={loading} onClick={handleLogin}>
+              登录后台
+            </Button>
+          </Form>
+        </section>
+      </main>
     );
   }
 
   return (
-    <EnglishWorldLayout activeKey="admin">
-      <div className="english-world-admin-page">
-        <EnglishWorldPageHeader
-          compact
-          title="后台管理"
-          description="管理用户状态、发布公告，并维护 AI 定时内容。"
-        />
+    <main className="admin-shell">
+      <aside className="admin-sidebar">
+        <div className="admin-brand">
+          <span className="admin-brand-mark">EW</span>
+          <span>
+            <strong>English World</strong>
+            <small>Admin Console</small>
+          </span>
+        </div>
+        <div className="admin-sidebar-note">
+          独立后台项目，用于通知、用户与定时内容维护。
+        </div>
+      </aside>
+      <section className="admin-workspace">
+        <header className="admin-toolbar">
+          <div>
+            <Typography.Title level={1}>后台管理</Typography.Title>
+            <Typography.Text type="secondary">
+              用户状态、公告发布、AI 定时任务与历史记录。
+            </Typography.Text>
+          </div>
+          <Space>
+            <Button icon={<ReloadOutlined />} loading={loading} onClick={() => void refresh()}>
+              刷新
+            </Button>
+            <Button icon={<LogoutOutlined />} onClick={() => void handleLogout()}>
+              退出
+            </Button>
+          </Space>
+        </header>
+
         <Tabs
-          className="english-world-admin-tabs"
+          className="admin-tabs"
           items={[
             {
               key: "users",
-              label: "用户管理",
+              label: (
+                <span>
+                  <TeamOutlined /> 用户管理
+                </span>
+              ),
               children: (
                 <Table
                   rowKey="id"
@@ -236,7 +385,11 @@ export function AdminPage() {
             },
             {
               key: "announcements",
-              label: "公告发布",
+              label: (
+                <span>
+                  <SendOutlined /> 公告发布
+                </span>
+              ),
               children: (
                 <Form
                   form={announcementForm}
@@ -247,7 +400,7 @@ export function AdminPage() {
                     targetType: "all",
                     sourceType: "manual",
                   }}
-                  className="english-world-admin-form"
+                  className="admin-form"
                 >
                   <Form.Item name="title" label="标题" rules={[{ required: true }]}>
                     <Input maxLength={160} />
@@ -258,7 +411,7 @@ export function AdminPage() {
                   <Space wrap>
                     <Form.Item name="category" label="类型">
                       <Select
-                        style={{ width: 180 }}
+                        style={{ width: 190 }}
                         options={[
                           { label: "普通公告", value: "announcement" },
                           ...categoryOptions,
@@ -286,8 +439,10 @@ export function AdminPage() {
                     </Form.Item>
                   </Space>
                   <Space>
-                    <Button onClick={handleAiPreview}>AI 帮我生成</Button>
-                    <Button type="primary" onClick={handlePublish}>
+                    <Button icon={<RobotOutlined />} onClick={handleAiPreview}>
+                      AI 帮我生成
+                    </Button>
+                    <Button type="primary" icon={<BellOutlined />} onClick={handlePublish}>
                       发送公告
                     </Button>
                   </Space>
@@ -296,9 +451,13 @@ export function AdminPage() {
             },
             {
               key: "schedules",
-              label: "定时任务",
+              label: (
+                <span>
+                  <ScheduleOutlined /> 定时任务
+                </span>
+              ),
               children: (
-                <div className="english-world-admin-schedules">
+                <div className="admin-schedules">
                   <Form
                     form={scheduleForm}
                     layout="vertical"
@@ -312,7 +471,7 @@ export function AdminPage() {
                       aiMode: "auto_publish",
                       targetType: "all",
                     }}
-                    className="english-world-admin-form"
+                    className="admin-form"
                   >
                     <Form.Item name="name" label="任务名称" rules={[{ required: true }]}>
                       <Input />
@@ -334,6 +493,11 @@ export function AdminPage() {
                           ]}
                         />
                       </Form.Item>
+                      {cadence === "once" ? (
+                        <Form.Item name="runAt" label="执行时间">
+                          <DatePicker showTime />
+                        </Form.Item>
+                      ) : null}
                       <Form.Item name="hour" label="小时">
                         <InputNumber min={0} max={23} />
                       </Form.Item>
@@ -353,35 +517,31 @@ export function AdminPage() {
                     dataSource={schedules}
                     pagination={false}
                     size="small"
-                    columns={[
-                      { title: "任务", dataIndex: "name" },
-                      { title: "类型", dataIndex: "category" },
-                      { title: "下次运行", dataIndex: "nextRunAt" },
-                    ]}
+                    columns={scheduleColumns}
                   />
                 </div>
               ),
             },
             {
               key: "history",
-              label: "历史记录",
+              label: (
+                <span>
+                  <HistoryOutlined /> 历史记录
+                </span>
+              ),
               children: (
                 <Table
                   rowKey="id"
                   dataSource={notifications}
                   pagination={false}
                   size="small"
-                  columns={[
-                    { title: "标题", dataIndex: "title" },
-                    { title: "类型", dataIndex: "category" },
-                    { title: "发布时间", dataIndex: "publishedAt" },
-                  ]}
+                  columns={notificationColumns}
                 />
               ),
             },
           ]}
         />
-      </div>
-    </EnglishWorldLayout>
+      </section>
+    </main>
   );
 }

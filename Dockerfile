@@ -9,6 +9,7 @@ RUN npm config set registry https://registry.npmmirror.com \
 
 # 复制 workspace 配置
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY apps/admin/package.json ./apps/admin/
 COPY apps/english-world/package.json ./apps/english-world/
 COPY apps/web-utils/package.json ./apps/web-utils/
 COPY packages/api/package.json ./packages/api/
@@ -22,14 +23,16 @@ RUN pnpm config set registry https://registry.npmmirror.com \
 # 复制源码
 COPY . .
 
-# 构建 english-world 应用（默认部署此应用）
-RUN pnpm --filter @font/english-world build
+# 构建前台应用和独立后台应用
+RUN pnpm --filter @font/english-world build \
+    && pnpm --filter @font/admin build
 
 # 第二阶段：Nginx 托管
 FROM nginx:alpine
 
 COPY nginx.conf /etc/nginx/nginx.conf
 COPY --from=build /app/apps/english-world/dist /usr/share/nginx/html
+COPY --from=build /app/apps/admin/dist /usr/share/nginx/html/admin
 
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]

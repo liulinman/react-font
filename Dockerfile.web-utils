@@ -6,6 +6,7 @@ WORKDIR /app
 RUN npm install -g pnpm@10.8.1
 
 COPY package.json pnpm-workspace.yaml ./
+COPY apps/admin/package.json ./apps/admin/
 COPY apps/english-world/package.json ./apps/english-world/
 COPY apps/web-utils/package.json ./apps/web-utils/
 COPY packages/api/package.json ./packages/api/

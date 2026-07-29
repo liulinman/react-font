@@ -44,8 +44,14 @@ jobs:
       - name: Run English World tests
         run: pnpm --filter @font/english-world exec vitest run --no-file-parallelism
 
+      - name: Run Admin tests
+        run: pnpm --filter @font/admin test --run
+
       - name: Build English World
         run: pnpm --filter @font/english-world build
+
+      - name: Build Admin
+        run: pnpm --filter @font/admin build
 
   deploy:
     needs: verify
