@@ -24,6 +24,7 @@ type SseEvent =
   | { type: "notification-withdrawn"; data: { id: number } }
   | { type: "unread-count"; data: { count: number } }
   | { type: "account-banned"; data: { reason?: string } }
+  | { type: "account-deleted"; data: { username: string } }
   | { type: "connected"; data: { userId: number } }
   | { type: "heartbeat"; data: { time: number } };
 
@@ -119,6 +120,14 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         notification.error({
           message: "账号已被封禁",
           description: event.data.reason || "请联系管理员",
+          placement: "topRight",
+        });
+        await logout();
+        window.location.assign("/login");
+      } else if (event.type === "account-deleted") {
+        notification.error({
+          message: "账号已被删除",
+          description: "账号永久删除后无法恢复",
           placement: "topRight",
         });
         await logout();

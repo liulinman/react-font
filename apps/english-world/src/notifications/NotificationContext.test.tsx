@@ -5,7 +5,9 @@ import { NotificationProvider, useNotifications } from "./NotificationContext";
 
 const requestMock = vi.hoisted(() => vi.fn());
 const notificationOpenMock = vi.hoisted(() => vi.fn());
+const notificationErrorMock = vi.hoisted(() => vi.fn());
 const logoutMock = vi.hoisted(() => vi.fn());
+const locationAssignMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@font/api", () => ({
   default: requestMock,
@@ -25,7 +27,7 @@ vi.mock("antd", async () => {
     ...actual,
     notification: {
       open: notificationOpenMock,
-      error: vi.fn(),
+      error: notificationErrorMock,
     },
   };
 });
@@ -73,6 +75,10 @@ describe("NotificationProvider", () => {
     });
     MockEventSource.instances = [];
     vi.stubGlobal("EventSource", MockEventSource);
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      value: { assign: locationAssignMock },
+    });
   });
 
   afterEach(() => {
@@ -166,5 +172,31 @@ describe("NotificationProvider", () => {
       expect(screen.queryByText("临时公告")).not.toBeInTheDocument(),
     );
     expect(screen.getByTestId("count")).toHaveTextContent("0");
+  });
+
+  it("logs out and redirects when the account is permanently deleted", async () => {
+    render(
+      <NotificationProvider>
+        <Probe />
+      </NotificationProvider>,
+    );
+
+    await waitFor(() => expect(MockEventSource.instances).toHaveLength(1));
+
+    MockEventSource.instances[0].emit({
+      type: "account-deleted",
+      data: { username: "alice" },
+    });
+
+    await waitFor(() => expect(notificationErrorMock).toHaveBeenCalled());
+    expect(notificationErrorMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: "账号已被删除",
+        description: "账号永久删除后无法恢复",
+        placement: "topRight",
+      }),
+    );
+    expect(logoutMock).toHaveBeenCalled();
+    expect(locationAssignMock).toHaveBeenCalledWith("/login");
   });
 });
