@@ -17,6 +17,7 @@ describe("standalone admin deployment configuration", () => {
     expect(dockerfile).toContain(
       "COPY --from=build /app/apps/admin/dist /usr/share/nginx/html/admin",
     );
+    expect(nginxConfig).toContain("location = /englishWorld/admin");
     expect(nginxConfig).toContain("location = /admin");
     expect(nginxConfig).toContain("location ^~ /admin/");
   });
