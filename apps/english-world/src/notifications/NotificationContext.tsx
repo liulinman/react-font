@@ -21,6 +21,7 @@ import type { NotificationItem } from "@/server/notification/notification.type";
 
 type SseEvent =
   | { type: "notification"; data: NotificationItem }
+  | { type: "notification-withdrawn"; data: { id: number } }
   | { type: "unread-count"; data: { count: number } }
   | { type: "account-banned"; data: { reason?: string } }
   | { type: "connected"; data: { userId: number } }
@@ -109,6 +110,11 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         });
       } else if (event.type === "unread-count") {
         setUnreadCount(event.data.count);
+      } else if (event.type === "notification-withdrawn") {
+        setItems((current) =>
+          current.filter((item) => item.id !== event.data.id),
+        );
+        void refresh();
       } else if (event.type === "account-banned") {
         notification.error({
           message: "账号已被封禁",
@@ -119,7 +125,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         window.location.assign("/login");
       }
     },
-    [logout],
+    [logout, refresh],
   );
 
   const closeEventSource = useCallback(() => {

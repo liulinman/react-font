@@ -90,6 +90,12 @@ export const adminDeleteNotification = ({ id }: { id: number }) => ({
   __responseType: undefined as unknown as { id: number; deleted: boolean },
 });
 
+export const adminWithdrawNotification = ({ id }: { id: number }) => ({
+  url: `/admin/notifications/${id}/withdraw`,
+  method: "POST",
+  __responseType: undefined as unknown as { id: number; status: "withdrawn" },
+});
+
 export const adminCreateSchedule = (data: NotificationScheduleParams) => ({
   url: "/admin/notification-schedules",
   method: "POST",

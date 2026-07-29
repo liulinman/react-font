@@ -11,6 +11,7 @@ import {
   adminPublishNotification,
   adminRunScheduleNow,
   adminUnbanUser,
+  adminWithdrawNotification,
 } from "../api/notification";
 
 describe("admin notification API builders", () => {
@@ -58,6 +59,11 @@ describe("admin notification API builders", () => {
     expect(adminDeleteNotification({ id: 4 })).toEqual({
       url: "/admin/notifications/4",
       method: "DELETE",
+      __responseType: undefined,
+    });
+    expect(adminWithdrawNotification({ id: 4 })).toEqual({
+      url: "/admin/notifications/4/withdraw",
+      method: "POST",
       __responseType: undefined,
     });
     expect(adminCreateSchedule({

@@ -117,4 +117,54 @@ describe("NotificationProvider", () => {
       }),
     );
   });
+
+  it("removes withdrawn notifications from the visible list", async () => {
+    let withdrawn = false;
+    requestMock.mockImplementation((request: { url: string }) => {
+      if (request.url === "/notifications") {
+        return Promise.resolve({
+          list: withdrawn
+            ? []
+            : [
+                {
+                  id: 12,
+                  title: "临时公告",
+                  body: "正文",
+                  category: "announcement",
+                  priority: "normal",
+                  sourceType: "manual",
+                  publishedAt: "2026-07-29T08:00:00.000Z",
+                  readAt: null,
+                },
+              ],
+          nextCursor: null,
+        });
+      }
+      if (request.url === "/notifications/unread-count") {
+        return Promise.resolve({ count: withdrawn ? 0 : 1 });
+      }
+      return Promise.resolve({});
+    });
+
+    render(
+      <NotificationProvider>
+        <Probe />
+      </NotificationProvider>,
+    );
+
+    expect(await screen.findByText("临时公告")).toBeInTheDocument();
+    expect(screen.getByTestId("count")).toHaveTextContent("1");
+    await waitFor(() => expect(MockEventSource.instances).toHaveLength(1));
+
+    withdrawn = true;
+    MockEventSource.instances[0].emit({
+      type: "notification-withdrawn",
+      data: { id: 12 },
+    });
+
+    await waitFor(() =>
+      expect(screen.queryByText("临时公告")).not.toBeInTheDocument(),
+    );
+    expect(screen.getByTestId("count")).toHaveTextContent("0");
+  });
 });

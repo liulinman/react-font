@@ -9,6 +9,7 @@ import {
   RobotOutlined,
   ScheduleOutlined,
   SendOutlined,
+  StopOutlined,
   TeamOutlined,
 } from "@ant-design/icons";
 import {
@@ -44,6 +45,7 @@ import {
   adminPublishNotification,
   adminRunScheduleNow,
   adminUnbanUser,
+  adminWithdrawNotification,
 } from "./api/notification";
 import type {
   AdminUserItem,
@@ -80,6 +82,12 @@ function formatDate(value?: string | null) {
   if (!value) return "-";
   const date = new Date(value);
   return Number.isFinite(date.getTime()) ? date.toLocaleString("zh-CN") : "-";
+}
+
+function renderNotificationStatus(status?: NotificationItem["status"]) {
+  if (status === "withdrawn") return <Tag color="default">已撤回</Tag>;
+  if (status === "draft") return <Tag color="blue">草稿</Tag>;
+  return <Tag color="green">已发布</Tag>;
 }
 
 export function AdminApp() {
@@ -211,6 +219,12 @@ export function AdminApp() {
     await refresh();
   };
 
+  const handleWithdrawNotification = async (id: number) => {
+    await request(adminWithdrawNotification({ id }));
+    message.success("公告已撤回");
+    await refresh();
+  };
+
   const userColumns: ColumnsType<AdminUserItem> = useMemo(
     () => [
       { title: "用户", dataIndex: "username" },
@@ -271,17 +285,32 @@ export function AdminApp() {
   const notificationColumns: ColumnsType<NotificationItem> = [
     { title: "标题", dataIndex: "title" },
     { title: "类型", dataIndex: "category" },
+    {
+      title: "状态",
+      dataIndex: "status",
+      render: renderNotificationStatus,
+    },
     { title: "发布时间", dataIndex: "publishedAt", render: formatDate },
     {
       title: "操作",
       render: (_, row) => (
-        <Button
-          aria-label="删除公告"
-          size="small"
-          danger
-          icon={<DeleteOutlined />}
-          onClick={() => void handleDeleteNotification(row.id)}
-        />
+        <Space>
+          {row.status === "published" || !row.status ? (
+            <Button
+              aria-label="撤回公告"
+              size="small"
+              icon={<StopOutlined />}
+              onClick={() => void handleWithdrawNotification(row.id)}
+            />
+          ) : null}
+          <Button
+            aria-label="删除公告"
+            size="small"
+            danger
+            icon={<DeleteOutlined />}
+            onClick={() => void handleDeleteNotification(row.id)}
+          />
+        </Space>
       ),
     },
   ];

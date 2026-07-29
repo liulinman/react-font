@@ -8,6 +8,7 @@ export type NotificationCategory =
 
 export type NotificationPriority = "normal" | "important" | "urgent";
 export type NotificationTargetType = "all" | "selected";
+export type NotificationStatus = "draft" | "published" | "withdrawn";
 
 export interface NotificationItem {
   id: number;
@@ -16,6 +17,7 @@ export interface NotificationItem {
   category: NotificationCategory;
   priority: NotificationPriority;
   sourceType: string;
+  status?: NotificationStatus;
   publishedAt: string | null;
   readAt?: string | null;
   createTime?: string | null;
