@@ -13,6 +13,17 @@ vi.mock("@/contexts/AuthContext", () => ({
   useAuth: () => ({ user: { username: "tester" }, logout: vi.fn() }),
 }));
 
+vi.mock("@/notifications/NotificationContext", () => ({
+  useNotifications: () => ({
+    items: [],
+    unreadCount: 0,
+    loading: false,
+    markRead: vi.fn(),
+    markAllRead: vi.fn(),
+    refresh: vi.fn(),
+  }),
+}));
+
 function LocationProbe() {
   const location = useLocation();
   return (
@@ -86,6 +97,9 @@ describe("EnglishWorldLayout sidebar state", () => {
     ).toBeInTheDocument();
     expect(
       within(contextBar).getByRole("button", { name: /用户菜单：tester/ }),
+    ).toBeInTheDocument();
+    expect(
+      within(contextBar).getByRole("button", { name: "通知" }),
     ).toBeInTheDocument();
     expect(
       within(

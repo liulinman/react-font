@@ -44,6 +44,7 @@ describe("EnglishHeader ToC navigation", () => {
     expect(within(navigation as HTMLElement).getByText("覆盖统计")).toBeInTheDocument();
     expect(within(navigation as HTMLElement).getByText("学习")).toBeInTheDocument();
     expect(within(navigation as HTMLElement).getByText("数据")).toBeInTheDocument();
+    expect(within(navigation as HTMLElement).getByText("后台")).toBeInTheDocument();
     expect(within(navigation as HTMLElement).getByText("今日复习")).toBeInTheDocument();
     expect(within(navigation as HTMLElement).getByText("语境实验室")).toBeInTheDocument();
     expect(within(navigation as HTMLElement).getByText("雅思核心复习")).toBeInTheDocument();
@@ -213,5 +214,6 @@ describe("EnglishHeader ToC navigation", () => {
     expect(screen.getByTitle("词库")).toBeInTheDocument();
     expect(screen.getByTitle("学习")).toBeInTheDocument();
     expect(screen.getByTitle("数据")).toBeInTheDocument();
+    expect(screen.getByTitle("后台")).toBeInTheDocument();
   });
 });

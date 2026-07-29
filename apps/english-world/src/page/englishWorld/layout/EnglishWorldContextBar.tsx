@@ -3,6 +3,7 @@ import {
   getEnglishWorldSectionLabel,
 } from "./englishWorldContext";
 import { EnglishUserMenu } from "./EnglishUserMenu";
+import { NotificationBell } from "@/notifications/NotificationBell";
 
 type EnglishWorldContextBarProps = {
   activeKey: string;
@@ -24,6 +25,7 @@ export function EnglishWorldContextBar({
         <time className="english-world-context-date" dateTime={now.toISOString()}>
           {formatEnglishWorldDate(now)}
         </time>
+        <NotificationBell />
         <EnglishUserMenu />
       </div>
     </header>

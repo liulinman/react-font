@@ -26,6 +26,7 @@ describe("english world navigation helpers", () => {
     expect(getNavFromLocation("/englishWorld/ielts-core", "")).toBe(
       "ieltsCore",
     );
+    expect(getNavFromLocation("/englishWorld/admin", "")).toBe("admin");
     expect(getNavFromLocation("/englishWorld", "#memory-map")).toBe(
       "memoryMap",
     );
@@ -40,6 +41,7 @@ describe("english world navigation helpers", () => {
     );
     expect(getPathForNav("contextLab")).toBe("/englishWorld/context-lab");
     expect(getPathForNav("ieltsCore")).toBe("/englishWorld/ielts-core");
+    expect(getPathForNav("admin")).toBe("/englishWorld/admin");
     expect(getPathForNav("unknown")).toBe("/englishWorld");
   });
 });

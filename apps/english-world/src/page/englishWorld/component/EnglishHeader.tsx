@@ -1,6 +1,7 @@
 import {
   BookFilled,
   CloudUploadOutlined,
+  ControlOutlined,
   UnorderedListOutlined,
   BarChartOutlined,
   DashboardOutlined,
@@ -50,6 +51,7 @@ const navItems: MenuProps["items"] = [
     ],
   },
   { key: "stats", icon: <BarChartOutlined />, label: "数据", title: "数据" },
+  { key: "admin", icon: <ControlOutlined />, label: "后台", title: "后台" },
 ];
 
 function getPrimaryActiveKey(activeKey: string) {

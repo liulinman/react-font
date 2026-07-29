@@ -1,5 +1,6 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import EnglishWorld from "@/page/englishWorld/EnglishWorld";
+import { AdminPage } from "@/page/englishWorld/admin/AdminPage";
 import { BulkImportPage } from "@/page/englishWorld/bulkImport/BulkImportPage";
 import { SystemSettingsPage } from "@/page/englishWorld/component/SystemSettingsPage";
 import { ContextLabPage } from "@/page/englishWorld/contextLab/ContextLabPage";
@@ -62,6 +63,14 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedWrapper>
         <SystemSettingsPage />
+      </ProtectedWrapper>
+    ),
+  },
+  {
+    path: "/englishWorld/admin",
+    element: (
+      <ProtectedWrapper>
+        <AdminPage />
       </ProtectedWrapper>
     ),
   },
