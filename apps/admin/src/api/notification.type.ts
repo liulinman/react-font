@@ -35,6 +35,11 @@ export interface AdminUserListParams {
   status?: "active" | "banned";
 }
 
+export interface AdminUserActionParams {
+  id: number;
+  confirmUsername: string;
+}
+
 export interface AdminUserItem {
   id: number;
   username: string;

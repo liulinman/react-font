@@ -1,6 +1,7 @@
 import type {
   AdminListResponse,
   AdminLoginParams,
+  AdminUserActionParams,
   AdminUserItem,
   AdminUserListParams,
   AiPreviewParams,
@@ -40,13 +41,15 @@ export const adminListUsers = (data: AdminUserListParams) => ({
 export const adminBanUser = ({
   id,
   reason,
+  confirmUsername,
 }: {
   id: number;
   reason?: string;
+  confirmUsername: string;
 }) => ({
   url: `/admin/users/${id}/ban`,
   method: "POST",
-  data: { reason },
+  data: { reason, confirmUsername },
   __responseType: undefined as unknown as {
     id: number;
     status: "banned";
@@ -54,10 +57,22 @@ export const adminBanUser = ({
   },
 });
 
-export const adminUnbanUser = ({ id }: { id: number }) => ({
+export const adminUnbanUser = ({ id, confirmUsername }: AdminUserActionParams) => ({
   url: `/admin/users/${id}/unban`,
   method: "POST",
+  data: { confirmUsername },
   __responseType: undefined as unknown as { id: number; status: "active" },
+});
+
+export const adminDeleteUser = ({ id, confirmUsername }: AdminUserActionParams) => ({
+  url: `/admin/users/${id}`,
+  method: "DELETE",
+  data: { confirmUsername },
+  __responseType: undefined as unknown as {
+    id: number;
+    username: string;
+    deleted: true;
+  },
 });
 
 export const adminPublishNotification = (data: PublishNotificationParams) => ({

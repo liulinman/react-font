@@ -3,6 +3,7 @@ import {
   adminAiPreview,
   adminBanUser,
   adminCreateSchedule,
+  adminDeleteUser,
   adminDeleteNotification,
   adminDeleteSchedule,
   adminListSchedules,
@@ -30,15 +31,22 @@ describe("admin notification API builders", () => {
       data: { page: 2, pageSize: 20, search: "li", status: "active" },
       __responseType: undefined,
     });
-    expect(adminBanUser({ id: 7, reason: "abuse" })).toEqual({
+    expect(adminBanUser({ id: 7, reason: "abuse", confirmUsername: "alice" })).toEqual({
       url: "/admin/users/7/ban",
       method: "POST",
-      data: { reason: "abuse" },
+      data: { reason: "abuse", confirmUsername: "alice" },
       __responseType: undefined,
     });
-    expect(adminUnbanUser({ id: 7 })).toEqual({
+    expect(adminUnbanUser({ id: 7, confirmUsername: "alice" })).toEqual({
       url: "/admin/users/7/unban",
       method: "POST",
+      data: { confirmUsername: "alice" },
+      __responseType: undefined,
+    });
+    expect(adminDeleteUser({ id: 7, confirmUsername: "alice" })).toEqual({
+      url: "/admin/users/7",
+      method: "DELETE",
+      data: { confirmUsername: "alice" },
       __responseType: undefined,
     });
   });
