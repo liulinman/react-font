@@ -64,6 +64,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const retryTimerRef = useRef<number | null>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
   const retryCountRef = useRef(0);
+  const accountRevocationHandledRef = useRef(false);
 
   const refresh = useCallback(async () => {
     if (!isAuthenticated) return;
@@ -99,6 +100,38 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     setUnreadCount(result.unreadCount);
   }, []);
 
+  const closeEventSource = useCallback(() => {
+    eventSourceRef.current?.close();
+    eventSourceRef.current = null;
+  }, []);
+
+  const handleAccountRevocation = useCallback(
+    async ({
+      message,
+      description,
+    }: {
+      message: string;
+      description: string;
+    }) => {
+      if (accountRevocationHandledRef.current) return;
+      accountRevocationHandledRef.current = true;
+      closeEventSource();
+      if (retryTimerRef.current) {
+        window.clearTimeout(retryTimerRef.current);
+        retryTimerRef.current = null;
+      }
+      notification.error({ message, description, placement: "topRight" });
+      try {
+        await logout();
+      } catch {
+        // Redirect remains mandatory when logout cannot complete.
+      } finally {
+        window.location.assign("/login");
+      }
+    },
+    [closeEventSource, logout],
+  );
+
   const handleEvent = useCallback(
     async (event: SseEvent) => {
       if (event.type === "notification") {
@@ -117,30 +150,19 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         );
         void refresh();
       } else if (event.type === "account-banned") {
-        notification.error({
+        await handleAccountRevocation({
           message: "账号已被封禁",
           description: event.data.reason || "请联系管理员",
-          placement: "topRight",
         });
-        await logout();
-        window.location.assign("/login");
       } else if (event.type === "account-deleted") {
-        notification.error({
+        await handleAccountRevocation({
           message: "账号已被删除",
           description: "账号永久删除后无法恢复",
-          placement: "topRight",
         });
-        await logout();
-        window.location.assign("/login");
       }
     },
-    [logout, refresh],
+    [handleAccountRevocation, refresh],
   );
-
-  const closeEventSource = useCallback(() => {
-    eventSourceRef.current?.close();
-    eventSourceRef.current = null;
-  }, []);
 
   const connect = useCallback(() => {
     if (!isAuthenticated || typeof EventSource === "undefined") return;
