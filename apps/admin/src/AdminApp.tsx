@@ -34,6 +34,7 @@ import {
   adminAiPreview,
   adminBanUser,
   adminCreateSchedule,
+  adminDeleteUser,
   adminDeleteNotification,
   adminDeleteSchedule,
   adminListNotifications,
@@ -53,9 +54,16 @@ import type {
   NotificationScheduleItem,
   NotificationScheduleParams,
 } from "./api/notification.type";
+import { UserActionConfirmModal } from "./UserActionConfirmModal";
+import type { UserAction } from "./UserActionConfirmModal";
 
 type ScheduleFormValues = Omit<NotificationScheduleParams, "runAt"> & {
   runAt?: Dayjs;
+};
+
+type PendingUserAction = {
+  action: UserAction;
+  user: AdminUserItem;
 };
 
 const categoryOptions = [
@@ -101,6 +109,8 @@ export function AdminApp() {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [schedules, setSchedules] = useState<NotificationScheduleItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [pendingUserAction, setPendingUserAction] = useState<PendingUserAction | null>(null);
+  const [userActionLoading, setUserActionLoading] = useState(false);
 
   const loadAdminData = useCallback(async () => {
     const [userResult, scheduleResult, notificationResult] = await Promise.all([
@@ -158,16 +168,29 @@ export function AdminApp() {
     setAuthed(false);
   };
 
-  const handleBan = async (userId: number) => {
-    await request(adminBanUser({ id: userId, reason: "管理员封禁" }));
-    message.success("已封禁用户");
-    await refresh();
-  };
+  const handleUserActionConfirm = async (confirmUsername: string) => {
+    if (!pendingUserAction) return;
 
-  const handleUnban = async (userId: number) => {
-    await request(adminUnbanUser({ id: userId }));
-    message.success("已解封用户");
-    await refresh();
+    const { action, user } = pendingUserAction;
+    setUserActionLoading(true);
+    try {
+      if (action === "ban") {
+        await request(adminBanUser({ id: user.id, reason: "管理员封禁", confirmUsername }));
+      } else if (action === "unban") {
+        await request(adminUnbanUser({ id: user.id, confirmUsername }));
+      } else {
+        await request(adminDeleteUser({ id: user.id, confirmUsername }));
+      }
+      message.success(
+        action === "ban" ? "已封禁用户" : action === "unban" ? "已解封用户" : "用户已永久删除",
+      );
+      setPendingUserAction(null);
+      await refresh();
+    } catch {
+      // Keep the dialog open so the administrator can review or retry the action.
+    } finally {
+      setUserActionLoading(false);
+    }
   };
 
   const handlePublish = async () => {
@@ -240,16 +263,36 @@ export function AdminApp() {
       { title: "封禁原因", dataIndex: "banReason", render: (value) => value || "-" },
       {
         title: "操作",
-        render: (_, row) =>
-          row.status === "banned" ? (
-            <Button size="small" onClick={() => void handleUnban(row.id)}>
-              解封
+        render: (_, row) => (
+          <Space size={8} wrap>
+            {row.status === "banned" ? (
+              <Button
+                aria-label={`解封 ${row.username}`}
+                size="small"
+                onClick={() => setPendingUserAction({ action: "unban", user: row })}
+              >
+                解封
+              </Button>
+            ) : (
+              <Button
+                aria-label={`封禁 ${row.username}`}
+                size="small"
+                danger
+                onClick={() => setPendingUserAction({ action: "ban", user: row })}
+              >
+                封禁
+              </Button>
+            )}
+            <Button
+              aria-label={`永久删除 ${row.username}`}
+              size="small"
+              danger
+              onClick={() => setPendingUserAction({ action: "delete", user: row })}
+            >
+              永久删除
             </Button>
-          ) : (
-            <Button size="small" danger onClick={() => void handleBan(row.id)}>
-              封禁
-            </Button>
-          ),
+          </Space>
+        ),
       },
     ],
     [],
@@ -569,6 +612,15 @@ export function AdminApp() {
               ),
             },
           ]}
+        />
+        <UserActionConfirmModal
+          key={`${pendingUserAction?.action ?? "none"}-${pendingUserAction?.user.id ?? "none"}-${pendingUserAction?.user.username ?? "none"}`}
+          open={pendingUserAction !== null}
+          action={pendingUserAction?.action ?? "ban"}
+          user={pendingUserAction?.user}
+          loading={userActionLoading}
+          onCancel={() => setPendingUserAction(null)}
+          onConfirm={handleUserActionConfirm}
         />
       </section>
     </main>
