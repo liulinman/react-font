@@ -614,7 +614,6 @@ export function AdminApp() {
           ]}
         />
         <UserActionConfirmModal
-          key={`${pendingUserAction?.action ?? "none"}-${pendingUserAction?.user.id ?? "none"}-${pendingUserAction?.user.username ?? "none"}`}
           open={pendingUserAction !== null}
           action={pendingUserAction?.action ?? "ban"}
           user={pendingUserAction?.user}
