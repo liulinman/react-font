@@ -24,7 +24,7 @@ React/Vite、Git、Python 3。
 
 ---
 
-### 任务 1：建立未加载项目 Skill 的基线
+### Task 1：建立未加载项目 Skill 的基线
 
 **文件：**
 - 创建：`docs/superpowers/research/2026-07-30-ux-skill-baseline-eval.md`
@@ -68,7 +68,7 @@ git add docs/superpowers/research/2026-07-30-ux-skill-baseline-eval.md
 git commit -m "test(english-world): capture UX audit skill baseline"
 ```
 
-### 任务 2：项目级安装第三方 UI/UX Skills
+### Task 2：项目级安装第三方 UI/UX Skills
 
 **文件：**
 - 创建：`.agents/skills/impeccable/**`
@@ -125,7 +125,7 @@ git add .agents/skills/impeccable .agents/skills/ui-ux-pro-max \
 git commit -m "chore(english-world): add project UI UX skills"
 ```
 
-### 任务 3：初始化项目专属审计 Skill
+### Task 3：初始化项目专属审计 Skill
 
 **文件：**
 - 创建：`.agents/skills/english-world-ux-product-audit/SKILL.md`
@@ -197,7 +197,7 @@ git add .agents/skills/english-world-ux-product-audit
 git commit -m "feat(english-world): add UX product audit skill"
 ```
 
-### 任务 4：运行 Skill 绿灯验证
+### Task 4：运行 Skill 绿灯验证
 
 **文件：**
 - 修改：`docs/superpowers/research/2026-07-30-ux-skill-baseline-eval.md`
@@ -241,7 +241,7 @@ git add .agents/skills/english-world-ux-product-audit \
 git commit -m "test(english-world): verify UX audit skill behavior"
 ```
 
-### 任务 5：运行第一次真实全站体验审计
+### Task 5：运行第一次真实全站体验审计
 
 **文件：**
 - 创建：`docs/superpowers/research/2026-07-30-english-world-ux-baseline-audit.md`
@@ -300,7 +300,7 @@ git add docs/superpowers/research/2026-07-30-english-world-ux-baseline-audit.md 
 git commit -m "docs(english-world): add UX baseline audit"
 ```
 
-### 任务 6：最终验证与交付
+### Task 6：最终验证与交付
 
 **文件：**
 - 检查：`.agents/skills/**`
