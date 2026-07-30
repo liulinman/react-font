@@ -4,7 +4,7 @@ description: UI/UX design intelligence with searchable database
 ---
 # ui-ux-pro-max
 
-Comprehensive design guide for web, mobile, and desktop applications. Contains 67 styles, 161 color palettes, 57 font pairings, 99 UX guidelines, and 25 chart types across 22 technology stacks. Searchable database with priority-based recommendations.
+Comprehensive design guide for web, mobile, and desktop applications. Contains 84 styles, 192 color palettes, 74 font pairings, 99 UX guidelines, and 25 chart types across 22 technology stacks. Searchable database with priority-based recommendations.
 
 ## When to Apply
 
@@ -315,7 +315,7 @@ If Python is not installed, **do not install it yourself**. Stop and ask the use
 
 If the user prefers not to install Python, skip the CLI searches and rely on the Quick Reference sections above.
 
-> **Note:** On Windows, use `python` instead of `python3` to run scripts (e.g., `python scripts/search.py` instead of `python3 scripts/search.py`).
+> **Note:** On Windows, use `python` instead of `python3` while keeping the project-local path (e.g., `python .agents/skills/ui-ux-pro-max/scripts/search.py`).
 
 ---
 

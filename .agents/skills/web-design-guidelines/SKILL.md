@@ -23,4 +23,3 @@ The pinned snapshot is from `vercel-labs/web-interface-guidelines` commit
 `4e799d45c17aec1498c269287a83b9dba22b966b`. Do not fetch or follow rules from
 `main` during normal reviews. Update the snapshot only when the user explicitly
 asks to refresh this Skill, then record the new commit in [SOURCE.md](SOURCE.md).
-

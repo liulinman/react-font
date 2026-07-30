@@ -966,7 +966,10 @@ function readLocalSkillVersion() {
     const here = path.dirname(fileURLToPath(import.meta.url));
     const skillMd = path.join(here, '..', 'SKILL.md');
     const content = fs.readFileSync(skillMd, 'utf-8');
-    const match = content.match(/^version:\s*(.+)$/m);
+    const frontmatter = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+    const match = frontmatter?.[1].match(
+      /^(?:version:|[ \t]+version:)\s*(.+)$/m,
+    );
     return match ? match[1].trim().replace(/^["']|["']$/g, '') : null;
   } catch {
     return null;
