@@ -8,6 +8,7 @@
 | Skill | 角色定位 | 主要解决的问题 | 默认是否修改产品代码 |
 |---|---|---|---|
 | `english-world-ux-product-audit` | English World 产品经理/UX 审计负责人 | 把真实用户体验问题整理成有证据、可排期、可验收的中文需求 | 否 |
+| `english-world-ui-design-system` | English World UI 负责人/设计系统 | 统一项目视觉、组件、状态、响应式和 UI 实施规则 | 仅在明确要求实施时 |
 | `impeccable` | UI/UX 设计总监 | 评审、设计、重构和打磨具体页面或组件 | 仅在明确要求实施时 |
 | `ui-ux-pro-max` | UI/UX 参考资料库 | 查询设计风格、配色、字体、交互规范和技术栈建议 | 否；持久化必须显式开启 |
 | `web-design-guidelines` | Web 规范检查员 | 检查可访问性、表单、交互语义、响应式和常见 Web 体验问题 | 否 |
@@ -16,7 +17,7 @@
 
 目录：[english-world-ux-product-audit](english-world-ux-product-audit/)
 
-这是专门为 English World 创建的项目 Skill，也是四个 Skill 的总协调者。
+这是专门为 English World 创建的项目 Skill，也是五个 Skill 的产品审计入口。
 
 ### 它会做什么
 
@@ -42,7 +43,46 @@
 
 入口文件：[SKILL.md](english-world-ux-product-audit/SKILL.md)
 
-## 2. impeccable
+## 2. english-world-ui-design-system
+
+目录：[english-world-ui-design-system](english-world-ui-design-system/)
+
+这是 English World 自己的项目级 UI 负责人。它不负责决定“应该做什么需求”，而是
+在需求确认后统一回答“这个产品应该怎么设计和实现”。
+
+### 它会做什么
+
+- 统一颜色、字体、间距、圆角、阴影、图标和桌面页面骨架。
+- 统一按钮、表单、列表、表格、弹窗、通知和危险操作模式。
+- 定义 AI 生成任务的等待、处理、成功、失败、重试、过期和重连状态。
+- 规定桌面端、移动端、键盘、触控、明暗主题和响应式验收方式。
+- 区分正式项目标准和旧页面中的迁移候选，采用“触及即整理”的渐进方式。
+- 在项目规则与第三方通用建议冲突时，明确优先级和例外记录方式。
+
+### 适合什么时候使用
+
+- “新增一个页面，应该沿用什么布局、颜色和组件？”
+- “统一 Context Lab 的生成、失败和重试状态。”
+- “检查桌面端和移动端是不是同一套产品能力。”
+- “这次 UI 改版应该遵守 English World 的哪些标准？”
+- “先定项目 UI 约束，再用 Impeccable 实现。”
+
+### 它不会做什么
+
+- 不替代 PRD、产品审计和需求优先级判断。
+- 不因为统一视觉而修改业务逻辑、API、数据结构或题目生成逻辑。
+- 不要求一次性重写旧 CSS，也不引入新的 UI 框架或图标库。
+- 单纯设计或审查时不会修改代码；只有明确要求实施时才进入改动。
+
+### 规则内容
+
+- [设计基础](english-world-ui-design-system/references/foundations.md)
+- [组件与状态](english-world-ui-design-system/references/components-and-states.md)
+- [响应式与治理](english-world-ui-design-system/references/responsive-and-governance.md)
+
+入口文件：[SKILL.md](english-world-ui-design-system/SKILL.md)
+
+## 3. impeccable
 
 目录：[impeccable](impeccable/)
 
@@ -73,7 +113,7 @@
 
 来源记录：[SOURCE.md](impeccable/SOURCE.md)
 
-## 3. ui-ux-pro-max
+## 4. ui-ux-pro-max
 
 目录：[ui-ux-pro-max](ui-ux-pro-max/)
 
@@ -111,7 +151,7 @@
 
 来源记录：[SOURCE.md](ui-ux-pro-max/SOURCE.md)
 
-## 4. web-design-guidelines
+## 5. web-design-guidelines
 
 目录：[web-design-guidelines](web-design-guidelines/)
 
@@ -143,14 +183,15 @@
 
 来源记录：[SOURCE.md](web-design-guidelines/SOURCE.md)
 
-## 四个 Skill 如何配合
+## 五个 Skill 如何配合
 
 可以把它们理解成一个小型产品团队：
 
 1. `english-world-ux-product-audit` 负责选择用户任务、收集证据和确定需求优先级。
-2. `impeccable` 负责深入评估页面设计质量，并在获批后提供设计或实现方案。
-3. `ui-ux-pro-max` 提供风格、配色、字体、交互和技术栈参考。
-4. `web-design-guidelines` 提供客观、可重复的 Web 规范检查。
+2. `english-world-ui-design-system` 负责确定项目视觉、组件、状态和响应式标准。
+3. `impeccable` 负责在项目标准内评估页面，并在获批后提供设计或实现方案。
+4. `ui-ux-pro-max` 提供风格、配色、字体、交互和技术栈参考。
+5. `web-design-guidelines` 提供客观、可重复的 Web 规范检查。
 
 默认推荐流程：
 
@@ -159,7 +200,8 @@
   -> English World 产品审计
   -> 中文需求 Backlog
   -> 产品确认
-  -> Impeccable 设计/改版
+  -> English World UI Design System 设定项目约束
+  -> Impeccable 设计/实现
   -> Web Guidelines 规则复查
   -> 桌面端与移动端浏览器验收
 ```
@@ -168,6 +210,10 @@
 
 ```text
 使用 $english-world-ux-product-audit 审计 Context Lab 的生成、失败、重试和答题恢复。
+```
+
+```text
+使用 $english-world-ui-design-system 为新的学习记录页面确定布局、组件、状态和移动端规则。
 ```
 
 ```text

@@ -1,0 +1,5 @@
+interface:
+  display_name: "English World UI Design System"
+  short_description: "统一 English World 的视觉、组件、状态与响应式规范"
+  brand_color: "#2563EB"
+  default_prompt: "Use $english-world-ui-design-system to design or review this English World interface against the project UI standards."

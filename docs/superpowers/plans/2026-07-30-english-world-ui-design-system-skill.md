@@ -31,7 +31,7 @@
 - Consumes: `docs/superpowers/specs/2026-07-30-english-world-ui-design-system-skill-design.md`
 - Produces: 可被 Agent 自动发现的 `$english-world-ui-design-system` Skill 入口。
 
-- [ ] **Step 1: 使用官方脚本生成标准目录**
+- [x] **Step 1: 使用官方脚本生成标准目录**
 
 Run:
 
@@ -40,15 +40,15 @@ python3 /Users/liulin/.codex/skills/.system/skill-creator/scripts/init_skill.py 
   english-world-ui-design-system \
   --path .agents/skills \
   --resources references \
-  --interface display_name="English World UI Design System" \
-  --interface short_description="统一 English World 的视觉、组件、状态与响应式规范" \
-  --interface brand_color="#2563EB" \
-  --interface default_prompt="Use $english-world-ui-design-system to design or review this English World interface against the project UI standards."
+  --interface 'display_name=English World UI Design System' \
+  --interface 'short_description=统一 English World 的视觉、组件、状态与响应式规范' \
+  --interface 'brand_color=#2563EB' \
+  --interface 'default_prompt=Use $english-world-ui-design-system to design or review this English World interface against the project UI standards.'
 ```
 
 Expected: 创建 Skill 目录、`SKILL.md`、`agents/openai.yaml` 和空的 `references` 目录。
 
-- [ ] **Step 2: 编写 Skill 入口**
+- [x] **Step 2: 编写 Skill 入口**
 
 将 `SKILL.md` 改为只包含以下职责：
 
@@ -60,7 +60,7 @@ Expected: 创建 Skill 目录、`SKILL.md`、`agents/openai.yaml` 和空的 `ref
 - 禁止营销式英雄区、嵌套卡片、无意义渐变、巨型标题、可替代的手绘图标和无必要硬编码。
 - 默认使用中文输出。
 
-- [ ] **Step 3: 检查入口元数据**
+- [x] **Step 3: 检查入口元数据**
 
 Run:
 
@@ -82,7 +82,7 @@ Expected: `SKILL.md` frontmatter 只有 `name` 与 `description`；YAML 字符�
 - Consumes: `apps/english-world/src/theme/theme.css`、`ThemeProvider.tsx`、桌面和移动 CSS、四份历史设计说明。
 - Produces: 可按需读取的项目 UI 标准。
 
-- [ ] **Step 1: 编写设计基础**
+- [x] **Step 1: 编写设计基础**
 
 `foundations.md` 必须记录：
 
@@ -93,7 +93,7 @@ Expected: `SKILL.md` frontmatter 只有 `name` 与 `description`；YAML 字符�
 - 明暗主题、Ant Design 图标、文本适配和减少动态效果要求。
 - 正式标准与迁移候选的区别。
 
-- [ ] **Step 2: 编写组件与状态规范**
+- [x] **Step 2: 编写组件与状态规范**
 
 `components-and-states.md` 必须覆盖：
 
@@ -104,7 +104,7 @@ Expected: `SKILL.md` frontmatter 只有 `name` 与 `description`；YAML 字符�
 - 失败原因、原参数保留、重试和下一步操作。
 - 键盘、焦点、标签、44 像素触控目标和减少动态效果。
 
-- [ ] **Step 3: 编写响应式与治理规范**
+- [x] **Step 3: 编写响应式与治理规范**
 
 `responsive-and-governance.md` 必须覆盖：
 
@@ -114,7 +114,7 @@ Expected: `SKILL.md` frontmatter 只有 `name` 与 `description`；YAML 字符�
 - “需求 -> 现有模式盘点 -> Token/组件决策 -> 最小范围实现 -> 自动化和视觉验收”的工作流。
 - 旧样式渐进迁移、异常记录和设计评审清单。
 
-- [ ] **Step 4: 检查事实来源**
+- [x] **Step 4: 检查事实来源**
 
 Run:
 
@@ -137,7 +137,7 @@ Expected: Skill 中的 Token 和尺寸都能追溯到代码或已批准规格，
 - Consumes: 新 Skill 的入口和三个参考文件。
 - Produces: 五个项目 Skill 的中文职责说明、推荐协作流程和调用示例。
 
-- [ ] **Step 1: 更新 Skill 索引**
+- [x] **Step 1: 更新 Skill 索引**
 
 在 `.agents/skills/README.md` 中：
 
@@ -158,7 +158,7 @@ Expected: Skill 中的 Token 和尺寸都能追溯到代码或已批准规格，
 
 - 增加 `$english-world-ui-design-system` 的中文调用示例。
 
-- [ ] **Step 2: 执行结构校验**
+- [x] **Step 2: 执行结构校验**
 
 Run:
 
@@ -169,7 +169,7 @@ python3 /Users/liulin/.codex/skills/.system/skill-creator/scripts/quick_validate
 
 Expected: 输出 `Skill is valid!`。
 
-- [ ] **Step 3: 执行前向检查**
+- [x] **Step 3: 执行前向检查**
 
 分别用以下三个任务检查 Skill 能否给出明确决策路径：
 
@@ -181,7 +181,7 @@ AI 练习生成失败时，界面必须保留和展示哪些信息？
 
 Expected: 三个任务都能从入口定位到对应参考文件，并得到可执行规则；不需要修改产品代码。
 
-- [ ] **Step 4: 执行 Git 范围检查**
+- [x] **Step 4: 执行 Git 范围检查**
 
 Run:
 
@@ -191,9 +191,9 @@ git status --short
 git diff --name-only HEAD
 ```
 
-Expected: 只出现新 Skill、中文索引和本实施计划，不包含 `apps/`、`packages/` 或后端运行代码。
+Expected: `git status` 与已追踪差异合并查看时，只出现新 Skill、中文索引和本实施计划，不包含 `apps/`、`packages/` 或后端运行代码。
 
-- [ ] **Step 5: 提交实现**
+- [x] **Step 5: 提交实现**
 
 Run:
 
