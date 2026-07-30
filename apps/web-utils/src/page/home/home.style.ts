@@ -15,25 +15,7 @@ export const useStyles = createStyles(({ css }) => {
   `;
 
   const tableExpand = css`
-    .ant-table-tbody {
-      position: relative; /* 继续保持相对定位 */
-    }
-
-    .ant-table-tbody::after {
-      content: "展开";
-      display: flex; /* 使用 flexbox 来居中内容 */
-      justify-content: center; /* 水平居中 */
-      align-items: center; /* 垂直居中 */
-      width: 60px;
-      height: 100%; /* 保持伪元素占满容器高度 */
-      position: fixed;
-      top: 0;
-      right: 0;
-      background-color: #fff;
-      z-index: 1; /* 调整层级，如果需要可减少该值 */
-      /* 防止伪元素的高度影响内容 */
-      pointer-events: none; /* 确保伪元素不会捕获鼠标事件 */
-    }
+    /* 移除了不需要的右侧固定提示 */
   `;
 
   // 返回样式对象
