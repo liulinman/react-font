@@ -30,14 +30,14 @@
 
 | Story | User value | Plan task |
 |---|---|---|
-| S1 | Old and new exercise packs open safely | Task 1 |
-| S2 | Mixed answers are submitted and scored predictably | Task 2 |
-| S3 | AI generates usable authentic IELTS question types | Task 3 |
-| S4 | History, results, warnings, and PDF stay trustworthy | Task 4 |
-| S5 | The Web client has one stable answer and draft contract | Task 5 |
-| S6 | Desktop learners can complete all four question types | Task 6 |
-| S7 | Mobile learners have the same exercise capability | Task 7 |
-| S8 | The complete workflow is regression-tested across repositories | Task 8 |
+| [S1](../stories/context-lab-mixed-ielts-question-types/S1-versioned-question-contract.md) | Old and new exercise packs open safely | Task 1 |
+| [S2](../stories/context-lab-mixed-ielts-question-types/S2-deterministic-grading.md) | Mixed answers are submitted and scored predictably | Task 2 |
+| [S3](../stories/context-lab-mixed-ielts-question-types/S3-authentic-generation.md) | AI generates usable authentic IELTS question types | Task 3 |
+| [S4](../stories/context-lab-mixed-ielts-question-types/S4-history-results-pdf.md) | History, results, warnings, and PDF stay trustworthy | Task 4 |
+| [S5](../stories/context-lab-mixed-ielts-question-types/S5-frontend-answer-contract.md) | The Web client has one stable answer and draft contract | Task 5 |
+| [S6](../stories/context-lab-mixed-ielts-question-types/S6-desktop-mixed-practice.md) | Desktop learners can complete all four question types | Task 6 |
+| [S7](../stories/context-lab-mixed-ielts-question-types/S7-mobile-mixed-practice.md) | Mobile learners have the same exercise capability | Task 7 |
+| [S8](../stories/context-lab-mixed-ielts-question-types/S8-cross-repo-acceptance.md) | The complete workflow is regression-tested across repositories | Task 8 |
 
 ## File Structure
 
