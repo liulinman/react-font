@@ -4276,6 +4276,11 @@ html[data-theme="dark"] .overwrite-stats-table .ant-table-thead > tr > th {
   font-size: 13px;
 }
 
+.context-lab-question-group-heading span {
+  color: #64748b;
+  font-size: 12px;
+}
+
 .context-lab-question-group-heading p {
   margin: 0;
   color: #475569;

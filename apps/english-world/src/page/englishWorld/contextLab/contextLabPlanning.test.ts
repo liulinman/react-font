@@ -21,6 +21,7 @@ describe("buildContextLabGenerateParams", () => {
       }),
     ).toEqual({
       sourceType: "pasted-article",
+      questionContractVersion: 2,
       pastedContent:
         "The passage explains how urban planners are adapting public transport to changing commuting habits.\n\nQuestions\n1. What trend does the passage describe?",
       pastedQuestionMode: "parse",
@@ -39,7 +40,7 @@ describe("buildContextLabGenerateParams", () => {
         "short_answer",
         "matching information",
       ]),
-    ).toEqual(["detail", "short_answer", "matching_information"]);
+    ).toEqual(["detail", "short_answer"]);
 
     expect(
       buildContextLabGenerateParams({
@@ -53,6 +54,7 @@ describe("buildContextLabGenerateParams", () => {
       }),
     ).toEqual(
       expect.objectContaining({
+        questionContractVersion: 2,
         questionTypes: ["short_answer"],
       }),
     );

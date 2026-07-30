@@ -11,6 +11,7 @@ const QUESTION_TYPE_LABELS: Record<string, string> = {
   true_false_not_given: "True / False / Not Given",
   matching_headings: "Matching headings",
   summary_completion: "Summary completion",
+  short_answer: "Short Answer",
 };
 
 export const CONTEXT_LAB_PASTED_QUESTION_TYPE_OPTIONS: Array<{
@@ -23,10 +24,9 @@ export const CONTEXT_LAB_PASTED_QUESTION_TYPE_OPTIONS: Array<{
   { label: "主旨题", value: "main_idea" },
   { label: "语境词义", value: "vocabulary" },
   { label: "True / False / Not Given", value: "true_false_not_given" },
-  { label: "Matching headings", value: "matching_headings" },
   { label: "Summary completion", value: "summary_completion" },
+  { label: "Short Answer", value: "short_answer" },
   { label: "Writer view", value: "writer_view" },
-  { label: "Matching information", value: "matching_information" },
 ];
 
 export function formatContextLabQuestionTypeLabel(questionType?: string) {

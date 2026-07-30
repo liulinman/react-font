@@ -3,6 +3,7 @@ const mixedTask = {
   taskId: 66,
   status: "succeeded",
   sourceType: "pasted-article",
+  questionContractVersion: 2,
   words: ["solar", "emissions"],
   articleExerciseId: 166,
   article: `Solar Neighbourhoods
@@ -21,32 +22,41 @@ The physical system presented its own constraints. Salt carried inland by winter
 
 Mereton's experience has attracted attention from other councils, yet specialists warn against treating it as a universal template. A suitable roof, a supportive grid operator, affordable credit, and patient organisers were all essential. Dense districts with shaded buildings may need to share a solar farm outside the city instead. Even so, the experiment demonstrates that residents without private roofs can take part in renewable generation. Its strongest lesson may be institutional rather than technological: durable clean-energy projects depend on transparent rules, inclusive decisions, and realistic maintenance plans.`,
   targetQuestionCount: 13,
-  generationWarnings: [
-    "Matching questions were omitted because they could not be validated.",
-  ],
+  generationWarnings: ["QUESTION_COUNT"],
   groups: [
     {
       groupId: "choice",
-      title: "Question 1",
-      instruction: "Choose the correct letter.",
+      title: "Multiple Choice",
+      instruction: "Choose one answer.",
       questionIds: ["q1"],
       startNumber: 1,
       endNumber: 1,
     },
     {
       groupId: "tfng",
-      title: "Question 2",
-      instruction: "Choose True, False or Not Given.",
+      title: "True / False / Not Given",
+      instruction: "Choose True, False, or Not Given.",
       questionIds: ["q2"],
       startNumber: 2,
       endNumber: 2,
     },
     {
       groupId: "completion",
-      title: "Questions 3-4",
-      instruction: "Write NO MORE THAN TWO WORDS.",
-      questionIds: ["q3", "q4"],
+      title: "Completion",
+      instruction:
+        "Complete each answer using NO MORE THAN TWO WORDS from the passage.",
+      questionIds: ["q3"],
       startNumber: 3,
+      endNumber: 3,
+      wordLimit: 2,
+    },
+    {
+      groupId: "short-answer",
+      title: "Short Answer",
+      instruction:
+        "Answer each question using NO MORE THAN TWO WORDS from the passage.",
+      questionIds: ["q4"],
+      startNumber: 4,
       endNumber: 4,
       wordLimit: 2,
     },
@@ -84,7 +94,7 @@ Mereton's experience has attracted attention from other councils, yet specialist
     },
     {
       id: "q4",
-      groupId: "completion",
+      groupId: "short-answer",
       stem: "What did the panels lower for participating households?",
       questionType: "short_answer",
       responseType: "short_answer",
@@ -143,6 +153,34 @@ const mixedSubmitResult = {
       explanation: "The question was left unanswered.",
     },
   ],
+};
+
+const mixedAttempt = {
+  id: 606,
+  attemptId: 606,
+  taskId: 66,
+  articleExerciseId: 166,
+  score: mixedSubmitResult.score,
+  correctCount: mixedSubmitResult.correctCount,
+  wrongCount: mixedSubmitResult.wrongCount,
+  weakWords: mixedSubmitResult.weakWords,
+  nextSuggestions: mixedSubmitResult.nextSuggestions,
+  answers: [
+    { questionId: "q1", responseType: "single_choice", selectedIndex: 1 },
+    {
+      questionId: "q2",
+      responseType: "true_false_not_given",
+      selectedValue: "False",
+    },
+    {
+      questionId: "q3",
+      responseType: "text_completion",
+      text: overLimitAnswer,
+    },
+  ],
+  results: mixedSubmitResult.results,
+  elapsedSeconds: 87,
+  createTime: "2026-07-30T12:00:00.000Z",
 };
 
 const viewports = [
@@ -346,7 +384,7 @@ function expectReadableMixedLayout() {
     });
 
   cy.get(".context-lab-question-group-heading")
-    .should("have.length", 3)
+    .should("have.length", 4)
     .each(($heading) => {
       const style = getComputedStyle($heading[0]);
       expect(Number.parseFloat(style.borderBottomWidth)).to.be.at.least(1);
@@ -480,6 +518,8 @@ function expectSeparatedResults() {
 
 describe("context lab mixed IELTS question types", () => {
   beforeEach(() => {
+    let submitted = false;
+
     cy.intercept("POST", "**/user/getCurrentUser", {
       code: 200,
       message: "ok",
@@ -503,15 +543,40 @@ describe("context lab mixed IELTS question types", () => {
       data: { count: 0 },
     });
 
-    cy.intercept("POST", "**/context-lab/history", {
-      code: 200,
-      message: "ok",
-      data: {
-        list: [mixedTask],
-        total: 1,
-        page: 1,
-        pageSize: 10,
-      },
+    cy.intercept("GET", "**/context-lab/task-events?*", (request) => {
+      expect(request.url).to.contain("questionContractVersion=2");
+      request.reply({
+        statusCode: 200,
+        headers: { "content-type": "text/event-stream" },
+        body: 'data: {"type":"connected"}\n\n',
+      });
+    }).as("taskEvents");
+
+    cy.intercept("POST", "**/context-lab/history", (request) => {
+      expect(request.body.questionContractVersion).to.equal(2);
+      request.reply({
+        code: 200,
+        message: "ok",
+        data: {
+          list: [
+            {
+              ...mixedTask,
+              ...(submitted
+                ? {
+                    attemptCount: 1,
+                    latestAttemptId: 606,
+                    latestScore: mixedSubmitResult.score,
+                    latestWrongCount: mixedSubmitResult.wrongCount,
+                    latestAttemptTime: mixedAttempt.createTime,
+                  }
+                : {}),
+            },
+          ],
+          total: 1,
+          page: 1,
+          pageSize: 10,
+        },
+      });
     }).as("contextHistory");
 
     cy.intercept("POST", "**/context-lab/submit", (request) => {
@@ -528,8 +593,32 @@ describe("context lab mixed IELTS question types", () => {
           text: overLimitAnswer,
         },
       ]);
+      submitted = true;
       request.reply({ code: 200, message: "ok", data: mixedSubmitResult });
     }).as("mixedSubmit");
+
+    cy.intercept("POST", "**/context-lab/attempt-history", (request) => {
+      expect(request.body).to.deep.equal({
+        taskId: 66,
+        page: 1,
+        pageSize: 20,
+      });
+      request.reply({
+        code: 200,
+        message: "ok",
+        data: {
+          list: [mixedAttempt],
+          total: 1,
+          page: 1,
+          pageSize: 20,
+        },
+      });
+    }).as("attemptHistory");
+
+    cy.intercept("POST", "**/context-lab/attempt-detail", (request) => {
+      expect(request.body).to.deep.equal({ attemptId: 606 });
+      request.reply({ code: 200, message: "ok", data: mixedAttempt });
+    }).as("attemptDetail");
   });
 
   viewports.forEach(({ width, height }) => {
@@ -538,6 +627,7 @@ describe("context lab mixed IELTS question types", () => {
       cy.visit("/englishWorld/context-lab");
       cy.wait("@currentUser");
       cy.wait("@contextHistory");
+      cy.wait("@taskEvents");
       expectNoPageOverflow();
 
       openMixedPractice();
@@ -547,6 +637,10 @@ describe("context lab mixed IELTS question types", () => {
       cy.get(".context-lab-generation-warning")
         .should("be.visible")
         .and("contain.text", "本套可练习 4/13 题");
+      cy.contains(
+        ".context-lab-question-group-heading",
+        "Question 3 | Maximum 2 words",
+      ).should("exist");
       expectReadableMixedLayout();
 
       cy.get(".context-lab-reading-pane").scrollTo("top");
@@ -695,6 +789,61 @@ describe("context lab mixed IELTS question types", () => {
         "have.value",
         "",
       );
+      expectNoPageOverflow();
+
+      cy.get(".context-lab-practice-modal .ant-modal-close").click();
+      cy.reload();
+      cy.wait("@currentUser");
+      cy.wait("@contextHistory");
+      cy.wait("@taskEvents");
+      cy.contains("练习 1 次").should("be.visible");
+
+      cy.get('button[aria-label="任务 66 更多操作"]').click();
+      cy.contains(".ant-dropdown-menu-item", "查看记录").click();
+      cy.wait("@attemptHistory");
+      cy.contains(".ant-drawer-title", "练习记录").should("be.visible");
+      cy.contains("得分 25").should("be.visible");
+      cy.contains("button", "查看详情").click();
+      cy.wait("@attemptDetail");
+
+      cy.get(".context-lab-attempt-question").should("have.length", 4);
+      cy.contains(
+        ".context-lab-attempt-question",
+        "Which technology was installed above the tram depot?",
+      )
+        .scrollIntoView()
+        .within(() => {
+          cy.contains("状态：正确").should("be.visible");
+          cy.contains("你的答案：B. Solar panels").should("be.visible");
+        });
+      cy.contains(
+        ".context-lab-attempt-question",
+        "The panels lowered household emissions.",
+      )
+        .scrollIntoView()
+        .within(() => {
+          cy.contains("状态：错误").should("be.visible");
+          cy.contains("你的答案：False").should("be.visible");
+          cy.contains("正确答案：True").should("be.visible");
+        });
+      cy.contains(
+        ".context-lab-attempt-question",
+        "Residents bought shares in a local energy ____.",
+      )
+        .scrollIntoView()
+        .within(() => {
+          cy.contains("原因：答案超过字数限制").should("be.visible");
+          cy.contains(`你的答案：${overLimitAnswer}`).should("be.visible");
+        });
+      cy.contains(
+        ".context-lab-attempt-question",
+        "What did the panels lower for participating households?",
+      )
+        .scrollIntoView()
+        .within(() => {
+          cy.contains("状态：未作答").should("be.visible");
+          cy.contains("正确答案：household emissions").should("be.visible");
+        });
       expectNoPageOverflow();
     });
   });

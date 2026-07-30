@@ -113,17 +113,23 @@ function parseContextLabTaskStreamLine(
 export function subscribeContextLabTaskEvents(
   onTaskUpdate: (task: ContextLabTask) => void,
   onError?: (error: Error) => void,
+  questionContractVersion?: 1 | 2,
 ) {
   const controller = new AbortController();
   let active = true;
 
   void (async () => {
     try {
-      const response = await fetch(`${getApiBaseUrl()}/context-lab/task-events`, {
-        method: "GET",
-        credentials: "include",
-        signal: controller.signal,
-      });
+      const capabilityQuery =
+        questionContractVersion === 2 ? "?questionContractVersion=2" : "";
+      const response = await fetch(
+        `${getApiBaseUrl()}/context-lab/task-events${capabilityQuery}`,
+        {
+          method: "GET",
+          credentials: "include",
+          signal: controller.signal,
+        },
+      );
       if (!response.ok || !response.body) {
         throw new Error("任务状态订阅失败");
       }

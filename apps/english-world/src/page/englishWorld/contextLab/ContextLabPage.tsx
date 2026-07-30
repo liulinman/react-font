@@ -83,6 +83,7 @@ import type {
   ContextLabTask,
 } from "../types/learning";
 import {
+  CONTEXT_LAB_MIXED_QUESTION_CONTRACT_VERSION,
   DEFAULT_PASTED_QUESTION_COUNT,
   DEFAULT_CONTEXT_LAB_MODEL_PROVIDER,
   DEFAULT_IELTS_BAND,
@@ -98,7 +99,9 @@ import {
 } from "./contextLabPlanning";
 import { useInRouterContext, useLocation, useNavigate } from "react-router-dom";
 import {
+  formatContextLabQuestionGroupMeta,
   getContextLabErrorMessage,
+  getContextLabGenerationWarningMessages,
   getContextLabStatusDescription,
   getContextLabStatusLabel,
   getContextLabStatusTone,
@@ -572,13 +575,15 @@ function ContextLabPageContent({
     try {
       const task = normalizeContextLabTask(
         await request(
-          contextLabCreateTask(
-            buildMicroGenerateParams(
+          contextLabCreateTask({
+            ...buildMicroGenerateParams(
               microEntry.reciteSessionId,
               microEntry.words,
               microRequestUidRef.current,
             ),
-          ),
+            questionContractVersion:
+              CONTEXT_LAB_MIXED_QUESTION_CONTRACT_VERSION,
+          }),
         ),
       );
       activeMicroTaskIdRef.current = task.taskId;
@@ -604,7 +609,11 @@ function ContextLabPageContent({
     try {
       const task = normalizeContextLabTask(
         await request<ContextLabTask>(
-          contextLabDetail({ taskId: currentTask.taskId }),
+          contextLabDetail({
+            taskId: currentTask.taskId,
+            questionContractVersion:
+              CONTEXT_LAB_MIXED_QUESTION_CONTRACT_VERSION,
+          }),
         ),
       );
       if (task.reciteSessionId !== microEntry.reciteSessionId) return;
@@ -636,6 +645,8 @@ function ContextLabPageContent({
         contextLabHistory({
           page: 1,
           pageSize: 10,
+          questionContractVersion:
+            CONTEXT_LAB_MIXED_QUESTION_CONTRACT_VERSION,
           ...(trimmedHistoryKeyword ? { keyword: trimmedHistoryKeyword } : {}),
           ...(getContextLabSearchSourceType(historySourceType)
             ? { sourceType: getContextLabSearchSourceType(historySourceType) }
@@ -723,38 +734,42 @@ function ContextLabPageContent({
   }, [historyKeyword, historySourceType, isMicroMode]);
 
   useEffect(() => {
-    return subscribeContextLabTaskEvents((task) => {
-      const normalizedTask = normalizeContextLabTask(task);
-      setHistory((prev) => {
-        const exists = prev.some(
-          (item) => item.taskId === normalizedTask.taskId,
+    return subscribeContextLabTaskEvents(
+      (task) => {
+        const normalizedTask = normalizeContextLabTask(task);
+        setHistory((prev) => {
+          const exists = prev.some(
+            (item) => item.taskId === normalizedTask.taskId,
+          );
+          if (!exists) {
+            return historySearchActive
+              ? prev
+              : [normalizedTask, ...prev].slice(0, 10);
+          }
+          return prev.map((item) =>
+            item.taskId === normalizedTask.taskId
+              ? normalizeContextLabTask({ ...item, ...normalizedTask })
+              : item,
+          );
+        });
+        setCurrentTask((prev) =>
+          prev?.taskId === normalizedTask.taskId
+            ? normalizeContextLabTask({ ...prev, ...normalizedTask })
+            : prev,
         );
-        if (!exists) {
-          return historySearchActive
-            ? prev
-            : [normalizedTask, ...prev].slice(0, 10);
+        if (
+          microEntry &&
+          normalizedTask.taskId === activeMicroTaskIdRef.current &&
+          normalizedTask.reciteSessionId === microEntry.reciteSessionId &&
+          normalizedTask.status === "succeeded"
+        ) {
+          void recordMicroGenerated(normalizedTask);
+          setPracticeModalOpen(true);
         }
-        return prev.map((item) =>
-          item.taskId === normalizedTask.taskId
-            ? normalizeContextLabTask({ ...item, ...normalizedTask })
-            : item,
-        );
-      });
-      setCurrentTask((prev) =>
-        prev?.taskId === normalizedTask.taskId
-          ? normalizeContextLabTask({ ...prev, ...normalizedTask })
-          : prev,
-      );
-      if (
-        microEntry &&
-        normalizedTask.taskId === activeMicroTaskIdRef.current &&
-        normalizedTask.reciteSessionId === microEntry.reciteSessionId &&
-        normalizedTask.status === "succeeded"
-      ) {
-        void recordMicroGenerated(normalizedTask);
-        setPracticeModalOpen(true);
-      }
-    });
+      },
+      undefined,
+      CONTEXT_LAB_MIXED_QUESTION_CONTRACT_VERSION,
+    );
   }, [historySearchActive, microEntry, recordMicroGenerated]);
 
   useEffect(() => {
@@ -762,7 +777,11 @@ function ContextLabPageContent({
     let cancelled = false;
     void request<ContextLabTask>(
       {
-        ...contextLabDetail({ taskId: microTaskId }),
+        ...contextLabDetail({
+          taskId: microTaskId,
+          questionContractVersion:
+            CONTEXT_LAB_MIXED_QUESTION_CONTRACT_VERSION,
+        }),
         config: { suppressErrorMessage: true },
       },
     )
@@ -809,7 +828,11 @@ function ContextLabPageContent({
       try {
         const task = normalizeContextLabTask(
           await request<ContextLabTask>({
-            ...contextLabDetail({ taskId: currentTask.taskId }),
+            ...contextLabDetail({
+              taskId: currentTask.taskId,
+              questionContractVersion:
+                CONTEXT_LAB_MIXED_QUESTION_CONTRACT_VERSION,
+            }),
             config: { suppressErrorMessage: true },
           }),
         );
@@ -882,7 +905,11 @@ function ContextLabPageContent({
             ? existingTask
             : normalizeContextLabTask(
                 await request<ContextLabTask>({
-                  ...contextLabDetail({ taskId: reference.taskId }),
+                  ...contextLabDetail({
+                    taskId: reference.taskId,
+                    questionContractVersion:
+                      CONTEXT_LAB_MIXED_QUESTION_CONTRACT_VERSION,
+                  }),
                   config: { suppressErrorMessage: true },
                 }),
               );
@@ -1879,6 +1906,12 @@ function ContextLabPageContent({
       return null;
     }
 
+    const generationWarningMessages =
+      getContextLabGenerationWarningMessages(currentTask.generationWarnings);
+    const hasPartialQuestionSet =
+      currentTask.targetQuestionCount != null &&
+      currentTask.questions.length < currentTask.targetQuestionCount;
+
     return (
       <div className="context-lab-practice-pack">
         <div className="context-lab-practice-workspace">
@@ -1899,8 +1932,8 @@ function ContextLabPageContent({
               </div>
             </div>
 
-            {currentTask.generationWarnings &&
-              currentTask.generationWarnings.length > 0 && (
+            {(generationWarningMessages.length > 0 ||
+              hasPartialQuestionSet) && (
                 <div
                   className="context-lab-generation-warning"
                   role="status"
@@ -1911,11 +1944,13 @@ function ContextLabPageContent({
                       {currentTask.targetQuestionCount} 题
                     </strong>
                   )}
-                  <ul>
-                    {currentTask.generationWarnings.map((warning) => (
-                      <li key={warning}>{warning}</li>
-                    ))}
-                  </ul>
+                  {generationWarningMessages.length > 0 && (
+                    <ul>
+                      {generationWarningMessages.map((warning) => (
+                        <li key={warning}>{warning}</li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
               )}
 
@@ -1944,6 +1979,7 @@ function ContextLabPageContent({
                     {firstQuestionInGroup && (
                       <div className="context-lab-question-group-heading">
                         {group.title && <strong>{group.title}</strong>}
+                        <span>{formatContextLabQuestionGroupMeta(group)}</span>
                         <p>{group.instruction}</p>
                       </div>
                     )}

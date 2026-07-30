@@ -23,6 +23,7 @@ export const PASTED_QUESTION_COUNT_MIN = 1;
 export const PASTED_QUESTION_COUNT_MAX = 13;
 export const DEFAULT_CONTEXT_LAB_MODEL_PROVIDER: ContextLabModelProvider =
   "deepseek";
+export const CONTEXT_LAB_MIXED_QUESTION_CONTRACT_VERSION = 2 as const;
 export const CONTEXT_LAB_SUPPORTED_QUESTION_TYPES: ContextLabQuestionType[] = [
   "detail",
   "paraphrase",
@@ -30,11 +31,9 @@ export const CONTEXT_LAB_SUPPORTED_QUESTION_TYPES: ContextLabQuestionType[] = [
   "main_idea",
   "vocabulary",
   "true_false_not_given",
-  "matching_headings",
   "summary_completion",
   "short_answer",
   "writer_view",
-  "matching_information",
 ];
 
 export function normalizeIeltsBand(value: unknown) {
@@ -125,6 +124,7 @@ export function buildContextLabGenerateParams({
   if (sourceMode === "ielts-random" || sourceMode === "random") {
     return {
       sourceType: "random",
+      questionContractVersion: CONTEXT_LAB_MIXED_QUESTION_CONTRACT_VERSION,
       count,
       ieltsBand: normalizedIeltsBand,
       modelProvider: normalizedModelProvider,
@@ -134,6 +134,7 @@ export function buildContextLabGenerateParams({
   if (sourceMode === "proficiency") {
     return {
       sourceType: "proficiency",
+      questionContractVersion: CONTEXT_LAB_MIXED_QUESTION_CONTRACT_VERSION,
       proficiencyLevels: proficiencyLevels?.length ? proficiencyLevels : [0, 1],
       count,
       ieltsBand: normalizedIeltsBand,
@@ -144,6 +145,7 @@ export function buildContextLabGenerateParams({
   if (sourceMode === "ielts-core") {
     return {
       sourceType: "ielts-core",
+      questionContractVersion: CONTEXT_LAB_MIXED_QUESTION_CONTRACT_VERSION,
       proficiencyLevels: proficiencyLevels?.length ? proficiencyLevels : [0, 1],
       count,
       ieltsBand: normalizedIeltsBand,
@@ -154,6 +156,7 @@ export function buildContextLabGenerateParams({
   if (sourceMode === "custom") {
     return {
       sourceType: "custom",
+      questionContractVersion: CONTEXT_LAB_MIXED_QUESTION_CONTRACT_VERSION,
       words: customWords
         .trim()
         .split(/[\s,，]+/)
@@ -166,6 +169,7 @@ export function buildContextLabGenerateParams({
   if (sourceMode === "pasted-article") {
     return {
       sourceType: "pasted-article",
+      questionContractVersion: CONTEXT_LAB_MIXED_QUESTION_CONTRACT_VERSION,
       pastedContent: String(pastedContent ?? "").trim(),
       pastedQuestionMode: normalizePastedQuestionMode(pastedQuestionMode),
       questionTypes: normalizePastedQuestionTypes(pastedQuestionTypes),
@@ -177,6 +181,7 @@ export function buildContextLabGenerateParams({
 
   return {
     sourceType: "proficiency",
+    questionContractVersion: CONTEXT_LAB_MIXED_QUESTION_CONTRACT_VERSION,
     proficiencyLevels: [0, 1],
     count,
     ieltsBand: normalizedIeltsBand,

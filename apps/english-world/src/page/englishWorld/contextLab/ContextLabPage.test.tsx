@@ -61,7 +61,12 @@ const mixedTask = {
   articleExerciseId: 166,
   article: "Solar Energy\n\nSolar panels can lower household emissions.",
   targetQuestionCount: 13,
-  generationWarnings: ["Matching questions were omitted."],
+  generationWarnings: [
+    "QUESTION_COUNT",
+    "q13: TEXT_ACCEPTED_ANSWERS_MISSING",
+    "Correct answer: secret solar panels",
+    "UPSTREAM_UNKNOWN_WARNING",
+  ],
   groups: [
     {
       groupId: "choice",
@@ -215,8 +220,12 @@ vi.mock("../server/learning", async () => {
     ...actual,
     downloadContextLabPdfTemplate: () => downloadMock(),
     downloadContextLabTaskPdf: (taskId: number) => downloadTaskMock(taskId),
-    subscribeContextLabTaskEvents: (handler: typeof taskEventHandler) =>
-      subscribeTaskEventsMock(handler),
+    subscribeContextLabTaskEvents: (
+      handler: typeof taskEventHandler,
+      onError?: (error: Error) => void,
+      questionContractVersion?: number,
+    ) =>
+      subscribeTaskEventsMock(handler, onError, questionContractVersion),
   };
 });
 
@@ -291,6 +300,19 @@ describe("ContextLabPage", () => {
     expect(
       screen.queryByRole("heading", { level: 1, name: "AI 语境实验室" }),
     ).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(requestMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          url: "/context-lab/history",
+          data: expect.objectContaining({ questionContractVersion: 2 }),
+        }),
+      );
+      expect(subscribeTaskEventsMock).toHaveBeenCalledWith(
+        expect.any(Function),
+        undefined,
+        2,
+      );
+    });
   });
 
   it("lets the user choose weak, mastery, IELTS random, IELTS core, or custom words", () => {
@@ -503,7 +525,10 @@ describe("ContextLabPage", () => {
       await screen.findByRole("region", { name: /错词语境巩固/ }),
     ).toBeInTheDocument();
     expect(requestMock).toHaveBeenCalledWith(
-      expect.objectContaining({ url: "/context-lab/detail", data: { taskId: 25 } }),
+      expect.objectContaining({
+        url: "/context-lab/detail",
+        data: { taskId: 25, questionContractVersion: 2 },
+      }),
     );
   });
 
@@ -783,7 +808,7 @@ describe("ContextLabPage", () => {
         expect.objectContaining({
           url: "/context-lab/detail",
           method: "POST",
-          data: { taskId: 12 },
+          data: { taskId: 12, questionContractVersion: 2 },
         }),
       );
     });
@@ -827,6 +852,7 @@ describe("ContextLabPage", () => {
       count: 8,
       ieltsBand: 5,
       modelProvider: "deepseek",
+      questionContractVersion: 2,
     });
   });
 
@@ -843,6 +869,7 @@ describe("ContextLabPage", () => {
       count: 8,
       ieltsBand: 7,
       modelProvider: "deepseek",
+      questionContractVersion: 2,
     });
   });
 
@@ -860,6 +887,7 @@ describe("ContextLabPage", () => {
       count: 8,
       ieltsBand: 7,
       modelProvider: "gpt",
+      questionContractVersion: 2,
     });
   });
 
@@ -878,6 +906,7 @@ describe("ContextLabPage", () => {
       count: 10,
       ieltsBand: 7.5,
       modelProvider: "deepseek",
+      questionContractVersion: 2,
     });
   });
 
@@ -894,6 +923,7 @@ describe("ContextLabPage", () => {
       count: 8,
       ieltsBand: 6.5,
       modelProvider: "deepseek",
+      questionContractVersion: 2,
     });
   });
 
@@ -910,6 +940,7 @@ describe("ContextLabPage", () => {
       words: ["resilient", "recover", "fragile", "steady"],
       ieltsBand: 8,
       modelProvider: "deepseek",
+      questionContractVersion: 2,
     });
   });
 
@@ -959,6 +990,7 @@ describe("ContextLabPage", () => {
           count: 20,
           ieltsBand: 7,
           modelProvider: "deepseek",
+          questionContractVersion: 2,
         },
         __responseType: undefined,
       });
@@ -1177,6 +1209,7 @@ describe("ContextLabPage", () => {
             count: 20,
             ieltsBand: 7,
             modelProvider: "deepseek",
+            questionContractVersion: 2,
           },
         }),
       );
@@ -1214,6 +1247,7 @@ describe("ContextLabPage", () => {
             count: 20,
             ieltsBand: 7,
             modelProvider: "deepseek",
+            questionContractVersion: 2,
           },
         }),
       );
@@ -1578,10 +1612,23 @@ describe("ContextLabPage", () => {
     expect(
       screen.getByRole("textbox", { name: "第 4 题答案，最多 2 个词" }),
     ).toBeInTheDocument();
+    expect(screen.getByText("Short Answer")).toBeInTheDocument();
     expect(
       screen.getAllByText("Write NO MORE THAN TWO WORDS."),
     ).toHaveLength(1);
+    expect(
+      screen.getByText("Questions 3-4 | Maximum 2 words"),
+    ).toBeInTheDocument();
     expect(screen.getByText("本套可练习 4/13 题")).toBeInTheDocument();
+    expect(
+      screen.getByText("部分题目未通过安全校验，已从练习中移除。"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("Correct answer: secret solar panels"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("UPSTREAM_UNKNOWN_WARNING"),
+    ).not.toBeInTheDocument();
     expect(
       screen.queryByText("This malformed HTTP question must be filtered."),
     ).not.toBeInTheDocument();

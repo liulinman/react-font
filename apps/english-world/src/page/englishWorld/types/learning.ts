@@ -142,7 +142,10 @@ export type MemoryMapUpdateLevelParams = {
 
 type ContextLabIeltsBandOptions = {
   ieltsBand?: number;
+  questionContractVersion?: ContextLabQuestionContractVersion;
 };
+
+export type ContextLabQuestionContractVersion = 1 | 2;
 
 export type ContextLabModelProvider = "deepseek" | "gpt";
 
@@ -282,6 +285,7 @@ export type ContextLabTask = {
   status: ContextLabTaskStatus;
   sourceType: ContextLabGenerateParams["sourceType"];
   words: string[];
+  questionContractVersion?: ContextLabQuestionContractVersion;
   mode?: ContextLabMode;
   reciteSessionId?: number;
   articleExerciseId?: number;
@@ -303,6 +307,7 @@ export type ContextLabTask = {
 };
 
 export type ContextLabHistoryParams = {
+  questionContractVersion?: ContextLabQuestionContractVersion;
   page?: number;
   pageSize?: number;
   status?: ContextLabTaskStatus;
@@ -319,4 +324,5 @@ export type ContextLabHistoryResponse = {
 
 export type ContextLabDetailParams = {
   taskId: number;
+  questionContractVersion?: ContextLabQuestionContractVersion;
 };

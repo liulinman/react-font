@@ -100,6 +100,29 @@ describe("contextLabAnswers", () => {
     ]);
   });
 
+  it("submits a historical V1 TFNG choice as a semantic selected value", () => {
+    const questions: ContextLabQuestionInput[] = [
+      {
+        id: "q2",
+        stem: "The project began in 2018.",
+        questionType: "true_false_not_given",
+        options: ["True", "False", "Not Given"],
+      },
+    ];
+
+    expect(
+      buildSubmitAnswers(questions, {
+        q2: { selectedValue: "Not Given" },
+      }),
+    ).toEqual([
+      {
+        questionId: "q2",
+        responseType: "true_false_not_given",
+        selectedValue: "Not Given",
+      },
+    ]);
+  });
+
   it("does not count or submit a choice index outside the available options", () => {
     const questions: ContextLabQuestionInput[] = [
       {

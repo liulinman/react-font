@@ -51,6 +51,9 @@ describe("contextLabTask", () => {
       method: "POST",
       data: body,
     });
+    expect(contextLabCreateTask(body).data).not.toHaveProperty(
+      "questionContractVersion",
+    );
     expect(
       contextLabCreateTask({
         sourceType: "ielts-core",
@@ -75,6 +78,14 @@ describe("contextLabTask", () => {
       url: "/context-lab/detail",
       method: "POST",
       data: { taskId: 12 },
+    });
+    expect(
+      contextLabDetail({
+        taskId: 12,
+        questionContractVersion: 2,
+      } as never),
+    ).toMatchObject({
+      data: { taskId: 12, questionContractVersion: 2 },
     });
   });
 
@@ -116,10 +127,28 @@ describe("contextLabTask", () => {
       taskId: 12,
       status: "succeeded",
     });
+    expect(fetchMock.mock.calls[0][0]).toBe("/api/context-lab/task-events");
 
     const signal = (fetchMock.mock.calls[0][1] as RequestInit)
       .signal as AbortSignal;
     unsubscribe();
     expect(signal.aborted).toBe(true);
+  });
+
+  it("adds V2 capability to the event URL only when explicitly requested", async () => {
+    const fetchMock = vi.fn(
+      async (...args: [RequestInfo | URL, RequestInit?]) => {
+        void args;
+        return new Response("");
+      },
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    subscribeContextLabTaskEvents(vi.fn(), undefined, 2 as never);
+
+    await vi.waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      "/api/context-lab/task-events?questionContractVersion=2",
+    );
   });
 });

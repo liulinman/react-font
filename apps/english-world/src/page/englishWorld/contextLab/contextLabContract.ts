@@ -120,6 +120,23 @@ export function parseContextLabQuestion(
           ? value.question
           : null;
     if (!stem || !isStringArray(value.options)) return null;
+    if (
+      value.questionType === "true_false_not_given" &&
+      isTfngOptions(value.options)
+    ) {
+      return {
+        id: value.id,
+        groupId:
+          typeof value.groupId === "string" && value.groupId
+            ? value.groupId
+            : `legacy-${String(value.id)}`,
+        stem,
+        questionType: "true_false_not_given",
+        responseType: "true_false_not_given",
+        options: value.options,
+        ...targetWord,
+      };
+    }
     return {
       id: value.id,
       groupId:

@@ -110,6 +110,24 @@ describe("contextLabContract", () => {
     });
   });
 
+  it("normalizes a historical V1 TFNG question to its semantic response type", () => {
+    expect(
+      normalizeContextLabQuestion({
+        id: "q2",
+        stem: "The project began in 2018.",
+        options: ["True", "False", "Not Given"],
+        questionType: "true_false_not_given",
+      }),
+    ).toEqual({
+      id: "q2",
+      groupId: "legacy-q2",
+      stem: "The project began in 2018.",
+      options: ["True", "False", "Not Given"],
+      questionType: "true_false_not_given",
+      responseType: "true_false_not_given",
+    });
+  });
+
   it("normalizes a legacy attempt row outside the safe result union", () => {
     expect(
       normalizeContextLabAttemptResult({
