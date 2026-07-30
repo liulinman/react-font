@@ -72,10 +72,8 @@ import {
   subscribeContextLabTaskEvents,
 } from "../server/learning";
 import type {
-  ContextLabAnswer,
   ContextLabAnswerState,
   ContextLabAttemptResult,
-  ContextLabAttemptResultInput,
   ContextLabGenerateParams,
   ContextLabModelProvider,
   ContextLabPastedQuestionMode,
@@ -136,10 +134,12 @@ import {
   saveContextLabDraft,
 } from "./contextLabAnswers";
 import {
-  normalizeContextLabAttemptResults,
-  normalizeContextLabQuestions,
+  parseContextLabAttemptAnswers,
+  parseContextLabAttemptResults,
+  parseContextLabQuestions,
 } from "./contextLabContract";
 import {
+  ContextLabAnswerOnlyResult,
   ContextLabQuestionField,
   ContextLabQuestionResult,
 } from "./ContextLabQuestionField";
@@ -163,19 +163,6 @@ const PROFICIENCY_OPTIONS = [
 ];
 const ACTIVE_TASK_DELETE_MESSAGE =
   "生成中的练习包暂不支持删除，请等待任务完成或失败后再操作";
-const CONTEXT_LAB_RESPONSE_TYPES = new Set([
-  "single_choice",
-  "true_false_not_given",
-  "text_completion",
-  "short_answer",
-]);
-const CONTEXT_LAB_TFNG_VALUES = new Set([
-  "True",
-  "False",
-  "Yes",
-  "No",
-  "Not Given",
-]);
 const SUPPORTED_PASTED_QUESTION_TYPE_OPTIONS: Array<{
   label: string;
   value: ContextLabQuestionType;
@@ -185,7 +172,7 @@ const SUPPORTED_PASTED_QUESTION_TYPE_OPTIONS: Array<{
   { label: "Summary completion", value: "summary_completion" },
   {
     label: "Short answer",
-    value: "short_answer" as ContextLabQuestionType,
+    value: "short_answer",
   },
 ];
 
@@ -201,94 +188,44 @@ type MarkedVocabularyItem = Omit<WordList, "id"> & {
   key: string;
 };
 
-function isPlainRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-function isContextLabAttemptResultInput(
-  value: unknown,
-): value is ContextLabAttemptResultInput {
-  if (
-    !isPlainRecord(value) ||
-    typeof value.questionId !== "string" ||
-    typeof value.correct !== "boolean"
-  ) {
-    return false;
-  }
-  return (
-    value.responseType === undefined ||
-    (typeof value.responseType === "string" &&
-      CONTEXT_LAB_RESPONSE_TYPES.has(value.responseType))
-  );
-}
-
-function isContextLabAnswer(value: unknown): value is ContextLabAnswer {
-  if (
-    !isPlainRecord(value) ||
-    typeof value.questionId !== "string" ||
-    typeof value.responseType !== "string"
-  ) {
-    return false;
-  }
-
-  switch (value.responseType) {
-    case "single_choice":
-      return (
-        Number.isInteger(value.selectedIndex) &&
-        Number(value.selectedIndex) >= 0
-      );
-    case "true_false_not_given":
-      return (
-        typeof value.selectedValue === "string" &&
-        CONTEXT_LAB_TFNG_VALUES.has(value.selectedValue)
-      );
-    case "text_completion":
-    case "short_answer":
-      return typeof value.text === "string";
-    default:
-      return false;
-  }
-}
-
 function normalizeContextLabAttempt(
   attempt: ContextLabAttempt,
+  questions: unknown = [],
 ): ContextLabAttempt {
-  const resultInputs = Array.isArray(attempt.results)
-    ? attempt.results.filter(isContextLabAttemptResultInput)
-    : [];
-  const answers = Array.isArray(attempt.answers)
-    ? attempt.answers.filter(isContextLabAnswer)
-    : [];
+  const answers = parseContextLabAttemptAnswers(attempt.answers, questions);
 
   return {
     ...attempt,
     answers,
-    results: normalizeContextLabAttemptResults(resultInputs),
+    results: parseContextLabAttemptResults(
+      attempt.results,
+      answers,
+      questions,
+    ),
   };
 }
 
 function normalizeContextLabTask(task: ContextLabTask): ContextLabTask {
+  const questions = Array.isArray(task.questions)
+    ? parseContextLabQuestions(task.questions)
+    : undefined;
   return {
     ...task,
-    questions: Array.isArray(task.questions)
-      ? normalizeContextLabQuestions(task.questions)
-      : undefined,
+    questions,
     latestAttempt: task.latestAttempt
-      ? normalizeContextLabAttempt(task.latestAttempt)
+      ? normalizeContextLabAttempt(task.latestAttempt, questions)
       : undefined,
   };
 }
 
 function normalizeContextLabSubmitResult(
   result: ContextLabSubmitResult,
+  questions: unknown,
+  answers: unknown,
 ): ContextLabSubmitResult {
-  const resultInputs = Array.isArray(result.results)
-    ? result.results.filter(isContextLabAttemptResultInput)
-    : [];
-
   return {
     ...result,
-    results: normalizeContextLabAttemptResults(resultInputs),
+    results: parseContextLabAttemptResults(result.results, answers, questions),
   };
 }
 
@@ -731,7 +668,7 @@ function ContextLabPageContent({
         contextLabAttemptHistory({ taskId: task.taskId, page: 1, pageSize: 20 }),
       );
       const nextAttempts = (response.list ?? []).map(
-        normalizeContextLabAttempt,
+        (attempt) => normalizeContextLabAttempt(attempt, task.questions),
       );
       setAttempts(nextAttempts);
       setSelectedAttemptId((prev) =>
@@ -762,6 +699,7 @@ function ContextLabPageContent({
         await request(
           contextLabAttemptDetail({ attemptId: attempt.attemptId }),
         ),
+        attemptTask?.questions,
       );
       setAttemptDetails((prev) => ({
         ...prev,
@@ -1213,14 +1151,17 @@ function ContextLabPageContent({
     submitInFlightRef.current = true;
     setSubmitting(true);
     try {
+      const submitAnswers = buildSubmitAnswers(currentTask.questions, answers);
       const response = normalizeContextLabSubmitResult(
         await request(
           contextLabSubmit({
             sessionId: currentSessionId,
             elapsedSeconds,
-            answers: buildSubmitAnswers(currentTask.questions, answers),
+            answers: submitAnswers,
           }),
         ),
+        currentTask.questions,
+        submitAnswers,
       );
       setResults(response.results);
       setSubmitSummary(response);
@@ -2743,6 +2684,13 @@ function ContextLabPageContent({
                       (() => {
                         const detail = attemptDetails[attempt.attemptId];
                         if (!detail) return null;
+                        const answerOnlyItems = detail.answers.filter(
+                          (answer) =>
+                            !detail.results.some(
+                              (result) =>
+                                result.questionId === answer.questionId,
+                            ),
+                        );
 
                         return (
                           <>
@@ -2759,7 +2707,8 @@ function ContextLabPageContent({
                               </div>
                             )}
                             <div className="context-lab-attempt-question-list">
-                              {detail.results.length === 0 ? (
+                              {detail.results.length === 0 &&
+                              answerOnlyItems.length === 0 ? (
                                 <Empty
                                   image={Empty.PRESENTED_IMAGE_SIMPLE}
                                   description="暂无可展示的作答详情"
@@ -2782,6 +2731,27 @@ function ContextLabPageContent({
                                     <ContextLabQuestionResult
                                       question={question}
                                       result={result}
+                                    />
+                                  </section>
+                                );
+                              })}
+                              {answerOnlyItems.map((answer, index) => {
+                                const question = getContextLabQuestionLabel(
+                                  attemptTask,
+                                  answer.questionId,
+                                );
+                                return (
+                                  <section
+                                    className="context-lab-attempt-question"
+                                    key={`answer-${answer.questionId || index}`}
+                                  >
+                                    <Text strong>
+                                      {question?.stem ||
+                                        `第 ${detail.results.length + index + 1} 题`}
+                                    </Text>
+                                    <ContextLabAnswerOnlyResult
+                                      answer={answer}
+                                      question={question}
                                     />
                                   </section>
                                 );

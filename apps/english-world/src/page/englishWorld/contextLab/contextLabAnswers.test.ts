@@ -100,6 +100,53 @@ describe("contextLabAnswers", () => {
     ]);
   });
 
+  it("does not count or submit a choice index outside the available options", () => {
+    const questions: ContextLabQuestionInput[] = [
+      {
+        id: "q1",
+        groupId: "choice",
+        stem: "Choose one.",
+        questionType: "detail",
+        responseType: "single_choice",
+        options: ["A", "B"],
+      },
+    ];
+    const state: ContextLabAnswerState = {
+      q1: { selectedIndex: 99 },
+    };
+
+    expect(countAnsweredQuestions(questions, state)).toBe(0);
+    expect(buildSubmitAnswers(questions, state)).toEqual([]);
+  });
+
+  it("safely omits a malformed discriminated question from submit helpers", () => {
+    const questions = [
+      {
+        id: "broken",
+        groupId: "choice",
+        stem: "Missing options.",
+        questionType: "detail",
+        responseType: "single_choice",
+      },
+    ] as unknown as ContextLabQuestionInput[];
+
+    expect(() =>
+      buildSubmitAnswers(questions, {
+        broken: { selectedIndex: 0 },
+      }),
+    ).not.toThrow();
+    expect(
+      buildSubmitAnswers(questions, {
+        broken: { selectedIndex: 0 },
+      }),
+    ).toEqual([]);
+    expect(
+      countAnsweredQuestions(questions, {
+        broken: { selectedIndex: 0 },
+      }),
+    ).toBe(0);
+  });
+
   it("stores drafts by session and clears only the submitted session", () => {
     const storage = new Map<string, string>();
     vi.stubGlobal("localStorage", {

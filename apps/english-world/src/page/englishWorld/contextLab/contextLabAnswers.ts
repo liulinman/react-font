@@ -5,7 +5,7 @@ import type {
   ContextLabQuestionInput,
   ContextLabTfngValue,
 } from "../types/learning";
-import { normalizeContextLabQuestion } from "./contextLabContract";
+import { parseContextLabQuestion } from "./contextLabContract";
 
 const TFNG_VALUES = new Set<ContextLabTfngValue>([
   "True",
@@ -54,13 +54,16 @@ export function isQuestionAnswered(
   value: ContextLabAnswerValue | undefined,
 ) {
   if (!value) return false;
-  const question = normalizeContextLabQuestion(questionInput);
+  const question = parseContextLabQuestion(questionInput);
+  if (!question) return false;
 
   switch (question.responseType) {
     case "single_choice":
       return (
         typeof value.selectedIndex === "number" &&
-        Number.isInteger(value.selectedIndex)
+        Number.isInteger(value.selectedIndex) &&
+        value.selectedIndex >= 0 &&
+        value.selectedIndex < question.options.length
       );
     case "true_false_not_given":
       return (
@@ -81,7 +84,8 @@ export function buildSubmitAnswers(
   state: ContextLabAnswerState,
 ): ContextLabAnswer[] {
   return questions.flatMap<ContextLabAnswer>((questionInput) => {
-    const question = normalizeContextLabQuestion(questionInput);
+    const question = parseContextLabQuestion(questionInput);
+    if (!question) return [];
     const value = state[question.id];
     const responseType = question.responseType;
     if (!isQuestionAnswered(question, value)) return [];

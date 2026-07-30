@@ -160,7 +160,8 @@ export type ContextLabQuestionType =
   | "matching_information"
   | "true_false_not_given"
   | "matching_headings"
-  | "summary_completion";
+  | "summary_completion"
+  | "short_answer";
 
 export type ContextLabPastedQuestionMode = "auto" | "generate" | "parse";
 

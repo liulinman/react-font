@@ -96,7 +96,14 @@ const mixedTask = {
       stem: "Which technology is discussed?",
       questionType: "detail",
       responseType: "single_choice" as const,
-      options: ["Wind turbines", "Solar panels"],
+      options: [
+        "Wind turbines",
+        "Solar panels",
+        "Hydropower",
+        "Geothermal",
+        "Tidal power",
+        "Biomass",
+      ],
     },
     {
       id: "q2",
@@ -126,6 +133,13 @@ const mixedTask = {
       responseType: "short_answer" as const,
       wordLimit: 2 as const,
     },
+    {
+      id: "broken-http-question",
+      groupId: "choice",
+      stem: "This malformed HTTP question must be filtered.",
+      questionType: "detail",
+      responseType: "single_choice" as const,
+    } as never,
   ],
 };
 
@@ -138,6 +152,14 @@ function createMixedSubmitResult() {
     weakWords: ["solar panels"],
     nextSuggestions: ["Review the article."],
     results: [
+      {
+        questionId: "broken-submit-result",
+        responseType: "single_choice" as const,
+        correct: false,
+        status: "incorrect" as const,
+        userAnswer: { selectedIndex: 0 },
+        explanation: "Missing correctAnswer must be filtered.",
+      },
       {
         questionId: "q1",
         responseType: "single_choice" as const,
@@ -974,6 +996,7 @@ describe("ContextLabPage", () => {
     await userEvent.click(screen.getByText("整理自带题"));
     await userEvent.click(screen.getByLabelText("定位细节"));
     await userEvent.click(screen.getByLabelText("True / False / Not Given"));
+    await userEvent.click(screen.getByLabelText("Short answer"));
     await userEvent.click(screen.getByRole("button", { name: /生成练习包/ }));
 
     await waitFor(() => {
@@ -986,7 +1009,11 @@ describe("ContextLabPage", () => {
             pastedContent:
               "Urban transport habits have changed as hybrid workers spread their journeys across the day.\n\nQuestions\n1. Which habit changed?",
             pastedQuestionMode: "parse",
-            questionTypes: ["detail", "true_false_not_given"],
+            questionTypes: [
+              "detail",
+              "true_false_not_given",
+              "short_answer",
+            ],
             questionCount: 8,
             ieltsBand: 7,
             modelProvider: "deepseek",
@@ -1259,6 +1286,13 @@ describe("ContextLabPage", () => {
         article: "A completed practice article.",
         questions: [
           {
+            id: "broken",
+            groupId: "choice",
+            stem: "This malformed question must be filtered.",
+            questionType: "detail",
+            responseType: "single_choice",
+          } as never,
+          {
             id: "q1",
             stem: "What does fragile mean?",
             options: ["Easy to break", "Very fast"],
@@ -1269,6 +1303,13 @@ describe("ContextLabPage", () => {
 
     expect(await screen.findByText("生成完成")).toBeInTheDocument();
     expect(screen.queryByText("等待回调")).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "开始练习" }));
+    expect(
+      screen.queryByText("This malformed question must be filtered."),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("radio", { name: "A. Easy to break" }),
+    ).toBeInTheDocument();
   });
 
   it("renders succeeded and failed history states", async () => {
@@ -1526,6 +1567,12 @@ describe("ContextLabPage", () => {
     expect(screen.getByRole("radio", { name: "True" })).toBeInTheDocument();
     expect(screen.queryByText("A. True")).not.toBeInTheDocument();
     expect(
+      screen.getByRole("radio", { name: "E. Tidal power" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("radio", { name: "F. Biomass" }),
+    ).toBeInTheDocument();
+    expect(
       screen.getByRole("textbox", { name: "第 3 题答案，最多 2 个词" }),
     ).toBeInTheDocument();
     expect(
@@ -1535,6 +1582,9 @@ describe("ContextLabPage", () => {
       screen.getAllByText("Write NO MORE THAN TWO WORDS."),
     ).toHaveLength(1);
     expect(screen.getByText("本套可练习 4/13 题")).toBeInTheDocument();
+    expect(
+      screen.queryByText("This malformed HTTP question must be filtered."),
+    ).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("radio", { name: "B. Solar panels" }));
     await user.click(screen.getByRole("radio", { name: "False" }));
@@ -2075,6 +2125,113 @@ describe("ContextLabPage", () => {
       await screen.findByText("暂无可展示的作答详情"),
     ).toBeInTheDocument();
     expect(screen.getByRole("dialog", { name: "练习记录" })).toBeInTheDocument();
+  });
+
+  it("merges V1 answers into legacy results and shows answer-only detail rows", async () => {
+    requestMock.mockImplementation((config) => {
+      if (config.url === "/context-lab/history") {
+        return Promise.resolve({
+          list: [
+            {
+              id: 12,
+              taskId: 12,
+              status: "succeeded",
+              sourceType: "custom",
+              words: ["vibe"],
+              articleExerciseId: 88,
+              article: "Topic\n\nParagraph.",
+              questions: [
+                {
+                  id: "q1",
+                  stem: "Which answer matches the paragraph?",
+                  options: ["It celebrates speed", "It describes mood"],
+                },
+                {
+                  id: "q2",
+                  stem: "Which tone is used?",
+                  options: ["Calm", "Urgent"],
+                },
+              ],
+              attemptCount: 1,
+              latestAttemptId: 501,
+              latestScore: 50,
+              latestWrongCount: 1,
+              latestAttemptTime: "2026-06-23T08:00:00Z",
+            },
+          ],
+          total: 1,
+          page: 1,
+          pageSize: 10,
+        });
+      }
+      if (config.url === "/context-lab/attempt-history") {
+        return Promise.resolve({
+          list: [
+            {
+              id: 501,
+              attemptId: 501,
+              taskId: 12,
+              articleExerciseId: 88,
+              score: 50,
+              correctCount: 0,
+              wrongCount: 1,
+              weakWords: [],
+              nextSuggestions: [],
+              answers: [],
+              results: [],
+              elapsedSeconds: 42,
+              createTime: "2026-06-23T08:00:00Z",
+            },
+          ],
+          total: 1,
+          page: 1,
+          pageSize: 10,
+        });
+      }
+      if (config.url === "/context-lab/attempt-detail") {
+        return Promise.resolve({
+          id: 501,
+          attemptId: 501,
+          taskId: 12,
+          articleExerciseId: 88,
+          score: 50,
+          correctCount: 0,
+          wrongCount: 1,
+          weakWords: [],
+          nextSuggestions: [],
+          answers: [
+            { questionId: "q1", selectedIndex: 1 },
+            { questionId: "q2", selectedIndex: 0 },
+          ],
+          results: [
+            {
+              questionId: "q1",
+              correct: false,
+              correctIndex: 0,
+              explanation: "Review paragraph B.",
+            },
+          ],
+          elapsedSeconds: 42,
+          createTime: "2026-06-23T08:00:00Z",
+        });
+      }
+      return Promise.resolve({});
+    });
+
+    const user = userEvent.setup();
+    render(<ContextLabPage />);
+
+    await user.click(
+      await screen.findByRole("button", { name: "任务 12 更多操作" }),
+    );
+    await user.click(await screen.findByText("查看记录"));
+    await user.click(await screen.findByRole("button", { name: "查看详情" }));
+
+    expect(
+      await screen.findByText("你的答案：B. It describes mood"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("你的答案：A. Calm")).toBeInTheDocument();
+    expect(screen.getByText("结果不可用")).toBeInTheDocument();
   });
 
   it("deletes a practice package after confirmation", async () => {

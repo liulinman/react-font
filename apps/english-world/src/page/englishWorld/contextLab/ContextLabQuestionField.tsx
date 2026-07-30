@@ -1,12 +1,11 @@
 import { Input, Radio } from "antd";
 import type { ReactNode } from "react";
 import type {
+  ContextLabAnswer,
   ContextLabAnswerValue,
   ContextLabAttemptResult,
   ContextLabQuestion,
 } from "../types/learning";
-
-const ANSWER_LETTERS = ["A", "B", "C", "D"];
 
 const STATUS_LABELS: Record<ContextLabAttemptResult["status"], string> = {
   correct: "正确",
@@ -23,19 +22,28 @@ const REASON_LABELS: Record<
 };
 
 function formatOption(option: string | undefined, index: number) {
-  const letter = ANSWER_LETTERS[index] ?? String(index);
+  if (!Number.isInteger(index) || index < 0) return "结果不可用";
+  const letter =
+    index < 26
+      ? String.fromCharCode("A".charCodeAt(0) + index)
+      : String(index + 1);
   return option ? `${letter}. ${option}` : letter;
 }
 
 function formatChoiceExplanation(explanation: string, correctIndex: number) {
-  const letter = ANSWER_LETTERS[correctIndex] ?? String(correctIndex);
+  if (correctIndex < 0) return explanation;
+  const getLetter = (index: number) =>
+    index < 26
+      ? String.fromCharCode("A".charCodeAt(0) + index)
+      : String(index + 1);
+  const letter = getLetter(correctIndex);
   const toAnswerLetter = (_match: string, prefix: string, optionIndex: string) =>
-    `${prefix} ${ANSWER_LETTERS[Number(optionIndex)] ?? optionIndex}`;
+    `${prefix} ${getLetter(Number(optionIndex))}`;
 
   return explanation
-    .replace(/正确答案为\s*[0-3]/g, `正确答案为 ${letter}`)
-    .replace(/正确答案是\s*[0-3]/g, `正确答案是 ${letter}`)
-    .replace(/(你选(?:了)?)[\s：:]*([0-3])\b/g, toAnswerLetter);
+    .replace(/正确答案为\s*\d+/g, `正确答案为 ${letter}`)
+    .replace(/正确答案是\s*\d+/g, `正确答案是 ${letter}`)
+    .replace(/(你选(?:了)?)[\s：:]*(\d+)\b/g, toAnswerLetter);
 }
 
 function getResultAnswerLabels(
@@ -102,6 +110,39 @@ export function ContextLabQuestionResult({
           <p>{labels.explanation}</p>
         </div>
       )}
+    </div>
+  );
+}
+
+function getAnswerOnlyLabel(
+  question: ContextLabQuestion | undefined,
+  answer: ContextLabAnswer,
+) {
+  switch (answer.responseType) {
+    case "single_choice": {
+      const options =
+        question?.responseType === "single_choice" ? question.options : [];
+      return formatOption(options[answer.selectedIndex], answer.selectedIndex);
+    }
+    case "true_false_not_given":
+      return answer.selectedValue;
+    case "text_completion":
+    case "short_answer":
+      return answer.text || "未作答";
+  }
+}
+
+export function ContextLabAnswerOnlyResult({
+  answer,
+  question,
+}: {
+  answer: ContextLabAnswer;
+  question?: ContextLabQuestion;
+}) {
+  return (
+    <div className="context-lab-field-result context-lab-field-result-unavailable">
+      <div className="context-lab-field-result-status">结果不可用</div>
+      <div>你的答案：{getAnswerOnlyLabel(question, answer)}</div>
     </div>
   );
 }

@@ -11,8 +11,10 @@ import type {
   ContextLabTask,
 } from "../types/learning";
 import {
+  normalizeContextLabAttemptResults,
   normalizeContextLabAttemptResult,
   normalizeContextLabQuestion,
+  normalizeContextLabQuestions,
 } from "./contextLabContract";
 
 function describeResult(result: ContextLabAttemptResult) {
@@ -126,5 +128,205 @@ describe("contextLabContract", () => {
       userSelectedIndex: -1,
       explanation: "Review paragraph B.",
     });
+  });
+
+  it("uses the matching legacy answer when a legacy result omits its user index", () => {
+    const normalizeWithAnswers = normalizeContextLabAttemptResults as unknown as (
+      results: unknown,
+      answers: unknown,
+    ) => ContextLabAttemptResult[];
+
+    expect(
+      normalizeWithAnswers(
+        [
+          {
+            questionId: "q1",
+            correct: false,
+            correctIndex: 0,
+            explanation: "Review paragraph B.",
+          },
+        ],
+        [{ questionId: "q1", selectedIndex: 1 }],
+      ),
+    ).toEqual([
+      {
+        questionId: "q1",
+        responseType: "single_choice",
+        correct: false,
+        status: "incorrect",
+        userAnswer: { selectedIndex: 1 },
+        correctAnswer: { correctIndex: 0 },
+        correctIndex: 0,
+        userSelectedIndex: 1,
+        explanation: "Review paragraph B.",
+      },
+    ]);
+  });
+
+  it("filters malformed discriminated questions before they enter page state", () => {
+    const questions: unknown = [
+      {
+        id: "broken-choice",
+        groupId: "choice",
+        stem: "Missing options.",
+        questionType: "detail",
+        responseType: "single_choice",
+      },
+      {
+        id: "valid-choice",
+        groupId: "choice",
+        stem: "Choose one.",
+        questionType: "detail",
+        responseType: "single_choice",
+        options: ["A", "B"],
+      },
+      {
+        id: "broken-tfng",
+        groupId: "tfng",
+        stem: "Wrong semantic options.",
+        questionType: "true_false_not_given",
+        responseType: "true_false_not_given",
+        options: ["True", "Maybe", "Not Given"],
+      },
+      {
+        id: "broken-text",
+        groupId: "text",
+        stem: "Missing word limit.",
+        questionType: "summary_completion",
+        responseType: "text_completion",
+      },
+      {
+        id: "valid-text",
+        groupId: "text",
+        stem: "Complete it.",
+        questionType: "summary_completion",
+        responseType: "text_completion",
+        wordLimit: 2,
+      },
+    ];
+
+    expect(
+      normalizeContextLabQuestions(
+        questions as Parameters<typeof normalizeContextLabQuestions>[0],
+      ),
+    ).toEqual([
+      {
+        id: "valid-choice",
+        groupId: "choice",
+        stem: "Choose one.",
+        questionType: "detail",
+        responseType: "single_choice",
+        options: ["A", "B"],
+      },
+      {
+        id: "valid-text",
+        groupId: "text",
+        stem: "Complete it.",
+        questionType: "summary_completion",
+        responseType: "text_completion",
+        wordLimit: 2,
+        options: [],
+      },
+    ]);
+  });
+
+  it("filters malformed discriminated results without dereferencing missing answers", () => {
+    const results: unknown = [
+      {
+        questionId: "broken-choice",
+        responseType: "single_choice",
+        correct: false,
+        status: "incorrect",
+        userAnswer: { selectedIndex: 0 },
+        explanation: "Missing correctAnswer.",
+      },
+      {
+        questionId: "broken-tfng",
+        responseType: "true_false_not_given",
+        correct: false,
+        status: "incorrect",
+        userAnswer: { selectedValue: "Maybe" },
+        correctAnswer: { correctValue: "True" },
+        explanation: "Invalid user value.",
+      },
+      {
+        questionId: "broken-status",
+        responseType: "text_completion",
+        correct: false,
+        status: "maybe",
+        userAnswer: { text: "solar panels" },
+        correctAnswer: { acceptedAnswers: ["solar power"] },
+        explanation: "Invalid status.",
+      },
+      {
+        questionId: "broken-explanation",
+        responseType: "short_answer",
+        correct: false,
+        status: "incorrect",
+        userAnswer: { text: "solar panels" },
+        correctAnswer: { acceptedAnswers: ["solar power"] },
+      },
+      {
+        questionId: "valid-text",
+        responseType: "text_completion",
+        correct: true,
+        status: "correct",
+        userAnswer: { text: "solar panels" },
+        correctAnswer: { acceptedAnswers: ["solar panels"] },
+        explanation: "Found in paragraph A.",
+      },
+    ];
+
+    expect(() =>
+      normalizeContextLabAttemptResults(
+        results as Parameters<typeof normalizeContextLabAttemptResults>[0],
+      ),
+    ).not.toThrow();
+    expect(
+      normalizeContextLabAttemptResults(
+        results as Parameters<typeof normalizeContextLabAttemptResults>[0],
+      ),
+    ).toEqual([
+      {
+        questionId: "valid-text",
+        responseType: "text_completion",
+        correct: true,
+        status: "correct",
+        userAnswer: { text: "solar panels" },
+        correctAnswer: { acceptedAnswers: ["solar panels"] },
+        correctIndex: -1,
+        userSelectedIndex: -1,
+        explanation: "Found in paragraph A.",
+      },
+    ]);
+  });
+
+  it("rejects typed choice result indexes outside the parsed question options", () => {
+    expect(
+      normalizeContextLabAttemptResults(
+        [
+          {
+            questionId: "q1",
+            responseType: "single_choice",
+            correct: false,
+            status: "incorrect",
+            userAnswer: { selectedIndex: 1 },
+            correctAnswer: { correctIndex: 2 },
+            explanation: "Out of range.",
+          },
+        ],
+        [],
+        [
+          {
+            id: "q1",
+            groupId: "choice",
+            stem: "Choose one.",
+            questionType: "detail",
+            responseType: "single_choice",
+            options: ["A", "B"],
+          },
+        ],
+      ),
+    ).toEqual([]);
   });
 });

@@ -32,6 +32,7 @@ export const CONTEXT_LAB_SUPPORTED_QUESTION_TYPES: ContextLabQuestionType[] = [
   "true_false_not_given",
   "matching_headings",
   "summary_completion",
+  "short_answer",
   "writer_view",
   "matching_information",
 ];
