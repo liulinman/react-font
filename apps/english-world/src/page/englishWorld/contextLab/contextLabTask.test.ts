@@ -7,6 +7,7 @@ import {
 } from "../server/learning";
 import {
   getContextLabErrorMessage,
+  getContextLabGenerationWarningMessages,
   getContextLabStatusLabel,
   getContextLabStatusTone,
   isContextLabTaskActive,
@@ -38,6 +39,14 @@ describe("contextLabTask", () => {
     expect(message).toBe("生成内容未通过格式校验，请重新生成，系统会自动纠偏重试。");
     expect(message).not.toContain("MICRO_OUTPUT_INVALID");
     expect(getContextLabErrorMessage("AI 服务不可用")).toBe("AI 服务不可用");
+  });
+
+  it("shows a safe partial-result message when one generated question type fails", () => {
+    expect(
+      getContextLabGenerationWarningMessages([
+        "QUESTION_TYPE_GENERATION_FAILED",
+      ]),
+    ).toEqual(["部分题目未通过安全校验，已从练习中移除。"]);
   });
 
   it("builds context lab async API request contracts", () => {
