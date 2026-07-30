@@ -72,6 +72,10 @@ import {
   subscribeContextLabTaskEvents,
 } from "../server/learning";
 import type {
+  ContextLabAnswer,
+  ContextLabAnswerState,
+  ContextLabAttemptResult,
+  ContextLabAttemptResultInput,
   ContextLabGenerateParams,
   ContextLabModelProvider,
   ContextLabPastedQuestionMode,
@@ -80,7 +84,6 @@ import type {
   ContextLabAttempt,
   ContextLabTask,
 } from "../types/learning";
-import type { ExerciseResultItem } from "@/server/exerciseAgent/exerciseAgent";
 import {
   DEFAULT_PASTED_QUESTION_COUNT,
   DEFAULT_CONTEXT_LAB_MODEL_PROVIDER,
@@ -124,10 +127,23 @@ import {
   toBulkImportWordPayload,
 } from "../bulkImport/bulkImportPreview";
 import { stripGeneratedMarkdownEmphasis } from "./articleText";
+import { formatContextLabQuestionTypeLabel } from "./contextLabQuestionType";
 import {
-  CONTEXT_LAB_PASTED_QUESTION_TYPE_OPTIONS,
-  formatContextLabQuestionTypeLabel,
-} from "./contextLabQuestionType";
+  buildSubmitAnswers,
+  clearContextLabDraft,
+  countAnsweredQuestions,
+  loadContextLabDraft,
+  saveContextLabDraft,
+} from "./contextLabAnswers";
+import {
+  normalizeContextLabAttemptResults,
+  normalizeContextLabQuestions,
+} from "./contextLabContract";
+import {
+  ContextLabQuestionField,
+  ContextLabQuestionResult,
+} from "./ContextLabQuestionField";
+import { detectUnsupportedPastedQuestions } from "./pastedQuestionCompatibility";
 
 const { Text, Title } = Typography;
 const { TextArea } = Input;
@@ -139,7 +155,6 @@ const CONTEXT_LAB_LIGHT_THEME = {
     borderRadius: 8,
   },
 } satisfies ThemeConfig;
-const ANSWER_LETTERS = ["A", "B", "C", "D"];
 const PROFICIENCY_OPTIONS = [
   { label: "不会", value: 0 },
   { label: "一般", value: 1 },
@@ -148,6 +163,31 @@ const PROFICIENCY_OPTIONS = [
 ];
 const ACTIVE_TASK_DELETE_MESSAGE =
   "生成中的练习包暂不支持删除，请等待任务完成或失败后再操作";
+const CONTEXT_LAB_RESPONSE_TYPES = new Set([
+  "single_choice",
+  "true_false_not_given",
+  "text_completion",
+  "short_answer",
+]);
+const CONTEXT_LAB_TFNG_VALUES = new Set([
+  "True",
+  "False",
+  "Yes",
+  "No",
+  "Not Given",
+]);
+const SUPPORTED_PASTED_QUESTION_TYPE_OPTIONS: Array<{
+  label: string;
+  value: ContextLabQuestionType;
+}> = [
+  { label: "定位细节", value: "detail" },
+  { label: "True / False / Not Given", value: "true_false_not_given" },
+  { label: "Summary completion", value: "summary_completion" },
+  {
+    label: "Short answer",
+    value: "short_answer" as ContextLabQuestionType,
+  },
+];
 
 function createRequestUid() {
   return (
@@ -155,26 +195,6 @@ function createRequestUid() {
     `request-${Date.now()}-${Math.random().toString(16).slice(2)}`
   );
 }
-
-function getAnswerLetter(index: number) {
-  return ANSWER_LETTERS[index] ?? String(index);
-}
-
-function formatOptionLabel(option: string, optionIndex: number) {
-  return `${getAnswerLetter(optionIndex)}. ${option}`;
-}
-
-function normalizeOptionIndex(value: unknown) {
-  if (value === null || value === undefined || value === "") return undefined;
-
-  const index = Number(value);
-  return Number.isInteger(index) && index >= 0 ? index : undefined;
-}
-
-type ContextLabAnswerItem = {
-  questionId: string;
-  selectedIndex?: unknown;
-};
 
 type ContextLabHistorySourceFilter = "all" | ContextLabTask["sourceType"];
 type MarkedVocabularyItem = Omit<WordList, "id"> & {
@@ -185,27 +205,91 @@ function isPlainRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function isContextLabAnswerItem(value: unknown): value is ContextLabAnswerItem {
-  return isPlainRecord(value) && typeof value.questionId === "string";
-}
-
-function isContextLabResultItem(value: unknown): value is ExerciseResultItem {
+function isContextLabAttemptResultInput(
+  value: unknown,
+): value is ContextLabAttemptResultInput {
+  if (
+    !isPlainRecord(value) ||
+    typeof value.questionId !== "string" ||
+    typeof value.correct !== "boolean"
+  ) {
+    return false;
+  }
   return (
-    isPlainRecord(value) &&
-    typeof value.questionId === "string" &&
-    typeof value.correct === "boolean"
+    value.responseType === undefined ||
+    (typeof value.responseType === "string" &&
+      CONTEXT_LAB_RESPONSE_TYPES.has(value.responseType))
   );
 }
 
-function formatExplanationText(explanation: string, correctIndex: number) {
-  const letter = getAnswerLetter(correctIndex);
-  const toAnswerLetter = (_match: string, prefix: string, optionIndex: string) =>
-    `${prefix} ${getAnswerLetter(Number(optionIndex))}`;
+function isContextLabAnswer(value: unknown): value is ContextLabAnswer {
+  if (
+    !isPlainRecord(value) ||
+    typeof value.questionId !== "string" ||
+    typeof value.responseType !== "string"
+  ) {
+    return false;
+  }
 
-  return explanation
-    .replace(/正确答案为\s*[0-3]/g, `正确答案为 ${letter}`)
-    .replace(/正确答案是\s*[0-3]/g, `正确答案是 ${letter}`)
-    .replace(/(你选(?:了)?)[\s：:]*([0-3])\b/g, toAnswerLetter);
+  switch (value.responseType) {
+    case "single_choice":
+      return (
+        Number.isInteger(value.selectedIndex) &&
+        Number(value.selectedIndex) >= 0
+      );
+    case "true_false_not_given":
+      return (
+        typeof value.selectedValue === "string" &&
+        CONTEXT_LAB_TFNG_VALUES.has(value.selectedValue)
+      );
+    case "text_completion":
+    case "short_answer":
+      return typeof value.text === "string";
+    default:
+      return false;
+  }
+}
+
+function normalizeContextLabAttempt(
+  attempt: ContextLabAttempt,
+): ContextLabAttempt {
+  const resultInputs = Array.isArray(attempt.results)
+    ? attempt.results.filter(isContextLabAttemptResultInput)
+    : [];
+  const answers = Array.isArray(attempt.answers)
+    ? attempt.answers.filter(isContextLabAnswer)
+    : [];
+
+  return {
+    ...attempt,
+    answers,
+    results: normalizeContextLabAttemptResults(resultInputs),
+  };
+}
+
+function normalizeContextLabTask(task: ContextLabTask): ContextLabTask {
+  return {
+    ...task,
+    questions: Array.isArray(task.questions)
+      ? normalizeContextLabQuestions(task.questions)
+      : undefined,
+    latestAttempt: task.latestAttempt
+      ? normalizeContextLabAttempt(task.latestAttempt)
+      : undefined,
+  };
+}
+
+function normalizeContextLabSubmitResult(
+  result: ContextLabSubmitResult,
+): ContextLabSubmitResult {
+  const resultInputs = Array.isArray(result.results)
+    ? result.results.filter(isContextLabAttemptResultInput)
+    : [];
+
+  return {
+    ...result,
+    results: normalizeContextLabAttemptResults(resultInputs),
+  };
 }
 
 function cleanSelectedVocabularyText(text: string) {
@@ -405,8 +489,9 @@ function ContextLabPageContent({
   const [historySourceType, setHistorySourceType] =
     useState<ContextLabHistorySourceFilter>("all");
   const [currentTask, setCurrentTask] = useState<ContextLabTask | null>(null);
-  const [answers, setAnswers] = useState<Record<string, number>>({});
-  const [results, setResults] = useState<ExerciseResultItem[]>([]);
+  const [answers, setAnswers] = useState<ContextLabAnswerState>({});
+  const [answerSessionId, setAnswerSessionId] = useState<number | null>(null);
+  const [results, setResults] = useState<ContextLabAttemptResult[]>([]);
   const [submitSummary, setSubmitSummary] =
     useState<ContextLabSubmitResult | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -548,12 +633,14 @@ function ContextLabPageContent({
     setSubmitSummary(null);
     setElapsedSeconds(0);
     try {
-      const task = await request(
-        contextLabCreateTask(
-          buildMicroGenerateParams(
-            microEntry.reciteSessionId,
-            microEntry.words,
-            microRequestUidRef.current,
+      const task = normalizeContextLabTask(
+        await request(
+          contextLabCreateTask(
+            buildMicroGenerateParams(
+              microEntry.reciteSessionId,
+              microEntry.words,
+              microRequestUidRef.current,
+            ),
           ),
         ),
       );
@@ -578,8 +665,10 @@ function ContextLabPageContent({
   const refreshCurrentMicroTask = async () => {
     if (!microEntry || !currentTask) return;
     try {
-      const task = await request<ContextLabTask>(
-        contextLabDetail({ taskId: currentTask.taskId }),
+      const task = normalizeContextLabTask(
+        await request<ContextLabTask>(
+          contextLabDetail({ taskId: currentTask.taskId }),
+        ),
       );
       if (task.reciteSessionId !== microEntry.reciteSessionId) return;
       setCurrentTask(task);
@@ -596,11 +685,12 @@ function ContextLabPageContent({
   const historySearchActive =
     Boolean(trimmedHistoryKeyword) || historySourceType !== "all";
 
-  const answeredCount =
-    currentTask?.questions?.filter((question, index) => {
-      const key = question.id || `q-${index}`;
-      return answers[key] != null;
-    }).length ?? 0;
+  const currentSessionId = currentTask
+    ? (currentTask.articleExerciseId ?? currentTask.taskId)
+    : null;
+  const answeredCount = currentTask?.questions
+    ? countAnsweredQuestions(currentTask.questions, answers)
+    : 0;
 
   const loadHistory = async () => {
     setHistoryLoading(true);
@@ -615,12 +705,12 @@ function ContextLabPageContent({
             : {}),
         }),
       );
-      const nextHistory = response.list ?? [];
+      const nextHistory = (response.list ?? []).map(normalizeContextLabTask);
       setHistory(nextHistory);
       setCurrentTask((prev) => {
         if (!prev) return prev;
         return (
-          response.list?.find((task) => task.taskId === prev.taskId) ?? prev
+          nextHistory.find((task) => task.taskId === prev.taskId) ?? prev
         );
       });
     } catch (error: unknown) {
@@ -640,7 +730,9 @@ function ContextLabPageContent({
       const response = await request(
         contextLabAttemptHistory({ taskId: task.taskId, page: 1, pageSize: 20 }),
       );
-      const nextAttempts = response.list ?? [];
+      const nextAttempts = (response.list ?? []).map(
+        normalizeContextLabAttempt,
+      );
       setAttempts(nextAttempts);
       setSelectedAttemptId((prev) =>
         nextAttempts.some((attempt) => attempt.attemptId === prev) ? prev : null,
@@ -666,8 +758,10 @@ function ContextLabPageContent({
     setSelectedAttemptId(attempt.attemptId);
     setAttemptDetailLoadingId(attempt.attemptId);
     try {
-      const detail = await request(
-        contextLabAttemptDetail({ attemptId: attempt.attemptId }),
+      const detail = normalizeContextLabAttempt(
+        await request(
+          contextLabAttemptDetail({ attemptId: attempt.attemptId }),
+        ),
       );
       setAttemptDetails((prev) => ({
         ...prev,
@@ -692,25 +786,34 @@ function ContextLabPageContent({
 
   useEffect(() => {
     return subscribeContextLabTaskEvents((task) => {
+      const normalizedTask = normalizeContextLabTask(task);
       setHistory((prev) => {
-        const exists = prev.some((item) => item.taskId === task.taskId);
+        const exists = prev.some(
+          (item) => item.taskId === normalizedTask.taskId,
+        );
         if (!exists) {
-          return historySearchActive ? prev : [task, ...prev].slice(0, 10);
+          return historySearchActive
+            ? prev
+            : [normalizedTask, ...prev].slice(0, 10);
         }
         return prev.map((item) =>
-          item.taskId === task.taskId ? { ...item, ...task } : item,
+          item.taskId === normalizedTask.taskId
+            ? normalizeContextLabTask({ ...item, ...normalizedTask })
+            : item,
         );
       });
       setCurrentTask((prev) =>
-        prev?.taskId === task.taskId ? { ...prev, ...task } : prev,
+        prev?.taskId === normalizedTask.taskId
+          ? normalizeContextLabTask({ ...prev, ...normalizedTask })
+          : prev,
       );
       if (
         microEntry &&
-        task.taskId === activeMicroTaskIdRef.current &&
-        task.reciteSessionId === microEntry.reciteSessionId &&
-        task.status === "succeeded"
+        normalizedTask.taskId === activeMicroTaskIdRef.current &&
+        normalizedTask.reciteSessionId === microEntry.reciteSessionId &&
+        normalizedTask.status === "succeeded"
       ) {
-        void recordMicroGenerated(task);
+        void recordMicroGenerated(normalizedTask);
         setPracticeModalOpen(true);
       }
     });
@@ -725,7 +828,8 @@ function ContextLabPageContent({
         config: { suppressErrorMessage: true },
       },
     )
-      .then((task) => {
+      .then((taskInput) => {
+        const task = normalizeContextLabTask(taskInput);
         if (
           cancelled ||
           task.mode !== "micro" ||
@@ -738,7 +842,7 @@ function ContextLabPageContent({
         setCurrentTask(task);
         if (task.latestAttempt) {
           completedMicroTaskIdsRef.current.add(task.taskId);
-          setResults(task.latestAttempt.results ?? []);
+          setResults(task.latestAttempt.results);
           setSubmitSummary(task.latestAttempt as ContextLabSubmitResult);
         }
         if (task.status === "succeeded") {
@@ -765,11 +869,11 @@ function ContextLabPageContent({
     let cancelled = false;
     const refresh = async () => {
       try {
-        const task = await request<ContextLabTask>(
-          {
+        const task = normalizeContextLabTask(
+          await request<ContextLabTask>({
             ...contextLabDetail({ taskId: currentTask.taskId }),
             config: { suppressErrorMessage: true },
-          },
+          }),
         );
         if (
           cancelled ||
@@ -838,11 +942,11 @@ function ContextLabPageContent({
         const task =
           existingTask?.status === "succeeded" && existingTask.article
             ? existingTask
-            : await request<ContextLabTask>(
-                {
+            : normalizeContextLabTask(
+                await request<ContextLabTask>({
                   ...contextLabDetail({ taskId: reference.taskId }),
                   config: { suppressErrorMessage: true },
-                },
+                }),
               );
         if (cancelled) return;
         setCurrentTask(task);
@@ -872,6 +976,27 @@ function ContextLabPageContent({
   }, [currentTask?.taskId]);
 
   useEffect(() => {
+    const timer = window.setTimeout(() => {
+      if (currentSessionId === null) {
+        setAnswers({});
+        setAnswerSessionId(null);
+        return;
+      }
+
+      setAnswers(loadContextLabDraft(currentSessionId));
+      setAnswerSessionId(currentSessionId);
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [currentSessionId]);
+
+  useEffect(() => {
+    if (currentSessionId === null || answerSessionId !== currentSessionId) {
+      return;
+    }
+    saveContextLabDraft(currentSessionId, answers);
+  }, [answerSessionId, answers, currentSessionId]);
+
+  useEffect(() => {
     if (
       !practiceModalOpen ||
       currentTask?.status !== "succeeded" ||
@@ -899,6 +1024,35 @@ function ContextLabPageContent({
       return;
     }
 
+    if (
+      sourceMode === "pasted-article" &&
+      pastedQuestionMode !== "generate"
+    ) {
+      const unsupportedQuestions =
+        detectUnsupportedPastedQuestions(pastedContent);
+      if (unsupportedQuestions.length > 0) {
+        Modal.warning({
+          title: "包含暂不支持的 Matching 题型",
+          content: (
+            <ul className="context-lab-unsupported-question-list">
+              {unsupportedQuestions.map((item, index) => (
+                <li key={`${item.questionType}-${item.questionNumber ?? index}`}>
+                  {item.questionNumber
+                    ? `第 ${item.questionNumber} 题：`
+                    : "未识别题号："}
+                  {item.reason}
+                </li>
+              ))}
+            </ul>
+          ),
+          okText: "知道了",
+          transitionName: "",
+          maskTransitionName: "",
+        });
+        return;
+      }
+    }
+
     setCreating(true);
     setCurrentTask(null);
     setAnswers({});
@@ -906,7 +1060,9 @@ function ContextLabPageContent({
     setSubmitSummary(null);
     setElapsedSeconds(0);
     try {
-      const task = await request(contextLabCreateTask(requestBody));
+      const task = normalizeContextLabTask(
+        await request(contextLabCreateTask(requestBody)),
+      );
       setHistory((prev) => [
         task,
         ...prev.filter((item) => item.taskId !== task.taskId),
@@ -946,8 +1102,10 @@ function ContextLabPageContent({
   };
 
   const handleOpenTask = (task: ContextLabTask) => {
+    const sessionId = task.articleExerciseId ?? task.taskId;
+    setAnswers(loadContextLabDraft(sessionId));
+    setAnswerSessionId(sessionId);
     setCurrentTask(task);
-    setAnswers({});
     setResults([]);
     setSubmitSummary(null);
     setElapsedSeconds(0);
@@ -960,7 +1118,9 @@ function ContextLabPageContent({
 
   const handleStartPracticeFromSource = () => {
     if (!currentTask) return;
-    setAnswers({});
+    const sessionId = currentTask.articleExerciseId ?? currentTask.taskId;
+    setAnswers(loadContextLabDraft(sessionId));
+    setAnswerSessionId(sessionId);
     setResults([]);
     setSubmitSummary(null);
     setElapsedSeconds(0);
@@ -1020,6 +1180,7 @@ function ContextLabPageContent({
         void (async () => {
           try {
             await request(contextLabDeleteTask({ taskId: task.taskId }));
+            clearContextLabDraft(task.articleExerciseId ?? task.taskId);
             message.success("练习包已删除");
             if (currentTask?.taskId === task.taskId) {
               setCurrentTask(null);
@@ -1043,56 +1204,46 @@ function ContextLabPageContent({
     });
   };
 
-  const handleSubmit = async () => {
-    if (!currentTask?.questions?.length) return;
-    if (submitInFlightRef.current) return;
-    const sessionId = currentTask.articleExerciseId ?? currentTask.taskId;
-    const questionKeys = currentTask.questions.map((question, index) =>
-      question.id || `q-${index}`,
-    );
-    const unanswered = questionKeys.filter((key) => answers[key] == null);
-    if (unanswered.length > 0) {
-      message.warning(`还有 ${unanswered.length} 题未作答`);
+  const submitCurrentAnswers = async () => {
+    if (!currentTask?.questions?.length || currentSessionId === null) {
       return;
     }
+    if (submitInFlightRef.current) return;
 
     submitInFlightRef.current = true;
     setSubmitting(true);
     try {
-      const response = await request(
-        contextLabSubmit({
-          sessionId,
-          elapsedSeconds,
-          answers: currentTask.questions.map((question, index) => {
-            const key = question.id || `q-${index}`;
-            return {
-              questionId: key,
-              selectedIndex: answers[key],
-            };
+      const response = normalizeContextLabSubmitResult(
+        await request(
+          contextLabSubmit({
+            sessionId: currentSessionId,
+            elapsedSeconds,
+            answers: buildSubmitAnswers(currentTask.questions, answers),
           }),
-        }),
+        ),
       );
-      setResults(response.results ?? []);
+      setResults(response.results);
       setSubmitSummary(response);
+      clearContextLabDraft(currentSessionId);
       if (microEntry) {
         if (
           response.attemptId &&
           !completedMicroTaskIdsRef.current.has(currentTask.taskId)
         ) {
           const saved = await recordLearningEvent({
-          eventUid: buildLearningEventUid(
-            "micro_context_completed",
-            currentTask.taskId,
-          ),
-          eventType: "micro_context_completed",
-          reciteSessionId: microEntry.reciteSessionId,
-          contextTaskId: currentTask.taskId,
-          attemptId: response.attemptId,
-          wordCount: microEntry.words.length,
-          correctCount: response.correctCount,
-          elapsedSeconds,
-          timezoneOffsetMinutes: -new Date().getTimezoneOffset(),
-          status: "completed",
+            eventUid: buildLearningEventUid(
+              "micro_context_completed",
+              currentTask.taskId,
+            ),
+            eventType: "micro_context_completed",
+            reciteSessionId: microEntry.reciteSessionId,
+            contextTaskId: currentTask.taskId,
+            attemptId: response.attemptId,
+            wordCount: microEntry.words.length,
+            correctCount: response.correctCount,
+            elapsedSeconds,
+            timezoneOffsetMinutes: -new Date().getTimezoneOffset(),
+            status: "completed",
           });
           if (saved) completedMicroTaskIdsRef.current.add(currentTask.taskId);
         }
@@ -1106,6 +1257,25 @@ function ContextLabPageContent({
       submitInFlightRef.current = false;
       setSubmitting(false);
     }
+  };
+
+  const handleSubmit = () => {
+    if (!currentTask?.questions?.length || submitInFlightRef.current) return;
+    const unansweredCount = currentTask.questions.length - answeredCount;
+    if (unansweredCount === 0) {
+      void submitCurrentAnswers();
+      return;
+    }
+
+    Modal.confirm({
+      title: `还有 ${unansweredCount} 题未作答`,
+      content: "继续提交后只会提交已答题，未答题将由系统标记为未作答。",
+      okText: "继续提交",
+      cancelText: "返回作答",
+      transitionName: "",
+      maskTransitionName: "",
+      onOk: submitCurrentAnswers,
+    });
   };
 
   const handleReadingContextMenu = (event: MouseEvent<HTMLElement>) => {
@@ -1788,12 +1958,40 @@ function ContextLabPageContent({
               </div>
             </div>
 
+            {currentTask.generationWarnings &&
+              currentTask.generationWarnings.length > 0 && (
+                <div
+                  className="context-lab-generation-warning"
+                  role="status"
+                >
+                  {currentTask.targetQuestionCount != null && (
+                    <strong>
+                      本套可练习 {currentTask.questions.length}/
+                      {currentTask.targetQuestionCount} 题
+                    </strong>
+                  )}
+                  <ul>
+                    {currentTask.generationWarnings.map((warning) => (
+                      <li key={warning}>{warning}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
             <div className="context-lab-question-list">
               {currentTask.questions.map((question, index) => {
                 const questionKey = question.id || `q-${index}`;
                 const result = results.find(
                   (item) => item.questionId === questionKey,
                 );
+                const group = currentTask.groups?.find(
+                  (item) => item.groupId === question.groupId,
+                );
+                const firstQuestionInGroup =
+                  group != null &&
+                  currentTask.questions?.findIndex(
+                    (item) => item.groupId === question.groupId,
+                  ) === index;
                 const questionTypeLabel = formatContextLabQuestionTypeLabel(
                   question.questionType,
                 );
@@ -1802,6 +2000,12 @@ function ContextLabPageContent({
                     className="context-lab-question-card"
                     key={questionKey}
                   >
+                    {firstQuestionInGroup && (
+                      <div className="context-lab-question-group-heading">
+                        {group.title && <strong>{group.title}</strong>}
+                        <p>{group.instruction}</p>
+                      </div>
+                    )}
                     <div className="context-lab-question-meta">
                       <div className="context-lab-question-index">
                         第 {index + 1} 题
@@ -1818,34 +2022,18 @@ function ContextLabPageContent({
                       </Tag>
                     )}
                     <p>{question.stem}</p>
-                    {result && (
-                      <Tag color={result.correct ? "green" : "red"}>
-                        {result.correct ? "正确" : "需要复盘"}
-                      </Tag>
-                    )}
-                    {result?.explanation && (
-                      <div className="context-lab-question-explanation">
-                        <Text className="learning-cockpit-label">解析</Text>
-                        <p>
-                          {formatExplanationText(
-                            result.explanation,
-                            result.correctIndex,
-                          )}
-                        </p>
-                      </div>
-                    )}
-                    <Radio.Group
+                    <ContextLabQuestionField
+                      disabled={submitting || Boolean(result)}
+                      number={index + 1}
+                      question={question}
+                      result={result}
                       value={answers[questionKey]}
-                      onChange={(event) =>
+                      onChange={(value) =>
                         setAnswers((prev) => ({
                           ...prev,
-                          [questionKey]: event.target.value,
+                          [questionKey]: value,
                         }))
                       }
-                      options={question.options.map((option, optionIndex) => ({
-                        label: formatOptionLabel(option, optionIndex),
-                        value: optionIndex,
-                      }))}
                     />
                   </section>
                 );
@@ -2200,7 +2388,7 @@ function ContextLabPageContent({
                     <Text>题型</Text>
                     <Checkbox.Group
                       className="context-lab-pasted-question-types"
-                      options={CONTEXT_LAB_PASTED_QUESTION_TYPE_OPTIONS}
+                      options={SUPPORTED_PASTED_QUESTION_TYPE_OPTIONS}
                       value={pastedQuestionTypes}
                       onChange={(value) =>
                         setPastedQuestionTypes(value as ContextLabQuestionType[])
@@ -2555,14 +2743,6 @@ function ContextLabPageContent({
                       (() => {
                         const detail = attemptDetails[attempt.attemptId];
                         if (!detail) return null;
-                        const resultItems =
-                          detail.results.filter(isContextLabResultItem);
-                        const answerItems =
-                          detail.answers.filter(isContextLabAnswerItem);
-                        const detailItems =
-                          resultItems.length > answerItems.length
-                            ? resultItems
-                            : answerItems;
 
                         return (
                           <>
@@ -2579,46 +2759,17 @@ function ContextLabPageContent({
                               </div>
                             )}
                             <div className="context-lab-attempt-question-list">
-                              {detailItems.length === 0 ? (
+                              {detail.results.length === 0 ? (
                                 <Empty
                                   image={Empty.PRESENTED_IMAGE_SIMPLE}
                                   description="暂无可展示的作答详情"
                                 />
-                              ) : detailItems.map((item, index) => {
-                                const isResultItem =
-                                  isContextLabResultItem(item);
-                                const result = isResultItem
-                                  ? item
-                                  : resultItems.find(
-                                      (resultItem) =>
-                                        resultItem.questionId === item.questionId,
-                                    ) || resultItems[index];
-                                const answer = isResultItem
-                                  ? answerItems.find(
-                                      (answerItem) =>
-                                        answerItem.questionId === item.questionId,
-                                    ) || answerItems[index]
-                                  : item;
-                                const questionId =
-                                  answer?.questionId || result?.questionId || "";
-                                const selectedIndex =
-                                  normalizeOptionIndex(answer?.selectedIndex) ??
-                                  normalizeOptionIndex(result?.userSelectedIndex);
-                                const correctIndex = normalizeOptionIndex(
-                                  result?.correctIndex,
-                                );
+                              ) : detail.results.map((result, index) => {
+                                const questionId = result.questionId;
                                 const question = getContextLabQuestionLabel(
                                   attemptTask,
                                   questionId,
                                 );
-                                const selectedLabel =
-                                  selectedIndex !== undefined
-                                    ? question?.options?.[selectedIndex]
-                                    : undefined;
-                                const correctLabel =
-                                  correctIndex !== undefined
-                                    ? question?.options?.[correctIndex]
-                                    : undefined;
 
                                 return (
                                   <section
@@ -2628,52 +2779,10 @@ function ContextLabPageContent({
                                     <Text strong>
                                       {question?.stem || `第 ${index + 1} 题`}
                                     </Text>
-                                    <div>
-                                      <Text>
-                                        你的作答{" "}
-                                        {selectedIndex !== undefined && selectedLabel
-                                          ? formatOptionLabel(
-                                              selectedLabel,
-                                              selectedIndex,
-                                            )
-                                          : selectedIndex !== undefined
-                                            ? getAnswerLetter(selectedIndex)
-                                            : "未作答"}
-                                      </Text>
-                                    </div>
-                                    {result && (
-                                      <>
-                                        <Tag color={result.correct ? "green" : "red"}>
-                                          {result.correct ? "回答正确" : "回答错误"}
-                                        </Tag>
-                                        {correctIndex !== undefined && correctLabel && (
-                                          <div>
-                                            <Text>
-                                              正确答案{" "}
-                                              {formatOptionLabel(
-                                                correctLabel,
-                                                correctIndex,
-                                              )}
-                                            </Text>
-                                          </div>
-                                        )}
-                                        {result.explanation && (
-                                          <div className="context-lab-question-explanation">
-                                            <Text className="learning-cockpit-label">
-                                              解析
-                                            </Text>
-                                            <p>
-                                              {correctIndex !== undefined
-                                                ? formatExplanationText(
-                                                    result.explanation,
-                                                    correctIndex,
-                                                  )
-                                                : result.explanation}
-                                            </p>
-                                          </div>
-                                        )}
-                                      </>
-                                    )}
+                                    <ContextLabQuestionResult
+                                      question={question}
+                                      result={result}
+                                    />
                                   </section>
                                 );
                               })}

@@ -2,6 +2,7 @@ import "@testing-library/jest-dom/vitest";
 import {
   act,
   cleanup,
+  fireEvent,
   render,
   screen,
   waitFor,
@@ -51,6 +52,133 @@ function LocationProbe() {
   return <div data-testid="location">{`${location.pathname}${location.search}`}</div>;
 }
 
+const mixedTask = {
+  id: 66,
+  taskId: 66,
+  status: "succeeded" as const,
+  sourceType: "pasted-article" as const,
+  words: ["solar panels"],
+  articleExerciseId: 166,
+  article: "Solar Energy\n\nSolar panels can lower household emissions.",
+  targetQuestionCount: 13,
+  generationWarnings: ["Matching questions were omitted."],
+  groups: [
+    {
+      groupId: "choice",
+      title: "Questions 1",
+      instruction: "Choose the correct letter.",
+      questionIds: ["q1"],
+      startNumber: 1,
+      endNumber: 1,
+    },
+    {
+      groupId: "tfng",
+      title: "Questions 2",
+      instruction: "Choose True, False or Not Given.",
+      questionIds: ["q2"],
+      startNumber: 2,
+      endNumber: 2,
+    },
+    {
+      groupId: "completion",
+      title: "Questions 3-4",
+      instruction: "Write NO MORE THAN TWO WORDS.",
+      questionIds: ["q3", "q4"],
+      startNumber: 3,
+      endNumber: 4,
+      wordLimit: 2 as const,
+    },
+  ],
+  questions: [
+    {
+      id: "q1",
+      groupId: "choice",
+      stem: "Which technology is discussed?",
+      questionType: "detail",
+      responseType: "single_choice" as const,
+      options: ["Wind turbines", "Solar panels"],
+    },
+    {
+      id: "q2",
+      groupId: "tfng",
+      stem: "The panels increase household emissions.",
+      questionType: "true_false_not_given",
+      responseType: "true_false_not_given" as const,
+      options: ["True", "False", "Not Given"] as [
+        "True",
+        "False",
+        "Not Given",
+      ],
+    },
+    {
+      id: "q3",
+      groupId: "completion",
+      stem: "The article discusses ____.",
+      questionType: "summary_completion",
+      responseType: "text_completion" as const,
+      wordLimit: 2 as const,
+    },
+    {
+      id: "q4",
+      groupId: "completion",
+      stem: "What can the technology lower?",
+      questionType: "short_answer",
+      responseType: "short_answer" as const,
+      wordLimit: 2 as const,
+    },
+  ],
+};
+
+function createMixedSubmitResult() {
+  return {
+    attemptId: 606,
+    score: 50,
+    correctCount: 1,
+    wrongCount: 2,
+    weakWords: ["solar panels"],
+    nextSuggestions: ["Review the article."],
+    results: [
+      {
+        questionId: "q1",
+        responseType: "single_choice" as const,
+        correct: true,
+        status: "correct" as const,
+        userAnswer: { selectedIndex: 1 },
+        correctAnswer: { correctIndex: 1 },
+        explanation: "The article is about solar panels.",
+      },
+      {
+        questionId: "q2",
+        responseType: "true_false_not_given" as const,
+        correct: false,
+        status: "incorrect" as const,
+        userAnswer: { selectedValue: "False" as const },
+        correctAnswer: { correctValue: "True" as const },
+        explanation: "The passage says emissions are lower.",
+      },
+      {
+        questionId: "q3",
+        responseType: "text_completion" as const,
+        correct: false,
+        status: "incorrect" as const,
+        reasonCode: "word_limit_exceeded" as const,
+        userAnswer: { text: "solar panels" },
+        correctAnswer: { acceptedAnswers: ["solar power"] },
+        explanation: "Use the exact phrase from the passage.",
+      },
+      {
+        questionId: "q4",
+        responseType: "short_answer" as const,
+        correct: false,
+        status: "unanswered" as const,
+        userAnswer: null,
+        correctAnswer: { acceptedAnswers: ["household emissions"] },
+        explanation: "The answer appears in the first paragraph.",
+      },
+    ],
+  };
+}
+
 vi.mock("@font/api", () => ({
   default: (requestConfig: unknown) => requestMock(requestConfig),
   getApiBaseUrl: () => "/api",
@@ -72,6 +200,7 @@ vi.mock("../server/learning", async () => {
 
 describe("ContextLabPage", () => {
   beforeEach(() => {
+    localStorage.clear();
     taskEventHandler = undefined;
     subscribeTaskEventsMock.mockImplementation((handler) => {
       taskEventHandler = handler;
@@ -867,6 +996,52 @@ describe("ContextLabPage", () => {
     });
   });
 
+  it.each(["自动识别", "整理自带题"])(
+    "blocks unsupported matching questions before %s creation",
+    async (questionMode) => {
+      requestMock.mockImplementation((config) => {
+        if (config.url === "/context-lab/generate-task") {
+          return Promise.resolve({
+            id: 68,
+            taskId: 68,
+            status: "pending",
+            sourceType: "pasted-article",
+            words: [],
+          });
+        }
+        return Promise.resolve({
+          list: [],
+          total: 0,
+          page: 1,
+          pageSize: 10,
+        });
+      });
+      const user = userEvent.setup();
+
+      render(<ContextLabPage />);
+
+      await user.click(screen.getByText("粘贴材料"));
+      await user.type(
+        screen.getByLabelText("粘贴英文材料"),
+        "Questions 14-18\n14. Matching Headings\n16. Match each statement with the correct researcher.",
+      );
+      await user.click(screen.getByText(questionMode));
+      await user.click(screen.getByRole("button", { name: /生成练习包/ }));
+
+      expect(await screen.findByText(/第 14 题/)).toBeInTheDocument();
+      expect(screen.getAllByText(/Matching Headings/).length).toBeGreaterThan(0);
+      expect(screen.getByText(/第 16 题/)).toBeInTheDocument();
+      expect(screen.getAllByText(/Matching Features/).length).toBeGreaterThan(
+        0,
+      );
+      expect(
+        requestMock.mock.calls.some(
+          ([config]) => config.url === "/context-lab/generate-task",
+        ),
+      ).toBe(false);
+    },
+  );
+
   it("lets the learner choose the IELTS band for generated articles", async () => {
     requestMock.mockImplementation((config) => {
       if (config.url === "/context-lab/history") {
@@ -1304,7 +1479,13 @@ describe("ContextLabPage", () => {
           data: expect.objectContaining({
             sessionId: 88,
             elapsedSeconds: expect.any(Number),
-            answers: [{ questionId: "q1", selectedIndex: 0 }],
+            answers: [
+              {
+                questionId: "q1",
+                responseType: "single_choice",
+                selectedIndex: 0,
+              },
+            ],
           }),
           __responseType: undefined,
         }),
@@ -1313,6 +1494,194 @@ describe("ContextLabPage", () => {
     expect(
       await screen.findByText("解析：正确答案为 A，你选 A，fragile 表示容易损坏，和文章语境一致。"),
     ).toBeInTheDocument();
+  });
+
+  it("renders mixed questions, confirms a 3-of-4 submit, and shows typed results", async () => {
+    requestMock.mockImplementation((config) => {
+      if (config.url === "/context-lab/history") {
+        return Promise.resolve({
+          list: [mixedTask],
+          total: 1,
+          page: 1,
+          pageSize: 10,
+        });
+      }
+      if (config.url === "/context-lab/submit") {
+        return Promise.resolve(createMixedSubmitResult());
+      }
+      return Promise.resolve({});
+    });
+    const user = userEvent.setup();
+
+    render(<ContextLabPage />);
+
+    await user.click(
+      await screen.findByRole(
+        "button",
+        { name: "开始练习" },
+        { timeout: 5_000 },
+      ),
+    );
+
+    expect(screen.getByRole("radio", { name: "True" })).toBeInTheDocument();
+    expect(screen.queryByText("A. True")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("textbox", { name: "第 3 题答案，最多 2 个词" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("textbox", { name: "第 4 题答案，最多 2 个词" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getAllByText("Write NO MORE THAN TWO WORDS."),
+    ).toHaveLength(1);
+    expect(screen.getByText("本套可练习 4/13 题")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("radio", { name: "B. Solar panels" }));
+    await user.click(screen.getByRole("radio", { name: "False" }));
+    fireEvent.change(
+      screen.getByRole("textbox", { name: "第 3 题答案，最多 2 个词" }),
+      { target: { value: "solar panels" } },
+    );
+    expect(screen.getByText("已答 3/4")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "提交练习" }));
+
+    expect(await screen.findByText("还有 1 题未作答")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "继续提交" }));
+
+    await waitFor(() => {
+      expect(requestMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          url: "/context-lab/submit",
+          data: expect.objectContaining({
+            answers: [
+              {
+                questionId: "q1",
+                responseType: "single_choice",
+                selectedIndex: 1,
+              },
+              {
+                questionId: "q2",
+                responseType: "true_false_not_given",
+                selectedValue: "False",
+              },
+              {
+                questionId: "q3",
+                responseType: "text_completion",
+                text: "solar panels",
+              },
+            ],
+          }),
+        }),
+      );
+    });
+
+    expect(await screen.findByText("状态：正确")).toBeInTheDocument();
+    expect(screen.getByText("你的答案：B. Solar panels")).toBeInTheDocument();
+    expect(screen.getByText("正确答案：B. Solar panels")).toBeInTheDocument();
+    expect(screen.getAllByText("状态：错误")).toHaveLength(2);
+    expect(screen.getByText("你的答案：False")).toBeInTheDocument();
+    expect(screen.getByText("正确答案：True")).toBeInTheDocument();
+    expect(screen.getByText("原因：答案超过字数限制")).toBeInTheDocument();
+    expect(screen.getByText("状态：未作答")).toBeInTheDocument();
+    expect(screen.getByText("正确答案：household emissions")).toBeInTheDocument();
+    expect(
+      screen.getByText("The answer appears in the first paragraph."),
+    ).toBeInTheDocument();
+  });
+
+  it("restores each session draft when switching practice packs", async () => {
+    const secondTask = {
+      ...mixedTask,
+      id: 67,
+      taskId: 67,
+      articleExerciseId: 167,
+      article: "Wind Energy\n\nWind turbines generate electricity.",
+      generationWarnings: [],
+    };
+    requestMock.mockResolvedValue({
+      list: [mixedTask, secondTask],
+      total: 2,
+      page: 1,
+      pageSize: 10,
+    });
+    const user = userEvent.setup();
+
+    render(<ContextLabPage />);
+
+    const startButtons = await screen.findAllByRole("button", {
+      name: "开始练习",
+    });
+    await user.click(startButtons[0]);
+    fireEvent.change(
+      screen.getByRole("textbox", { name: "第 3 题答案，最多 2 个词" }),
+      { target: { value: "first draft" } },
+    );
+    await user.click(screen.getByRole("button", { name: "Close" }));
+
+    await user.click(screen.getAllByRole("button", { name: "开始练习" })[1]);
+    fireEvent.change(
+      screen.getByRole("textbox", { name: "第 3 题答案，最多 2 个词" }),
+      { target: { value: "second draft" } },
+    );
+    await user.click(screen.getByRole("button", { name: "Close" }));
+
+    await user.click(screen.getAllByRole("button", { name: "开始练习" })[0]);
+    expect(
+      screen.getByRole("textbox", { name: "第 3 题答案，最多 2 个词" }),
+    ).toHaveValue("first draft");
+  });
+
+  it("restores a saved draft and clears it after successful submission", async () => {
+    localStorage.setItem(
+      "context-lab:draft:v2:166",
+      JSON.stringify({
+        q1: { selectedIndex: 1 },
+        q2: { selectedValue: "False" },
+        q3: { text: "solar panels" },
+        q4: { text: "household emissions" },
+      }),
+    );
+    requestMock.mockImplementation((config) => {
+      if (config.url === "/context-lab/history") {
+        return Promise.resolve({
+          list: [mixedTask],
+          total: 1,
+          page: 1,
+          pageSize: 10,
+        });
+      }
+      if (config.url === "/context-lab/submit") {
+        return Promise.resolve(createMixedSubmitResult());
+      }
+      return Promise.resolve({});
+    });
+    const user = userEvent.setup();
+
+    render(<ContextLabPage />);
+
+    await user.click(
+      await screen.findByRole(
+        "button",
+        { name: "开始练习" },
+        { timeout: 5_000 },
+      ),
+    );
+    await waitFor(() => {
+      expect(
+        screen.getByRole("radio", { name: "B. Solar panels" }),
+      ).toHaveAttribute("checked");
+      expect(screen.getByRole("radio", { name: "False" })).toHaveAttribute(
+        "checked",
+      );
+      expect(
+        screen.getByRole("textbox", { name: "第 3 题答案，最多 2 个词" }),
+      ).toHaveValue("solar panels");
+    });
+
+    await user.click(screen.getByRole("button", { name: "提交练习" }));
+    await waitFor(() => {
+      expect(localStorage.getItem("context-lab:draft:v2:166")).toBeNull();
+    });
   });
 
   it(
@@ -1577,9 +1946,9 @@ describe("ContextLabPage", () => {
     expect(
       await screen.findByText("Which answer matches the paragraph?"),
     ).toBeInTheDocument();
-    expect(screen.getByText("你的作答 A. It celebrates speed")).toBeInTheDocument();
+    expect(screen.getByText("你的答案：A. It celebrates speed")).toBeInTheDocument();
     expect(screen.queryByText(/NaN/)).not.toBeInTheDocument();
-    expect(screen.getByText("正确答案 B. It describes mood")).toBeInTheDocument();
+    expect(screen.getByText("正确答案：B. It describes mood")).toBeInTheDocument();
     expect(
       screen.getByText("段落强调的是情绪氛围，不是速度。"),
     ).toBeInTheDocument();
@@ -1709,6 +2078,10 @@ describe("ContextLabPage", () => {
   });
 
   it("deletes a practice package after confirmation", async () => {
+    localStorage.setItem(
+      "context-lab:draft:v2:88",
+      JSON.stringify({ q1: { selectedIndex: 0 } }),
+    );
     requestMock.mockImplementation((config) => {
       if (config.url === "/context-lab/history") {
         return Promise.resolve({
@@ -1754,6 +2127,7 @@ describe("ContextLabPage", () => {
         }),
       );
     });
+    expect(localStorage.getItem("context-lab:draft:v2:88")).toBeNull();
   });
 
   it("blocks deleting a pending practice package and explains why", async () => {
@@ -2253,7 +2627,13 @@ describe("ContextLabPage", () => {
           data: expect.objectContaining({
             sessionId: 12,
             elapsedSeconds: expect.any(Number),
-            answers: [{ questionId: "q1", selectedIndex: 0 }],
+            answers: [
+              {
+                questionId: "q1",
+                responseType: "single_choice",
+                selectedIndex: 0,
+              },
+            ],
           }),
           __responseType: undefined,
         }),

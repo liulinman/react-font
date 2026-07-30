@@ -4239,11 +4239,48 @@ html[data-theme="dark"] .overwrite-stats-table .ant-table-thead > tr > th {
   padding: 10px 14px;
 }
 
+.context-lab-generation-warning {
+  display: grid;
+  gap: 4px;
+  margin: 10px 14px 0;
+  padding: 9px 12px;
+  border-left: 3px solid #d97706;
+  background: #fffbeb;
+  color: #78350f;
+  font-size: 13px;
+}
+
+.context-lab-generation-warning ul,
+.context-lab-unsupported-question-list {
+  margin: 0;
+  padding-left: 18px;
+}
+
 .context-lab-question-card {
   padding: 12px;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   background: #fff;
+}
+
+.context-lab-question-group-heading {
+  display: grid;
+  gap: 3px;
+  margin: -2px 0 10px;
+  padding-bottom: 9px;
+  border-bottom: 1px solid #cbd5e1;
+}
+
+.context-lab-question-group-heading strong {
+  color: #334155;
+  font-size: 13px;
+}
+
+.context-lab-question-group-heading p {
+  margin: 0;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .context-lab-question-meta {
@@ -4291,6 +4328,49 @@ html[data-theme="dark"] .overwrite-stats-table .ant-table-thead > tr > th {
 .context-lab-question-card .ant-radio-group {
   display: grid;
   gap: 6px;
+}
+
+.context-lab-question-field {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.context-lab-question-field > .ant-input {
+  width: min(100%, 420px);
+  min-height: 36px;
+}
+
+.context-lab-field-result {
+  display: grid;
+  gap: 5px;
+  padding-top: 10px;
+  border-top: 1px solid #cbd5e1;
+  color: #334155;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.context-lab-field-result-status {
+  color: #1f2937;
+  font-weight: 800;
+}
+
+.context-lab-field-result-correct .context-lab-field-result-status {
+  color: #166534;
+}
+
+.context-lab-field-result-incorrect .context-lab-field-result-status,
+.context-lab-field-result-reason {
+  color: #b91c1c;
+}
+
+.context-lab-field-result-unanswered .context-lab-field-result-status {
+  color: #92400e;
+}
+
+.context-lab-field-result .context-lab-question-explanation {
+  margin: 5px 0 0;
 }
 
 .context-lab-result-review {
@@ -4799,7 +4879,7 @@ html[data-theme="dark"] .overwrite-stats-table .ant-table-thead > tr > th {
   }
 
   .context-lab-question-card {
-    border-radius: 10px;
+    border-radius: 8px;
   }
 
   .context-lab-question-card .ant-radio-group {
@@ -4811,7 +4891,7 @@ html[data-theme="dark"] .overwrite-stats-table .ant-table-thead > tr > th {
     margin-inline-end: 0;
     padding: 9px 10px;
     border: 1px solid #e5e7eb;
-    border-radius: 9px;
+    border-radius: 8px;
     background: #f8fafc;
   }
 
