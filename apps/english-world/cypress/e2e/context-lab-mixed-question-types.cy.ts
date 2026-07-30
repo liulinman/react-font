@@ -68,7 +68,7 @@ Mereton's experience has attracted attention from other councils, yet specialist
     {
       id: "q2",
       groupId: "tfng",
-      stem: "The panels increased household emissions.",
+      stem: "The panels lowered household emissions.",
       questionType: "true_false_not_given",
       responseType: "true_false_not_given",
       options: ["True", "False", "Not Given"],
@@ -94,6 +94,8 @@ Mereton's experience has attracted attention from other councils, yet specialist
   ],
 };
 
+const overLimitAnswer = "community solar panels";
+
 const mixedSubmitResult = {
   attemptId: 606,
   score: 25,
@@ -118,7 +120,8 @@ const mixedSubmitResult = {
       status: "incorrect",
       userAnswer: { selectedValue: "False" },
       correctAnswer: { correctValue: "True" },
-      explanation: "The fixture deliberately exercises an incorrect outcome.",
+      explanation:
+        "The passage states that the panels lowered household emissions.",
     },
     {
       questionId: "q3",
@@ -126,7 +129,7 @@ const mixedSubmitResult = {
       correct: false,
       status: "incorrect",
       reasonCode: "word_limit_exceeded",
-      userAnswer: { text: "solar panels" },
+      userAnswer: { text: overLimitAnswer },
       correctAnswer: { acceptedAnswers: ["solar energy"] },
       explanation: "The fixture deliberately exercises the word-limit result.",
     },
@@ -156,6 +159,25 @@ function expectNoPageOverflow() {
   });
 }
 
+function isNearIdentityTransform(transform: string) {
+  if (transform === "none") return true;
+
+  const match = transform.match(/^matrix(3d)?\(([^)]+)\)$/);
+  if (!match) return false;
+
+  const values = match[2].split(",").map((value) => Number(value.trim()));
+  const expected = match[1]
+    ? [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
+    : [1, 0, 0, 1, 0, 0];
+
+  return (
+    values.length === expected.length &&
+    values.every(
+      (value, index) => Math.abs(value - expected[index]) <= 0.01,
+    )
+  );
+}
+
 function openMixedPractice() {
   cy.contains("button", "开始练习").click();
   cy.get(".context-lab-practice-modal")
@@ -168,6 +190,25 @@ function openMixedPractice() {
 }
 
 function expectPracticeModalReady() {
+  cy.get(".context-lab-practice-modal.ant-modal")
+    .should("be.visible")
+    .and(($modal) => {
+      const style = getComputedStyle($modal[0]);
+      const animationNames = style.animationName
+        .split(",")
+        .map((name) => name.trim());
+      const animationIsInactive = animationNames.every(
+        (name) => name === "none",
+      );
+      const transformIsStable = isNearIdentityTransform(style.transform);
+
+      expect(Number.parseFloat(style.opacity)).to.be.closeTo(1, 0.001);
+      expect(
+        animationIsInactive || transformIsStable,
+        `animation=${style.animationName}, transform=${style.transform}`,
+      ).to.equal(true);
+    });
+
   cy.get(".context-lab-practice-modal .ant-modal-content")
     .should("be.visible")
     .and(($content) => {
@@ -267,6 +308,19 @@ function expectVerticalSeparation(elements: HTMLElement[], minimumGap: number) {
   });
 }
 
+function expectQuestionCardsSeparated() {
+  cy.get(".context-lab-question-card")
+    .should("have.length", 4)
+    .then(($cards) => {
+      const cards = [...$cards] as HTMLElement[];
+      expectVerticalSeparation(cards, 8);
+      cards.forEach((card) => {
+        const style = getComputedStyle(card);
+        expect(Number.parseFloat(style.borderTopWidth)).to.be.at.least(1);
+      });
+    });
+}
+
 function expectReadableMixedLayout() {
   cy.get(".context-lab-reading-pane").then(($pane) => {
     const pane = $pane[0];
@@ -299,16 +353,7 @@ function expectReadableMixedLayout() {
       cy.wrap($heading).find("p").should("not.be.empty");
     });
 
-  cy.get(".context-lab-question-card")
-    .should("have.length", 4)
-    .then(($cards) => {
-      const cards = [...$cards] as HTMLElement[];
-      expectVerticalSeparation(cards, 8);
-      cards.forEach((card) => {
-        const style = getComputedStyle(card);
-        expect(Number.parseFloat(style.borderTopWidth)).to.be.at.least(1);
-      });
-    });
+  expectQuestionCardsSeparated();
 
   cy.get(".context-lab-question-card > p")
     .should("have.length", 4)
@@ -337,32 +382,100 @@ function expectReadableMixedLayout() {
   cy.get(".context-lab-question-field > input")
     .should("have.length", 2)
     .each(($input) => {
-      const inputRect = $input[0].getBoundingClientRect();
-      const cardRect = $input
-        .closest(".context-lab-question-card")[0]
-        .getBoundingClientRect();
+      const input = $input[0];
+      const field = input.closest<HTMLElement>(
+        ".context-lab-question-field",
+      );
+      const card = input.closest<HTMLElement>(".context-lab-question-card");
+      const previous = field?.previousElementSibling as HTMLElement | null;
+      if (!field || !card || !previous) {
+        throw new Error("Question input geometry is unavailable");
+      }
+
+      const inputRect = input.getBoundingClientRect();
+      const fieldRect = field.getBoundingClientRect();
+      const cardRect = card.getBoundingClientRect();
+      const previousRect = previous.getBoundingClientRect();
+
       expect(inputRect.height).to.be.at.least(32);
       expect(inputRect.left).to.be.at.least(cardRect.left);
       expect(inputRect.right).to.be.at.most(cardRect.right);
+      expect(inputRect.top).to.be.at.least(fieldRect.top);
+      expect(inputRect.bottom).to.be.at.most(fieldRect.bottom);
+      expect(inputRect.top).to.be.at.least(cardRect.top);
+      expect(inputRect.bottom).to.be.at.most(cardRect.bottom);
+      expect(inputRect.top - previousRect.bottom).to.be.at.least(4);
+      expect(cardRect.bottom - inputRect.bottom).to.be.at.least(8);
     });
 }
 
 function expectSeparatedResults() {
+  expectQuestionCardsSeparated();
+
   cy.get(".context-lab-field-result")
     .should("have.length", 4)
     .each(($result) => {
       const result = $result[0];
+      const field = result.closest<HTMLElement>(
+        ".context-lab-question-field",
+      );
+      const card = result.closest<HTMLElement>(".context-lab-question-card");
+      const previous = result.previousElementSibling as HTMLElement | null;
+      if (!field || !card || !previous) {
+        throw new Error("Question result geometry is unavailable");
+      }
+
       const style = getComputedStyle(result);
+      const resultRect = result.getBoundingClientRect();
+      const fieldRect = field.getBoundingClientRect();
+      const cardRect = card.getBoundingClientRect();
+      const previousRect = previous.getBoundingClientRect();
+      const children = [...result.children] as HTMLElement[];
+
       expect(style.display).to.equal("grid");
       expect(Number.parseFloat(style.rowGap)).to.be.at.least(4);
       expect(Number.parseFloat(style.borderTopWidth)).to.be.at.least(1);
-      expectVerticalSeparation(
-        [...result.children] as HTMLElement[],
-        4,
-      );
+      expect(resultRect.top).to.be.at.least(fieldRect.top);
+      expect(resultRect.bottom).to.be.at.most(fieldRect.bottom);
+      expect(resultRect.top).to.be.at.least(cardRect.top);
+      expect(resultRect.bottom).to.be.at.most(cardRect.bottom);
+      expect(resultRect.top - previousRect.bottom).to.be.at.least(8);
+      expect(cardRect.bottom - resultRect.bottom).to.be.at.least(8);
+      expectVerticalSeparation(children, 0);
+      children.forEach((child) => {
+        const childRect = child.getBoundingClientRect();
+        expect(childRect.height).to.be.greaterThan(0);
+        expect(childRect.top).to.be.at.least(resultRect.top);
+        expect(childRect.bottom).to.be.at.most(resultRect.bottom);
+        expect(childRect.top).to.be.at.least(cardRect.top);
+        expect(childRect.bottom).to.be.at.most(cardRect.bottom);
+      });
+
+      expect(
+        children.filter((child) =>
+          child.classList.contains("context-lab-field-result-status"),
+        ),
+      ).to.have.length(1);
+      expect(
+        children.filter((child) =>
+          child.textContent?.trim().startsWith("你的答案："),
+        ),
+      ).to.have.length(1);
+      expect(
+        children.filter((child) =>
+          child.textContent?.trim().startsWith("正确答案："),
+        ),
+      ).to.have.length(1);
+      expect(
+        children.filter((child) =>
+          child.classList.contains("context-lab-question-explanation"),
+        ),
+      ).to.have.length(1);
       cy.wrap($result).contains("你的答案：").should("exist");
       cy.wrap($result).contains("正确答案：").should("exist");
     });
+
+  cy.get(".context-lab-field-result-reason").should("have.length", 1);
 }
 
 describe("context lab mixed IELTS question types", () => {
@@ -412,7 +525,7 @@ describe("context lab mixed IELTS question types", () => {
         {
           questionId: "q3",
           responseType: "text_completion",
-          text: "solar panels",
+          text: overLimitAnswer,
         },
       ]);
       request.reply({ code: 200, message: "ok", data: mixedSubmitResult });
@@ -429,6 +542,7 @@ describe("context lab mixed IELTS question types", () => {
 
       openMixedPractice();
       expectNoPageOverflow();
+      expectPracticeModalReady();
 
       cy.get(".context-lab-generation-warning")
         .should("be.visible")
@@ -447,7 +561,7 @@ describe("context lab mixed IELTS question types", () => {
       restorePracticeModalAfterScreenshot();
 
       focusQuestionPaneForScreenshot(
-        "The panels increased household emissions.",
+        "The panels lowered household emissions.",
       );
       alignPracticeModalForScreenshot();
       cy.get(".context-lab-practice-modal .ant-modal-content").screenshot(
@@ -459,7 +573,7 @@ describe("context lab mixed IELTS question types", () => {
 
       cy.contains(
         ".context-lab-question-card",
-        "The panels increased household emissions.",
+        "The panels lowered household emissions.",
       ).within(() => {
         cy.get(".ant-radio-wrapper").then(($labels) => {
           expect(
@@ -477,7 +591,7 @@ describe("context lab mixed IELTS question types", () => {
       });
 
       cy.get('input[aria-label="第 3 题答案，最多 2 个词"]').type(
-        "solar panels",
+        overLimitAnswer,
       );
       cy.window().should((window) => {
         const draft = window.localStorage.getItem(
@@ -485,7 +599,7 @@ describe("context lab mixed IELTS question types", () => {
         );
         expect(draft).not.to.equal(null);
         expect(JSON.parse(draft as string).q3).to.deep.equal({
-          text: "solar panels",
+          text: overLimitAnswer,
         });
       });
 
@@ -494,7 +608,7 @@ describe("context lab mixed IELTS question types", () => {
       openMixedPractice();
       cy.get('input[aria-label="第 3 题答案，最多 2 个词"]').should(
         "have.value",
-        "solar panels",
+        overLimitAnswer,
       );
 
       cy.get('button[aria-label="提交练习"]')
@@ -534,7 +648,7 @@ describe("context lab mixed IELTS question types", () => {
         });
       cy.contains(
         ".context-lab-question-card",
-        "The panels increased household emissions.",
+        "The panels lowered household emissions.",
       )
         .scrollIntoView()
         .within(() => {
