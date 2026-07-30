@@ -2,11 +2,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Upgrade full Context Lab reading exercises from an all-radio contract to authentic single-choice, True/False/Not Given, text-completion, and short-answer questions without changing micro exercises or migrating database tables.
+**Goal:** Upgrade Web desktop Context Lab reading exercises from an all-radio contract to authentic single-choice, True/False/Not Given, text-completion, and short-answer questions without changing micro exercises, mobile pages, or database tables.
 
-**Architecture:** Store standard and pasted exercises in a versioned V2 JSON envelope inside the existing `questionsJson` columns, convert historical V1 arrays in memory, and keep micro exercises on their existing choice contract. Move question-envelope compatibility and deterministic grading into focused backend modules, then add shared frontend answer helpers plus separate Ant Design and Ant Design Mobile renderers.
+**Architecture:** Store standard and pasted exercises in a versioned V2 JSON envelope inside the existing `questionsJson` columns, convert historical V1 arrays in memory, and keep micro exercises on their existing choice contract. Move question-envelope compatibility and deterministic grading into focused backend modules, then add Web answer helpers and an Ant Design desktop renderer.
 
-**Tech Stack:** NestJS 10, TypeScript, Sequelize JSON text columns, class-validator, Jest, React 18, Ant Design 5, Ant Design Mobile 5, Vitest, Testing Library, Cypress, pnpm.
+**Tech Stack:** NestJS 10, TypeScript, Sequelize JSON text columns, class-validator, Jest, React 18, Ant Design 5, Vitest, Testing Library, Cypress, pnpm.
 
 ## Global Constraints
 
@@ -19,7 +19,8 @@
 - Text grading uses NFKC, trimmed and collapsed whitespace, case-insensitive comparison, terminal punctuation removal, word-limit enforcement, and exact accepted-answer matching.
 - No database schema migration and no bulk rewrite of historical JSON.
 - Correct answers never appear in task, history, detail, or SSE payloads before submission.
-- Desktop and mobile must expose the same four answer capabilities.
+- Web desktop must expose all four answer capabilities.
+- Mobile mixed-question work is deferred; do not modify files under `englishWorldMobile` in this implementation phase.
 - Matching Headings, Matching Information, and Matching Features are not newly generated in this release; historical pseudo-matching questions remain legacy choices.
 - Backend repo `/Users/liulin/Desktop/font/english/nestjs` contains an unrelated untracked plan file; do not stage, edit, delete, or commit it.
 - Use TDD for each task and make one focused commit per task in the repository that owns the changed files.
@@ -36,8 +37,8 @@
 | [S4](../stories/context-lab-mixed-ielts-question-types/S4-history-results-pdf.md) | History, results, warnings, and PDF stay trustworthy | Task 4 |
 | [S5](../stories/context-lab-mixed-ielts-question-types/S5-frontend-answer-contract.md) | The Web client has one stable answer and draft contract | Task 5 |
 | [S6](../stories/context-lab-mixed-ielts-question-types/S6-desktop-mixed-practice.md) | Desktop learners can complete all four question types | Task 6 |
-| [S7](../stories/context-lab-mixed-ielts-question-types/S7-mobile-mixed-practice.md) | Mobile learners have the same exercise capability | Task 7 |
-| [S8](../stories/context-lab-mixed-ielts-question-types/S8-cross-repo-acceptance.md) | The complete workflow is regression-tested across repositories | Task 8 |
+| [S7](../stories/context-lab-mixed-ielts-question-types/S7-mobile-mixed-practice.md) | Deferred mobile parity backlog | Task 7, do not execute |
+| [S8](../stories/context-lab-mixed-ielts-question-types/S8-cross-repo-acceptance.md) | Backend and Web workflow are regression-tested | Task 8 |
 
 ## File Structure
 
@@ -63,15 +64,12 @@ Frontend repo: `/Users/liulin/Desktop/font/english/react-font`
 - Create `apps/english-world/src/page/englishWorld/contextLab/pastedQuestionCompatibility.ts`: deterministic preflight detection for unsupported pasted Matching tasks.
 - Create `apps/english-world/src/page/englishWorld/contextLab/pastedQuestionCompatibility.test.ts`: pasted-question compatibility tests.
 - Create `apps/english-world/src/page/englishWorld/contextLab/ContextLabQuestionField.tsx`: desktop field renderer for the four response types.
-- Create `apps/english-world/src/page/englishWorldMobile/MobileContextLabQuestionField.tsx`: mobile field renderer for the four response types.
 - Modify `apps/english-world/src/page/englishWorld/contextLab/ContextLabPage.tsx`: groups, draft lifecycle, mixed submit, confirmation, warnings, and result review.
 - Modify `apps/english-world/src/page/englishWorld/contextLab/ContextLabPage.test.tsx`: desktop mixed-flow tests.
-- Modify `apps/english-world/src/page/englishWorldMobile/mobileContextLab.ts`: reuse shared answer helpers in mobile keys and result lookup.
-- Modify `apps/english-world/src/page/englishWorldMobile/MobileContextLabPage.tsx`: mobile mixed answers, drafts, confirmation, groups, and review.
-- Modify `apps/english-world/src/page/englishWorldMobile/ExerciseAgentTabMobile.test.tsx`: mobile mixed-flow tests.
 - Modify `apps/english-world/src/page/englishWorld/EnglishWorld.css`: desktop group, field, warning, and result styles.
-- Modify `apps/english-world/src/page/englishWorldMobile/EnglishWorldMobile.css`: mobile field, keyboard, warning, and fixed-submit spacing.
-- Create `apps/english-world/cypress/e2e/context-lab-mixed-question-types.cy.ts`: desktop and mobile browser regression.
+- Create `apps/english-world/cypress/e2e/context-lab-mixed-question-types.cy.ts`: Web desktop browser regression.
+
+Deferred mobile files are documented in Task 7 for future work and are not part of the current implementation or commit scope.
 
 ### Task 1: S1 - Versioned Question Contract and V1 Compatibility
 
@@ -1236,7 +1234,9 @@ git add apps/english-world/src/page/englishWorld/contextLab/ContextLabQuestionFi
 git commit -m "feat(context-lab): render mixed questions on desktop"
 ```
 
-### Task 7: S7 - Mobile Mixed Question Experience
+### Task 7: S7 - Mobile Mixed Question Experience (Deferred)
+
+**Status:** Deferred by product scope. Do not execute this task, modify the files below, or include mobile tests in the current delivery. Retain this section only as future backlog context.
 
 **Files:**
 - Create: `apps/english-world/src/page/englishWorldMobile/MobileContextLabQuestionField.tsx`
@@ -1339,11 +1339,11 @@ git commit -m "feat(context-lab): render mixed questions on mobile"
 
 **Files:**
 - Create: `apps/english-world/cypress/e2e/context-lab-mixed-question-types.cy.ts`
-- Modify only files exposed by failures from Tasks 1-7.
+- Modify only files exposed by failures from active Tasks 1-6.
 
 **Interfaces:**
-- Consumes the deployed API contract from Tasks 1-4 and UI behavior from Tasks 5-7.
-- Produces a repeatable desktop/mobile acceptance test.
+- Consumes the deployed API contract from Tasks 1-4 and Web UI behavior from Tasks 5-6.
+- Produces a repeatable Web desktop acceptance test.
 
 - [ ] **Step 1: Add a mixed-question Cypress fixture**
 
@@ -1368,16 +1368,15 @@ cy.intercept('POST', '**/context-lab/submit', (request) => {
 }).as('mixedSubmit');
 ```
 
-- [ ] **Step 2: Assert desktop and mobile viewport behavior**
+- [ ] **Step 2: Assert Web desktop viewport behavior**
 
 Test:
 
 ```ts
 [
+  { route: '/englishWorld/context-lab', width: 1280, height: 720 },
   { route: '/englishWorld/context-lab', width: 1440, height: 900 },
   { route: '/englishWorld/context-lab', width: 1920, height: 1080 },
-  { route: '/englishWorldMobile?view=aiTool', width: 390, height: 844 },
-  { route: '/englishWorldMobile?view=aiTool', width: 320, height: 568 },
 ].forEach(({ route, width, height }) => {
   cy.viewport(width, height);
   cy.visit(route);
@@ -1409,7 +1408,7 @@ Run:
 
 ```bash
 cd /Users/liulin/Desktop/font/english/react-font
-pnpm --filter @font/english-world test -- --run src/page/englishWorld/contextLab/contextLabAnswers.test.ts src/page/englishWorld/contextLab/ContextLabPage.test.tsx src/page/englishWorldMobile/mobileContextLab.test.ts src/page/englishWorldMobile/ExerciseAgentTabMobile.test.tsx
+pnpm --filter @font/english-world test -- --run src/page/englishWorld/contextLab/contextLabAnswers.test.ts src/page/englishWorld/contextLab/ContextLabPage.test.tsx
 pnpm --filter @font/english-world build
 ```
 
@@ -1426,7 +1425,7 @@ cd apps/english-world
 pnpm exec start-server-and-test "vite --host 127.0.0.1 --port 5175 --strictPort" http://127.0.0.1:5175 "cypress run --spec cypress/e2e/context-lab-mixed-question-types.cy.ts"
 ```
 
-Expected: PASS at all four viewports with no whole-page horizontal overflow or hidden submit controls.
+Expected: PASS at all three Web desktop viewports with no whole-page horizontal overflow or hidden submit controls.
 
 - [ ] **Step 6: Manually verify a real local generation**
 
@@ -1477,9 +1476,9 @@ git commit -m "test(context-lab): cover mixed IELTS question flow"
 - PDF instructions and answer spaces match each response type.
 - Partial packs display and score against their actual question count.
 
-### S5: One Stable Client Contract
+### S5: One Stable Web Client Contract
 
-- Desktop and mobile use the same answer union and answered-count rules.
+- Web desktop uses one answer union and one answered-count rule.
 - Local drafts are scoped by session and validated during restore.
 - Successful submission or task deletion clears only the relevant draft.
 
@@ -1492,13 +1491,11 @@ git commit -m "test(context-lab): cover mixed IELTS question flow"
 
 ### S7: Mobile Mixed Practice
 
-- Mobile has parity with desktop for all four response types.
-- Text inputs are usable with the software keyboard at 390x844 and 320x568.
-- The fixed submit bar does not hide the focused question or validation state.
+- Deferred; no mobile files are modified in the current phase.
 
 ### S8: Regression Confidence
 
 - Focused Jest and Vitest suites pass.
 - Backend and frontend builds pass.
-- Cypress covers desktop and mobile mixed workflows.
+- Cypress covers the Web desktop mixed workflow at 1280x720, 1440x900, and 1920x1080.
 - Existing V1, micro, history, deletion, vocabulary marking, SSE, and PDF behaviors remain green.

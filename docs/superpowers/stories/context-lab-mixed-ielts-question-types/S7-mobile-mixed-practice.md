@@ -1,7 +1,7 @@
 ---
 story_id: S7
 title: 移动端混合题型练习体验
-status: ready-for-dev
+status: deferred
 depends_on:
   - S5
 repositories:
@@ -9,6 +9,9 @@ repositories:
 ---
 
 # S7 移动端混合题型练习体验
+
+> 产品范围更新：本 Story 整体延期，当前阶段不得执行或修改移动端文件。保留本文
+> 仅用于未来恢复移动端工作时继续使用。
 
 ## 用户故事
 
@@ -108,8 +111,8 @@ pnpm --filter @font/english-world build
 
 ## 实施参考
 
-- [设计规格：移动端](../../specs/2026-07-30-context-lab-mixed-ielts-question-types-design.md#移动端)
-- [实施计划：Task 7](../../plans/2026-07-30-context-lab-mixed-ielts-question-types.md#task-7-s7---mobile-mixed-question-experience)
+- [设计规格：后续阶段移动端](../../specs/2026-07-30-context-lab-mixed-ielts-question-types-design.md#后续阶段移动端)
+- [实施计划：延期 Task 7](../../plans/2026-07-30-context-lab-mixed-ielts-question-types.md#task-7-s7---mobile-mixed-question-experience-deferred)
 
 ## 完成定义
 

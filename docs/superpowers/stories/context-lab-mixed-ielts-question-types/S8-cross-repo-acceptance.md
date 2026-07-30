@@ -9,7 +9,6 @@ depends_on:
   - S4
   - S5
   - S6
-  - S7
 repositories:
   - /Users/liulin/Desktop/font/english/nestjs
   - /Users/liulin/Desktop/font/english/react-font
@@ -20,7 +19,7 @@ repositories:
 ## 用户故事
 
 作为产品负责人，我希望完整混合题型流程经过前后端和真实浏览器验证，以便上线
-后不会再次出现“生成成功但无法练习”或桌面正常、手机不可用的问题。
+后不会再次出现“生成成功但无法练习”或不同 Web 桌面尺寸下不可用的问题。
 
 ## 业务价值
 
@@ -32,7 +31,7 @@ SSE 和词汇学习闭环能够共存。
 - 新增 Cypress 混合题型流程。
 - 运行后端聚焦测试和构建。
 - 运行前端聚焦测试和构建。
-- 验证四个目标视口。
+- 验证三个 Web 桌面目标视口。
 - 使用真实本地 AI 配置生成一套标准练习。
 - 核对网络响应中没有答案泄漏。
 
@@ -45,12 +44,12 @@ SSE 和词汇学习闭环能够共存。
 **Then** 请求载荷正确
 **And** 结果正确展示四种答案
 
-### AC2：移动完整流程
+### AC2：Web 桌面布局
 
-**Given** 同一任务在移动端打开
+**Given** 同一任务在 1280x720、1440x900 和 1920x1080 打开
 **When** 用户完成文本输入和 TFNG
 **Then** 页面无横向滚动
-**And** 固定提交栏不遮挡内容
+**And** 题目控件、结果和提交按钮互不遮挡
 
 ### AC3：旧数据回归
 
@@ -85,8 +84,7 @@ SSE 和词汇学习闭环能够共存。
 ## 任务清单
 
 - [ ] 创建安全 V2 任务和混合提交结果 Cypress fixture。
-- [ ] 验证桌面 1440x900 和 1920x1080。
-- [ ] 验证移动 390x844 和 320x568。
+- [ ] 验证 Web 桌面 1280x720、1440x900 和 1920x1080。
 - [ ] 检查 TFNG 语义标签、文本草稿、未答确认和结果复盘。
 - [ ] 运行全部聚焦 Jest 与 Vitest。
 - [ ] 运行前后端构建。
@@ -108,7 +106,7 @@ pnpm build
 
 ```bash
 cd /Users/liulin/Desktop/font/english/react-font
-pnpm --filter @font/english-world test -- --run src/page/englishWorld/contextLab/contextLabAnswers.test.ts src/page/englishWorld/contextLab/ContextLabPage.test.tsx src/page/englishWorldMobile/mobileContextLab.test.ts src/page/englishWorldMobile/ExerciseAgentTabMobile.test.tsx
+pnpm --filter @font/english-world test -- --run src/page/englishWorld/contextLab/contextLabAnswers.test.ts src/page/englishWorld/contextLab/ContextLabPage.test.tsx
 pnpm --filter @font/english-world build
 ```
 
@@ -138,7 +136,7 @@ pnpm exec start-server-and-test "vite --host 127.0.0.1 --port 5175 --strictPort"
 ## 完成定义
 
 - AC1-AC6 全部通过。
-- Cypress 四个视口通过。
+- Cypress 三个 Web 桌面视口通过。
 - 前后端构建和聚焦测试通过。
 - 本地真实生成、提交、历史和 PDF 手工验收通过。
 - 回归测试以独立前端 commit 提交。
