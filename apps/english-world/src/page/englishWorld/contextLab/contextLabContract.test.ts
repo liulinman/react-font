@@ -1,6 +1,7 @@
 import { describe, expect, expectTypeOf, it } from "vitest";
 import type {
   ContextLabAnswer,
+  ContextLabAnswerValue,
   ContextLabAttempt,
   ContextLabAttemptResult,
   ContextLabQuestion,
@@ -32,6 +33,16 @@ function describeResult(result: ContextLabAttemptResult) {
 }
 
 describe("contextLabContract", () => {
+  it("keeps answer value payloads mutually exclusive at compile time", () => {
+    // @ts-expect-error mixed answer payloads are invalid draft values
+    const mixedAnswerValue: ContextLabAnswerValue = {
+      selectedIndex: 1,
+      text: "also text",
+    };
+
+    expect(mixedAnswerValue).toBeDefined();
+  });
+
   it("connects safe mixed unions to task, attempt, and submit results", () => {
     expectTypeOf<NonNullable<ContextLabTask["questions"]>>().toEqualTypeOf<
       ContextLabQuestion[]

@@ -1,5 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { ContextLabQuestionInput } from "../types/learning";
+import type {
+  ContextLabAnswerState,
+  ContextLabQuestionInput,
+} from "../types/learning";
 import {
   buildSubmitAnswers,
   clearContextLabDraft,
@@ -114,6 +117,37 @@ describe("contextLabAnswers", () => {
     clearContextLabDraft(88);
     expect(loadContextLabDraft(88)).toEqual({});
     expect(loadContextLabDraft(89)).toEqual({ q2: { text: "keep me" } });
+  });
+
+  it("persists only valid mutually exclusive answer values", () => {
+    const storage = new Map<string, string>();
+    vi.stubGlobal("localStorage", {
+      getItem: (key: string) => storage.get(key) ?? null,
+      setItem: (key: string, value: string) => storage.set(key, value),
+      removeItem: (key: string) => storage.delete(key),
+    });
+
+    saveContextLabDraft(
+      90,
+      {
+        validChoice: { selectedIndex: 0 },
+        validTfng: { selectedValue: "Not Given" },
+        validText: { text: " solar panels " },
+        mixedShape: { selectedIndex: 1, text: "also text" },
+        extraAnswerField: { text: "answer", acceptedAnswers: ["answer"] },
+        decimalChoice: { selectedIndex: 1.5 },
+        unknownValue: { selectedValue: "Maybe" },
+        invalidText: { text: 42 },
+      } as unknown as ContextLabAnswerState,
+    );
+
+    expect(
+      JSON.parse(storage.get("context-lab:draft:v2:90") ?? "{}"),
+    ).toEqual({
+      validChoice: { selectedIndex: 0 },
+      validTfng: { selectedValue: "Not Given" },
+      validText: { text: " solar panels " },
+    });
   });
 
   it("rejects malformed saved draft values", () => {

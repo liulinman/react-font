@@ -83,9 +83,21 @@ export type ContextLabQuestionInput =
   | ContextLabLegacyQuestion;
 
 export type ContextLabAnswerValue =
-  | { selectedIndex: number }
-  | { selectedValue: ContextLabTfngValue }
-  | { text: string };
+  | {
+      selectedIndex: number;
+      selectedValue?: never;
+      text?: never;
+    }
+  | {
+      selectedIndex?: never;
+      selectedValue: ContextLabTfngValue;
+      text?: never;
+    }
+  | {
+      selectedIndex?: never;
+      selectedValue?: never;
+      text: string;
+    };
 
 export type ContextLabAnswer =
   | {

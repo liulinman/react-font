@@ -33,6 +33,14 @@ function isPlainRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+function sanitizeAnswerState(value: unknown): ContextLabAnswerState {
+  if (!isPlainRecord(value)) return {};
+
+  return Object.fromEntries(
+    Object.entries(value).filter(([, answer]) => isAnswerValue(answer)),
+  ) as ContextLabAnswerState;
+}
+
 function getLocalStorage() {
   try {
     return typeof localStorage === "undefined" ? undefined : localStorage;
@@ -50,17 +58,19 @@ export function isQuestionAnswered(
 
   switch (question.responseType) {
     case "single_choice":
-      return "selectedIndex" in value && Number.isInteger(value.selectedIndex);
+      return (
+        typeof value.selectedIndex === "number" &&
+        Number.isInteger(value.selectedIndex)
+      );
     case "true_false_not_given":
       return (
-        "selectedValue" in value &&
-        "options" in question &&
+        typeof value.selectedValue === "string" &&
         (question.options as readonly string[]).includes(value.selectedValue) &&
         TFNG_VALUES.has(value.selectedValue)
       );
     case "text_completion":
     case "short_answer":
-      return "text" in value && value.text.trim().length > 0;
+      return typeof value.text === "string" && value.text.trim().length > 0;
     default:
       return false;
   }
@@ -124,11 +134,7 @@ export function loadContextLabDraft(sessionId: number): ContextLabAnswerState {
     const raw = storage.getItem(getDraftKey(sessionId));
     if (!raw) return {};
     const parsed: unknown = JSON.parse(raw);
-    if (!isPlainRecord(parsed)) return {};
-
-    return Object.fromEntries(
-      Object.entries(parsed).filter(([, value]) => isAnswerValue(value)),
-    ) as ContextLabAnswerState;
+    return sanitizeAnswerState(parsed);
   } catch {
     return {};
   }
@@ -142,7 +148,10 @@ export function saveContextLabDraft(
   if (!storage) return;
 
   try {
-    storage.setItem(getDraftKey(sessionId), JSON.stringify(state));
+    storage.setItem(
+      getDraftKey(sessionId),
+      JSON.stringify(sanitizeAnswerState(state)),
+    );
   } catch {
     // Storage can be unavailable in private browsing or when it is full.
   }
