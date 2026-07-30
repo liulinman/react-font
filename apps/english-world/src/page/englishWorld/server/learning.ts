@@ -44,14 +44,26 @@ export const dailyCoachPlan = (data: {
   __responseType: undefined as unknown as DailyCoachPlan,
 });
 
-export const contextLabSubmit = (
+type ContextLabLegacySubmitParams = Omit<ContextLabSubmitParams, "answers"> & {
+  answers: Array<{ questionId: string; selectedIndex: number }>;
+};
+
+export function contextLabSubmit(
   data: ContextLabSubmitParams,
-): YTRequest<ContextLabSubmitResult> => ({
-  url: "/context-lab/submit",
-  method: "POST",
-  data,
-  __responseType: undefined as unknown as ContextLabSubmitResult,
-});
+): YTRequest<ContextLabSubmitResult>;
+export function contextLabSubmit(
+  data: ContextLabLegacySubmitParams,
+): YTRequest<ContextLabSubmitResult>;
+export function contextLabSubmit(
+  data: ContextLabSubmitParams | ContextLabLegacySubmitParams,
+): YTRequest<ContextLabSubmitResult> {
+  return {
+    url: "/context-lab/submit",
+    method: "POST",
+    data,
+    __responseType: undefined as unknown as ContextLabSubmitResult,
+  };
+}
 
 export const contextLabCreateTask = (
   data: ContextLabGenerateParams,

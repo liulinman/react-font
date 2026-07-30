@@ -2,32 +2,32 @@ import type {
   ContextLabAnswer as ContextLabAnswerContract,
   ContextLabAnswerValue as ContextLabAnswerValueContract,
   ContextLabAttemptResult as ContextLabAttemptResultContract,
+  ContextLabAttemptResultInput as ContextLabAttemptResultInputContract,
+  ContextLabAttemptResultPayload as ContextLabAttemptResultPayloadContract,
+  ContextLabLegacyAttemptResult as ContextLabLegacyAttemptResultContract,
+  ContextLabLegacyQuestion as ContextLabLegacyQuestionContract,
   ContextLabQuestion as ContextLabQuestionContract,
   ContextLabQuestionGroup as ContextLabQuestionGroupContract,
+  ContextLabQuestionInput as ContextLabQuestionInputContract,
+  ContextLabQuestionPayload as ContextLabQuestionPayloadContract,
   ContextLabTfngValue,
-  ExerciseResultItem,
 } from "@/server/exerciseAgent/exerciseAgent";
 
 export type ContextLabAnswer = ContextLabAnswerContract;
 export type ContextLabAnswerValue = ContextLabAnswerValueContract;
 export type ContextLabAnswerState = Record<string, ContextLabAnswerValue>;
 export type ContextLabAttemptResult = ContextLabAttemptResultContract;
+export type ContextLabAttemptResultInput = ContextLabAttemptResultInputContract;
+export type ContextLabAttemptResultPayload =
+  ContextLabAttemptResultPayloadContract;
+export type ContextLabLegacyAttemptResult =
+  ContextLabLegacyAttemptResultContract;
+export type ContextLabLegacyQuestion = ContextLabLegacyQuestionContract;
 export type ContextLabQuestion = ContextLabQuestionContract;
 export type ContextLabQuestionGroup = ContextLabQuestionGroupContract;
+export type ContextLabQuestionInput = ContextLabQuestionInputContract;
+export type ContextLabQuestionPayload = ContextLabQuestionPayloadContract;
 export type { ContextLabTfngValue };
-
-type ContextLabLegacyQuestion = {
-  id: string;
-  stem: string;
-  options: string[];
-  questionType?: string;
-  targetWord?: string;
-};
-
-type ContextLabLegacyAnswer = {
-  questionId: string;
-  selectedIndex: number;
-};
 
 export type LearningLevel = 0 | 1 | 2 | 3;
 
@@ -204,22 +204,22 @@ export type ContextLabMode = "standard" | "micro";
 export type ContextLabSubmitParams = {
   sessionId: number;
   elapsedSeconds?: number;
-  answers: Array<ContextLabAnswer | ContextLabLegacyAnswer>;
+  answers: ContextLabAnswer[];
 };
 
 export type ContextLabAttempt = {
   id: number;
   attemptId: number;
   taskId: number;
-  articleExerciseId: number;
+  articleExerciseId?: number;
   score: number;
   correctCount: number;
   wrongCount: number;
   weakWords: string[];
   nextSuggestions: string[];
-  answers: ContextLabLegacyAnswer[];
-  results: ExerciseResultItem[];
-  elapsedSeconds?: number | null;
+  answers: ContextLabAnswer[];
+  results: ContextLabAttemptResult[];
+  elapsedSeconds?: number;
   createTime?: string;
 };
 
@@ -255,7 +255,7 @@ export type ContextLabDeleteResponse = {
 
 export type ContextLabSubmitResult = {
   attemptId?: number;
-  results: ExerciseResultItem[];
+  results: ContextLabAttemptResult[];
   score: number;
   correctCount: number;
   wrongCount: number;
@@ -286,7 +286,7 @@ export type ContextLabTask = {
   articleExerciseId?: number;
   article?: string;
   groups?: ContextLabQuestionGroup[];
-  questions?: ContextLabLegacyQuestion[];
+  questions?: ContextLabQuestion[];
   generationWarnings?: string[];
   targetQuestionCount?: number;
   attemptCount?: number;

@@ -2,9 +2,10 @@ import type {
   ContextLabAnswer,
   ContextLabAnswerState,
   ContextLabAnswerValue,
-  ContextLabQuestion,
+  ContextLabQuestionInput,
   ContextLabTfngValue,
 } from "../types/learning";
+import { normalizeContextLabQuestion } from "./contextLabContract";
 
 const TFNG_VALUES = new Set<ContextLabTfngValue>([
   "True",
@@ -16,15 +17,9 @@ const TFNG_VALUES = new Set<ContextLabTfngValue>([
 
 const getDraftKey = (sessionId: number) => `context-lab:draft:v2:${sessionId}`;
 
-function getResponseType(question: ContextLabQuestion) {
-  if (question.responseType) return question.responseType;
-  return "options" in question && Array.isArray(question.options)
-    ? "single_choice"
-    : undefined;
-}
-
 function isAnswerValue(value: unknown): value is ContextLabAnswerValue {
   if (!isPlainRecord(value)) return false;
+  if (Object.keys(value).length !== 1) return false;
   if (typeof value.selectedIndex === "number") {
     return Number.isInteger(value.selectedIndex);
   }
@@ -47,12 +42,13 @@ function getLocalStorage() {
 }
 
 export function isQuestionAnswered(
-  question: ContextLabQuestion,
+  questionInput: ContextLabQuestionInput,
   value: ContextLabAnswerValue | undefined,
 ) {
   if (!value) return false;
+  const question = normalizeContextLabQuestion(questionInput);
 
-  switch (getResponseType(question)) {
+  switch (question.responseType) {
     case "single_choice":
       return "selectedIndex" in value && Number.isInteger(value.selectedIndex);
     case "true_false_not_given":
@@ -71,13 +67,14 @@ export function isQuestionAnswered(
 }
 
 export function buildSubmitAnswers(
-  questions: ContextLabQuestion[],
+  questions: ContextLabQuestionInput[],
   state: ContextLabAnswerState,
 ): ContextLabAnswer[] {
-  return questions.flatMap<ContextLabAnswer>((question) => {
+  return questions.flatMap<ContextLabAnswer>((questionInput) => {
+    const question = normalizeContextLabQuestion(questionInput);
     const value = state[question.id];
-    const responseType = getResponseType(question);
-    if (!responseType || !isQuestionAnswered(question, value)) return [];
+    const responseType = question.responseType;
+    if (!isQuestionAnswered(question, value)) return [];
 
     switch (responseType) {
       case "single_choice":
@@ -111,7 +108,7 @@ export function buildSubmitAnswers(
 }
 
 export function countAnsweredQuestions(
-  questions: ContextLabQuestion[],
+  questions: ContextLabQuestionInput[],
   state: ContextLabAnswerState,
 ) {
   return questions.filter((question) =>

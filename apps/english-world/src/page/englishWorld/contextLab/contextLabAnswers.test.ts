@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { ContextLabQuestion } from "../types/learning";
+import type { ContextLabQuestionInput } from "../types/learning";
 import {
   buildSubmitAnswers,
   clearContextLabDraft,
@@ -14,7 +14,7 @@ describe("contextLabAnswers", () => {
   });
 
   it("builds the mixed submit union and omits blank text", () => {
-    const questions: ContextLabQuestion[] = [
+    const questions: ContextLabQuestionInput[] = [
       {
         id: "q1",
         groupId: "choice",
@@ -59,7 +59,7 @@ describe("contextLabAnswers", () => {
   });
 
   it("accepts legacy options questions as single choice and validates TFNG values", () => {
-    const questions: ContextLabQuestion[] = [
+    const questions: ContextLabQuestionInput[] = [
       {
         id: "legacy",
         groupId: "legacy",
@@ -125,6 +125,8 @@ describe("contextLabAnswers", () => {
           decimalChoice: { selectedIndex: 1.5 },
           unknownValue: { selectedValue: "Maybe" },
           invalidShape: { selectedIndex: "0" },
+          mixedShape: { selectedIndex: 1, text: "also text" },
+          extraAnswerField: { text: "answer", acceptedAnswers: ["answer"] },
         }),
       setItem: vi.fn(),
       removeItem: vi.fn(),

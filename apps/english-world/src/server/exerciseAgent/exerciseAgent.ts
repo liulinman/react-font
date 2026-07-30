@@ -25,15 +25,15 @@ export type ContextLabQuestionGroup = {
 
 type ContextLabQuestionBase = {
   id: string;
-  groupId?: string;
+  groupId: string;
   stem: string;
-  questionType?: string;
+  questionType: string;
   targetWord?: string;
 };
 
-export type ContextLabQuestion =
+export type ContextLabQuestionPayload =
   | (ContextLabQuestionBase & {
-      responseType?: "single_choice";
+      responseType: "single_choice";
       options: string[];
     })
   | (ContextLabQuestionBase & {
@@ -48,6 +48,39 @@ export type ContextLabQuestion =
       responseType: "short_answer";
       wordLimit: 1 | 2 | 3;
     });
+
+export type ContextLabLegacyQuestion = {
+  id: string;
+  groupId?: string;
+  stem: string;
+  questionType?: string;
+  targetWord?: string;
+  options: string[];
+  responseType?: undefined;
+};
+
+/**
+ * Client-normalized question. Text responses expose an empty options list so
+ * the pre-S6 choice renderer remains type-safe while S6 switches by responseType.
+ */
+export type ContextLabQuestion =
+  | Extract<ContextLabQuestionPayload, { responseType: "single_choice" }>
+  | Extract<
+      ContextLabQuestionPayload,
+      { responseType: "true_false_not_given" }
+    >
+  | (Extract<
+      ContextLabQuestionPayload,
+      { responseType: "text_completion" }
+    > & { options: [] })
+  | (Extract<ContextLabQuestionPayload, { responseType: "short_answer" }> & {
+      options: [];
+    });
+
+export type ContextLabQuestionInput =
+  | ContextLabQuestion
+  | ContextLabQuestionPayload
+  | ContextLabLegacyQuestion;
 
 export type ContextLabAnswerValue =
   | { selectedIndex: number }
@@ -64,16 +97,19 @@ export type ContextLabAnswer =
       questionId: string;
       responseType: "true_false_not_given";
       selectedValue: ContextLabTfngValue;
+      selectedIndex?: never;
     }
   | {
       questionId: string;
       responseType: "text_completion";
       text: string;
+      selectedIndex?: never;
     }
   | {
       questionId: string;
       responseType: "short_answer";
       text: string;
+      selectedIndex?: never;
     };
 
 type ContextLabResultBase = {
@@ -84,29 +120,59 @@ type ContextLabResultBase = {
   explanation: string;
   targetWord?: string;
   reasonCode?: "word_limit_exceeded" | "answer_mismatch";
+  /** Choice-only compatibility projection removed when S6 owns rendering. */
+  correctIndex: number;
+  /** Choice-only compatibility projection removed when S6 owns rendering. */
+  userSelectedIndex: number;
 };
 
-export type ContextLabAttemptResult =
-  | (ContextLabResultBase & {
+type ContextLabAttemptResultPayloadBase = Omit<
+  ContextLabResultBase,
+  "correctIndex" | "userSelectedIndex"
+>;
+
+export type ContextLabAttemptResultPayload =
+  | (ContextLabAttemptResultPayloadBase & {
       responseType: "single_choice";
       userAnswer: { selectedIndex: number } | null;
       correctAnswer: { correctIndex: number };
     })
-  | (ContextLabResultBase & {
+  | (ContextLabAttemptResultPayloadBase & {
       responseType: "true_false_not_given";
       userAnswer: { selectedValue: ContextLabTfngValue } | null;
       correctAnswer: { correctValue: ContextLabTfngValue };
     })
-  | (ContextLabResultBase & {
-      responseType: "text_completion" | "short_answer";
+  | (ContextLabAttemptResultPayloadBase & {
+      responseType: "text_completion";
       userAnswer: { text: string } | null;
       correctAnswer: { acceptedAnswers: string[] };
     })
-  | {
-      questionId: string;
-      correct: boolean;
-      explanation?: string;
-    };
+  | (ContextLabAttemptResultPayloadBase & {
+      responseType: "short_answer";
+      userAnswer: { text: string } | null;
+      correctAnswer: { acceptedAnswers: string[] };
+    });
+
+export type ContextLabAttemptResult =
+  ContextLabAttemptResultPayload extends infer TResult
+    ? TResult extends ContextLabAttemptResultPayload
+      ? TResult & Pick<ContextLabResultBase, "correctIndex" | "userSelectedIndex">
+      : never
+    : never;
+
+export type ContextLabLegacyAttemptResult = {
+  questionId: string;
+  correct: boolean;
+  explanation?: string;
+  correctIndex?: number;
+  userSelectedIndex?: number;
+  responseType?: undefined;
+};
+
+export type ContextLabAttemptResultInput =
+  | ContextLabAttemptResult
+  | ContextLabAttemptResultPayload
+  | ContextLabLegacyAttemptResult;
 
 /** 生成练习：题目项 */
 export interface ExerciseQuestion {
