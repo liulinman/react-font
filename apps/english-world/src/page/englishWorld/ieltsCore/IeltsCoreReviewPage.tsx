@@ -278,6 +278,7 @@ export function IeltsCoreReviewPage() {
           sourceType: "ielts-core",
           proficiencyLevels: selectedLevels,
           count,
+          questionContractVersion: 2,
         }),
       );
       message.success("生成任务已提交");

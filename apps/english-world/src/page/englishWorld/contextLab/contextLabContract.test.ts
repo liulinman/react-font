@@ -11,6 +11,7 @@ import type {
   ContextLabTask,
 } from "../types/learning";
 import {
+  parseContextLabAttemptAnswers,
   normalizeContextLabAttemptResults,
   normalizeContextLabAttemptResult,
   normalizeContextLabQuestion,
@@ -181,6 +182,30 @@ describe("contextLabContract", () => {
     ]);
   });
 
+  it("maps a historical TFNG selected index to its semantic answer", () => {
+    expect(
+      parseContextLabAttemptAnswers(
+        [{ questionId: "q5", selectedIndex: 2 }],
+        [
+          {
+            id: "q5",
+            groupId: "legacy-tfng",
+            stem: "The policy was introduced in 2018.",
+            questionType: "true_false_not_given",
+            responseType: "true_false_not_given",
+            options: ["True", "False", "Not Given"],
+          },
+        ],
+      ),
+    ).toEqual([
+      {
+        questionId: "q5",
+        responseType: "true_false_not_given",
+        selectedValue: "Not Given",
+      },
+    ]);
+  });
+
   it("filters malformed discriminated questions before they enter page state", () => {
     const questions: unknown = [
       {
@@ -197,6 +222,13 @@ describe("contextLabContract", () => {
         questionType: "detail",
         responseType: "single_choice",
         options: ["A", "B"],
+      },
+      {
+        id: "broken-summary-choice",
+        stem:
+          "The kiosks use (5) ____ for clarity while (6) ____ consumption is a concern.",
+        questionType: "summary_completion",
+        options: ["refund", "typography", "energy", "queue"],
       },
       {
         id: "broken-tfng",
@@ -216,7 +248,7 @@ describe("contextLabContract", () => {
       {
         id: "valid-text",
         groupId: "text",
-        stem: "Complete it.",
+        stem: "Complete ____.",
         questionType: "summary_completion",
         responseType: "text_completion",
         wordLimit: 2,
@@ -239,7 +271,7 @@ describe("contextLabContract", () => {
       {
         id: "valid-text",
         groupId: "text",
-        stem: "Complete it.",
+        stem: "Complete ____.",
         questionType: "summary_completion",
         responseType: "text_completion",
         wordLimit: 2,

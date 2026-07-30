@@ -22,7 +22,7 @@ The physical system presented its own constraints. Salt carried inland by winter
 
 Mereton's experience has attracted attention from other councils, yet specialists warn against treating it as a universal template. A suitable roof, a supportive grid operator, affordable credit, and patient organisers were all essential. Dense districts with shaded buildings may need to share a solar farm outside the city instead. Even so, the experiment demonstrates that residents without private roofs can take part in renewable generation. Its strongest lesson may be institutional rather than technological: durable clean-energy projects depend on transparent rules, inclusive decisions, and realistic maintenance plans.`,
   targetQuestionCount: 13,
-  generationWarnings: ["QUESTION_COUNT"],
+  generationWarnings: ["QUESTION_COUNT", "TEXT_COMPLETION_BLANK_INVALID"],
   groups: [
     {
       groupId: "choice",
@@ -101,6 +101,13 @@ Mereton's experience has attracted attention from other councils, yet specialist
       wordLimit: 2,
       options: [],
     },
+    {
+      id: "q5",
+      stem:
+        "The kiosks use (5) ____ for clarity while (6) ____ consumption is a concern.",
+      questionType: "summary_completion",
+      options: ["refund", "typography", "energy", "queue"],
+    },
   ],
 };
 
@@ -110,7 +117,7 @@ const mixedSubmitResult = {
   attemptId: 606,
   score: 25,
   correctCount: 1,
-  wrongCount: 2,
+  wrongCount: 3,
   weakWords: ["emissions"],
   nextSuggestions: ["Review exact phrases and answer limits."],
   results: [
@@ -360,6 +367,10 @@ function expectQuestionCardsSeparated() {
 }
 
 function expectReadableMixedLayout() {
+  cy.contains(
+    "The kiosks use (5) ____ for clarity while (6) ____ consumption is a concern.",
+  ).should("not.exist");
+
   cy.get(".context-lab-reading-pane").then(($pane) => {
     const pane = $pane[0];
     expect(pane.scrollWidth).to.be.at.most(pane.clientWidth);

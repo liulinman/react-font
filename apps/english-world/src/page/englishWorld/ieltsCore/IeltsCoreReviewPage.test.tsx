@@ -179,6 +179,7 @@ describe("IeltsCoreReviewPage", () => {
           sourceType: "ielts-core",
           proficiencyLevels: [0, 1],
           count: 8,
+          questionContractVersion: 2,
         },
         __responseType: undefined,
       });

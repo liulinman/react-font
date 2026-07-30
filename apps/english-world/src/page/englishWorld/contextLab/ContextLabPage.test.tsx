@@ -397,6 +397,14 @@ describe("ContextLabPage", () => {
           }),
         }),
       );
+      expect(createCalls[0][0].data).not.toHaveProperty(
+        "questionContractVersion",
+      );
+      expect(subscribeTaskEventsMock).toHaveBeenCalledWith(
+        expect.any(Function),
+        undefined,
+        undefined,
+      );
     });
     await waitFor(() => {
       expect(screen.getByTestId("location")).toHaveTextContent("taskId=21");
@@ -527,7 +535,7 @@ describe("ContextLabPage", () => {
     expect(requestMock).toHaveBeenCalledWith(
       expect.objectContaining({
         url: "/context-lab/detail",
-        data: { taskId: 25, questionContractVersion: 2 },
+        data: { taskId: 25 },
       }),
     );
   });

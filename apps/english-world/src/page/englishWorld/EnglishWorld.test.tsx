@@ -319,7 +319,7 @@ describe("EnglishWorld ToC routing", () => {
         expect.objectContaining({
           url: "/context-lab/detail",
           method: "POST",
-          data: { taskId: 12 },
+          data: { taskId: 12, questionContractVersion: 2 },
         }),
       );
     });

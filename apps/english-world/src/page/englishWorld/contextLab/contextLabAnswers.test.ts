@@ -29,7 +29,7 @@ describe("contextLabAnswers", () => {
       {
         id: "q2",
         groupId: "completion",
-        stem: "Complete it.",
+        stem: "Complete ____.",
         questionType: "summary_completion",
         responseType: "text_completion",
         wordLimit: 2,
@@ -37,7 +37,7 @@ describe("contextLabAnswers", () => {
       {
         id: "q3",
         groupId: "blank",
-        stem: "Leave blank.",
+        stem: "Leave ____.",
         questionType: "summary_completion",
         responseType: "text_completion",
         wordLimit: 2,

@@ -52,6 +52,21 @@ function isOptionalString(value: unknown) {
   return value === undefined || typeof value === "string";
 }
 
+function isValidCompletionStem(stem: string) {
+  return (stem.match(/_{3,}/g)?.length ?? 0) === 1;
+}
+
+function isSummaryCompletionType(value: unknown) {
+  return (
+    typeof value === "string" &&
+    value
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "_")
+      .replace(/^_+|_+$/g, "") === "summary_completion"
+  );
+}
+
 function isTfngValue(value: unknown): value is ContextLabTfngValue {
   return (
     typeof value === "string" &&
@@ -121,6 +136,12 @@ export function parseContextLabQuestion(
           : null;
     if (!stem || !isStringArray(value.options)) return null;
     if (
+      isSummaryCompletionType(value.questionType) &&
+      !isValidCompletionStem(stem)
+    ) {
+      return null;
+    }
+    if (
       value.questionType === "true_false_not_given" &&
       isTfngOptions(value.options)
     ) {
@@ -188,6 +209,15 @@ export function parseContextLabQuestion(
           }
         : null;
     case "text_completion":
+      if (!isValidCompletionStem(base.stem)) return null;
+      return isInteger(value.wordLimit) && WORD_LIMITS.has(value.wordLimit)
+        ? {
+            ...base,
+            responseType: value.responseType,
+            wordLimit: value.wordLimit as 1 | 2 | 3,
+            options: [],
+          }
+        : null;
     case "short_answer":
       return isInteger(value.wordLimit) && WORD_LIMITS.has(value.wordLimit)
         ? {
@@ -261,6 +291,22 @@ export function parseContextLabAttemptAnswers(
 
     const questionId = item.questionId;
     if (item.responseType === undefined) {
+      const question = findQuestion(questionId, questions);
+      if (
+        question?.responseType === "true_false_not_given" &&
+        isNonNegativeInteger(item.selectedIndex) &&
+        item.selectedIndex < question.options.length
+      ) {
+        return [
+          {
+            questionId,
+            responseType: "true_false_not_given",
+            selectedValue: question.options[
+              item.selectedIndex
+            ] as ContextLabTfngValue,
+          },
+        ];
+      }
       return isChoiceIndexValid(
         questionId,
         item.selectedIndex,

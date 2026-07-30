@@ -280,7 +280,10 @@ const EnglishWorld: React.FC = () => {
     try {
       const task = await request<ContextLabTask>(
         {
-          ...contextLabDetail({ taskId: reference.taskId }),
+          ...contextLabDetail({
+            taskId: reference.taskId,
+            questionContractVersion: 2,
+          }),
           config: { suppressErrorMessage: true },
         },
       );

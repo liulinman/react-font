@@ -581,8 +581,6 @@ function ContextLabPageContent({
               microEntry.words,
               microRequestUidRef.current,
             ),
-            questionContractVersion:
-              CONTEXT_LAB_MIXED_QUESTION_CONTRACT_VERSION,
           }),
         ),
       );
@@ -611,8 +609,6 @@ function ContextLabPageContent({
         await request<ContextLabTask>(
           contextLabDetail({
             taskId: currentTask.taskId,
-            questionContractVersion:
-              CONTEXT_LAB_MIXED_QUESTION_CONTRACT_VERSION,
           }),
         ),
       );
@@ -768,7 +764,9 @@ function ContextLabPageContent({
         }
       },
       undefined,
-      CONTEXT_LAB_MIXED_QUESTION_CONTRACT_VERSION,
+      microEntry
+        ? undefined
+        : CONTEXT_LAB_MIXED_QUESTION_CONTRACT_VERSION,
     );
   }, [historySearchActive, microEntry, recordMicroGenerated]);
 
@@ -779,8 +777,6 @@ function ContextLabPageContent({
       {
         ...contextLabDetail({
           taskId: microTaskId,
-          questionContractVersion:
-            CONTEXT_LAB_MIXED_QUESTION_CONTRACT_VERSION,
         }),
         config: { suppressErrorMessage: true },
       },
@@ -830,8 +826,6 @@ function ContextLabPageContent({
           await request<ContextLabTask>({
             ...contextLabDetail({
               taskId: currentTask.taskId,
-              questionContractVersion:
-                CONTEXT_LAB_MIXED_QUESTION_CONTRACT_VERSION,
             }),
             config: { suppressErrorMessage: true },
           }),
