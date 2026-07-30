@@ -1,99 +1,92 @@
-# English World UX Product Audit Skill Design
+# English World UX 产品审计 Skill 设计
 
-Date: 2026-07-30
-Status: Approved in conversation
+日期：2026-07-30
+状态：对话方案已确认，待书面复核
 
-## Objective
+## 目标
 
-Install a project-local UX/UI skill stack that finds real usability problems in
-English World and converts them into evidence-backed product requirements.
-The first version is read-only: it may inspect code, screenshots, browser flows,
-tests, product documents, and public references, but it must not modify product
-code or deploy changes while running an audit.
+在项目内安装一套 UX/UI Skill，用于发现 English World 的真实可用性问题，
+并将问题转化为有证据、可验收的产品需求。
 
-## Decision
+第一版保持只读。审计时可以检查代码、截图、浏览器流程、测试、产品文档和公开资料，
+但不得直接修改产品代码或执行部署。
 
-Use a small routed stack instead of one large generic UI skill:
+## 方案
 
-- `impeccable`: primary UX planning, critique, onboarding, layout, copy,
-  responsive adaptation, hardening, and polish.
-- `web-design-guidelines`: deterministic second-pass checks for accessibility,
-  forms, navigation, focus, touch, responsiveness, performance, and i18n.
-- `ui-ux-pro-max`: design-system and visual-reference lookup only. It must not
-  replace the existing product identity with a generic template.
-- `english-world-ux-product-audit`: project-specific orchestrator that controls
-  scope, evidence, severity, requirement format, and stopping rules.
-- Existing `bmad-ux`: optional downstream tool for turning approved findings
-  into a detailed UX specification. It is not required to run an audit.
+采用职责清晰的小型组合，而不是依赖一个庞大的通用 UI Skill：
 
-Install all vendored skills under `.agents/skills/` in the `react-font`
-repository so they are versioned with the project.
+- `impeccable`：负责 UX 规划、体验批评、首次使用、布局、文案、响应式适配、
+  边界状态和最终打磨。
+- `web-design-guidelines`：负责第二轮客观检查，包括可访问性、表单、导航、焦点、
+  触摸交互、响应式、性能和国际化。
+- `ui-ux-pro-max`：只用于检索设计系统和视觉参考，不允许用通用模板覆盖现有产品识别。
+- `english-world-ux-product-audit`：项目专属编排 Skill，统一控制审计范围、证据要求、
+  严重度、需求格式和停止条件。
+- 现有 `bmad-ux`：用于把已经确认的问题继续转化为详细 UX 规格，不是执行审计的
+  必要依赖。
 
-## Product Scope
+所有引入的 Skill 安装到 `react-font` 仓库的 `.agents/skills/`，与项目一起进行版本管理。
 
-The orchestrator covers these task journeys:
+## 产品范围
 
-1. Login and account recovery
-2. Today's learning plan and cockpit
-3. Word library, search, filtering, and bulk import
-4. Recite flow, completion, mistakes, and recovery
-5. Context Lab generation, waiting, practice, failure, retry, and history
-6. IELTS core vocabulary review
-7. Memory Map and Word Journey
-8. Notifications and account controls
-9. Mobile navigation and parity
-10. Admin workflows only when explicitly requested
+项目 Skill 覆盖以下用户任务：
 
-The skill reads the sibling backend repository at `../nestjs` when an observed
-experience depends on API state, error handling, persistence, or permissions.
+1. 登录和账号恢复
+2. 今日学习计划和学习驾驶舱
+3. 词库、搜索、筛选和批量导入
+4. 复习、完成、错题和中断恢复
+5. 语境实验室的生成、等待、练习、失败、重试和历史记录
+6. 雅思核心词汇复习
+7. 记忆地图和 Word Journey
+8. 通知和账号操作
+9. 移动端导航及功能一致性
+10. 仅在明确要求时检查后台管理流程
 
-## Audit Workflow
+当体验问题涉及接口状态、错误处理、持久化或权限时，Skill 读取兄弟目录
+`../nestjs` 中的后端代码。
 
-1. Select one user goal and define the start and success state.
-2. Read the relevant existing specs, code, tests, and recent commits.
-3. Walk the real flow in a browser at desktop and mobile widths.
-4. Capture evidence for every finding: screenshot, route, interaction, source
-   location, test, or reproducible observation.
-5. Run UX critique first, then technical UI checks.
-6. Deduplicate symptoms that share one root product problem.
-7. Rate severity and confidence.
-8. Produce requirements, not implementation.
-9. Stop for product approval before editing code or opening implementation work.
+## 审计流程
 
-## Finding Contract
+1. 选择一个用户目标，定义开始状态和成功状态。
+2. 阅读相关现有规格、代码、测试和近期提交。
+3. 在真实浏览器中分别使用桌面和移动尺寸完成任务。
+4. 为每个问题保留证据，包括截图、路由、交互步骤、源码位置、测试或可复现观察。
+5. 先进行 UX 体验批评，再执行技术 UI 规则检查。
+6. 合并由同一个根因产生的多个表面症状。
+7. 评定严重度和结论置信度。
+8. 输出产品需求，不直接输出实现代码。
+9. 在产品需求获得确认前，不进入代码修改或开发任务。
 
-Every finding must include:
+## 问题记录格式
 
-- `ID` and short problem title
-- Affected user and user goal
-- Reproduction path
-- Evidence
-- Root problem, separated from visible symptoms
-- Severity: P0 blocker, P1 major, P2 moderate, or P3 polish
-- Confidence: high, medium, or low
-- User and business impact
-- Recommended requirement
-- Acceptance criteria
-- Desktop/mobile applicability
-- Dependencies and explicit non-goals
+每个问题必须包含：
 
-The final report contains a Top 10 backlog. Ordering uses severity, affected
-journey frequency, learning-flow impact, confidence, and implementation scope.
-Visual taste alone cannot create a P0 or P1 requirement.
+- `ID` 和简短问题标题
+- 受影响用户及其目标
+- 复现路径
+- 问题证据
+- 根本问题，与表面症状分开描述
+- 严重度：P0 阻塞、P1 严重、P2 一般、P3 打磨
+- 置信度：高、中、低
+- 用户影响和产品影响
+- 推荐需求
+- 验收标准
+- 桌面端和移动端适用范围
+- 依赖项和明确不做的内容
 
-## Evidence Rules
+最终报告输出 Top 10 需求 Backlog。排序综合严重度、用户路径发生频率、
+对学习闭环的影响、结论置信度和实施范围。单纯的视觉偏好不能成为 P0 或 P1 需求。
 
-- Mark statements as product fact, observed behavior, user evidence, external
-  reference, or inference.
-- Do not claim user frustration without user evidence; describe observable
-  friction instead.
-- Do not report an issue from a static screenshot when interaction is required
-  to verify it.
-- Do not propose a feature already covered by an existing specification without
-  explaining the remaining gap.
-- Keep learning correctness and recoverability above decorative polish.
+## 证据规则
 
-## Files
+- 将结论标记为产品事实、实际观察、用户证据、外部资料或推断。
+- 没有用户证据时，不得声称用户感到沮丧，只能描述可观察到的交互阻力。
+- 必须通过交互才能确认的问题，不能只根据静态截图下结论。
+- 不得重复提出已有规格覆盖的功能，除非说明现有方案仍然存在的缺口。
+- 学习正确性和任务可恢复性优先于装饰性视觉优化。
+- Skill、审计报告和需求 Backlog 默认使用中文；代码标识符和第三方专有名词保留原文。
+
+## 文件结构
 
 ```text
 .agents/skills/
@@ -109,26 +102,26 @@ Visual taste alone cannot create a P0 or P1 requirement.
       requirement-template.md
 ```
 
-No extra README or installation guide is added.
+不添加额外的 README 或安装说明文件。
 
-## Validation
+## 验证方式
 
-Use skill TDD:
+按照 Skill TDD 流程验证：
 
-1. Run a representative audit prompt without the project skill and record
-   omissions.
-2. Create the minimum project skill that addresses those omissions.
-3. Validate frontmatter and file structure with `quick_validate.py`.
-4. Run the same prompt with the skill in a fresh agent context.
-5. Confirm it reads project facts, traces a real journey, separates evidence
-   from inference, assigns severity, and emits testable requirements.
-6. Run a first real browser audit across desktop and mobile and save the report
-   under `docs/superpowers/research/`.
+1. 先让未加载项目 Skill 的独立 Agent 执行一次代表性审计，并记录遗漏。
+2. 创建能够修复这些遗漏的最小项目 Skill。
+3. 使用 `quick_validate.py` 校验目录、名称和 frontmatter。
+4. 在全新 Agent 上下文中，加载 Skill 后重复相同审计任务。
+5. 确认它会读取项目事实、追踪真实任务、区分证据与推断、评定严重度，
+   并输出可验收的中文需求。
+6. 使用真实浏览器完成第一次桌面端和移动端审计，将报告保存到
+   `docs/superpowers/research/`。
 
-## Success Criteria
+## 成功标准
 
-- The installed skills are project-local and version controlled.
-- One command can audit a specified English World journey.
-- Findings are reproducible and evidence-backed.
-- The output is a prioritized product backlog rather than a style wishlist.
-- No audit run changes production code without a separate approved task.
+- 所有 Skill 都安装在项目内并进入版本管理。
+- 一个命令可以审计指定的 English World 用户路径。
+- 所有问题都可复现并具有证据。
+- 输出是有优先级的产品需求，而不是视觉愿望清单。
+- 审计过程不会在未经单独确认时修改生产代码。
+- 默认交付语言为中文。
