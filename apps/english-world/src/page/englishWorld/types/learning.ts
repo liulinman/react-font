@@ -1,4 +1,33 @@
-import type { ExerciseResultItem } from "@/server/exerciseAgent/exerciseAgent";
+import type {
+  ContextLabAnswer as ContextLabAnswerContract,
+  ContextLabAnswerValue as ContextLabAnswerValueContract,
+  ContextLabAttemptResult as ContextLabAttemptResultContract,
+  ContextLabQuestion as ContextLabQuestionContract,
+  ContextLabQuestionGroup as ContextLabQuestionGroupContract,
+  ContextLabTfngValue,
+  ExerciseResultItem,
+} from "@/server/exerciseAgent/exerciseAgent";
+
+export type ContextLabAnswer = ContextLabAnswerContract;
+export type ContextLabAnswerValue = ContextLabAnswerValueContract;
+export type ContextLabAnswerState = Record<string, ContextLabAnswerValue>;
+export type ContextLabAttemptResult = ContextLabAttemptResultContract;
+export type ContextLabQuestion = ContextLabQuestionContract;
+export type ContextLabQuestionGroup = ContextLabQuestionGroupContract;
+export type { ContextLabTfngValue };
+
+type ContextLabLegacyQuestion = {
+  id: string;
+  stem: string;
+  options: string[];
+  questionType?: string;
+  targetWord?: string;
+};
+
+type ContextLabLegacyAnswer = {
+  questionId: string;
+  selectedIndex: number;
+};
 
 export type LearningLevel = 0 | 1 | 2 | 3;
 
@@ -175,7 +204,7 @@ export type ContextLabMode = "standard" | "micro";
 export type ContextLabSubmitParams = {
   sessionId: number;
   elapsedSeconds?: number;
-  answers: Array<{ questionId: string; selectedIndex: number }>;
+  answers: Array<ContextLabAnswer | ContextLabLegacyAnswer>;
 };
 
 export type ContextLabAttempt = {
@@ -188,7 +217,7 @@ export type ContextLabAttempt = {
   wrongCount: number;
   weakWords: string[];
   nextSuggestions: string[];
-  answers: Array<{ questionId: string; selectedIndex: number }>;
+  answers: ContextLabLegacyAnswer[];
   results: ExerciseResultItem[];
   elapsedSeconds?: number | null;
   createTime?: string;
@@ -245,14 +274,6 @@ export type ContextLabTaskStatus =
   | "succeeded"
   | "failed";
 
-export type ContextLabQuestion = {
-  id: string;
-  stem: string;
-  options: string[];
-  questionType?: string;
-  targetWord?: string;
-};
-
 export type ContextLabTask = {
   id: number;
   taskId: number;
@@ -264,7 +285,10 @@ export type ContextLabTask = {
   reciteSessionId?: number;
   articleExerciseId?: number;
   article?: string;
-  questions?: ContextLabQuestion[];
+  groups?: ContextLabQuestionGroup[];
+  questions?: ContextLabLegacyQuestion[];
+  generationWarnings?: string[];
+  targetQuestionCount?: number;
   attemptCount?: number;
   latestAttemptId?: number;
   latestScore?: number;

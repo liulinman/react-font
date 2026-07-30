@@ -1,5 +1,113 @@
 import type { YTRequest } from "@font/api";
 
+export type ContextLabResponseType =
+  | "single_choice"
+  | "true_false_not_given"
+  | "text_completion"
+  | "short_answer";
+
+export type ContextLabTfngValue =
+  | "True"
+  | "False"
+  | "Yes"
+  | "No"
+  | "Not Given";
+
+export type ContextLabQuestionGroup = {
+  groupId: string;
+  title: string;
+  instruction: string;
+  questionIds: string[];
+  startNumber: number;
+  endNumber: number;
+  wordLimit?: 1 | 2 | 3;
+};
+
+type ContextLabQuestionBase = {
+  id: string;
+  groupId?: string;
+  stem: string;
+  questionType?: string;
+  targetWord?: string;
+};
+
+export type ContextLabQuestion =
+  | (ContextLabQuestionBase & {
+      responseType?: "single_choice";
+      options: string[];
+    })
+  | (ContextLabQuestionBase & {
+      responseType: "true_false_not_given";
+      options: ["True", "False", "Not Given"] | ["Yes", "No", "Not Given"];
+    })
+  | (ContextLabQuestionBase & {
+      responseType: "text_completion";
+      wordLimit: 1 | 2 | 3;
+    })
+  | (ContextLabQuestionBase & {
+      responseType: "short_answer";
+      wordLimit: 1 | 2 | 3;
+    });
+
+export type ContextLabAnswerValue =
+  | { selectedIndex: number }
+  | { selectedValue: ContextLabTfngValue }
+  | { text: string };
+
+export type ContextLabAnswer =
+  | {
+      questionId: string;
+      responseType: "single_choice";
+      selectedIndex: number;
+    }
+  | {
+      questionId: string;
+      responseType: "true_false_not_given";
+      selectedValue: ContextLabTfngValue;
+    }
+  | {
+      questionId: string;
+      responseType: "text_completion";
+      text: string;
+    }
+  | {
+      questionId: string;
+      responseType: "short_answer";
+      text: string;
+    };
+
+type ContextLabResultBase = {
+  questionId: string;
+  responseType: ContextLabResponseType;
+  correct: boolean;
+  status: "correct" | "incorrect" | "unanswered";
+  explanation: string;
+  targetWord?: string;
+  reasonCode?: "word_limit_exceeded" | "answer_mismatch";
+};
+
+export type ContextLabAttemptResult =
+  | (ContextLabResultBase & {
+      responseType: "single_choice";
+      userAnswer: { selectedIndex: number } | null;
+      correctAnswer: { correctIndex: number };
+    })
+  | (ContextLabResultBase & {
+      responseType: "true_false_not_given";
+      userAnswer: { selectedValue: ContextLabTfngValue } | null;
+      correctAnswer: { correctValue: ContextLabTfngValue };
+    })
+  | (ContextLabResultBase & {
+      responseType: "text_completion" | "short_answer";
+      userAnswer: { text: string } | null;
+      correctAnswer: { acceptedAnswers: string[] };
+    })
+  | {
+      questionId: string;
+      correct: boolean;
+      explanation?: string;
+    };
+
 /** 生成练习：题目项 */
 export interface ExerciseQuestion {
   id: string;
