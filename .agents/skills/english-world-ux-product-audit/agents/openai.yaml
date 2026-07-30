@@ -1,0 +1,4 @@
+interface:
+  display_name: "English World UX 产品审计"
+  short_description: "把真实体验问题转成有证据、可排期、可验收的中文产品需求清单"
+  default_prompt: "使用 $english-world-ux-product-audit 审计 English World 的一个用户任务，输出按严重度排序的中文需求 Backlog。"
