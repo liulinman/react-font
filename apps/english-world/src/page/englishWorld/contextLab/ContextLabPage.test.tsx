@@ -586,6 +586,95 @@ describe("ContextLabPage", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("focuses a word-library task without opening source preview and follows SSE", async () => {
+    requestMock.mockImplementation((config) => {
+      if (config.url === "/context-lab/history") {
+        return Promise.resolve({ list: [], total: 0, page: 1, pageSize: 10 });
+      }
+      if (config.url === "/context-lab/detail") {
+        return Promise.resolve({
+          id: 44,
+          taskId: 44,
+          status: "pending",
+          sourceType: "custom",
+          words: ["word-1", "word-2", "word-3"],
+        });
+      }
+      return Promise.resolve({});
+    });
+
+    render(
+      <MemoryRouter
+        initialEntries={[
+          "/englishWorld/context-lab?source=word-library&taskId=44",
+        ]}
+      >
+        <ContextLabPage />
+      </MemoryRouter>,
+    );
+
+    expect(
+      await screen.findByRole("region", { name: "批量生成任务状态" }),
+    ).toHaveTextContent("等待回调");
+    expect(screen.queryByRole("dialog", { name: /单词来源文章/ })).toBeNull();
+    expect(screen.getByText("word-1 / word-2 / word-3").closest("article"))
+      .toHaveClass("context-lab-history-item-selected");
+
+    act(() => {
+      taskEventHandler?.({
+        id: 44,
+        taskId: 44,
+        status: "succeeded",
+        sourceType: "custom",
+        words: ["word-1", "word-2", "word-3"],
+        article: "A generated article.",
+        questions: [
+          {
+            id: "q1",
+            stem: "What is the article about?",
+            options: ["Words", "Numbers", "Weather", "Travel"],
+          },
+        ],
+      });
+    });
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("region", { name: "批量生成任务状态" }),
+      ).toBeNull();
+    });
+    expect(screen.getByRole("button", { name: "开始练习" })).toBeVisible();
+  });
+
+  it("keeps Context Lab usable when a focused word-library task is unavailable", async () => {
+    const warningSpy = vi
+      .spyOn(message, "warning")
+      .mockImplementation(() => undefined as never);
+    requestMock.mockImplementation((config) =>
+      config.url === "/context-lab/detail"
+        ? Promise.reject(new Error("not found"))
+        : Promise.resolve({ list: [], total: 0, page: 1, pageSize: 10 }),
+    );
+
+    render(
+      <MemoryRouter
+        initialEntries={[
+          "/englishWorld/context-lab?source=word-library&taskId=404",
+        ]}
+      >
+        <ContextLabPage />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(warningSpy).toHaveBeenCalledWith(
+        "目标语境任务无法加载，请在练习包列表中查看",
+      );
+    });
+    expect(screen.getByRole("main", { name: "练习包管理" })).toBeVisible();
+    expect(screen.queryByRole("dialog", { name: /单词来源文章/ })).toBeNull();
+  });
+
   it("opens a referenced article as source preview without starting practice", async () => {
     const user = userEvent.setup();
     requestMock.mockImplementation((config) => {

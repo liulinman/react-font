@@ -3760,6 +3760,16 @@ html[data-theme="dark"] .overwrite-stats-table .ant-table-thead > tr > th {
   margin-inline-end: 0;
 }
 
+.context-lab-word-library-task-status {
+  margin: 12px 0;
+}
+
+.context-lab-word-library-task-status > .context-lab-task-status {
+  margin: 0;
+  border-color: #bfdbfe;
+  background: #eff6ff;
+}
+
 .context-lab-history-empty {
   display: flex;
   align-items: center;

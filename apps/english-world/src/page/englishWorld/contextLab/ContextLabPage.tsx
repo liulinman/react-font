@@ -471,6 +471,12 @@ function ContextLabPageContent({
     const value = Number(new URLSearchParams(initialSearch).get("taskId"));
     return Number.isInteger(value) && value > 0 ? value : null;
   }, [initialSearch, microEntry]);
+  const wordLibraryTaskId = useMemo(() => {
+    const params = new URLSearchParams(initialSearch);
+    if (params.get("source") !== "word-library") return null;
+    const value = Number(params.get("taskId"));
+    return Number.isInteger(value) && value > 0 ? value : null;
+  }, [initialSearch]);
   const isMicroMode = microEntry !== null || invalidMicroEntry;
   const autoCreateMicroKeyRef = useRef<string | null>(null);
   const microCreateInFlightRef = useRef(false);
@@ -616,7 +622,19 @@ function ContextLabPageContent({
         }),
       );
       const nextHistory = response.list ?? [];
-      setHistory(nextHistory);
+      setHistory((previousHistory) => {
+        if (!wordLibraryTaskId) return nextHistory;
+        const focusedTask = previousHistory.find(
+          (task) => task.taskId === wordLibraryTaskId,
+        );
+        if (
+          !focusedTask ||
+          nextHistory.some((task) => task.taskId === wordLibraryTaskId)
+        ) {
+          return nextHistory;
+        }
+        return [focusedTask, ...nextHistory].slice(0, 10);
+      });
       setCurrentTask((prev) => {
         if (!prev) return prev;
         return (
@@ -823,7 +841,43 @@ function ContextLabPageContent({
   }, [initialSearch]);
 
   useEffect(() => {
-    if (microEntry) return;
+    if (microEntry || !wordLibraryTaskId) return;
+
+    let cancelled = false;
+    void request<ContextLabTask>({
+      ...contextLabDetail({ taskId: wordLibraryTaskId }),
+      config: { suppressErrorMessage: true },
+    })
+      .then((task) => {
+        if (cancelled) return;
+        setHistory((previousHistory) => [
+          task,
+          ...previousHistory.filter((item) => item.taskId !== task.taskId),
+        ].slice(0, 10));
+        setCurrentTask(task);
+        setAnswers({});
+        setResults([]);
+        setSubmitSummary(null);
+        setElapsedSeconds(0);
+        setHighlightWord("");
+        setSourcePreviewFullscreen(false);
+        setSourcePreviewOpen(false);
+        setPracticeFullscreen(false);
+        setPracticeModalOpen(false);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          message.warning("目标语境任务无法加载，请在练习包列表中查看");
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [microEntry, wordLibraryTaskId]);
+
+  useEffect(() => {
+    if (microEntry || wordLibraryTaskId) return;
     const reference = parseContextLabReference(
       `/englishWorld/context-lab${initialSearch}`,
     );
@@ -864,7 +918,7 @@ function ContextLabPageContent({
     return () => {
       cancelled = true;
     };
-  }, [history, initialSearch, microEntry]);
+  }, [history, initialSearch, microEntry, wordLibraryTaskId]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => setMarkedVocabulary([]), 0);
@@ -2278,6 +2332,17 @@ function ContextLabPageContent({
               </div>
             )}
           </div>
+
+          {currentTask &&
+            wordLibraryTaskId === currentTask.taskId &&
+            isContextLabTaskActive(currentTask.status) && (
+              <section
+                aria-label="批量生成任务状态"
+                className="context-lab-word-library-task-status"
+              >
+                {renderTaskStatus(currentTask)}
+              </section>
+            )}
 
           {historyLoading && (
             <div className="context-lab-history-empty">
