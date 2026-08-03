@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Button,
   Checkbox,
@@ -8,14 +8,17 @@ import {
   Form,
   Image,
   Input,
+  InputNumber,
   message,
   Modal,
   Pagination,
   Segmented,
   Select,
+  Space,
   Spin,
   Table,
   Tag,
+  Tooltip,
   Typography,
 } from "antd";
 import { EditAddModal } from "./component/EditAddModal";
@@ -36,12 +39,21 @@ import { LearningCockpitPage } from "./cockpit/LearningCockpitPage";
 import { MemoryMapPage } from "./memoryMap/MemoryMapPage";
 import { ContextLabPage } from "./contextLab/ContextLabPage";
 import { WordAgentTab } from "./component/WordAgentTab";
-import { contextLabDetail } from "./server/learning";
-import type { ContextLabTask } from "./types/learning";
+import { contextLabCreateTask, contextLabDetail } from "./server/learning";
+import type { ContextLabModelProvider, ContextLabTask } from "./types/learning";
+import {
+  DEFAULT_CONTEXT_LAB_MODEL_PROVIDER,
+  DEFAULT_IELTS_BAND,
+  IELTS_BAND_MAX,
+  IELTS_BAND_MIN,
+  IELTS_BAND_STEP,
+  normalizeIeltsBand,
+} from "./contextLab/contextLabPlanning";
 import {
   AppstoreOutlined,
   BarsOutlined,
   DownOutlined,
+  ExperimentOutlined,
   FullscreenExitOutlined,
   FullscreenOutlined,
   MoreOutlined,
@@ -107,6 +119,14 @@ const EnglishWorld: React.FC = () => {
   const [selectedCardIds, setSelectedCardIds] = useState<number[]>([]);
   const [levelUpdatingIds, setLevelUpdatingIds] = useState<number[]>([]);
   const [batchLevelUpdating, setBatchLevelUpdating] = useState(false);
+  const [batchContextModalOpen, setBatchContextModalOpen] = useState(false);
+  const [batchContextCreating, setBatchContextCreating] = useState(false);
+  const [batchContextIeltsBand, setBatchContextIeltsBand] = useState<
+    number | null
+  >(DEFAULT_IELTS_BAND);
+  const [batchContextModelProvider, setBatchContextModelProvider] =
+    useState<ContextLabModelProvider>(DEFAULT_CONTEXT_LAB_MODEL_PROVIDER);
+  const batchContextCreateInFlightRef = useRef(false);
   const [sourcePreviewOpen, setSourcePreviewOpen] = useState(false);
   const [sourcePreviewFullscreen, setSourcePreviewFullscreen] = useState(false);
   const [sourcePreviewLoading, setSourcePreviewLoading] = useState(false);
@@ -412,6 +432,56 @@ const EnglishWorld: React.FC = () => {
     setSelectedCardIds(
       allCurrentPageCardsSelected ? [] : wordList.map((word) => word.id),
     );
+  };
+
+  const selectedCardRecords = wordList.filter((word) =>
+    selectedCardIds.includes(word.id),
+  );
+
+  const handleOpenBatchContextLab = () => {
+    if (selectedCardRecords.length > 20) {
+      message.warning("每次最多选择 20 个词，请减少选择");
+      return;
+    }
+    if (selectedCardRecords.length < 3) return;
+
+    setBatchContextIeltsBand(DEFAULT_IELTS_BAND);
+    setBatchContextModelProvider(DEFAULT_CONTEXT_LAB_MODEL_PROVIDER);
+    setBatchContextModalOpen(true);
+  };
+
+  const handleCreateBatchContextLab = async () => {
+    if (
+      batchContextCreateInFlightRef.current ||
+      selectedCardRecords.length < 3 ||
+      selectedCardRecords.length > 20
+    ) {
+      return;
+    }
+
+    batchContextCreateInFlightRef.current = true;
+    setBatchContextCreating(true);
+    try {
+      const task = await request<ContextLabTask>(
+        contextLabCreateTask({
+          sourceType: "custom",
+          words: selectedCardRecords.map((record) => record.englishWord),
+          ieltsBand: normalizeIeltsBand(batchContextIeltsBand),
+          modelProvider: batchContextModelProvider,
+        }),
+      );
+      setBatchContextModalOpen(false);
+      setSelectedCardIds([]);
+      message.success("语境练习任务已提交");
+      navigate(
+        `/englishWorld/context-lab?source=word-library&taskId=${task.taskId}`,
+      );
+    } catch (error: unknown) {
+      message.error(error instanceof Error ? error.message : "任务提交失败");
+    } finally {
+      batchContextCreateInFlightRef.current = false;
+      setBatchContextCreating(false);
+    }
   };
 
   const handleQuickLevelChange = async (
@@ -937,6 +1007,28 @@ const EnglishWorld: React.FC = () => {
                         </Button>
                       </div>
                       <div className="word-card-batch-actions">
+                        <Tooltip
+                          title={
+                            selectedCardRecords.length < 3
+                              ? "至少选择 3 个词"
+                              : undefined
+                          }
+                        >
+                          <span>
+                            <Button
+                              aria-label="生成语境题"
+                              disabled={
+                                selectedCardRecords.length < 3 ||
+                                batchContextCreating
+                              }
+                              icon={<ExperimentOutlined aria-hidden="true" />}
+                              type="primary"
+                              onClick={handleOpenBatchContextLab}
+                            >
+                              生成语境题
+                            </Button>
+                          </span>
+                        </Tooltip>
                         <span>批量设为</span>
                         {WORD_LEVEL_VALUES.map((level) => {
                           const info = getLevelLabel(level);
@@ -990,6 +1082,71 @@ const EnglishWorld: React.FC = () => {
               onOk={handleModalOk}
               onCancel={handleModalCancel}
             />
+            <Modal
+              cancelButtonProps={{ disabled: batchContextCreating }}
+              cancelText="取消"
+              closable={!batchContextCreating}
+              confirmLoading={batchContextCreating}
+              destroyOnHidden={false}
+              maskClosable={!batchContextCreating}
+              okButtonProps={{ "aria-label": "开始生成" }}
+              okText="开始生成"
+              open={batchContextModalOpen}
+              title="生成语境练习"
+              transitionName=""
+              onCancel={() => setBatchContextModalOpen(false)}
+              onOk={() => void handleCreateBatchContextLab()}
+            >
+              <Space
+                className="word-batch-context-lab-modal"
+                direction="vertical"
+                size={16}
+              >
+                <div>
+                  <Text strong>所选单词</Text>
+                  <Text type="secondary">已选 {selectedCardRecords.length}/20</Text>
+                </div>
+                <div className="word-batch-context-lab-words">
+                  {selectedCardRecords.map((word) => (
+                    <Tag color="blue" key={word.id}>
+                      {word.englishWord}
+                    </Tag>
+                  ))}
+                </div>
+                <Space direction="vertical" size={6}>
+                  <Text>生成模型</Text>
+                  <Segmented
+                    aria-label="生成模型"
+                    options={[
+                      { label: "DeepSeek", value: "deepseek" },
+                      { label: "GPT-5.6", value: "gpt" },
+                    ]}
+                    value={batchContextModelProvider}
+                    onChange={(value) =>
+                      setBatchContextModelProvider(
+                        value as ContextLabModelProvider,
+                      )
+                    }
+                  />
+                </Space>
+                <Space direction="vertical" size={6}>
+                  <Text>雅思分数等级</Text>
+                  <InputNumber
+                    aria-label="雅思分数等级"
+                    max={IELTS_BAND_MAX}
+                    min={IELTS_BAND_MIN}
+                    step={IELTS_BAND_STEP}
+                    value={batchContextIeltsBand}
+                    onBlur={() =>
+                      setBatchContextIeltsBand(
+                        normalizeIeltsBand(batchContextIeltsBand),
+                      )
+                    }
+                    onChange={(value) => setBatchContextIeltsBand(value)}
+                  />
+                </Space>
+              </Space>
+            </Modal>
             <Modal
               className={`context-lab-source-modal${
                 sourcePreviewFullscreen

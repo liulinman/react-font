@@ -3,13 +3,30 @@ import type React from "react";
 import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, useLocation } from "react-router-dom";
+import { message } from "antd";
 import EnglishWorld from "./EnglishWorld";
 
 const { requestMock, tablePropsMock } = vi.hoisted(() => ({
   requestMock: vi.fn(),
   tablePropsMock: vi.fn(),
 }));
+
+function LocationProbe() {
+  const location = useLocation();
+  return (
+    <div data-testid="location">{`${location.pathname}${location.search}`}</div>
+  );
+}
+
+function makeWordList(count: number) {
+  return Array.from({ length: count }, (_, index) => ({
+    id: index + 1,
+    englishWord: `word-${index + 1}`,
+    englishType: 0,
+    englishLevel: index % 4,
+  }));
+}
 
 vi.mock("antd", async () => {
   const actual = await vi.importActual<typeof import("antd")>("antd");
@@ -565,6 +582,173 @@ describe("EnglishWorld ToC routing", () => {
       );
       expect(listCalls).toHaveLength(2);
     });
+  });
+
+  it("requires at least three cards before opening batch context generation", async () => {
+    const user = userEvent.setup();
+    requestMock.mockResolvedValue({
+      list: makeWordList(2),
+      total: 2,
+      totalPages: 1,
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/englishWorld/words"]}>
+        <EnglishWorld />
+      </MemoryRouter>,
+    );
+
+    await user.click(screen.getByText("卡片"));
+    await screen.findByText("word-1");
+    await user.click(screen.getByRole("button", { name: "批量管理" }));
+    await user.click(screen.getByRole("button", { name: "全选当前页" }));
+
+    expect(
+      screen.getByRole("button", { name: "生成语境题" }),
+    ).toBeDisabled();
+    expect(screen.queryByRole("dialog", { name: "生成语境练习" })).toBeNull();
+  });
+
+  it("rejects more than twenty selected cards without opening the modal", async () => {
+    const user = userEvent.setup();
+    const warningSpy = vi
+      .spyOn(message, "warning")
+      .mockImplementation(() => undefined as never);
+    requestMock.mockResolvedValue({
+      list: makeWordList(21),
+      total: 21,
+      totalPages: 1,
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/englishWorld/words"]}>
+        <EnglishWorld />
+      </MemoryRouter>,
+    );
+
+    await user.click(screen.getByText("卡片"));
+    await screen.findByText("word-1");
+    await user.click(screen.getByRole("button", { name: "批量管理" }));
+    await user.click(screen.getByRole("button", { name: "全选当前页" }));
+    await user.click(screen.getByRole("button", { name: "生成语境题" }));
+
+    expect(warningSpy).toHaveBeenCalledWith(
+      "每次最多选择 20 个词，请减少选择",
+    );
+    expect(screen.queryByRole("dialog", { name: "生成语境练习" })).toBeNull();
+    expect(
+      requestMock.mock.calls.filter(
+        ([config]) => config.url === "/context-lab/generate-task",
+      ),
+    ).toHaveLength(0);
+  }, 60_000);
+
+  it("creates one configured custom task and navigates to its focused status", async () => {
+    const user = userEvent.setup();
+    const words = makeWordList(3);
+    let resolveTask: ((value: unknown) => void) | undefined;
+    requestMock.mockImplementation((config: { url?: string }) => {
+      if (config.url === "/context-lab/generate-task") {
+        return new Promise((resolve) => {
+          resolveTask = resolve;
+        });
+      }
+      return Promise.resolve({ list: words, total: 3, totalPages: 1 });
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/englishWorld/words"]}>
+        <EnglishWorld />
+        <LocationProbe />
+      </MemoryRouter>,
+    );
+
+    await user.click(screen.getByText("卡片"));
+    await screen.findByText("word-1");
+    await user.click(screen.getByRole("button", { name: "批量管理" }));
+    await user.click(screen.getByRole("button", { name: "全选当前页" }));
+    await user.click(screen.getByRole("button", { name: "生成语境题" }));
+
+    const dialog = screen.getByRole("dialog", { name: "生成语境练习" });
+    expect(within(dialog).getByText("已选 3/20")).toBeInTheDocument();
+    await user.click(within(dialog).getByText("GPT-5.6"));
+    const band = within(dialog).getByRole("spinbutton", {
+      name: "雅思分数等级",
+    });
+    await user.clear(band);
+    await user.type(band, "7.5");
+    await user.click(within(dialog).getByRole("button", { name: "开始生成" }));
+    await user.click(within(dialog).getByRole("button", { name: "开始生成" }));
+
+    await waitFor(() => {
+      expect(
+        requestMock.mock.calls.filter(
+          ([config]) => config.url === "/context-lab/generate-task",
+        ),
+      ).toHaveLength(1);
+    });
+    expect(requestMock).toHaveBeenCalledWith({
+      url: "/context-lab/generate-task",
+      method: "POST",
+      data: {
+        sourceType: "custom",
+        words: ["word-1", "word-2", "word-3"],
+        ieltsBand: 7.5,
+        modelProvider: "gpt",
+      },
+      __responseType: undefined,
+    });
+
+    resolveTask?.({
+      id: 44,
+      taskId: 44,
+      status: "pending",
+      sourceType: "custom",
+      words: ["word-1", "word-2", "word-3"],
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("location")).toHaveTextContent(
+        "/englishWorld/context-lab?source=word-library&taskId=44",
+      );
+    });
+  });
+
+  it("keeps the batch modal and configuration after task creation fails", async () => {
+    const user = userEvent.setup();
+    const errorSpy = vi
+      .spyOn(message, "error")
+      .mockImplementation(() => undefined as never);
+    const words = makeWordList(3);
+    requestMock.mockImplementation((config: { url?: string }) =>
+      config.url === "/context-lab/generate-task"
+        ? Promise.reject(new Error("AI 服务暂不可用"))
+        : Promise.resolve({ list: words, total: 3, totalPages: 1 }),
+    );
+
+    render(
+      <MemoryRouter initialEntries={["/englishWorld/words"]}>
+        <EnglishWorld />
+      </MemoryRouter>,
+    );
+
+    await user.click(screen.getByText("卡片"));
+    await screen.findByText("word-1");
+    await user.click(screen.getByRole("button", { name: "批量管理" }));
+    await user.click(screen.getByRole("button", { name: "全选当前页" }));
+    await user.click(screen.getByRole("button", { name: "生成语境题" }));
+    const dialog = screen.getByRole("dialog", { name: "生成语境练习" });
+    await user.click(within(dialog).getByText("GPT-5.6"));
+    await user.click(within(dialog).getByRole("button", { name: "开始生成" }));
+
+    await waitFor(() => {
+      expect(errorSpy).toHaveBeenCalledWith("AI 服务暂不可用");
+    });
+    expect(screen.getByRole("dialog", { name: "生成语境练习" })).toBeVisible();
+    expect(screen.getByText("已选 3/20")).toBeInTheDocument();
+    expect(screen.getByText("GPT-5.6").closest(".ant-segmented-item")).toHaveClass(
+      "ant-segmented-item-selected",
+    );
   });
 
   it("rolls back a failed card mastery update", async () => {
