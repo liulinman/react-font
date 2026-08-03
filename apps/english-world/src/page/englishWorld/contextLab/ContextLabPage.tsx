@@ -357,6 +357,20 @@ function getContextLabSearchSourceType(
   return sourceType === "all" ? undefined : sourceType;
 }
 
+function mergeContextLabTask(
+  currentTask: ContextLabTask | null | undefined,
+  nextTask: ContextLabTask,
+) {
+  if (!currentTask || currentTask.taskId !== nextTask.taskId) return nextTask;
+  if (
+    !isContextLabTaskActive(currentTask.status) &&
+    isContextLabTaskActive(nextTask.status)
+  ) {
+    return { ...nextTask, ...currentTask };
+  }
+  return { ...currentTask, ...nextTask };
+}
+
 export function formatElapsedSeconds(totalSeconds: number) {
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
@@ -623,23 +637,30 @@ function ContextLabPageContent({
       );
       const nextHistory = response.list ?? [];
       setHistory((previousHistory) => {
-        if (!wordLibraryTaskId) return nextHistory;
+        const mergedHistory = nextHistory.map((task) =>
+          mergeContextLabTask(
+            previousHistory.find((item) => item.taskId === task.taskId),
+            task,
+          ),
+        );
+        if (!wordLibraryTaskId) return mergedHistory;
         const focusedTask = previousHistory.find(
           (task) => task.taskId === wordLibraryTaskId,
         );
         if (
           !focusedTask ||
-          nextHistory.some((task) => task.taskId === wordLibraryTaskId)
+          mergedHistory.some((task) => task.taskId === wordLibraryTaskId)
         ) {
-          return nextHistory;
+          return mergedHistory;
         }
-        return [focusedTask, ...nextHistory].slice(0, 10);
+        return [focusedTask, ...mergedHistory].slice(0, 10);
       });
       setCurrentTask((prev) => {
         if (!prev) return prev;
-        return (
-          response.list?.find((task) => task.taskId === prev.taskId) ?? prev
+        const matchingTask = response.list?.find(
+          (task) => task.taskId === prev.taskId,
         );
+        return matchingTask ? mergeContextLabTask(prev, matchingTask) : prev;
       });
     } catch (error: unknown) {
       message.error(error instanceof Error ? error.message : "历史记录加载失败");
@@ -716,11 +737,15 @@ function ContextLabPageContent({
           return historySearchActive ? prev : [task, ...prev].slice(0, 10);
         }
         return prev.map((item) =>
-          item.taskId === task.taskId ? { ...item, ...task } : item,
+          item.taskId === task.taskId
+            ? mergeContextLabTask(item, task)
+            : item,
         );
       });
       setCurrentTask((prev) =>
-        prev?.taskId === task.taskId ? { ...prev, ...task } : prev,
+        prev?.taskId === task.taskId || task.taskId === wordLibraryTaskId
+          ? mergeContextLabTask(prev, task)
+          : prev,
       );
       if (
         microEntry &&
@@ -732,7 +757,12 @@ function ContextLabPageContent({
         setPracticeModalOpen(true);
       }
     });
-  }, [historySearchActive, microEntry, recordMicroGenerated]);
+  }, [
+    historySearchActive,
+    microEntry,
+    recordMicroGenerated,
+    wordLibraryTaskId,
+  ]);
 
   useEffect(() => {
     if (!microEntry || !microTaskId) return;
@@ -850,11 +880,18 @@ function ContextLabPageContent({
     })
       .then((task) => {
         if (cancelled) return;
-        setHistory((previousHistory) => [
-          task,
-          ...previousHistory.filter((item) => item.taskId !== task.taskId),
-        ].slice(0, 10));
-        setCurrentTask(task);
+        setHistory((previousHistory) => {
+          const existingTask = previousHistory.find(
+            (item) => item.taskId === task.taskId,
+          );
+          return [
+            mergeContextLabTask(existingTask, task),
+            ...previousHistory.filter((item) => item.taskId !== task.taskId),
+          ].slice(0, 10);
+        });
+        setCurrentTask((previousTask) =>
+          mergeContextLabTask(previousTask, task),
+        );
         setAnswers({});
         setResults([]);
         setSubmitSummary(null);

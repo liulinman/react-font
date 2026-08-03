@@ -646,6 +646,77 @@ describe("ContextLabPage", () => {
     expect(screen.getByRole("button", { name: "开始练习" })).toBeVisible();
   });
 
+  it("keeps a succeeded word-library task after stale detail and history responses", async () => {
+    let resolveDetail: (task: unknown) => void = () => undefined;
+    let resolveHistory: (history: unknown) => void = () => undefined;
+    const pendingDetail = new Promise((resolve) => {
+      resolveDetail = resolve;
+    });
+    const pendingHistory = new Promise((resolve) => {
+      resolveHistory = resolve;
+    });
+    const staleTask = {
+      id: 45,
+      taskId: 45,
+      status: "pending",
+      sourceType: "custom",
+      words: ["word-1", "word-2", "word-3"],
+    };
+
+    requestMock.mockImplementation((config) => {
+      if (config.url === "/context-lab/history") return pendingHistory;
+      if (config.url === "/context-lab/detail") return pendingDetail;
+      return Promise.resolve({});
+    });
+
+    render(
+      <MemoryRouter
+        initialEntries={[
+          "/englishWorld/context-lab?source=word-library&taskId=45",
+        ]}
+      >
+        <ContextLabPage />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(requestMock).toHaveBeenCalledWith(
+        expect.objectContaining({ url: "/context-lab/detail" }),
+      );
+    });
+    await userEvent.click(screen.getByRole("button", { name: "刷新" }));
+
+    act(() => {
+      taskEventHandler?.({
+        id: 45,
+        taskId: 45,
+        status: "succeeded",
+        sourceType: "custom",
+        words: ["word-1", "word-2", "word-3"],
+        article: "A generated article.",
+        questions: [
+          {
+            id: "q1",
+            stem: "What is the article about?",
+            options: ["Words", "Numbers", "Weather", "Travel"],
+          },
+        ],
+      });
+    });
+
+    await act(async () => {
+      resolveDetail(staleTask);
+      resolveHistory({ list: [staleTask], total: 1, page: 1, pageSize: 10 });
+    });
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("region", { name: "批量生成任务状态" }),
+      ).toBeNull();
+    });
+    expect(screen.getByRole("button", { name: "开始练习" })).toBeVisible();
+  });
+
   it("keeps Context Lab usable when a focused word-library task is unavailable", async () => {
     const warningSpy = vi
       .spyOn(message, "warning")
