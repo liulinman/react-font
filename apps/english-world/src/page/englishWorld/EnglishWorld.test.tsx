@@ -1,6 +1,13 @@
 import "@testing-library/jest-dom/vitest";
 import type React from "react";
-import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter, useLocation } from "react-router-dom";
@@ -746,6 +753,62 @@ describe("EnglishWorld ToC routing", () => {
     });
     expect(screen.getByRole("dialog", { name: "生成语境练习" })).toBeVisible();
     expect(screen.getByText("已选 3/20")).toBeInTheDocument();
+    expect(screen.getByText("GPT-5.6").closest(".ant-segmented-item")).toHaveClass(
+      "ant-segmented-item-selected",
+    );
+  });
+
+  it("keeps the batch modal open when Escape is pressed during a failed creation", async () => {
+    const user = userEvent.setup();
+    const errorSpy = vi
+      .spyOn(message, "error")
+      .mockImplementation(() => undefined as never);
+    const words = makeWordList(3);
+    let rejectTask: ((reason?: unknown) => void) | undefined;
+    requestMock.mockImplementation((config: { url?: string }) => {
+      if (config.url === "/context-lab/generate-task") {
+        return new Promise((_, reject) => {
+          rejectTask = reject;
+        });
+      }
+      return Promise.resolve({ list: words, total: 3, totalPages: 1 });
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/englishWorld/words"]}>
+        <EnglishWorld />
+      </MemoryRouter>,
+    );
+
+    await user.click(screen.getByText("卡片"));
+    await screen.findByText("word-1");
+    await user.click(screen.getByRole("button", { name: "批量管理" }));
+    await user.click(screen.getByRole("button", { name: "全选当前页" }));
+    await user.click(screen.getByRole("button", { name: "生成语境题" }));
+    const dialog = screen.getByRole("dialog", { name: "生成语境练习" });
+    await user.click(within(dialog).getByText("GPT-5.6"));
+    await user.click(within(dialog).getByRole("button", { name: "开始生成" }));
+
+    await waitFor(() => {
+      expect(
+        requestMock.mock.calls.filter(
+          ([config]) => config.url === "/context-lab/generate-task",
+        ),
+      ).toHaveLength(1);
+    });
+    fireEvent.keyDown(dialog.parentElement as HTMLElement, {
+      code: "Escape",
+      key: "Escape",
+      keyCode: 27,
+    });
+    rejectTask?.(new Error("AI 服务暂不可用"));
+
+    await waitFor(() => {
+      expect(errorSpy).toHaveBeenCalledWith("AI 服务暂不可用");
+    });
+    expect(screen.getByRole("dialog", { name: "生成语境练习" })).toBeVisible();
+    expect(screen.getByText("已选 3/20")).toBeInTheDocument();
+    expect(screen.getByText("已选 3 项")).toBeInTheDocument();
     expect(screen.getByText("GPT-5.6").closest(".ant-segmented-item")).toHaveClass(
       "ant-segmented-item-selected",
     );

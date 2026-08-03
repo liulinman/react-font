@@ -1088,6 +1088,7 @@ const EnglishWorld: React.FC = () => {
               closable={!batchContextCreating}
               confirmLoading={batchContextCreating}
               destroyOnHidden={false}
+              keyboard={!batchContextCreating}
               maskClosable={!batchContextCreating}
               okButtonProps={{ "aria-label": "开始生成" }}
               okText="开始生成"
