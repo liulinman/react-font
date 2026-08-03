@@ -717,6 +717,297 @@ describe("ContextLabPage", () => {
     expect(screen.getByRole("button", { name: "开始练习" })).toBeVisible();
   });
 
+  it("keeps focused task processing after stale pending detail and history responses", async () => {
+    let resolveDetail: (task: unknown) => void = () => undefined;
+    let resolveHistory: (history: unknown) => void = () => undefined;
+    const pendingDetail = new Promise((resolve) => {
+      resolveDetail = resolve;
+    });
+    const pendingHistory = new Promise((resolve) => {
+      resolveHistory = resolve;
+    });
+    const staleTask = {
+      id: 46,
+      taskId: 46,
+      status: "pending",
+      sourceType: "custom",
+      words: ["word-1", "word-2", "word-3"],
+    };
+
+    requestMock.mockImplementation((config) => {
+      if (config.url === "/context-lab/history") return pendingHistory;
+      if (config.url === "/context-lab/detail") return pendingDetail;
+      return Promise.resolve({});
+    });
+
+    render(
+      <MemoryRouter
+        initialEntries={[
+          "/englishWorld/context-lab?source=word-library&taskId=46",
+        ]}
+      >
+        <ContextLabPage />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(requestMock).toHaveBeenCalledWith(
+        expect.objectContaining({ url: "/context-lab/detail" }),
+      );
+    });
+    act(() => {
+      taskEventHandler?.({
+        id: 46,
+        taskId: 46,
+        status: "processing",
+        sourceType: "custom",
+        words: ["word-1", "word-2", "word-3"],
+      });
+    });
+
+    expect(
+      await screen.findByRole("region", { name: "批量生成任务状态" }),
+    ).toHaveTextContent("处理中");
+
+    await act(async () => {
+      resolveDetail(staleTask);
+      resolveHistory({ list: [staleTask], total: 1, page: 1, pageSize: 10 });
+    });
+
+    expect(
+      screen.getByRole("region", { name: "批量生成任务状态" }),
+    ).toHaveTextContent("处理中");
+    expect(
+      screen.getByText("word-1 / word-2 / word-3").closest("article"),
+    ).toHaveClass("context-lab-history-item-processing");
+  });
+
+  it("preserves an opened focused practice and its answer when detail resolves late", async () => {
+    let resolveDetail: (task: unknown) => void = () => undefined;
+    const pendingDetail = new Promise((resolve) => {
+      resolveDetail = resolve;
+    });
+    const focusedWords = ["word-1", "word-2", "word-3"];
+
+    requestMock.mockImplementation((config) => {
+      if (config.url === "/context-lab/history") {
+        return Promise.resolve({ list: [], total: 0, page: 1, pageSize: 10 });
+      }
+      if (config.url === "/context-lab/detail") return pendingDetail;
+      return Promise.resolve({});
+    });
+
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter
+        initialEntries={[
+          "/englishWorld/context-lab?source=word-library&taskId=47",
+        ]}
+      >
+        <ContextLabPage />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(requestMock).toHaveBeenCalledWith(
+        expect.objectContaining({ url: "/context-lab/detail" }),
+      );
+    });
+    act(() => {
+      taskEventHandler?.({
+        id: 47,
+        taskId: 47,
+        status: "succeeded",
+        sourceType: "custom",
+        words: focusedWords,
+        article: "Focused article.",
+        questions: [
+          {
+            id: "focused-q1",
+            stem: "What is the focused article about?",
+            options: ["Words", "Numbers"],
+          },
+        ],
+      });
+    });
+
+    await user.click(await screen.findByRole("button", { name: "开始练习" }));
+    await user.click(screen.getByLabelText("A. Words"));
+
+    await act(async () => {
+      resolveDetail({
+        id: 47,
+        taskId: 47,
+        status: "pending",
+        sourceType: "custom",
+        words: focusedWords,
+      });
+    });
+
+    expect(screen.getByRole("dialog", { name: /AI 语境练习/ })).not.toHaveClass(
+      "ant-zoom-leave",
+    );
+    expect(screen.getByLabelText("A. Words")).toBeChecked();
+    expect(
+      screen.getByText("What is the focused article about?"),
+    ).toBeInTheDocument();
+  });
+
+  it("does not let focused-task SSE replace a newer practice selection", async () => {
+    let resolveDetail: (task: unknown) => void = () => undefined;
+    const pendingDetail = new Promise((resolve) => {
+      resolveDetail = resolve;
+    });
+    const selectedTask = {
+      id: 92,
+      taskId: 92,
+      status: "succeeded",
+      sourceType: "custom",
+      words: ["newer", "selection", "wins"],
+      article: "Newer selected article.",
+      questions: [
+        {
+          id: "selected-q1",
+          stem: "Which task did the learner select?",
+          options: ["Newer task", "Focused task"],
+        },
+      ],
+    };
+
+    requestMock.mockImplementation((config) => {
+      if (config.url === "/context-lab/history") {
+        return Promise.resolve({
+          list: [selectedTask],
+          total: 1,
+          page: 1,
+          pageSize: 10,
+        });
+      }
+      if (config.url === "/context-lab/detail") return pendingDetail;
+      return Promise.resolve({});
+    });
+
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter
+        initialEntries={[
+          "/englishWorld/context-lab?source=word-library&taskId=48",
+        ]}
+      >
+        <ContextLabPage />
+      </MemoryRouter>,
+    );
+
+    await user.click(await screen.findByRole("button", { name: "开始练习" }));
+    await user.click(screen.getByLabelText("A. Newer task"));
+    act(() => {
+      taskEventHandler?.({
+        id: 48,
+        taskId: 48,
+        status: "succeeded",
+        sourceType: "custom",
+        words: ["focused", "task", "event"],
+        article: "Focused SSE article.",
+        questions: [
+          {
+            id: "focused-q1",
+            stem: "Should this focused task replace the selection?",
+            options: ["No", "Yes"],
+          },
+        ],
+      });
+    });
+
+    expect(
+      screen.getByText("Which task did the learner select?"),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("A. Newer task")).toBeChecked();
+    expect(
+      screen.queryByText("Should this focused task replace the selection?"),
+    ).toBeNull();
+
+    await act(async () => {
+      resolveDetail({
+        id: 48,
+        taskId: 48,
+        status: "succeeded",
+        sourceType: "custom",
+        words: ["focused", "task", "event"],
+      });
+    });
+  });
+
+  it("does not let delayed focused detail replace a newer practice selection", async () => {
+    let resolveDetail: (task: unknown) => void = () => undefined;
+    const pendingDetail = new Promise((resolve) => {
+      resolveDetail = resolve;
+    });
+    const selectedTask = {
+      id: 93,
+      taskId: 93,
+      status: "succeeded",
+      sourceType: "custom",
+      words: ["manual", "selection", "wins"],
+      article: "Manually selected article.",
+      questions: [
+        {
+          id: "manual-q1",
+          stem: "Which article is still open?",
+          options: ["Manual article", "Focused article"],
+        },
+      ],
+    };
+
+    requestMock.mockImplementation((config) => {
+      if (config.url === "/context-lab/history") {
+        return Promise.resolve({
+          list: [selectedTask],
+          total: 1,
+          page: 1,
+          pageSize: 10,
+        });
+      }
+      if (config.url === "/context-lab/detail") return pendingDetail;
+      return Promise.resolve({});
+    });
+
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter
+        initialEntries={[
+          "/englishWorld/context-lab?source=word-library&taskId=49",
+        ]}
+      >
+        <ContextLabPage />
+      </MemoryRouter>,
+    );
+
+    await user.click(await screen.findByRole("button", { name: "开始练习" }));
+    await user.click(screen.getByLabelText("A. Manual article"));
+
+    await act(async () => {
+      resolveDetail({
+        id: 49,
+        taskId: 49,
+        status: "succeeded",
+        sourceType: "custom",
+        words: ["focused", "late", "detail"],
+        article: "Late focused article.",
+        questions: [
+          {
+            id: "late-q1",
+            stem: "Did late detail replace the selection?",
+            options: ["No", "Yes"],
+          },
+        ],
+      });
+    });
+
+    expect(screen.getByText("Which article is still open?")).toBeInTheDocument();
+    expect(screen.getByLabelText("A. Manual article")).toBeChecked();
+    expect(screen.queryByText("Did late detail replace the selection?")).toBeNull();
+  });
+
   it("keeps Context Lab usable when a focused word-library task is unavailable", async () => {
     const warningSpy = vi
       .spyOn(message, "warning")

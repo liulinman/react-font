@@ -1611,7 +1611,7 @@ html[data-theme="dark"] .overwrite-stats-table .ant-table-thead > tr > th {
   width: 100%;
 }
 
-.word-batch-context-lab-modal > div:first-child {
+.word-batch-context-lab-header {
   display: flex;
   align-items: center;
   justify-content: space-between;

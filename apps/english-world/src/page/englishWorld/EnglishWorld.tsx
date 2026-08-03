@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   Button,
   Checkbox,
@@ -127,6 +127,7 @@ const EnglishWorld: React.FC = () => {
   const [batchContextModelProvider, setBatchContextModelProvider] =
     useState<ContextLabModelProvider>(DEFAULT_CONTEXT_LAB_MODEL_PROVIDER);
   const batchContextCreateInFlightRef = useRef(false);
+  const batchContextCreateOperationRef = useRef(0);
   const [sourcePreviewOpen, setSourcePreviewOpen] = useState(false);
   const [sourcePreviewFullscreen, setSourcePreviewFullscreen] = useState(false);
   const [sourcePreviewLoading, setSourcePreviewLoading] = useState(false);
@@ -141,6 +142,14 @@ const EnglishWorld: React.FC = () => {
     useMutation(wordAdd);
   const location = useLocation();
   const navigate = useNavigate();
+  const locationKeyRef = useRef(location.key);
+  const locationGenerationRef = useRef(0);
+  useLayoutEffect(() => {
+    if (locationKeyRef.current !== location.key) {
+      locationKeyRef.current = location.key;
+      locationGenerationRef.current += 1;
+    }
+  }, [location.key]);
   const activeNav = getNavFromLocation(
     location.pathname,
     location.hash || "",
@@ -439,6 +448,7 @@ const EnglishWorld: React.FC = () => {
   );
 
   const handleOpenBatchContextLab = () => {
+    if (batchLevelUpdating) return;
     if (selectedCardRecords.length > 20) {
       message.warning("每次最多选择 20 个词，请减少选择");
       return;
@@ -453,6 +463,7 @@ const EnglishWorld: React.FC = () => {
   const handleCreateBatchContextLab = async () => {
     if (
       batchContextCreateInFlightRef.current ||
+      batchLevelUpdating ||
       selectedCardRecords.length < 3 ||
       selectedCardRecords.length > 20
     ) {
@@ -460,6 +471,8 @@ const EnglishWorld: React.FC = () => {
     }
 
     batchContextCreateInFlightRef.current = true;
+    const operationToken = ++batchContextCreateOperationRef.current;
+    const ownerLocationGeneration = locationGenerationRef.current;
     setBatchContextCreating(true);
     try {
       const task = await request<ContextLabTask>(
@@ -470,6 +483,12 @@ const EnglishWorld: React.FC = () => {
           modelProvider: batchContextModelProvider,
         }),
       );
+      if (
+        operationToken !== batchContextCreateOperationRef.current ||
+        ownerLocationGeneration !== locationGenerationRef.current
+      ) {
+        return;
+      }
       setBatchContextModalOpen(false);
       setSelectedCardIds([]);
       message.success("语境练习任务已提交");
@@ -477,7 +496,12 @@ const EnglishWorld: React.FC = () => {
         `/englishWorld/context-lab?source=word-library&taskId=${task.taskId}`,
       );
     } catch (error: unknown) {
-      message.error(error instanceof Error ? error.message : "任务提交失败");
+      if (
+        operationToken === batchContextCreateOperationRef.current &&
+        ownerLocationGeneration === locationGenerationRef.current
+      ) {
+        message.error(error instanceof Error ? error.message : "任务提交失败");
+      }
     } finally {
       batchContextCreateInFlightRef.current = false;
       setBatchContextCreating(false);
@@ -1019,6 +1043,7 @@ const EnglishWorld: React.FC = () => {
                               aria-label="生成语境题"
                               disabled={
                                 selectedCardRecords.length < 3 ||
+                                batchLevelUpdating ||
                                 batchContextCreating
                               }
                               icon={<ExperimentOutlined aria-hidden="true" />}
@@ -1103,7 +1128,7 @@ const EnglishWorld: React.FC = () => {
                 direction="vertical"
                 size={16}
               >
-                <div>
+                <div className="word-batch-context-lab-header">
                   <Text strong>所选单词</Text>
                   <Text type="secondary">已选 {selectedCardRecords.length}/20</Text>
                 </div>

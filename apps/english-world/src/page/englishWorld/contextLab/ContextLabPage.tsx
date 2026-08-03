@@ -362,9 +362,23 @@ function mergeContextLabTask(
   nextTask: ContextLabTask,
 ) {
   if (!currentTask || currentTask.taskId !== nextTask.taskId) return nextTask;
+
+  const statusRank: Record<ContextLabTask["status"], number> = {
+    pending: 0,
+    processing: 1,
+    succeeded: 2,
+    failed: 2,
+  };
+  const currentUpdateTime = Date.parse(currentTask.updateTime ?? "");
+  const nextUpdateTime = Date.parse(nextTask.updateTime ?? "");
+  const nextIsOlder =
+    Number.isFinite(currentUpdateTime) &&
+    Number.isFinite(nextUpdateTime) &&
+    nextUpdateTime < currentUpdateTime;
+
   if (
-    !isContextLabTaskActive(currentTask.status) &&
-    isContextLabTaskActive(nextTask.status)
+    statusRank[nextTask.status] < statusRank[currentTask.status] ||
+    nextIsOlder
   ) {
     return { ...nextTask, ...currentTask };
   }
@@ -499,6 +513,8 @@ function ContextLabPageContent({
   const completedMicroTaskIdsRef = useRef(new Set<number>());
   const microRequestUidRef = useRef<string | null>(null);
   const submitInFlightRef = useRef(false);
+  const focusedTaskRequestGenerationRef = useRef(0);
+  const userTaskNavigationGenerationRef = useRef(0);
 
   const closeSelectionMenu = () => {
     setSelectionMenu((prev) => ({ ...prev, open: false }));
@@ -742,11 +758,15 @@ function ContextLabPageContent({
             : item,
         );
       });
-      setCurrentTask((prev) =>
-        prev?.taskId === task.taskId || task.taskId === wordLibraryTaskId
-          ? mergeContextLabTask(prev, task)
-          : prev,
-      );
+      setCurrentTask((prev) => {
+        if (prev?.taskId === task.taskId) {
+          return mergeContextLabTask(prev, task);
+        }
+        if (!prev && task.taskId === wordLibraryTaskId) {
+          return task;
+        }
+        return prev;
+      });
       if (
         microEntry &&
         task.taskId === activeMicroTaskIdRef.current &&
@@ -873,43 +893,67 @@ function ContextLabPageContent({
   useEffect(() => {
     if (microEntry || !wordLibraryTaskId) return;
 
+    const requestGeneration = ++focusedTaskRequestGenerationRef.current;
+    const navigationGeneration = userTaskNavigationGenerationRef.current;
     let cancelled = false;
-    void request<ContextLabTask>({
-      ...contextLabDetail({ taskId: wordLibraryTaskId }),
-      config: { suppressErrorMessage: true },
-    })
-      .then((task) => {
-        if (cancelled) return;
-        setHistory((previousHistory) => {
-          const existingTask = previousHistory.find(
-            (item) => item.taskId === task.taskId,
-          );
-          return [
-            mergeContextLabTask(existingTask, task),
-            ...previousHistory.filter((item) => item.taskId !== task.taskId),
-          ].slice(0, 10);
-        });
-        setCurrentTask((previousTask) =>
-          mergeContextLabTask(previousTask, task),
-        );
-        setAnswers({});
-        setResults([]);
-        setSubmitSummary(null);
-        setElapsedSeconds(0);
-        setHighlightWord("");
-        setSourcePreviewFullscreen(false);
-        setSourcePreviewOpen(false);
-        setPracticeFullscreen(false);
-        setPracticeModalOpen(false);
+
+    const requestTimer = window.setTimeout(() => {
+      if (cancelled) return;
+
+      setAnswers({});
+      setResults([]);
+      setSubmitSummary(null);
+      setElapsedSeconds(0);
+      setHighlightWord("");
+      setSourcePreviewFullscreen(false);
+      setSourcePreviewOpen(false);
+      setPracticeFullscreen(false);
+      setPracticeModalOpen(false);
+
+      void request<ContextLabTask>({
+        ...contextLabDetail({ taskId: wordLibraryTaskId }),
+        config: { suppressErrorMessage: true },
       })
-      .catch(() => {
-        if (!cancelled) {
-          message.warning("目标语境任务无法加载，请在练习包列表中查看");
-        }
-      });
+        .then((task) => {
+          if (
+            cancelled ||
+            requestGeneration !== focusedTaskRequestGenerationRef.current
+          ) {
+            return;
+          }
+          setHistory((previousHistory) => {
+            const existingTask = previousHistory.find(
+              (item) => item.taskId === task.taskId,
+            );
+            return [
+              mergeContextLabTask(existingTask, task),
+              ...previousHistory.filter((item) => item.taskId !== task.taskId),
+            ].slice(0, 10);
+          });
+          setCurrentTask((previousTask) => {
+            const userSelectedAnotherTask =
+              navigationGeneration !==
+                userTaskNavigationGenerationRef.current &&
+              previousTask?.taskId !== task.taskId;
+            if (
+              userSelectedAnotherTask ||
+              (previousTask && previousTask.taskId !== task.taskId)
+            ) {
+              return previousTask;
+            }
+            return mergeContextLabTask(previousTask, task);
+          });
+        })
+        .catch(() => {
+          if (!cancelled) {
+            message.warning("目标语境任务无法加载，请在练习包列表中查看");
+          }
+        });
+    }, 0);
 
     return () => {
       cancelled = true;
+      window.clearTimeout(requestTimer);
     };
   }, [microEntry, wordLibraryTaskId]);
 
@@ -1037,6 +1081,7 @@ function ContextLabPageContent({
   };
 
   const handleOpenTask = (task: ContextLabTask) => {
+    userTaskNavigationGenerationRef.current += 1;
     setCurrentTask(task);
     setAnswers({});
     setResults([]);

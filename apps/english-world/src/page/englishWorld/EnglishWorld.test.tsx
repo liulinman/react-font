@@ -1,6 +1,7 @@
 import "@testing-library/jest-dom/vitest";
 import type React from "react";
 import {
+  act,
   cleanup,
   fireEvent,
   render,
@@ -10,7 +11,7 @@ import {
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { MemoryRouter, useLocation } from "react-router-dom";
+import { MemoryRouter, useLocation, useNavigate } from "react-router-dom";
 import { message } from "antd";
 import EnglishWorld from "./EnglishWorld";
 
@@ -24,6 +25,11 @@ function LocationProbe() {
   return (
     <div data-testid="location">{`${location.pathname}${location.search}`}</div>
   );
+}
+
+function LeaveWordLibraryButton() {
+  const navigate = useNavigate();
+  return <button onClick={() => navigate("/englishWorld/stats")}>离开词库</button>;
 }
 
 function makeWordList(count: number) {
@@ -812,6 +818,107 @@ describe("EnglishWorld ToC routing", () => {
     expect(screen.getByText("GPT-5.6").closest(".ant-segmented-item")).toHaveClass(
       "ant-segmented-item-selected",
     );
+  });
+
+  it("blocks context generation while a batch mastery update is in flight", async () => {
+    const user = userEvent.setup();
+    const words = makeWordList(3);
+    let resolveLevelUpdate: (success: boolean) => void = () => undefined;
+    const pendingLevelUpdate = new Promise<boolean>((resolve) => {
+      resolveLevelUpdate = resolve;
+    });
+    requestMock.mockImplementation((config: { url?: string }) => {
+      if (config.url === "/english/updateEnglishWordLevel") {
+        return pendingLevelUpdate;
+      }
+      return Promise.resolve({ list: words, total: 3, totalPages: 1 });
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/englishWorld/words"]}>
+        <EnglishWorld />
+      </MemoryRouter>,
+    );
+
+    await user.click(screen.getByText("卡片"));
+    await screen.findByText("word-1");
+    await user.click(screen.getByRole("button", { name: "批量管理" }));
+    await user.click(screen.getByRole("button", { name: "全选当前页" }));
+    await user.click(screen.getByRole("button", { name: "批量设为精通" }));
+
+    const generateButton = screen.getByRole("button", { name: "生成语境题" });
+    expect(generateButton).toBeDisabled();
+    await user.click(generateButton);
+    expect(screen.queryByRole("dialog", { name: "生成语境练习" })).toBeNull();
+    expect(
+      requestMock.mock.calls.filter(
+        ([config]) => config.url === "/context-lab/generate-task",
+      ),
+    ).toHaveLength(0);
+
+    await act(async () => {
+      resolveLevelUpdate(true);
+    });
+  });
+
+  it("does not redirect or announce success when task creation resolves after navigation", async () => {
+    const user = userEvent.setup();
+    const successSpy = vi
+      .spyOn(message, "success")
+      .mockImplementation(() => undefined as never);
+    const words = makeWordList(3);
+    let resolveTask: (task: unknown) => void = () => undefined;
+    const pendingTask = new Promise((resolve) => {
+      resolveTask = resolve;
+    });
+    requestMock.mockImplementation((config: { url?: string }) => {
+      if (config.url === "/context-lab/generate-task") return pendingTask;
+      return Promise.resolve({ list: words, total: 3, totalPages: 1 });
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/englishWorld/words"]}>
+        <EnglishWorld />
+        <LocationProbe />
+        <LeaveWordLibraryButton />
+      </MemoryRouter>,
+    );
+
+    await user.click(screen.getByText("卡片"));
+    await screen.findByText("word-1");
+    await user.click(screen.getByRole("button", { name: "批量管理" }));
+    await user.click(screen.getByRole("button", { name: "全选当前页" }));
+    await user.click(screen.getByRole("button", { name: "生成语境题" }));
+    await user.click(
+      screen.getByRole("button", { name: "开始生成" }),
+    );
+    await waitFor(() => {
+      expect(
+        requestMock.mock.calls.filter(
+          ([config]) => config.url === "/context-lab/generate-task",
+        ),
+      ).toHaveLength(1);
+    });
+
+    await user.click(screen.getByRole("button", { name: "离开词库" }));
+    expect(screen.getByTestId("location")).toHaveTextContent(
+      "/englishWorld/stats",
+    );
+
+    await act(async () => {
+      resolveTask({
+        id: 50,
+        taskId: 50,
+        status: "pending",
+        sourceType: "custom",
+        words: ["word-1", "word-2", "word-3"],
+      });
+    });
+
+    expect(screen.getByTestId("location")).toHaveTextContent(
+      "/englishWorld/stats",
+    );
+    expect(successSpy).not.toHaveBeenCalledWith("语境练习任务已提交");
   });
 
   it("rolls back a failed card mastery update", async () => {
