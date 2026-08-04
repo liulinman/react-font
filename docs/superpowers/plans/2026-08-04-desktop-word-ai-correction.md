@@ -4,7 +4,7 @@
 
 **Goal:** Add user-confirmed lemma and spelling suggestions to the desktop add-word modal, then deploy the compatible backend before the frontend.
 
-**Architecture:** Extend the existing Word Agent response with a validated four-state diagnosis and keep that diagnosis in a v2 Redis namespace. Model response interpretation as pure frontend functions, render a small suggestion component, and integrate it into the existing debounced desktop add flow without changing mobile or save contracts.
+**Architecture:** Extend the existing Word Agent response with a validated four-state diagnosis, require the AI to return a controlled word-form type for backend validation, and keep validated results in a v3 Redis namespace. Model response interpretation as pure frontend functions, render a small suggestion component, and integrate it into the existing debounced desktop add flow without changing mobile or save contracts.
 
 **Tech Stack:** NestJS 10, TypeScript, Jest, Redis/ioredis, DeepSeek through the OpenAI client, React 18, Ant Design, Vitest, Testing Library, pnpm, GitHub Actions, Docker Compose.
 
@@ -19,8 +19,28 @@
 - English phrases remain complete and receive no lemma suggestion.
 - Desktop add mode only; edit mode, mobile, bulk import, persistence schema, and notes remain unchanged.
 - Deploy backend before frontend. The frontend accepts missing diagnosis fields during rollout but only legacy-auto-completes an exactly matching word.
-- Redis keys use `word-agent:v2:` with the existing seven-day default TTL; do not migrate or delete v1 keys.
+- Redis keys use `word-agent:v3:` with the existing seven-day default TTL; do not migrate or delete v1/v2 keys.
 - The existing `/Users/liulin/Desktop/font/english/nestjs` checkout has unrelated state. At execution time, use `superpowers:using-git-worktrees` to create a clean backend worktree from `origin/context-lab-learning-loop-mvp`; do not modify or include `docs/superpowers/plans/2026-07-28-mvp1-branch-governance.md`.
+
+---
+
+## Production Remediation Addendum (Binding)
+
+The initial backend deployment showed one `running / exact` result while four bounded probes correctly returned `parading → parade`, `outflanked → outflank`, `viaducts → viaduct`, and `overcame → overcome`. Root-cause tracing found that a stochastic same-word model echo was accepted as authoritative and cached under v2. This addendum supersedes Task 1's original v2 cache and same-word normalization instructions.
+
+- The AI raw JSON must include `sourceWord` and `wordFormType` in the existing single Word Agent call.
+- `wordFormType` is exactly `base | plural | third_person_singular | past_tense | past_participle | present_participle | gerund | comparative | superlative | possessive | spelling_error | unknown`.
+- Prompt examples must include `running → run / present_participle`, `went → go / past_tense`, `insects → insect / plural`, `recieve → receive / spelling_error`, and `happiness → happiness / base`.
+- `sourceWord` must equal the normalized request input.
+- Approved inflection types require a valid candidate different from the input and normalize to `inflected`.
+- `spelling_error` requires a valid candidate different from the input and normalizes to `misspelled`.
+- `base` requires the candidate to equal the input and normalizes to `exact`.
+- Same-word inflection, changed-word base, source mismatch, unknown type, and every contradictory pair normalize to `uncertain` and are not cached.
+- English phrases remain complete `exact` entries and use `base`; Chinese/other input remains `uncertain`.
+- Lower the Word Agent sampling temperature from `0.3` to `0.2` to match the existing controlled import path.
+- Bump the key prefix to `word-agent:v3:` so the deployed bad `word-agent:v2:running` entry is bypassed without deleting cache data.
+- Add normal/batch/stream tests proving contradictory results return `uncertain` and never call `cache.setMany` for that item.
+- Re-run full backend verification, deploy v3, and require a production `running → run / inflected / non-empty reason` probe before deploying the frontend.
 
 ---
 
@@ -955,7 +975,7 @@ git commit -m "feat(english-world): confirm AI word corrections" \
 **Interfaces:**
 
 - Consumes: Task 1's backend commit in the isolated worktree.
-- Produces: a successful `Verify and deploy backend` run and a production v2 Word Agent response.
+- Produces: a successful `Verify and deploy backend` run and a production v3 Word Agent response.
 
 - [ ] **Step 1: Run the full backend verification**
 
