@@ -97,10 +97,10 @@ export const EditAddModal = (props: Props) => {
     aiLookupRequestIdRef.current += 1;
     completedLookupWordRef.current = null;
     englishTypeManuallyChangedRef.current = false;
-    // Clear stale loading and suggestions before a reset transition can paint.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    /* eslint-disable react-hooks/set-state-in-effect -- Reset stale loading and pending suggestions atomically before paint. */
     setAiCompleting(false);
     setPendingWordSuggestion(null);
+    /* eslint-enable react-hooks/set-state-in-effect */
 
     const timer = window.setTimeout(() => {
       if (type === "edit" && currentRecord) {
