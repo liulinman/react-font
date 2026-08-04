@@ -184,6 +184,31 @@ describe("ListeningActivity", () => {
     });
   });
 
+  it("ignores late audio failures after the current answer was explicitly submitted", async () => {
+    const user = userEvent.setup();
+    const handlers = createHandlers();
+    const { container } = render(
+      <ListeningActivity
+        item={spellingItem}
+        draft={{ kind: "spelling", text: "inspect" }}
+        {...handlers}
+      />,
+    );
+    const audio = container.querySelector("audio") as HTMLAudioElement;
+
+    await user.click(screen.getByRole("button", { name: "提交答案" }));
+    expect(handlers.onSubmit).toHaveBeenCalledTimes(1);
+    expect(handlers.onSubmit).toHaveBeenLastCalledWith({
+      kind: "spelling",
+      text: "inspect",
+    });
+
+    fireEvent.error(audio);
+    fireEvent.error(audio);
+
+    expect(handlers.onSubmit).toHaveBeenCalledTimes(1);
+  });
+
   it("offers accessible replay, slow replay, accent recovery, and skips only after all audio fails", async () => {
     const user = userEvent.setup();
     const handlers = createHandlers();

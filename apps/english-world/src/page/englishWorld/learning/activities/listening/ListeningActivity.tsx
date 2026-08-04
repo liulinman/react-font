@@ -62,7 +62,11 @@ export function ListeningActivity({
   const audioRef = useRef<HTMLAudioElement>(null);
   const composingRef = useRef(false);
   const failedAccentsRef = useRef<Set<Accent>>(new Set());
-  const unavailableSubmittedRef = useRef(false);
+  const mediaIdentity = `${item.itemUid}\u0000${item.audio.britishUrl ?? ""}\u0000${item.audio.americanUrl ?? ""}`;
+  const submissionGuardRef = useRef({
+    mediaIdentity,
+    submissionEmitted: false,
+  });
 
   const selectedUrl = availableAccents.find(
     ([accent]) => accent === selectedAccent,
@@ -74,23 +78,33 @@ export function ListeningActivity({
     setFailedAccents(new Set());
     setIsPlaying(false);
     setPendingPlaybackRate(null);
-    unavailableSubmittedRef.current = false;
-  }, [item.itemUid, item.audio.americanUrl, item.audio.britishUrl]);
+    submissionGuardRef.current = {
+      mediaIdentity,
+      submissionEmitted: false,
+    };
+  }, [availableAccents, mediaIdentity]);
 
   useEffect(() => {
     if (
       submitting ||
       availableAccents.length > 0 ||
-      unavailableSubmittedRef.current
+      submissionGuardRef.current.mediaIdentity !== mediaIdentity ||
+      submissionGuardRef.current.submissionEmitted
     ) {
       return;
     }
-    unavailableSubmittedRef.current = true;
+    submissionGuardRef.current.submissionEmitted = true;
     onSubmit({ kind: "skip", reason: "audio_unavailable" });
-  }, [availableAccents.length, onSubmit, submitting]);
+  }, [availableAccents.length, mediaIdentity, onSubmit, submitting]);
 
   const recordAudioFailure = useCallback(
     (accent: Accent) => {
+      if (
+        submissionGuardRef.current.mediaIdentity !== mediaIdentity ||
+        submissionGuardRef.current.submissionEmitted
+      ) {
+        return;
+      }
       setIsPlaying(false);
       const next = new Set(failedAccentsRef.current);
       if (next.has(accent)) return;
@@ -106,13 +120,13 @@ export function ListeningActivity({
         availableAccents.length > 0 &&
         availableAccents.every(([candidate]) => next.has(candidate)) &&
         !submitting &&
-        !unavailableSubmittedRef.current
+        !submissionGuardRef.current.submissionEmitted
       ) {
-        unavailableSubmittedRef.current = true;
+        submissionGuardRef.current.submissionEmitted = true;
         onSubmit({ kind: "skip", reason: "audio_unavailable" });
       }
     },
-    [availableAccents, onSubmit, submitting],
+    [availableAccents, mediaIdentity, onSubmit, submitting],
   );
 
   const playAudio = useCallback(
@@ -152,11 +166,19 @@ export function ListeningActivity({
     setPendingPlaybackRate(1);
   };
 
-  const submitCurrentDraft = () => {
+  const submitExplicitAnswer = (answer: LearningAnswerDraft) => {
     if (submitting) return;
+    if (submissionGuardRef.current.mediaIdentity !== mediaIdentity) {
+      return;
+    }
+    submissionGuardRef.current.submissionEmitted = true;
+    onSubmit(answer);
+  };
+
+  const submitCurrentDraft = () => {
     if (draft.kind === "spelling" && draft.text.trim().length === 0) return;
     if (draft.kind === "choice" && draft.selectedValue.length === 0) return;
-    onSubmit(draft);
+    submitExplicitAnswer(draft);
   };
 
   const handleSpellingKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -328,7 +350,9 @@ export function ListeningActivity({
       <button
         type="button"
         disabled={submitting}
-        onClick={() => onSubmit({ kind: "skip", reason: "dont_know" })}
+        onClick={() =>
+          submitExplicitAnswer({ kind: "skip", reason: "dont_know" })
+        }
       >
         暂时不会
       </button>
