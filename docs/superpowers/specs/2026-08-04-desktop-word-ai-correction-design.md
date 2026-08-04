@@ -69,6 +69,23 @@ interface WordAgentItem {
 - 无法可靠判断时返回 `uncertain`，不得编造纠正结果。
 - `word`、释义、音标、词性和例句必须全部对应最终候选词。
 
+生产验证后，AI 原始结果还必须增加只供后端校验的 `sourceWord` 和 `wordFormType`。`wordFormType` 只能是：
+
+- `base`
+- `plural`
+- `third_person_singular`
+- `past_tense`
+- `past_participle`
+- `present_participle`
+- `gerund`
+- `comparative`
+- `superlative`
+- `possessive`
+- `spelling_error`
+- `unknown`
+
+提示词必须明确给出 `running → run / present_participle`、`went → go / past_tense`、`insects → insect / plural` 和 `recieve → receive / spelling_error`，并说明即使 `running` 等词形也可以作名词或形容词，只要当前输入是常见屈折形式，仍优先返回 lemma。合法派生词如 `happiness` 必须返回 `base`，不能还原为 `happy`。
+
 服务层增加独立的诊断归一化边界，在将每个 AI 结果与对应输入配对后校验状态和候选：
 
 - 未知或缺失的状态统一降级为 `uncertain`。
@@ -77,12 +94,16 @@ interface WordAgentItem {
 - AI 返回的候选与输入实际相同时，将错误标注的 `inflected` 或 `misspelled` 归一为 `exact`。
 - 英文短语继续使用现有完整性保护；最终强制保留规范化后的原短语并标为 `exact`。
 - `correctionReason` 去除首尾空白；非纠正状态清空理由，纠正状态缺少理由时由服务层提供通用短句。
+- `sourceWord` 必须与对应输入规范化后完全一致，否则结果降级为 `uncertain`。
+- 只有受控屈折类型配合“与输入不同的合法候选词”才能生成 `inflected`；`spelling_error` 配合不同候选词才能生成 `misspelled`。
+- `base` 只能配合同词结果生成 `exact`。同词却声明为屈折类型、异词却声明为 `base`、未知类型或其他矛盾组合统一降级为 `uncertain`。
+- `uncertain` 和矛盾结果可以返回给当前请求，但不得写入 Redis，避免一次模型异常被缓存放大。
 
 这个边界同时应用于普通查询、批量查询和流式查询的最终结果，保证不同入口写入缓存的数据结构一致。
 
 ### 缓存与兼容性
 
-Redis key 前缀从 `word-agent:v1:` 升级为 `word-agent:v2:`。缓存校验器要求 `inputStatus` 为四个合法枚举值、`correctionReason` 为字符串。旧缓存自然失效，不执行扫描或迁移，继续沿用现有七天 TTL。
+Redis key 前缀升级为 `word-agent:v3:`。v2 已在首次生产部署中写入过 `running / exact` 的错误诊断，因此 v3 同时承载新的词形类型合同并让错误 v2 记录立即失效。缓存校验器要求 `inputStatus` 为四个合法枚举值、`correctionReason` 为字符串。旧缓存自然失效，不执行扫描或迁移，继续沿用现有七天 TTL。
 
 接口变更为增加字段，现有调用方可以忽略它们。部署顺序为先后端、后前端。桌面前端在迁移期允许字段缺失：缺失诊断时不显示纠正建议；只有返回词与输入规范化后完全相同时，才沿用原有空白字段自动补全。它不会恢复编辑距离纠正逻辑，因此即使后端暂时回滚，也不会错误替换词条。
 
@@ -157,7 +178,9 @@ Word Agent 客户端类型增加可选诊断字段以支持前后端分步部署
 - 不确定、缺失或非法状态安全降级。
 - 错误的状态/候选组合经过服务层归一化。
 - 英文短语保持完整、标为 `exact`，普通和流式路径一致。
-- 缓存只接受完整 v2 结构，并使用 `word-agent:v2:` key。
+- `running → run / present_participle`、`went → go / past_tense`、复数和拼写错误通过受控类型校验。
+- 同词屈折、异词 `base`、错误 `sourceWord` 和未知类型降级为 `uncertain` 且不缓存。
+- 缓存只接受完整 v3 结构，并使用 `word-agent:v3:` key。
 - 缓存命中、未命中、重复输入和 Redis 故障继续保持现有行为。
 
 ### 桌面组件测试
@@ -177,7 +200,7 @@ Word Agent 客户端类型增加可选诊断字段以支持前后端分步部署
 
 1. 运行 NestJS Word Agent service/cache 测试和后端构建。
 2. 运行 English World 弹窗相关 Vitest、应用测试和生产构建。
-3. 先部署后端，确认生产接口返回 v2 诊断字段并且旧前端正常使用。
+3. 先部署后端，确认生产接口返回 v3 合同生成的诊断字段并且旧前端正常使用。
 4. 再部署前端，在桌面端手工验证 `confront`、`running`、`went`、`recieve`、`happiness`、`be cited as` 和一个不确定输入。
 5. 验证“使用建议”“保留原词”、直接保存、已有字段不覆盖以及请求失败降级。
 
