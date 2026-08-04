@@ -97,6 +97,8 @@ export const EditAddModal = (props: Props) => {
     aiLookupRequestIdRef.current += 1;
     completedLookupWordRef.current = null;
     englishTypeManuallyChangedRef.current = false;
+    // Clear stale loading and suggestions before a reset transition can paint.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setAiCompleting(false);
     setPendingWordSuggestion(null);
 
@@ -128,6 +130,8 @@ export const EditAddModal = (props: Props) => {
       !lookupWord ||
       !isLikelyEnglishLookupInput(lookupWord)
     ) {
+      // An invalidated request cannot clear its spinner in finally, so clear it now.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setAiCompleting(false);
       return;
     }
