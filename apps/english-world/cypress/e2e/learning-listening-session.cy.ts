@@ -1,27 +1,24 @@
 const ok = (data: unknown) => ({ code: 200, message: "success", data });
-const silentWav = (() => {
-  const sampleRate = 8_000;
-  const dataLength = 32_000;
-  const wav = Cypress.Buffer.alloc(44 + dataLength);
-  wav.write("RIFF", 0, "ascii");
-  wav.writeUInt32LE(36 + dataLength, 4);
-  wav.write("WAVE", 8, "ascii");
-  wav.write("fmt ", 12, "ascii");
-  wav.writeUInt32LE(16, 16);
-  wav.writeUInt16LE(1, 20);
-  wav.writeUInt16LE(1, 22);
-  wav.writeUInt32LE(sampleRate, 24);
-  wav.writeUInt32LE(sampleRate * 2, 28);
-  wav.writeUInt16LE(2, 32);
-  wav.writeUInt16LE(16, 34);
-  wav.write("data", 36, "ascii");
-  wav.writeUInt32LE(dataLength, 40);
-  return wav;
-})();
-const silentWavBody = silentWav.buffer.slice(
-  silentWav.byteOffset,
-  silentWav.byteOffset + silentWav.byteLength,
-) as ArrayBuffer;
+const playableMp3Base64 = [
+  "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",
+].join("");
+
+const playableMp3Response = () => {
+  const bytes = Cypress.Buffer.from(playableMp3Base64, "base64");
+  const body = bytes.buffer.slice(
+    bytes.byteOffset,
+    bytes.byteOffset + bytes.byteLength,
+  ) as ArrayBuffer;
+  return {
+    statusCode: 200,
+    headers: {
+      "content-type": "audio/mpeg",
+      "content-length": String(bytes.byteLength),
+      "cache-control": "no-store",
+    },
+    body,
+  };
+};
 
 describe("listening learning session", () => {
   it("completes a selected-word listening journey with refresh and idempotent retry", () => {
@@ -159,20 +156,15 @@ describe("listening learning session", () => {
       statusCode: 200,
       body: "",
     });
-    const audioResponse = {
-      statusCode: 200,
-      headers: { "content-type": "audio/wav", "cache-control": "no-store" },
-      body: silentWavBody,
-    };
     cy.intercept(
       "GET",
       "/api/learning-session/audio/701/11111111-1111-4111-8111-111111111111.mp3",
-      audioResponse,
+      (request) => request.reply(playableMp3Response()),
     ).as("meaningAudio");
     cy.intercept(
       "GET",
       "/api/learning-session/audio/701/22222222-2222-4222-8222-222222222222.mp3",
-      audioResponse,
+      (request) => request.reply(playableMp3Response()),
     ).as("spellingAudio");
     cy.intercept("POST", "/api/english/filterWordList", {
       code: 200,
