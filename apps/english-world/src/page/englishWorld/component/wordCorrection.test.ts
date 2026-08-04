@@ -93,6 +93,21 @@ describe("word correction decisions", () => {
     ).toEqual({ kind: "ignore" });
   });
 
+  it.each([
+    ["inflected", "running shoes", "run"],
+    ["misspelled", "be citd as", "cite"],
+  ] as const)(
+    "ignores a %s correction for phrase input",
+    (inputStatus, lookupWord, candidate) => {
+      expect(
+        resolveWordAgentResult(
+          makeItem({ word: candidate, inputStatus, correctionReason: "" }),
+          lookupWord,
+        ),
+      ).toEqual({ kind: "ignore" });
+    },
+  );
+
   it("ignores an unrecognized runtime input status", () => {
     expect(
       resolveWordAgentResult(
@@ -141,5 +156,23 @@ describe("word correction decisions", () => {
       englishPhonetic: "/rʌn/",
       englishPartSpeech: [1],
     });
+  });
+
+  it("normalizes the AI word before deriving the completion word type", () => {
+    expect(
+      buildAiCompletionPatch(
+        makeItem({ word: " run " }),
+        "run",
+        {
+          englishWord: "run",
+          englishLevel: 0,
+          englishType: 0,
+          englishChinese: "手填释义",
+          englishPhonetic: "手填音标",
+          englishPartSpeech: [2],
+        },
+        { preserveWordType: false },
+      ),
+    ).toEqual({ englishType: 0 });
   });
 });

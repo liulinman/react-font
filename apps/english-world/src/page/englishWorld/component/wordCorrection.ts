@@ -72,7 +72,11 @@ export function resolveWordAgentResult(
   ) {
     return { kind: "ignore" };
   }
-  if (same || !/^[A-Za-z][A-Za-z'-]*$/.test(candidate)) {
+  if (
+    input.includes(" ") ||
+    same ||
+    !/^[A-Za-z][A-Za-z'-]*$/.test(candidate)
+  ) {
     return { kind: "ignore" };
   }
   return {
@@ -110,7 +114,7 @@ export function buildAiCompletionPatch(
     patch.englishLevel = 0;
   }
   if (!options.preserveWordType) {
-    patch.englishType = getWordType(item.word || lookupWord);
+    patch.englishType = getWordType(normalizeWordInput(item.word || lookupWord));
   }
 
   return patch;
