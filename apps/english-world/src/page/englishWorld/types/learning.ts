@@ -1,5 +1,35 @@
 import type { ExerciseResultItem } from "@/server/exerciseAgent/exerciseAgent";
 
+export type {
+  ActivityEnvelopeV1,
+  LearningAnswerV1,
+  LearningMode,
+  ListeningPublicItemV1,
+  MasteryDimension,
+  PublicLearningItemV1,
+} from "../learning/contracts/activity-contract";
+export type {
+  CreateLearningSessionCommandV1,
+  LearningAttemptResultSummaryV1,
+  LearningCapabilitiesV1,
+  LearningErrorCodeV1,
+  LearningHintTypeV1,
+  LearningModeCapabilityV1,
+  LearningPlanPreviewV1,
+  LearningSessionApiErrorV1,
+  LearningSessionCommandV1,
+  LearningSessionCreateResultV1,
+  LearningSessionDetailCommandV1,
+  LearningSessionDetailV1,
+  LearningSessionSnapshotV1,
+  LearningSessionStatusV1,
+  LearningSessionTransitionResultV1,
+  PreviewLearningSessionCommandV1,
+  SubmitLearningAnswerV1,
+  SubmitLearningAttemptCommandV1,
+  SubmitLearningAttemptResultV1,
+} from "../learning/contracts/learning-session";
+
 export type LearningLevel = 0 | 1 | 2 | 3;
 
 export type LearningWord = {

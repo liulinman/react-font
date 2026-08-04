@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "mode": "listening",
+  "phase": "recall",
+  "item": {
+    "itemType": "listening_spelling",
+    "itemUid": "listening-spelling-7",
+    "wordId": 7,
+    "audio": {
+      "britishUrl": "/audio-assets/7c2a91-uk.mp3",
+      "americanUrl": "/audio-assets/7c2a91-us.mp3"
+    }
+  }
+}

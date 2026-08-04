@@ -23,6 +23,17 @@ import type {
 } from "../types/learning";
 import { getApiBaseUrl } from "@font/api";
 
+export {
+  completeLearningSession,
+  createLearningSession,
+  learningCapabilities,
+  learningSessionDetail,
+  pauseLearningSession,
+  previewLearningSession,
+  submitLearningAttempt,
+} from "../learning/api/learningApi";
+export { learningKeys } from "../learning/api/learningKeys";
+
 export const dailyCoachSummary = (data: {
   days?: number;
   timezone?: number;
