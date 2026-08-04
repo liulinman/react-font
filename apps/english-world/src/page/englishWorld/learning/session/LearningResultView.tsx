@@ -1,6 +1,34 @@
 import type {
   LearningSessionDetailV1,
 } from "../contracts/learning-session";
+import type { LearningMode } from "../contracts/activity-contract";
+
+const MODE_LABELS: Record<LearningMode, string> = {
+  root_family: "词根词族",
+  micro_scene: "微场景",
+  confusion: "易混辨析",
+  listening: "听音记忆",
+  output: "主动输出",
+};
+
+function formatElapsed(seconds: number) {
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  return minutes > 0
+    ? `${minutes} 分 ${remainingSeconds} 秒`
+    : `${remainingSeconds} 秒`;
+}
+
+function formatReviewAt(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "时间待同步";
+  return new Intl.DateTimeFormat("zh-CN", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "Asia/Shanghai",
+    hour12: false,
+  }).format(date);
+}
 
 export function LearningResultView({ snapshot }: { snapshot: LearningSessionDetailV1 }) {
   const result = snapshot.result;
@@ -38,6 +66,7 @@ export function LearningResultView({ snapshot }: { snapshot: LearningSessionDeta
     <section aria-label="学习结果" className="learning-result-view">
       <h1>学习结果</h1>
       <p>已完成 {result.completedWords} 个词</p>
+      <p>用时 {formatElapsed(result.elapsedSeconds)}</p>
       <div className="learning-result-metrics">
         <article>
           <strong>{result.independentCorrect}</strong>
@@ -62,10 +91,21 @@ export function LearningResultView({ snapshot }: { snapshot: LearningSessionDeta
           {result.words.map((word) => (
             <li key={word.wordId}>
               <strong>{word.word}</strong>
-              <span>
-                {word.originalLevel} → {word.systemLevel}
-                {word.manualLevel === null ? "" : `（手动等级 ${word.manualLevel}）`}
-              </span>
+              <div className="learning-result-word-detail">
+                <span>
+                  掌握度 {word.originalLevel} → {word.systemLevel}
+                  {word.manualLevel === null
+                    ? ""
+                    : `（用户调整为 ${word.manualLevel}）`}
+                </span>
+                <span>
+                  下次复习{" "}
+                  <time dateTime={word.nextReviewAt}>
+                    {formatReviewAt(word.nextReviewAt)}
+                  </time>
+                </span>
+                <span>推荐方式：{MODE_LABELS[word.recommendedMode]}</span>
+              </div>
             </li>
           ))}
         </ul>

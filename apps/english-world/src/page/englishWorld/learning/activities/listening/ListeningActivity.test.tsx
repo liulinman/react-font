@@ -18,6 +18,7 @@ const spellingItem: ListeningPublicItemV1 = {
     britishUrl: "/audio/7-uk.mp3",
     americanUrl: "/audio/7-us.mp3",
   },
+  spellingCue: { firstLetter: "i", length: 7 },
 };
 
 function createHandlers() {
@@ -39,7 +40,7 @@ describe("ListeningActivity", () => {
     vi.restoreAllMocks();
   });
 
-  it("renders opaque meaning choices and emits a spelling hint without exposing private answer fields", async () => {
+  it("reveals the public spelling cue and records the hint without exposing private answer fields", async () => {
     const user = userEvent.setup();
     const handlers = createHandlers();
     const item = {
@@ -60,6 +61,17 @@ describe("ListeningActivity", () => {
     expect(document.body).not.toHaveTextContent("inspect");
     await user.click(screen.getByRole("button", { name: "查看拼写提示" }));
     expect(handlers.onRevealHint).toHaveBeenCalledWith("show_spelling");
+    rerender(
+      <ListeningActivity
+        item={item}
+        draft={{ kind: "spelling", text: "" }}
+        hints={["show_spelling"]}
+        {...handlers}
+      />,
+    );
+    expect(screen.getByRole("status", { name: "拼写提示" })).toHaveTextContent(
+      "首字母 i，共 7 个字母",
+    );
     expect(document.body).not.toHaveTextContent("inspect");
 
     rerender(
@@ -83,6 +95,23 @@ describe("ListeningActivity", () => {
       kind: "choice",
       selectedValue: "opaque-b",
     });
+  });
+
+  it("does not offer or record a spelling hint when no visible cue is available", () => {
+    const handlers = createHandlers();
+
+    render(
+      <ListeningActivity
+        item={{ ...spellingItem, spellingCue: undefined }}
+        draft={{ kind: "spelling", text: "" }}
+        {...handlers}
+      />,
+    );
+
+    expect(
+      screen.queryByRole("button", { name: "查看拼写提示" }),
+    ).not.toBeInTheDocument();
+    expect(handlers.onRevealHint).not.toHaveBeenCalled();
   });
 
   it("submits controlled spelling once on Enter, respects IME and submitting, and emits dont_know", async () => {

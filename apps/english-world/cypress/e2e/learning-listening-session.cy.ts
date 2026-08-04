@@ -1,7 +1,7 @@
 const ok = (data: unknown) => ({ code: 200, message: "success", data });
 const silentWav = (() => {
   const sampleRate = 8_000;
-  const dataLength = 1_600;
+  const dataLength = 32_000;
   const wav = Cypress.Buffer.alloc(44 + dataLength);
   wav.write("RIFF", 0, "ascii");
   wav.writeUInt32LE(36 + dataLength, 4);
@@ -79,7 +79,7 @@ describe("listening learning session", () => {
                 wordId: 701,
                 audio: {
                   britishUrl:
-                    "/learning-audio/8f14e45fceea167a5a36dedd4bea2543.mp3",
+                    "/api/learning-session/audio/701/11111111-1111-4111-8111-111111111111.mp3",
                 },
                 meaningChoices: [
                   {
@@ -107,12 +107,37 @@ describe("listening learning session", () => {
                   wordId: 701,
                   audio: {
                     britishUrl:
-                      "/learning-audio/c9f0f895fb98ab9159f51fd0297e236d.mp3",
+                      "/api/learning-session/audio/701/22222222-2222-4222-8222-222222222222.mp3",
                   },
+                  spellingCue: { firstLetter: "i", length: 7 },
                 },
               },
             }
           : {}),
+      ...(sessionStatus === "completed"
+        ? {
+            result: {
+              completedWords: 1,
+              elapsedSeconds: 84,
+              independentCorrect: 0,
+              hintedCorrect: 1,
+              needsWork: 0,
+              pending: 0,
+              levelChanges: 1,
+              words: [
+                {
+                  wordId: 701,
+                  word: "inspect",
+                  originalLevel: 1,
+                  systemLevel: 2,
+                  manualLevel: null,
+                  nextReviewAt: "2026-08-06T00:00:00.000Z",
+                  recommendedMode: "listening",
+                },
+              ],
+            },
+          }
+        : {}),
     });
 
     cy.intercept("POST", "/api/user/getCurrentUser", {
@@ -141,12 +166,12 @@ describe("listening learning session", () => {
     };
     cy.intercept(
       "GET",
-      "/learning-audio/8f14e45fceea167a5a36dedd4bea2543.mp3",
+      "/api/learning-session/audio/701/11111111-1111-4111-8111-111111111111.mp3",
       audioResponse,
     ).as("meaningAudio");
     cy.intercept(
       "GET",
-      "/learning-audio/c9f0f895fb98ab9159f51fd0297e236d.mp3",
+      "/api/learning-session/audio/701/22222222-2222-4222-8222-222222222222.mp3",
       audioResponse,
     ).as("spellingAudio");
     cy.intercept("POST", "/api/english/filterWordList", {
@@ -325,12 +350,6 @@ describe("listening learning session", () => {
       });
     }).as("complete");
 
-    cy.on("window:before:load", (appWindow) => {
-      appWindow.HTMLMediaElement.prototype.play = function play() {
-        this.dispatchEvent(new appWindow.Event("play"));
-        return Promise.resolve();
-      };
-    });
     cy.visit("/englishWorld/words");
     cy.wait("@currentUser");
     cy.wait("@wordList");
@@ -359,8 +378,12 @@ describe("listening learning session", () => {
     cy.wait("@detail");
     cy.wait("@meaningAudio");
     cy.get("body").should("not.contain.text", "inspect");
+    cy.get("audio").should(($audio) => {
+      expect(($audio[0] as HTMLAudioElement).readyState).to.be.at.least(1);
+    });
     cy.contains("button", "播放英式发音")
       .should("have.attr", "aria-pressed", "false")
+      .and("not.be.disabled")
       .click()
       .should("have.attr", "aria-pressed", "true");
     cy.contains('[role="status"]', "正在播放英式发音").should("be.visible");
@@ -388,6 +411,9 @@ describe("listening learning session", () => {
     cy.contains("button", "查看拼写提示")
       .click()
       .should("be.disabled");
+    cy.get('[role="status"][aria-label="拼写提示"]')
+      .should("be.visible")
+      .and("contain.text", "首字母 i，共 7 个字母");
     cy.contains("label", "输入听到的单词")
       .find('input[type="text"]')
       .type("insp");
@@ -416,16 +442,19 @@ describe("listening learning session", () => {
     cy.wait("@detail");
 
     cy.get('section[aria-label="学习结果"]').within(() => {
-      cy.contains("2 次作答").should("be.visible");
-      cy.contains("答对 2 次").should("be.visible");
-      cy.contains("答错 0 次").should("be.visible");
-      cy.contains("跳过 0 次").should("be.visible");
-      cy.contains("单词完成数、提示使用和等级变化暂无统计").should(
+      cy.contains("已完成 1 个词").should("be.visible");
+      cy.contains("用时 1 分 24 秒").should("be.visible");
+      cy.contains("独立答对").parent().should("contain.text", "0");
+      cy.contains("提示后答对").parent().should("contain.text", "1");
+      cy.contains("仍需加强").parent().should("contain.text", "0");
+      cy.contains("待处理").parent().should("contain.text", "0");
+      cy.contains("等级变化 1 个词").should("be.visible");
+      cy.contains("inspect").should("be.visible");
+      cy.contains("掌握度 1 → 2").should("be.visible");
+      cy.contains("推荐方式：听音记忆").should("be.visible");
+      cy.get('time[datetime="2026-08-06T00:00:00.000Z"]').should(
         "be.visible",
       );
-      cy.contains("独立答对").should("not.exist");
-      cy.contains("提示后答对").should("not.exist");
-      cy.contains("已完成 1 个词").should("not.exist");
     });
 
     cy.go("back");

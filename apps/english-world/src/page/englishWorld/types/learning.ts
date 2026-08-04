@@ -21,6 +21,7 @@ export type {
   LearningSessionCreateResultV1,
   LearningSessionDetailCommandV1,
   LearningSessionDetailV1,
+  LearningSessionResultV1,
   LearningSessionSnapshotV1,
   LearningSessionStatusV1,
   LearningSessionTransitionResultV1,

@@ -175,6 +175,10 @@ export function ListeningActivity({
     !submitting &&
     ((draft.kind === "spelling" && draft.text.trim().length > 0) ||
       (draft.kind === "choice" && draft.selectedValue.length > 0));
+  const spellingHintVisible =
+    item.itemType === "listening_spelling" &&
+    Boolean(item.spellingCue) &&
+    hints.includes("show_spelling");
 
   return (
     <section aria-label="听力练习" className="listening-activity">
@@ -296,14 +300,27 @@ export function ListeningActivity({
         </label>
       )}
 
-      {item.itemType === "listening_spelling" ? (
-        <button
-          type="button"
-          disabled={submitting || hints.includes("show_spelling")}
-          onClick={() => onRevealHint("show_spelling")}
-        >
-          查看拼写提示
-        </button>
+      {item.itemType === "listening_spelling" && item.spellingCue ? (
+        <>
+          <button
+            type="button"
+            disabled={submitting || spellingHintVisible}
+            onClick={() => onRevealHint("show_spelling")}
+          >
+            查看拼写提示
+          </button>
+          {spellingHintVisible ? (
+            <p
+              role="status"
+              aria-label="拼写提示"
+              aria-live="polite"
+              className="listening-spelling-hint"
+            >
+              首字母 {item.spellingCue.firstLetter}，共 {item.spellingCue.length}{" "}
+              个字母
+            </p>
+          ) : null}
+        </>
       ) : null}
       <button type="button" disabled={!canSubmit} onClick={submitCurrentDraft}>
         提交答案

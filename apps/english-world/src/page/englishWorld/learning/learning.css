@@ -22,12 +22,16 @@
 .learning-session-feedback-correct { color: #166534; background: #f0fdf4; }
 .learning-session-feedback-skipped { color: #92400e; background: #fffbeb; }
 .learning-sync-actions { display: flex; gap: 10px; }
+.listening-spelling-hint { width: fit-content; margin: 8px 0; padding: 8px 12px; border-radius: 8px; color: #1e3a8a; background: #eff6ff; }
 .learning-result-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 20px 0; }
 .learning-result-metrics article { display: flex; flex-direction: column; gap: 4px; padding: 16px; border-radius: 12px; background: #f8fafc; }
 .learning-result-metrics strong { font-size: 28px; }
 .learning-result-words { display: grid; gap: 8px; padding: 0; list-style: none; }
 .learning-result-words li { display: flex; justify-content: space-between; gap: 12px; padding: 10px 12px; border-bottom: 1px solid #e2e8f0; }
+.learning-result-word-detail { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; text-align: right; }
 @media (max-width: 720px) {
   .learning-mode-grid, .learning-result-metrics { grid-template-columns: 1fr; }
   .mixed-learning-session-page, .learning-result-view { width: min(100% - 20px, 1120px); margin: 10px auto; padding: 16px; }
+  .learning-result-words li { flex-direction: column; }
+  .learning-result-word-detail { align-items: flex-start; text-align: left; }
 }

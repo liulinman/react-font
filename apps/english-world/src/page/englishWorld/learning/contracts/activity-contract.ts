@@ -25,6 +25,7 @@ export interface ListeningPublicItemV1 {
   wordId: number;
   audio: { britishUrl?: string; americanUrl?: string };
   meaningChoices?: Array<{ value: string; label: string }>;
+  spellingCue?: { firstLetter: string; length: number };
 }
 
 export type PublicLearningItemV1 = ListeningPublicItemV1;

@@ -28,7 +28,11 @@ const activeSnapshot: LearningSessionDetailV1 = {
       itemType: "listening_spelling",
       itemUid: "opaque-item-71",
       wordId: 7,
-      audio: { britishUrl: "/learning-audio/opaque-71.mp3" },
+      audio: {
+        britishUrl:
+          "/api/learning-session/audio/7/11111111-1111-4111-8111-111111111111.mp3",
+      },
+      spellingCue: { firstLetter: "r", length: 19 },
     },
   },
 };
@@ -130,6 +134,9 @@ describe("MixedLearningSessionPage", () => {
     expect(document.body).not.toHaveTextContent("result-visible-word");
     await user.click(screen.getByRole("button", { name: "0.8 倍慢速重播" }));
     await user.click(screen.getByRole("button", { name: "查看拼写提示" }));
+    expect(screen.getByRole("status", { name: "拼写提示" })).toHaveTextContent(
+      "首字母 r，共 19 个字母",
+    );
     const input = screen.getByRole("textbox", { name: "输入听到的单词" });
     await user.type(input, "learner-response");
     await user.click(screen.getByRole("button", { name: "提交答案" }));
@@ -139,8 +146,16 @@ describe("MixedLearningSessionPage", () => {
     expect(screen.getByText("提示后答对")).toBeInTheDocument();
     expect(screen.getByText("仍需加强")).toBeInTheDocument();
     expect(screen.getByText("待处理")).toBeInTheDocument();
+    expect(screen.getByText("用时 1 分 24 秒")).toBeInTheDocument();
     expect(screen.getByText("等级变化 1 个词")).toBeInTheDocument();
     expect(screen.getByText("result-visible-word")).toBeInTheDocument();
+    expect(screen.getByText("掌握度 0 → 1")).toBeInTheDocument();
+    expect(screen.getByText("推荐方式：听音记忆")).toBeInTheDocument();
+    expect(screen.getByText("下次复习")).toBeInTheDocument();
+    expect(screen.getByRole("time")).toHaveAttribute(
+      "datetime",
+      "2026-08-05T00:00:00.000Z",
+    );
 
     const submitCall = requestMock.mock.calls.find(
       ([descriptor]) => descriptor.url === "/learning-session/submit",

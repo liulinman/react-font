@@ -13,6 +13,10 @@ import type { LearningErrorCodeV1 } from "../contracts/learning-session";
 
 const noEligibleWordsErrorCode: LearningErrorCodeV1 =
   "LEARNING_NO_ELIGIBLE_WORDS";
+const releaseSafetyErrorCodes: LearningErrorCodeV1[] = [
+  "LEARNING_WORDS_REQUIRE_REVIEW",
+  "LEARNING_WORD_HAS_LEARNING_RECORDS",
+];
 
 describe("learning session request descriptors", () => {
   it("uses the public V1 endpoints and command bodies", () => {
@@ -86,5 +90,9 @@ describe("learning session request descriptors", () => {
 
   it("recognizes the backend no-eligible-words error code", () => {
     expect(noEligibleWordsErrorCode).toBe("LEARNING_NO_ELIGIBLE_WORDS");
+    expect(releaseSafetyErrorCodes).toEqual([
+      "LEARNING_WORDS_REQUIRE_REVIEW",
+      "LEARNING_WORD_HAS_LEARNING_RECORDS",
+    ]);
   });
 });

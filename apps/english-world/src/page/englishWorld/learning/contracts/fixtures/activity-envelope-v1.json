@@ -9,6 +9,10 @@
     "audio": {
       "britishUrl": "/audio-assets/7c2a91-uk.mp3",
       "americanUrl": "/audio-assets/7c2a91-us.mp3"
+    },
+    "spellingCue": {
+      "firstLetter": "i",
+      "length": 7
     }
   }
 }
