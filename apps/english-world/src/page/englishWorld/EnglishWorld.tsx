@@ -76,6 +76,11 @@ import { BritishPronunciationButton } from "./component/BritishPronunciationButt
 import { WordLevelQuickEdit } from "./component/WordLevelQuickEdit";
 import { EnglishWorldLayout } from "./layout/EnglishWorldLayout";
 import {
+  readWordLibraryView,
+  writeWordLibraryView,
+  type WordLibraryView,
+} from "./utils/wordLibraryViewPreference";
+import {
   getContextLabReferenceLabel,
   isExternalReference,
   type ParsedContextLabReference,
@@ -86,7 +91,6 @@ const { RangePicker } = DatePicker;
 const { Text, Title } = Typography;
 const WORD_TABLE_SCROLL_Y = 620;
 const WORD_LEVEL_VALUES = [0, 1, 2, 3] as const;
-type WordLibraryView = "list" | "card";
 
 function splitContextLabArticleParagraphs(article: string) {
   return article
@@ -114,7 +118,9 @@ const EnglishWorld: React.FC = () => {
   const [type, setType] = useState<"edit" | "add">("add");
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [wordRecord, setWordRecord] = useState<WordList>();
-  const [libraryView, setLibraryView] = useState<WordLibraryView>("list");
+  const [libraryView, setLibraryView] = useState<WordLibraryView>(
+    readWordLibraryView,
+  );
   const [cardBatchMode, setCardBatchMode] = useState(false);
   const [selectedCardIds, setSelectedCardIds] = useState<number[]>([]);
   const [levelUpdatingIds, setLevelUpdatingIds] = useState<number[]>([]);
@@ -416,6 +422,7 @@ const EnglishWorld: React.FC = () => {
 
   const handleLibraryViewChange = (view: WordLibraryView) => {
     setLibraryView(view);
+    writeWordLibraryView(view);
     setCardBatchMode(false);
     setSelectedCardIds([]);
   };

@@ -441,6 +441,22 @@ describe("EnglishWorld ToC routing", () => {
 
     expect(screen.queryByLabelText("词库列表视图")).not.toBeInTheDocument();
     expect(screen.getByLabelText("词库卡片视图")).toBeInTheDocument();
+    expect(
+      window.localStorage.getItem("english-world:word-library-view"),
+    ).toBe("card");
+  });
+
+  it("restores the saved card view when the word library opens", () => {
+    window.localStorage.setItem("english-world:word-library-view", "card");
+
+    render(
+      <MemoryRouter initialEntries={["/englishWorld/words"]}>
+        <EnglishWorld />
+      </MemoryRouter>,
+    );
+
+    expect(screen.queryByLabelText("词库列表视图")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("词库卡片视图")).toBeInTheDocument();
   });
 
   it("only renders an image area in card view when a word has an image", async () => {
