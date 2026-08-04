@@ -9,6 +9,10 @@ import {
   submitLearningAttempt,
 } from "./learningApi";
 import { learningKeys } from "./learningKeys";
+import type { LearningErrorCodeV1 } from "../contracts/learning-session";
+
+const noEligibleWordsErrorCode: LearningErrorCodeV1 =
+  "LEARNING_NO_ELIGIBLE_WORDS";
 
 describe("learning session request descriptors", () => {
   it("uses the public V1 endpoints and command bodies", () => {
@@ -78,5 +82,9 @@ describe("learning session request descriptors", () => {
     ]);
     expect(learningKeys.session(17)).toEqual(["learning", "session", 17]);
     expect(learningKeys.mastery(7)).toEqual(["learning", "mastery", 7]);
+  });
+
+  it("recognizes the backend no-eligible-words error code", () => {
+    expect(noEligibleWordsErrorCode).toBe("LEARNING_NO_ELIGIBLE_WORDS");
   });
 });
