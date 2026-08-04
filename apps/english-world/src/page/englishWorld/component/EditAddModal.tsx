@@ -15,7 +15,7 @@ import TextArea from "antd/es/input/TextArea";
 import { WordList } from "@/server/word/word.type";
 import request from "@font/api";
 import { uploadFile } from "@/server";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { enumToOptions } from "@font/utils";
 import { EnglishAbsorb, EnglishType } from "../enum";
 import {
@@ -77,6 +77,7 @@ export const EditAddModal = (props: Props) => {
     useState<PendingWordSuggestion | null>(null);
   const aiLookupRequestIdRef = useRef(0);
   const completedLookupWordRef = useRef<string | null>(null);
+  const englishTypeManuallyChangedRef = useRef(false);
 
   // 词性选项
   const partSpeechOptions = [
@@ -92,7 +93,13 @@ export const EditAddModal = (props: Props) => {
   ];
 
   // 编辑时预填 currentRecord；新增时若有 addInitialValues 则预填
-  useEffect(() => {
+  useLayoutEffect(() => {
+    aiLookupRequestIdRef.current += 1;
+    completedLookupWordRef.current = null;
+    englishTypeManuallyChangedRef.current = false;
+    setAiCompleting(false);
+    setPendingWordSuggestion(null);
+
     const timer = window.setTimeout(() => {
       if (type === "edit" && currentRecord) {
         form.setFieldsValue(currentRecord);
@@ -105,9 +112,6 @@ export const EditAddModal = (props: Props) => {
         setSelectedPartSpeech([]);
       }
       setAiLookupWord("");
-      setAiCompleting(false);
-      setPendingWordSuggestion(null);
-      completedLookupWordRef.current = null;
     }, 0);
 
     return () => window.clearTimeout(timer);
@@ -159,7 +163,7 @@ export const EditAddModal = (props: Props) => {
             resolution.item,
             lookupWord,
             currentValues,
-            { preserveWordType: form.isFieldTouched("englishType") },
+            { preserveWordType: englishTypeManuallyChangedRef.current },
           );
           form.setFieldsValue(patch);
           if (patch.englishPartSpeech?.length) {
@@ -197,6 +201,7 @@ export const EditAddModal = (props: Props) => {
         setAiCompleting(false);
         setPendingWordSuggestion(null);
         completedLookupWordRef.current = null;
+        englishTypeManuallyChangedRef.current = false;
         aiLookupRequestIdRef.current += 1;
       }
     } catch (info) {
@@ -210,11 +215,11 @@ export const EditAddModal = (props: Props) => {
   };
 
   const handleUseWordSuggestion = () => {
-    if (!pendingWordSuggestion) return;
+    if (!isModalVisible || type !== "add" || !pendingWordSuggestion) return;
     const { candidate, item } = pendingWordSuggestion;
     const currentValues = form.getFieldsValue() as FormValues;
     const patch = buildAiCompletionPatch(item, candidate, currentValues, {
-      preserveWordType: form.isFieldTouched("englishType"),
+      preserveWordType: englishTypeManuallyChangedRef.current,
     });
 
     completedLookupWordRef.current = candidate.toLowerCase();
@@ -234,9 +239,13 @@ export const EditAddModal = (props: Props) => {
   };
 
   const onValuesChange = (changedValues: Partial<FormValues>) => {
+    if (Object.prototype.hasOwnProperty.call(changedValues, "englishType")) {
+      englishTypeManuallyChangedRef.current = true;
+    }
     if (Object.prototype.hasOwnProperty.call(changedValues, "englishWord")) {
       const englishWord = normalizeWordInput(changedValues.englishWord);
       completedLookupWordRef.current = null;
+      englishTypeManuallyChangedRef.current = false;
       setPendingWordSuggestion(null);
       if (type === "add") {
         setAiLookupWord(englishWord);
@@ -348,7 +357,7 @@ export const EditAddModal = (props: Props) => {
                 }
               />
             </Form.Item>
-            {pendingWordSuggestion ? (
+            {isModalVisible && type === "add" && pendingWordSuggestion ? (
               <WordCorrectionSuggestion
                 input={pendingWordSuggestion.input}
                 candidate={pendingWordSuggestion.candidate}

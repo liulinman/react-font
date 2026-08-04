@@ -66,7 +66,12 @@ export function resolveWordAgentResult(
   if (item.inputStatus === "exact") {
     return same ? { kind: "auto-complete", item } : { kind: "ignore" };
   }
-  if (item.inputStatus === "uncertain") return { kind: "ignore" };
+  if (
+    item.inputStatus !== "inflected" &&
+    item.inputStatus !== "misspelled"
+  ) {
+    return { kind: "ignore" };
+  }
   if (same || !/^[A-Za-z][A-Za-z'-]*$/.test(candidate)) {
     return { kind: "ignore" };
   }

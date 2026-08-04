@@ -93,6 +93,19 @@ describe("word correction decisions", () => {
     ).toEqual({ kind: "ignore" });
   });
 
+  it("ignores an unrecognized runtime input status", () => {
+    expect(
+      resolveWordAgentResult(
+        makeItem({
+          word: "receive",
+          inputStatus: "invalid-status" as never,
+          correctionReason: "不应该成为可操作建议",
+        }),
+        "recieve",
+      ),
+    ).toEqual({ kind: "ignore" });
+  });
+
   it("normalizes and classifies lookup text", () => {
     expect(normalizeWordInput("  take\n off  ")).toBe("take off");
     expect(getWordType("take off")).toBe(1);
