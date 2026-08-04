@@ -200,4 +200,46 @@ describe("ListeningActivity", () => {
     await user.click(screen.getByRole("button", { name: "重试英式发音" }));
     expect(audio).toHaveAttribute("src", "/audio/7-uk.mp3");
   });
+
+  it("does not emit audio_unavailable for a no-audio item while submitting", () => {
+    const handlers = createHandlers();
+
+    render(
+      <ListeningActivity
+        item={{ ...spellingItem, audio: {} }}
+        draft={{ kind: "spelling", text: "insp" }}
+        submitting
+        {...handlers}
+      />,
+    );
+
+    expect(handlers.onSubmit).not.toHaveBeenCalled();
+  });
+
+  it("does not emit audio_unavailable when the final accent fails while submitting", () => {
+    const handlers = createHandlers();
+    const { container, rerender } = render(
+      <ListeningActivity
+        item={spellingItem}
+        draft={{ kind: "spelling", text: "insp" }}
+        {...handlers}
+      />,
+    );
+    const audio = container.querySelector("audio") as HTMLAudioElement;
+
+    fireEvent.error(audio);
+    expect(handlers.onSubmit).not.toHaveBeenCalled();
+
+    rerender(
+      <ListeningActivity
+        item={spellingItem}
+        draft={{ kind: "spelling", text: "insp" }}
+        submitting
+        {...handlers}
+      />,
+    );
+    fireEvent.error(audio);
+
+    expect(handlers.onSubmit).not.toHaveBeenCalled();
+  });
 });

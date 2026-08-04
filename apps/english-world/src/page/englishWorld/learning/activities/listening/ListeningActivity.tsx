@@ -78,10 +78,16 @@ export function ListeningActivity({
   }, [item.itemUid, item.audio.americanUrl, item.audio.britishUrl]);
 
   useEffect(() => {
-    if (availableAccents.length > 0 || unavailableSubmittedRef.current) return;
+    if (
+      submitting ||
+      availableAccents.length > 0 ||
+      unavailableSubmittedRef.current
+    ) {
+      return;
+    }
     unavailableSubmittedRef.current = true;
     onSubmit({ kind: "skip", reason: "audio_unavailable" });
-  }, [availableAccents.length, onSubmit]);
+  }, [availableAccents.length, onSubmit, submitting]);
 
   const recordAudioFailure = useCallback(
     (accent: Accent) => {
@@ -99,13 +105,14 @@ export function ListeningActivity({
       } else if (
         availableAccents.length > 0 &&
         availableAccents.every(([candidate]) => next.has(candidate)) &&
+        !submitting &&
         !unavailableSubmittedRef.current
       ) {
         unavailableSubmittedRef.current = true;
         onSubmit({ kind: "skip", reason: "audio_unavailable" });
       }
     },
-    [availableAccents, onSubmit],
+    [availableAccents, onSubmit, submitting],
   );
 
   const playAudio = useCallback(
