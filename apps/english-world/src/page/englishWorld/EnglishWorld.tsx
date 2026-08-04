@@ -60,6 +60,7 @@ import {
   PlayCircleOutlined,
   PlusOutlined,
   NodeIndexOutlined,
+  RightOutlined,
   TranslationOutlined,
   UpOutlined,
 } from "@ant-design/icons";
@@ -74,6 +75,11 @@ import {
 } from "./utils/wordLabels";
 import { BritishPronunciationButton } from "./component/BritishPronunciationButton";
 import { WordLevelQuickEdit } from "./component/WordLevelQuickEdit";
+import {
+  hasDisplayNote,
+  WordCardNote,
+  WordExpandedNote,
+} from "./component/WordNoteDisplay";
 import { EnglishWorldLayout } from "./layout/EnglishWorldLayout";
 import {
   readWordLibraryView,
@@ -814,9 +820,13 @@ const EnglishWorld: React.FC = () => {
           </span>
         </div>
 
-        {(record.englishNote || record.englishReference) && (
+        <WordCardNote
+          note={record.englishNote}
+          word={record.englishWord}
+        />
+
+        {record.englishReference && (
           <div className="word-card-meta">
-            {record.englishNote && <span>有笔记</span>}
             {contextLabReference ? (
               <button
                 type="button"
@@ -992,6 +1002,38 @@ const EnglishWorld: React.FC = () => {
                     loading={loading}
                     columns={columns}
                     dataSource={wordList}
+                    expandable={{
+                      columnWidth: 48,
+                      expandRowByClick: false,
+                      rowExpandable: (record) =>
+                        hasDisplayNote(record.englishNote),
+                      expandedRowRender: (record) => (
+                        <WordExpandedNote
+                          record={record}
+                          onEdit={handleEdit}
+                        />
+                      ),
+                      expandIcon: ({ expanded, onExpand, record }) =>
+                        hasDisplayNote(record.englishNote) ? (
+                          <button
+                            aria-expanded={expanded}
+                            aria-label={`${expanded ? "收起" : "展开"} ${
+                              record.englishWord
+                            } 的笔记`}
+                            className="word-note-expand-button"
+                            type="button"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              onExpand(record, event);
+                            }}
+                          >
+                            <RightOutlined
+                              aria-hidden="true"
+                              rotate={expanded ? 90 : 0}
+                            />
+                          </button>
+                        ) : null,
+                    }}
                     rowKey="id"
                     locale={{
                       emptyText: (

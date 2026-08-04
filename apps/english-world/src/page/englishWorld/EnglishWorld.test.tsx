@@ -13,6 +13,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter, useLocation, useNavigate } from "react-router-dom";
 import { message } from "antd";
+import type { WordList } from "@/server/word/word.type";
 import EnglishWorld from "./EnglishWorld";
 
 const { requestMock, tablePropsMock } = vi.hoisted(() => ({
@@ -253,6 +254,158 @@ describe("EnglishWorld ToC routing", () => {
       expect.objectContaining({ x: 1360, y: expect.any(Number) }),
     );
     expect(tableProps.pagination?.pageSizeOptions).toContain("500");
+  });
+
+  it("exposes notes through expandable table rows beside the word", async () => {
+    const user = userEvent.setup();
+    const record: WordList = {
+      id: 7,
+      englishWord: "preserve",
+      englishPhonetic: "/prɪˈzɜːv/",
+      englishChinese: "保护；保存",
+      englishType: 0,
+      englishLevel: 1,
+      englishNote: "first line\nsecond line",
+    };
+
+    render(
+      <MemoryRouter initialEntries={["/englishWorld/words"]}>
+        <EnglishWorld />
+      </MemoryRouter>,
+    );
+
+    const tableProps = tablePropsMock.mock.calls.at(-1)?.[0] as {
+      columns?: Array<{ dataIndex?: string }>;
+      expandable?: {
+        expandRowByClick?: boolean;
+        rowExpandable?: (word: WordList) => boolean;
+        expandedRowRender?: (word: WordList) => React.ReactNode;
+        expandIcon?: (props: {
+          expanded: boolean;
+          onExpand: (word: WordList, event: React.MouseEvent) => void;
+          record: WordList;
+        }) => React.ReactNode;
+      };
+    };
+
+    expect(
+      tableProps.columns?.some(
+        (column) => column.dataIndex === "englishNote",
+      ),
+    ).toBe(false);
+    expect(tableProps.expandable?.expandRowByClick).toBe(false);
+    expect(tableProps.expandable?.rowExpandable?.(record)).toBe(true);
+    expect(
+      tableProps.expandable?.rowExpandable?.({
+        ...record,
+        englishNote: "  \n ",
+      }),
+    ).toBe(false);
+
+    render(<>{tableProps.expandable?.expandedRowRender?.(record)}</>);
+    expect(screen.getByText("first line second line")).toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole("button", { name: "编辑 preserve 的笔记" }),
+    );
+    expect(
+      await screen.findByRole("dialog", { name: "编辑单词" }),
+    ).toBeInTheDocument();
+
+    const onExpand = vi.fn();
+    render(
+      <>{
+        tableProps.expandable?.expandIcon?.({
+          expanded: false,
+          onExpand,
+          record,
+        })
+      }</>,
+    );
+    await user.click(
+      screen.getByRole("button", { name: "展开 preserve 的笔记" }),
+    );
+    expect(onExpand).toHaveBeenCalledWith(record, expect.anything());
+  });
+
+  it("marks note-bearing words next to the word instead of in a remote column", () => {
+    render(
+      <MemoryRouter initialEntries={["/englishWorld/words"]}>
+        <EnglishWorld />
+      </MemoryRouter>,
+    );
+
+    const tableProps = tablePropsMock.mock.calls.at(-1)?.[0] as {
+      columns?: Array<{
+        dataIndex?: string;
+        render?: (
+          value: string,
+          record: WordList,
+          index: number,
+        ) => React.ReactNode;
+      }>;
+    };
+    const wordColumn = tableProps.columns?.find(
+      (column) => column.dataIndex === "englishWord",
+    );
+    const record: WordList = {
+      id: 8,
+      englishWord: "insect",
+      englishType: 0,
+      englishLevel: 0,
+      englishNote: "原始词形：insects",
+    };
+
+    const noteWord = render(
+      <MemoryRouter>{wordColumn?.render?.("insect", record, 0)}</MemoryRouter>,
+    );
+    expect(screen.getByText("有笔记")).toHaveClass("word-note-indicator");
+    noteWord.unmount();
+
+    render(
+      <MemoryRouter>
+        {wordColumn?.render?.(
+          "insect",
+          { ...record, englishNote: "  \n " },
+          0,
+        )}
+      </MemoryRouter>,
+    );
+    expect(screen.queryByText("有笔记")).not.toBeInTheDocument();
+  });
+
+  it("renders note text directly inside card view", async () => {
+    const user = userEvent.setup();
+    requestMock.mockResolvedValue({
+      list: [
+        {
+          id: 9,
+          englishWord: "preserve",
+          englishPhonetic: "/prɪˈzɜːv/",
+          englishChinese: "保护；保存",
+          englishType: 0,
+          englishLevel: 1,
+          englishPartSpeech: [1],
+          englishNote: "常见搭配 preserve food / preserve evidence",
+        },
+      ],
+      total: 1,
+      totalPages: 1,
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/englishWorld/words"]}>
+        <EnglishWorld />
+      </MemoryRouter>,
+    );
+
+    await user.click(screen.getByText("卡片"));
+
+    expect(await screen.findByText("我的笔记")).toBeInTheDocument();
+    expect(
+      screen.getByText("常见搭配 preserve food / preserve evidence"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("有笔记")).not.toBeInTheDocument();
   });
 
   it("renders context lab references as readable source buttons in the table", () => {

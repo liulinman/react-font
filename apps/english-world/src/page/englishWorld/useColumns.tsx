@@ -1,7 +1,6 @@
 import { WordList } from "@/server/word/word.type";
 import {
   Button,
-  Popover,
   Space,
   TableProps,
   Tag,
@@ -17,6 +16,7 @@ import {
   getTypeLabel,
 } from "./utils/wordLabels";
 import { BritishPronunciationButton } from "./component/BritishPronunciationButton";
+import { hasDisplayNote } from "./component/WordNoteDisplay";
 import {
   getContextLabReferenceLabel,
   isExternalReference,
@@ -89,18 +89,23 @@ export const useColumns = (props: Props) => {
       dataIndex: "englishWord",
       key: "englishWord",
       // fixed: "left",
-      render: (text: string) => (
-        <span className="word-title-cell">
-          <a
-            href={`https://www.baidu.com/s?wd=${encodeURIComponent(text)}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="word-link"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {text}
-          </a>
-          <BritishPronunciationButton word={text} />
+      render: (text: string, record: WordList) => (
+        <span className="word-title-stack">
+          <span className="word-title-cell">
+            <a
+              href={`https://www.baidu.com/s?wd=${encodeURIComponent(text)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="word-link"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {text}
+            </a>
+            <BritishPronunciationButton word={text} />
+          </span>
+          {hasDisplayNote(record.englishNote) && (
+            <span className="word-note-indicator">有笔记</span>
+          )}
         </span>
       ),
     },
@@ -218,30 +223,6 @@ export const useColumns = (props: Props) => {
       render: (type: number) => {
         const info = getTypeLabel(type);
         return <Tag color={info.color}>{info.label}</Tag>;
-      },
-    },
-    {
-      width: 104,
-      title: "笔记",
-      dataIndex: "englishNote",
-      key: "englishNote",
-      align: "center",
-      render: (text: string) => {
-        if (text) {
-          return (
-            <Popover
-              content={formatNote(text)}
-              title="笔记内容"
-              trigger="hover"
-            >
-              <Button type="link" size="small">
-                查看笔记
-              </Button>
-            </Popover>
-          );
-        } else {
-          return <span className="word-muted">无</span>;
-        }
       },
     },
     {

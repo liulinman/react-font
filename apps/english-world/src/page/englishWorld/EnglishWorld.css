@@ -1513,6 +1513,38 @@ html[data-theme="dark"] .overwrite-stats-table .ant-table-thead > tr > th {
   background: #f8fbff;
 }
 
+.english-world-table-wrap .ant-table-expanded-row > td {
+  padding: 0 12px 0 46px;
+  background: color-mix(in srgb, var(--ew-accent) 3%, var(--ew-surface));
+}
+
+.word-note-expand-button {
+  display: inline-flex;
+  width: 32px;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 7px;
+  color: var(--ew-accent);
+  background: color-mix(in srgb, var(--ew-accent) 8%, transparent);
+  font: inherit;
+  cursor: pointer;
+  transition:
+    color 160ms ease,
+    background 160ms ease;
+}
+
+.word-note-expand-button:hover {
+  background: color-mix(in srgb, var(--ew-accent) 14%, transparent);
+}
+
+.word-note-expand-button:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--ew-accent) 40%, transparent);
+  outline-offset: 1px;
+}
+
 .english-world-table-wrap .ant-tag {
   min-width: 42px;
   margin-inline-end: 0;
@@ -2052,6 +2084,32 @@ html[data-theme="dark"] .overwrite-stats-table .ant-table-thead > tr > th {
   align-items: center;
   gap: 4px;
   max-width: 100%;
+}
+
+.word-title-stack {
+  display: inline-grid;
+  min-width: 0;
+  max-width: 100%;
+  gap: 2px;
+}
+
+.word-note-indicator {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 4px;
+  color: var(--ew-accent);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.word-note-indicator::before {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  content: "";
 }
 
 .british-pronunciation-button.ant-btn {
