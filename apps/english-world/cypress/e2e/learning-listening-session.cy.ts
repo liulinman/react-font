@@ -1,8 +1,27 @@
 const ok = (data: unknown) => ({ code: 200, message: "success", data });
-const silentMp3 = Cypress.Buffer.from(
-  "SUQzBAAAAAAAIlRTU0UAAAAOAAADTGF2ZjYxLjcuMTAwAAAAAAAAAAAAAAD/4yjEAAAAA0gAAAAATEFNRVVVVUxBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVX/4yjEfAAAA0gAAAAAVVVVVVVVVUxBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVX/4yjEfAAAA0gAAAAAVVVVVVVVVUxBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVX/4yjEfAAAA0gAAAAAVVVVVVVVVUxBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVX/4yjEfAAAA0gAAAAAVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVU=",
-  "base64",
-);
+const silentWav = (() => {
+  const sampleRate = 8_000;
+  const dataLength = 1_600;
+  const wav = Cypress.Buffer.alloc(44 + dataLength);
+  wav.write("RIFF", 0, "ascii");
+  wav.writeUInt32LE(36 + dataLength, 4);
+  wav.write("WAVE", 8, "ascii");
+  wav.write("fmt ", 12, "ascii");
+  wav.writeUInt32LE(16, 16);
+  wav.writeUInt16LE(1, 20);
+  wav.writeUInt16LE(1, 22);
+  wav.writeUInt32LE(sampleRate, 24);
+  wav.writeUInt32LE(sampleRate * 2, 28);
+  wav.writeUInt16LE(2, 32);
+  wav.writeUInt16LE(16, 34);
+  wav.write("data", 36, "ascii");
+  wav.writeUInt32LE(dataLength, 40);
+  return wav;
+})();
+const silentWavBody = silentWav.buffer.slice(
+  silentWav.byteOffset,
+  silentWav.byteOffset + silentWav.byteLength,
+) as ArrayBuffer;
 
 describe("listening learning session", () => {
   it("completes a selected-word listening journey with refresh and idempotent retry", () => {
@@ -37,6 +56,8 @@ describe("listening learning session", () => {
     let currentItem: "meaning" | "spelling" | "none" = "meaning";
     let sessionStatus: "active" | "paused" | "completed" = "active";
     let sessionVersion = 1;
+    let meaningAttemptUid: string | undefined;
+    let spellingAttemptUid: string | undefined;
     let droppedSpellingPayload: Record<string, unknown> | undefined;
     let acceptSpellingRetry = false;
 
@@ -113,16 +134,21 @@ describe("listening learning session", () => {
       statusCode: 200,
       body: "",
     });
-    for (const audioPath of [
+    const audioResponse = {
+      statusCode: 200,
+      headers: { "content-type": "audio/wav", "cache-control": "no-store" },
+      body: silentWavBody,
+    };
+    cy.intercept(
+      "GET",
       "/learning-audio/8f14e45fceea167a5a36dedd4bea2543.mp3",
+      audioResponse,
+    ).as("meaningAudio");
+    cy.intercept(
+      "GET",
       "/learning-audio/c9f0f895fb98ab9159f51fd0297e236d.mp3",
-    ]) {
-      cy.intercept("GET", audioPath, {
-        statusCode: 200,
-        headers: { "content-type": "audio/mpeg" },
-        body: silentMp3,
-      });
-    }
+      audioResponse,
+    ).as("spellingAudio");
     cy.intercept("POST", "/api/english/filterWordList", {
       code: 200,
       message: "ok",
@@ -225,7 +251,9 @@ describe("listening learning session", () => {
           hintCount: 0,
           hintTypes: [],
         });
+        expect(request.body.attemptUid).to.be.a("string").and.not.be.empty;
         expect(request.body.attemptUid).to.match(/^learning-attempt-/);
+        meaningAttemptUid = request.body.attemptUid;
         currentItem = "spelling";
         sessionVersion = 2;
         submittedResults.push(meaningResult);
@@ -256,7 +284,11 @@ describe("listening learning session", () => {
           hintCount: 1,
           hintTypes: ["show_spelling"],
         });
+        expect(request.body.attemptUid).to.be.a("string").and.not.be.empty;
         expect(request.body.attemptUid).to.match(/^learning-attempt-/);
+        expect(meaningAttemptUid).to.be.a("string").and.not.be.empty;
+        expect(request.body.attemptUid).not.to.equal(meaningAttemptUid);
+        spellingAttemptUid = request.body.attemptUid;
         request.destroy();
         return;
       }
@@ -265,6 +297,7 @@ describe("listening learning session", () => {
       expect(request.body.attemptUid).to.equal(
         droppedSpellingPayload.attemptUid,
       );
+      expect(request.body.attemptUid).to.equal(spellingAttemptUid);
       if (!acceptSpellingRetry) {
         request.destroy();
         return;
@@ -293,25 +326,6 @@ describe("listening learning session", () => {
     }).as("complete");
 
     cy.on("window:before:load", (appWindow) => {
-      const nativeAddEventListener =
-        appWindow.EventTarget.prototype.addEventListener;
-      Object.defineProperty(
-        appWindow.HTMLMediaElement.prototype,
-        "addEventListener",
-        {
-          configurable: true,
-          value(
-            this: HTMLMediaElement,
-            type: string,
-            listener: EventListenerOrEventListenerObject,
-            options?: boolean | AddEventListenerOptions,
-          ) {
-            if (type === "error") return;
-            nativeAddEventListener.call(this, type, listener, options);
-          },
-        },
-      );
-      appWindow.HTMLMediaElement.prototype.load = () => undefined;
       appWindow.HTMLMediaElement.prototype.play = function play() {
         this.dispatchEvent(new appWindow.Event("play"));
         return Promise.resolve();
@@ -330,7 +344,9 @@ describe("listening learning session", () => {
     cy.wait("@capabilities");
     cy.get('input[aria-label="听音记忆"]').should("be.checked");
     for (const mode of ["词根词族", "微场景", "易混辨析", "主动输出"]) {
-      cy.get(`input[aria-label="${mode}"]`).should("be.disabled");
+      cy.get(`input[aria-label="${mode}"]`)
+        .should("be.visible")
+        .and("be.disabled");
     }
     cy.wait("@preview");
     cy.get('[aria-label="学习计划预览"]')
@@ -341,6 +357,7 @@ describe("listening learning session", () => {
 
     cy.location("pathname").should("eq", "/englishWorld/learn/session/42");
     cy.wait("@detail");
+    cy.wait("@meaningAudio");
     cy.get("body").should("not.contain.text", "inspect");
     cy.contains("button", "播放英式发音")
       .should("have.attr", "aria-pressed", "false")
@@ -354,6 +371,7 @@ describe("listening learning session", () => {
     cy.contains("button", "提交答案").click();
     cy.wait("@submit");
     cy.wait("@detail");
+    cy.wait("@spellingAudio");
 
     cy.contains("label", "输入听到的单词")
       .find('input[type="text"]')
