@@ -16,7 +16,7 @@ import {
   getTypeLabel,
 } from "./utils/wordLabels";
 import { BritishPronunciationButton } from "./component/BritishPronunciationButton";
-import { hasDisplayNote } from "./component/WordNoteDisplay";
+import { hasDisplayNote } from "./utils/wordNote";
 import {
   getContextLabReferenceLabel,
   isExternalReference,

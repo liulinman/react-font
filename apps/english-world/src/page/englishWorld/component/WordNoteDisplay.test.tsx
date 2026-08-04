@@ -1,11 +1,8 @@
 import "@testing-library/jest-dom/vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import {
-  hasDisplayNote,
-  WordCardNote,
-  WordExpandedNote,
-} from "./WordNoteDisplay";
+import { hasDisplayNote } from "../utils/wordNote";
+import { WordCardNote, WordExpandedNote } from "./WordNoteDisplay";
 
 afterEach(() => {
   cleanup();

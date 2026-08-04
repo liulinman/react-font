@@ -1,6 +1,7 @@
 import { Button } from "antd";
 import { useId, useLayoutEffect, useRef, useState } from "react";
 import type { WordList } from "@/server/word/word.type";
+import { hasDisplayNote } from "../utils/wordNote";
 
 type WordCardNoteProps = {
   word: string;
@@ -11,10 +12,6 @@ type WordExpandedNoteProps = {
   record: WordList;
   onEdit: (record: WordList) => void;
 };
-
-export function hasDisplayNote(note?: string | null) {
-  return typeof note === "string" && note.trim().length > 0;
-}
 
 export function WordCardNote({ word, note }: WordCardNoteProps) {
   const [expanded, setExpanded] = useState(false);

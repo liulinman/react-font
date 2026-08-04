@@ -75,11 +75,8 @@ import {
 } from "./utils/wordLabels";
 import { BritishPronunciationButton } from "./component/BritishPronunciationButton";
 import { WordLevelQuickEdit } from "./component/WordLevelQuickEdit";
-import {
-  hasDisplayNote,
-  WordCardNote,
-  WordExpandedNote,
-} from "./component/WordNoteDisplay";
+import { WordCardNote, WordExpandedNote } from "./component/WordNoteDisplay";
+import { hasDisplayNote } from "./utils/wordNote";
 import { EnglishWorldLayout } from "./layout/EnglishWorldLayout";
 import {
   readWordLibraryView,
