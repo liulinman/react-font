@@ -8,6 +8,15 @@ const styles = readFileSync(
 );
 
 describe("word card visual hierarchy", () => {
+  it("keeps card and expanded notes readable without nested scrolling", () => {
+    expect(styles).toMatch(
+      /\.word-card-note-text\s*\{[^}]*overflow-wrap:\s*anywhere;[^}]*white-space:\s*pre-wrap;[^}]*-webkit-line-clamp:\s*2;/s,
+    );
+    expect(styles).toMatch(
+      /\.word-note-expanded-text\s*\{[^}]*overflow-wrap:\s*anywhere;[^}]*white-space:\s*pre-wrap;/s,
+    );
+  });
+
   it("separates the card grid surface from interactive word cards", () => {
     expect(styles).toMatch(
       /\.english-world-card-view\s*\{[^}]*padding:\s*14px;[^}]*background:\s*#f6f8fc;/s,

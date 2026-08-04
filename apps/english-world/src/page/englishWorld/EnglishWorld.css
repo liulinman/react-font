@@ -1668,6 +1668,11 @@ html[data-theme="dark"] .overwrite-stats-table .ant-table-thead > tr > th {
     transition: none;
   }
 
+  .word-card-note-toggle,
+  .word-note-expand-button {
+    transition: none;
+  }
+
   .english-world-header,
   .english-world-workspace {
     transition: none;
@@ -1868,6 +1873,106 @@ html[data-theme="dark"] .overwrite-stats-table .ant-table-thead > tr > th {
   min-width: 0;
   align-items: center;
   gap: 12px;
+}
+
+.word-card-note {
+  padding: 10px 11px;
+  border-left: 3px solid color-mix(in srgb, var(--ew-accent) 62%, white);
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--ew-accent) 4%, var(--ew-surface));
+}
+
+.word-card-note-head,
+.word-note-expanded-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.word-card-note-head {
+  margin-bottom: 4px;
+  color: var(--ew-text-secondary);
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.word-card-note-toggle {
+  flex: 0 0 auto;
+  min-width: 44px;
+  min-height: 28px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: 6px;
+  color: var(--ew-accent);
+  background: transparent;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    color 160ms ease,
+    background 160ms ease;
+}
+
+.word-card-note-toggle:hover {
+  background: color-mix(in srgb, var(--ew-accent) 9%, transparent);
+}
+
+.word-card-note-toggle:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--ew-accent) 40%, transparent);
+  outline-offset: 1px;
+}
+
+.word-card-note-text {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  color: var(--ew-text-secondary);
+  font-size: 12px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.word-card-note-text-expanded {
+  display: block;
+  overflow: visible;
+  -webkit-line-clamp: unset;
+}
+
+.word-note-expanded-panel {
+  margin: 10px 14px 12px 2px;
+  padding: 13px 15px;
+  border: 1px solid color-mix(in srgb, var(--ew-accent) 25%, var(--ew-border));
+  border-left: 3px solid color-mix(in srgb, var(--ew-accent) 62%, white);
+  border-radius: 8px;
+  background: var(--ew-surface);
+}
+
+.word-note-expanded-head {
+  margin-bottom: 7px;
+}
+
+.word-note-expanded-head strong {
+  color: var(--ew-text);
+  font-size: 12px;
+}
+
+.word-note-expanded-head .ant-btn-link {
+  min-height: 32px;
+  padding-inline: 8px;
+}
+
+.word-note-expanded-text {
+  margin: 0;
+  color: var(--ew-text-secondary);
+  font-size: 13px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
 }
 
 .word-card-classification {
