@@ -79,9 +79,8 @@ import { WordCardNote, WordExpandedNote } from "./component/WordNoteDisplay";
 import { hasDisplayNote } from "./utils/wordNote";
 import { EnglishWorldLayout } from "./layout/EnglishWorldLayout";
 import {
-  readWordLibraryView,
-  writeWordLibraryView,
   type WordLibraryView,
+  wordLibraryViewPreference,
 } from "./utils/wordLibraryViewPreference";
 import {
   getContextLabReferenceLabel,
@@ -122,7 +121,7 @@ const EnglishWorld: React.FC = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [wordRecord, setWordRecord] = useState<WordList>();
   const [libraryView, setLibraryView] = useState<WordLibraryView>(
-    readWordLibraryView,
+    wordLibraryViewPreference.read,
   );
   const [cardBatchMode, setCardBatchMode] = useState(false);
   const [selectedCardIds, setSelectedCardIds] = useState<number[]>([]);
@@ -425,7 +424,7 @@ const EnglishWorld: React.FC = () => {
 
   const handleLibraryViewChange = (view: WordLibraryView) => {
     setLibraryView(view);
-    writeWordLibraryView(view);
+    wordLibraryViewPreference.write(view);
     setCardBatchMode(false);
     setSelectedCardIds([]);
   };

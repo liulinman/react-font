@@ -1,24 +1,25 @@
-import { describe, expect, it, vi } from "vitest";
-import {
-  readWordLibraryView,
-  writeWordLibraryView,
-} from "./wordLibraryViewPreference";
+import { describe, expect, it } from "vitest";
+import { wordLibraryViewPreference } from "./wordLibraryViewPreference";
 
 describe("wordLibraryViewPreference", () => {
   it.each(["list", "card"] as const)("reads %s", (value) => {
-    expect(readWordLibraryView({ getItem: () => value })).toBe(value);
+    expect(wordLibraryViewPreference.read({ getItem: () => value })).toBe(
+      value,
+    );
   });
 
   it.each([null, "grid", "", "CARD"])(
     "falls back to list for %s",
     (value) => {
-      expect(readWordLibraryView({ getItem: () => value })).toBe("list");
+      expect(
+        wordLibraryViewPreference.read({ getItem: () => value }),
+      ).toBe("list");
     },
   );
 
   it("falls back when storage throws", () => {
     expect(
-      readWordLibraryView({
+      wordLibraryViewPreference.read({
         getItem: () => {
           throw new Error("blocked");
         },
@@ -27,19 +28,18 @@ describe("wordLibraryViewPreference", () => {
   });
 
   it("writes the validated view", () => {
-    const setItem = vi.fn();
+    const values = new Map<string, string>();
 
-    writeWordLibraryView("card", { setItem });
+    wordLibraryViewPreference.write("card", {
+      setItem: (key, value) => values.set(key, value),
+    });
 
-    expect(setItem).toHaveBeenCalledWith(
-      "english-world:word-library-view",
-      "card",
-    );
+    expect(values.get("english-world:word-library-view")).toBe("card");
   });
 
   it("does not block view changes when writing fails", () => {
     expect(() =>
-      writeWordLibraryView("list", {
+      wordLibraryViewPreference.write("list", {
         setItem: () => {
           throw new Error("blocked");
         },
