@@ -81,7 +81,7 @@ describe("createLearningDraftStore", () => {
     expect(store.load()).toBeNull();
 
     const throwingStorage: Storage = {
-      get length() {
+      get length(): number {
         throw new Error("blocked");
       },
       clear: vi.fn(() => {

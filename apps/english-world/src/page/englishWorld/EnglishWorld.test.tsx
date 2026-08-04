@@ -10,6 +10,7 @@ import {
   within,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter, useLocation, useNavigate } from "react-router-dom";
 import { message } from "antd";
@@ -49,6 +50,13 @@ vi.mock("antd", async () => {
     Table: (props: Record<string, unknown>) => {
       tablePropsMock(props);
       const columns = (props.columns ?? []) as Array<{ title?: unknown }>;
+      const dataSource = (props.dataSource ?? []) as WordList[];
+      const rowSelection = props.rowSelection as
+        | {
+            selectedRowKeys?: React.Key[];
+            onChange?: (keys: React.Key[]) => void;
+          }
+        | undefined;
       const locale = props.locale as { emptyText?: React.ReactNode } | undefined;
       return (
         <div data-testid="word-table">
@@ -57,6 +65,23 @@ vi.mock("antd", async () => {
               <span key={`${column.title}-${index}`}>{column.title}</span>
             ) : null,
           )}
+          {dataSource.map((word) => (
+            <label key={word.id}>
+              <input
+                aria-label={`选择 ${word.englishWord}`}
+                type="checkbox"
+                checked={rowSelection?.selectedRowKeys?.includes(word.id) ?? false}
+                onChange={(event) =>
+                  rowSelection?.onChange?.(
+                    event.target.checked
+                      ? [...(rowSelection.selectedRowKeys ?? []), word.id]
+                      : (rowSelection.selectedRowKeys ?? []).filter((id) => id !== word.id),
+                  )
+                }
+              />
+              {word.englishWord}
+            </label>
+          ))}
           {locale?.emptyText}
         </div>
       );
@@ -156,6 +181,63 @@ describe("EnglishWorld ToC routing", () => {
     expect(screen.getAllByText("类型").length).toBeGreaterThan(0);
     expect(screen.getAllByText("掌握程度").length).toBeGreaterThan(0);
     expect(screen.queryByText("Mock Cockpit")).not.toBeInTheDocument();
+  });
+
+  it("opens mixed-memory setup only from an explicit word selection", async () => {
+    const user = userEvent.setup();
+    requestMock.mockImplementation(async (descriptor: { url: string; data?: unknown }) => {
+      if (descriptor.url === "/english/filterWordList") {
+        return { list: makeWordList(2), total: 2, totalPages: 1 };
+      }
+      if (descriptor.url === "/learning-session/capabilities") {
+        return { modes: [{ mode: "listening", status: "enabled" }] };
+      }
+      if (descriptor.url === "/learning-session/preview") {
+        const wordIds = (descriptor.data as { wordIds: number[] }).wordIds;
+        return {
+          wordCount: wordIds.length,
+          estimatedSeconds: 35,
+          modeCapabilities: [{ mode: "listening", status: "enabled" }],
+          words: wordIds.map((wordId, sourceOrder) => ({
+            wordId,
+            sourceOrder,
+            primaryMode: "listening",
+            eligibleModes: ["listening"],
+            audioEligibility: "eligible",
+            adaptationStatus: "adapted",
+          })),
+          blocks: [],
+        };
+      }
+      throw new Error(`unexpected request: ${descriptor.url}`);
+    });
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    });
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/englishWorld/words"]}>
+          <EnglishWorld />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    const startButton = await screen.findByRole("button", { name: "开始记忆" });
+    expect(startButton).toBeDisabled();
+    await user.click(screen.getByRole("checkbox", { name: "选择 word-1" }));
+    expect(startButton).toBeEnabled();
+    await user.click(startButton);
+
+    expect(screen.getByRole("dialog", { name: "开始混合记忆" })).toBeVisible();
+    expect(screen.getByText("本次 1 个词")).toBeInTheDocument();
+    const previewCall = await waitFor(() => {
+      const call = requestMock.mock.calls.find(
+        ([descriptor]) => descriptor.url === "/learning-session/preview",
+      );
+      expect(call).toBeDefined();
+      return call;
+    });
+    expect(previewCall?.[0].data.wordIds).toEqual([1]);
   });
 
   it("fills and automatically searches the word from the URL", async () => {

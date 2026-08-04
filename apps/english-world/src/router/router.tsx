@@ -8,6 +8,7 @@ import { IeltsCoreReviewPage } from "@/page/englishWorld/ieltsCore/IeltsCoreRevi
 import { MemoryMapPage } from "@/page/englishWorld/memoryMap/MemoryMapPage";
 import { OverwriteStatsPage } from "@/page/englishWorld/overwriteStats/OverwriteStatsPage";
 import { RecitePage } from "@/page/englishWorld/recite/RecitePage";
+import { MixedLearningSessionPage } from "@/page/englishWorld/learning/session/MixedLearningSessionPage";
 import { WordAgentTab } from "@/page/englishWorld/component/WordAgentTab";
 import EnglishWorldMobile from "@/page/englishWorldMobile/EnglishWorldMobile";
 import Login from "@/page/login/Login";
@@ -130,6 +131,14 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedWrapper>
         <RecitePage />
+      </ProtectedWrapper>
+    ),
+  },
+  {
+    path: "/englishWorld/learn/session/:sessionId",
+    element: (
+      <ProtectedWrapper>
+        <MixedLearningSessionPage />
       </ProtectedWrapper>
     ),
   },

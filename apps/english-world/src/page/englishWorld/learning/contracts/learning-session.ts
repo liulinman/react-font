@@ -101,6 +101,27 @@ export interface LearningSessionDetailV1 {
   sessionVersion: number;
   currentItem?: ActivityEnvelopeV1 & { itemId: number };
   submittedResults: LearningAttemptResultSummaryV1[];
+  /** Present on completed snapshots when the server includes the result rollup. */
+  result?: LearningSessionResultV1;
+}
+
+export interface LearningSessionResultV1 {
+  completedWords: number;
+  elapsedSeconds: number;
+  independentCorrect: number;
+  hintedCorrect: number;
+  needsWork: number;
+  pending: number;
+  levelChanges: number;
+  words: Array<{
+    wordId: number;
+    word: string;
+    originalLevel: 0 | 1 | 2 | 3;
+    systemLevel: 0 | 1 | 2 | 3;
+    manualLevel: 0 | 1 | 2 | 3 | null;
+    nextReviewAt: string;
+    recommendedMode: LearningMode;
+  }>;
 }
 
 /** The current public detail response is the V1 session snapshot. */

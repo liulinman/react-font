@@ -27,6 +27,7 @@ import {
   wordAdd,
   wordDel,
   wordExist,
+  wordFilter,
   wordUpdate,
   wordUpdateLevel,
 } from "@/server/word/word";
@@ -68,6 +69,10 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useWordList } from "./hooks/useWordList";
 import { normalizeDesktopWordFilters } from "./utils/wordFilters";
 import { getLegacyPathFromHash, getNavFromLocation } from "./navigation";
+import {
+  LearningSetupDrawer,
+  type LearningWordScope,
+} from "./learning/setup/LearningSetupDrawer";
 import {
   getLevelLabel,
   getPartSpeechLabel,
@@ -125,6 +130,11 @@ const EnglishWorld: React.FC = () => {
   );
   const [cardBatchMode, setCardBatchMode] = useState(false);
   const [selectedCardIds, setSelectedCardIds] = useState<number[]>([]);
+  const [useCurrentFilterScope, setUseCurrentFilterScope] = useState(false);
+  const [learningScope, setLearningScope] = useState<LearningWordScope | null>(
+    null,
+  );
+  const [resolvingLearningScope, setResolvingLearningScope] = useState(false);
   const [levelUpdatingIds, setLevelUpdatingIds] = useState<number[]>([]);
   const [batchLevelUpdating, setBatchLevelUpdating] = useState(false);
   const [batchContextModalOpen, setBatchContextModalOpen] = useState(false);
@@ -354,12 +364,14 @@ const EnglishWorld: React.FC = () => {
   // 查询数据
   const handleSearch = async () => {
     setSelectedCardIds([]);
+    setUseCurrentFilterScope(false);
     await search(normalizeDesktopWordFilters(form.getFieldsValue()));
   };
 
   // 重置表单
   const handleReset = async () => {
     setSelectedCardIds([]);
+    setUseCurrentFilterScope(false);
     form.resetFields();
     await reset();
   };
@@ -455,6 +467,57 @@ const EnglishWorld: React.FC = () => {
   const selectedCardRecords = wordList.filter((word) =>
     selectedCardIds.includes(word.id),
   );
+
+  const masteryFilterLabel = () => {
+    const level = getCurrentFilters().englishLevel;
+    return typeof level === "number"
+      ? `掌握程度：${getLevelLabel(level).label}`
+      : "不限掌握程度";
+  };
+
+  const handleStartMemory = async () => {
+    if (selectedCardIds.length > 0) {
+      setLearningScope({
+        kind: "selection",
+        wordIds: [...selectedCardIds],
+        count: selectedCardIds.length,
+        masteryFilterLabel: `已选词条（${masteryFilterLabel()}）`,
+      });
+      return;
+    }
+    if (!useCurrentFilterScope || totalNum <= 0 || resolvingLearningScope) return;
+
+    setResolvingLearningScope(true);
+    try {
+      const result = await request<{
+        list: WordList[];
+        total: number;
+        totalPages: number;
+      }>(
+        wordFilter({
+          ...getCurrentFilters(),
+          page: 1,
+          pageSize: totalNum,
+        }),
+      );
+      const wordIds = Array.from(new Set(result.list.map((word) => word.id)));
+      if (wordIds.length !== result.total || result.total !== totalNum) {
+        message.warning("筛选结果已变化，请重新查询后再开始记忆");
+        setUseCurrentFilterScope(false);
+        return;
+      }
+      setLearningScope({
+        kind: "current_filter",
+        wordIds,
+        count: wordIds.length,
+        masteryFilterLabel: `当前筛选（${masteryFilterLabel()}）`,
+      });
+    } catch {
+      message.error("读取当前筛选结果失败，请重试");
+    } finally {
+      setResolvingLearningScope(false);
+    }
+  };
 
   const handleOpenBatchContextLab = () => {
     if (batchLevelUpdating) return;
@@ -892,7 +955,19 @@ const EnglishWorld: React.FC = () => {
                     记忆地图
                   </Button>
                   <Button
+                    aria-label="开始记忆"
+                    disabled={
+                      selectedCardIds.length === 0 &&
+                      !(useCurrentFilterScope && totalNum > 0)
+                    }
+                    loading={resolvingLearningScope}
                     type="primary"
+                    icon={<PlayCircleOutlined />}
+                    onClick={() => void handleStartMemory()}
+                  >
+                    开始记忆
+                  </Button>
+                  <Button
                     onClick={handleAdd}
                     loading={buttonPending}
                     icon={<PlusOutlined />}
@@ -960,6 +1035,15 @@ const EnglishWorld: React.FC = () => {
                   <span>查看和维护词汇内容与学习状态</span>
                 </div>
                 <div className="english-world-table-tools">
+                  <Checkbox
+                    checked={useCurrentFilterScope}
+                    disabled={totalNum === 0 || selectedCardIds.length > 0}
+                    onChange={(event) =>
+                      setUseCurrentFilterScope(event.target.checked)
+                    }
+                  >
+                    使用当前筛选结果（{totalNum} 个）
+                  </Checkbox>
                   <Segmented<WordLibraryView>
                     value={libraryView}
                     onChange={handleLibraryViewChange}
@@ -998,6 +1082,11 @@ const EnglishWorld: React.FC = () => {
                     loading={loading}
                     columns={columns}
                     dataSource={wordList}
+                    rowSelection={{
+                      selectedRowKeys: selectedCardIds,
+                      onChange: (keys) =>
+                        setSelectedCardIds(keys.map((key) => Number(key))),
+                    }}
                     expandable={{
                       columnWidth: 48,
                       expandRowByClick: false,
@@ -1145,6 +1234,13 @@ const EnglishWorld: React.FC = () => {
               )}
             </section>
             {/* 编辑模态框 */}
+            {learningScope ? (
+              <LearningSetupDrawer
+                open
+                scope={learningScope}
+                onClose={() => setLearningScope(null)}
+              />
+            ) : null}
             <EditAddModal
               isModalVisible={isModalVisible}
               currentRecord={wordRecord}
