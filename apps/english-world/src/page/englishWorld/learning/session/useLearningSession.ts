@@ -98,7 +98,9 @@ export function useLearningSession(sessionId: number) {
 
   const replaceWithRefetch = useCallback(async () => {
     const refreshed = await detailQuery.refetch();
-    if (refreshed.data) applySnapshot(refreshed.data);
+    if (refreshed.error) throw refreshed.error;
+    if (!refreshed.data) throw new Error("learning session detail missing");
+    applySnapshot(refreshed.data);
   }, [applySnapshot, detailQuery]);
 
   const changeDraft = useCallback((draft: LearningAnswerDraft) => {

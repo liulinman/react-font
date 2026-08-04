@@ -61,6 +61,9 @@ export function MixedLearningSessionPage() {
           <Button type="primary" onClick={learning.retrySubmit}>重试提交</Button>
           <Button onClick={learning.editAfterFailure}>修改答案</Button>
         </section>
+      ) : interaction?.status === "feedback" &&
+        learning.actionError?.code === "REFRESH_FAILED" ? (
+        <section role="status">答案已保存，等待刷新学习进度。</section>
       ) : Activity && currentItem && interaction &&
         (interaction.status === "editing" || interaction.status === "submitting") ? (
         <Activity

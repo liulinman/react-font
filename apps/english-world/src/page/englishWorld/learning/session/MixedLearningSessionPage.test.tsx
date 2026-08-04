@@ -215,4 +215,76 @@ describe("MixedLearningSessionPage", () => {
     )?.[0];
     expect(pauseCall.data).toEqual({ sessionId: 42, sessionVersion: 3 });
   });
+
+  it("offers refresh when submit is accepted but the authoritative detail refresh fails", async () => {
+    const user = userEvent.setup();
+    let detailCount = 0;
+    requestMock.mockImplementation(async (descriptor: { url: string }) => {
+      if (descriptor.url === "/learning-session/detail") {
+        detailCount += 1;
+        if (detailCount === 1) return activeSnapshot;
+        throw { code: "CORS_ERROR", message: "offline" };
+      }
+      if (descriptor.url === "/learning-session/submit") {
+        return {
+          attemptId: 92,
+          status: "final",
+          outcome: "correct",
+          dimensionResults: [{ dimension: "spelling", outcome: "correct" }],
+          feedback: {
+            kind: "spelling",
+            expected: "visible-after-result",
+            diff: [{ text: "visible-after-result", kind: "same" }],
+          },
+          sessionVersion: 4,
+        };
+      }
+      throw new Error(`unexpected request: ${descriptor.url}`);
+    });
+    renderPage();
+    const input = await screen.findByRole("textbox", { name: "输入听到的单词" });
+    await user.type(input, "public-response");
+    await user.click(screen.getByRole("button", { name: "提交答案" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "答案已保存，请刷新学习进度",
+    );
+    expect(screen.getByRole("button", { name: "刷新学习进度" })).toBeVisible();
+    expect(screen.queryByText("正在同步下一题…")).not.toBeInTheDocument();
+  });
+
+  it("does not invent word or hint metrics when a completed detail has no result rollup", async () => {
+    requestMock.mockResolvedValue({
+      sessionId: 42,
+      status: "completed",
+      sessionVersion: 5,
+      submittedResults: [
+        {
+          attemptId: 101,
+          itemId: 71,
+          status: "final",
+          outcome: "correct",
+          dimensionResults: [{ dimension: "listening", outcome: "correct" }],
+          sessionVersion: 4,
+          nextItemId: 72,
+        },
+        {
+          attemptId: 102,
+          itemId: 72,
+          status: "final",
+          outcome: "correct",
+          dimensionResults: [{ dimension: "spelling", outcome: "correct" }],
+          sessionVersion: 5,
+        },
+      ],
+    });
+    renderPage();
+
+    expect(await screen.findByRole("heading", { name: "学习结果" })).toBeVisible();
+    expect(screen.getByText("2 次作答")).toBeInTheDocument();
+    expect(screen.getByText(/暂无统计|等待服务端汇总/)).toBeInTheDocument();
+    expect(screen.queryByText("已完成 2 个词")).not.toBeInTheDocument();
+    expect(screen.queryByText("独立答对")).not.toBeInTheDocument();
+    expect(screen.queryByText("提示后答对")).not.toBeInTheDocument();
+  });
 });

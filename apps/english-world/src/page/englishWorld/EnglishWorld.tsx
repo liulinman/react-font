@@ -71,6 +71,7 @@ import { normalizeDesktopWordFilters } from "./utils/wordFilters";
 import { getLegacyPathFromHash, getNavFromLocation } from "./navigation";
 import {
   LearningSetupDrawer,
+  MAX_LEARNING_WORDS,
   type LearningWordScope,
 } from "./learning/setup/LearningSetupDrawer";
 import {
@@ -476,6 +477,14 @@ const EnglishWorld: React.FC = () => {
   };
 
   const handleStartMemory = async () => {
+    const requestedCount =
+      selectedCardIds.length > 0
+        ? selectedCardIds.length
+        : useCurrentFilterScope
+          ? totalNum
+          : 0;
+    if (requestedCount > MAX_LEARNING_WORDS) return;
+
     if (selectedCardIds.length > 0) {
       setLearningScope({
         kind: "selection",
@@ -518,6 +527,14 @@ const EnglishWorld: React.FC = () => {
       setResolvingLearningScope(false);
     }
   };
+
+  const requestedLearningCount =
+    selectedCardIds.length > 0
+      ? selectedCardIds.length
+      : useCurrentFilterScope
+        ? totalNum
+        : 0;
+  const learningScopeTooLarge = requestedLearningCount > MAX_LEARNING_WORDS;
 
   const handleOpenBatchContextLab = () => {
     if (batchLevelUpdating) return;
@@ -957,8 +974,9 @@ const EnglishWorld: React.FC = () => {
                   <Button
                     aria-label="开始记忆"
                     disabled={
-                      selectedCardIds.length === 0 &&
-                      !(useCurrentFilterScope && totalNum > 0)
+                      learningScopeTooLarge ||
+                      (selectedCardIds.length === 0 &&
+                        !(useCurrentFilterScope && totalNum > 0))
                     }
                     loading={resolvingLearningScope}
                     type="primary"
@@ -977,6 +995,9 @@ const EnglishWorld: React.FC = () => {
                 </>
               }
             />
+            {learningScopeTooLarge ? (
+              <p role="alert">一次最多 20 个单词，请缩小选择或筛选范围。</p>
+            ) : null}
             <section className="english-world-filter-panel" aria-label="词库筛选">
               <Form
                 form={form}

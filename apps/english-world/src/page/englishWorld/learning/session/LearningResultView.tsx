@@ -1,28 +1,39 @@
 import type {
   LearningSessionDetailV1,
-  LearningSessionResultV1,
 } from "../contracts/learning-session";
 
-function fallbackResult(snapshot: LearningSessionDetailV1): LearningSessionResultV1 {
-  const independentCorrect = snapshot.submittedResults.filter(
-    (attempt) => attempt.outcome === "correct",
-  ).length;
-  const needsWork = snapshot.submittedResults.filter(
-    (attempt) => attempt.outcome !== "correct",
-  ).length;
-  return {
-    completedWords: snapshot.submittedResults.length,
-    elapsedSeconds: 0,
-    independentCorrect,
-    hintedCorrect: 0,
-    needsWork,
-    pending: 0,
-    levelChanges: 0,
-    words: [],
-  };
-}
 export function LearningResultView({ snapshot }: { snapshot: LearningSessionDetailV1 }) {
-  const result = snapshot.result ?? fallbackResult(snapshot);
+  const result = snapshot.result;
+  if (!result) {
+    const correct = snapshot.submittedResults.filter(
+      (attempt) => attempt.outcome === "correct",
+    ).length;
+    const incorrect = snapshot.submittedResults.filter(
+      (attempt) => attempt.outcome === "incorrect",
+    ).length;
+    const skipped = snapshot.submittedResults.filter(
+      (attempt) => attempt.outcome === "skipped",
+    ).length;
+
+    return (
+      <section aria-label="学习结果" className="learning-result-view">
+        <h1>学习结果</h1>
+        <section aria-label="作答结果">
+          <h2>作答结果</h2>
+          <p>{snapshot.submittedResults.length} 次作答</p>
+          <ul>
+            <li>答对 {correct} 次</li>
+            <li>答错 {incorrect} 次</li>
+            <li>跳过 {skipped} 次</li>
+          </ul>
+        </section>
+        <p role="status">
+          单词完成数、提示使用和等级变化暂无统计，等待服务端汇总。
+        </p>
+      </section>
+    );
+  }
+
   return (
     <section aria-label="学习结果" className="learning-result-view">
       <h1>学习结果</h1>

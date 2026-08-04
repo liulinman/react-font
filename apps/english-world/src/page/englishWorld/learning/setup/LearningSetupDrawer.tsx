@@ -33,6 +33,8 @@ export interface LearningSetupDrawerProps {
   onClose(): void;
 }
 
+export const MAX_LEARNING_WORDS = 20;
+
 function createUid(prefix: string) {
   const randomUuid = globalThis.crypto?.randomUUID?.();
   return randomUuid
@@ -87,6 +89,9 @@ export function LearningSetupDrawer({
     () => scope.wordIds.filter((wordId) => !excludedWordIds.includes(wordId)),
     [excludedWordIds, scope.wordIds],
   );
+  const scopeTooLarge =
+    scope.count > MAX_LEARNING_WORDS ||
+    requestedWordIds.length > MAX_LEARNING_WORDS;
   const inputHash = `${requestedWordIds.join(",")}:${selectedModes.join(",")}`;
 
   const capabilitiesQuery = useQuery({
@@ -102,7 +107,10 @@ export function LearningSetupDrawer({
         previewLearningSession({ wordIds: requestedWordIds, selectedModes }),
       ),
     enabled:
-      open && requestedWordIds.length > 0 && selectedModes.length > 0,
+      open &&
+      !scopeTooLarge &&
+      requestedWordIds.length > 0 &&
+      selectedModes.length > 0,
     retry: false,
   });
 
@@ -119,6 +127,7 @@ export function LearningSetupDrawer({
     selectedModes.length > 0 && selectedModes.every((mode) => enabledModes.has(mode));
   const canCreate =
     requestedWordIds.length > 0 &&
+    !scopeTooLarge &&
     preview?.wordCount === requestedWordIds.length &&
     !hasUnadaptedWords &&
     selectionIsEnabled &&
@@ -178,6 +187,10 @@ export function LearningSetupDrawer({
             {scope.kind === "selection" ? "范围：手动选择" : "范围：当前筛选结果"}
           </span>
         </section>
+
+        {scopeTooLarge ? (
+          <p role="alert">一次最多 20 个单词，请缩小选择或筛选范围。</p>
+        ) : null}
 
         <LearningModePicker
           capabilities={capabilitiesQuery.data?.modes ?? []}

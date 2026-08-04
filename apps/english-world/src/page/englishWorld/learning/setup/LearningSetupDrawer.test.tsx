@@ -223,4 +223,34 @@ describe("LearningSetupDrawer", () => {
     expect(createCalls[0][0].data.requestUid).toBe(createCalls[1][0].data.requestUid);
     expect(createCalls[0][0].data).toEqual(createCalls[1][0].data);
   });
+
+  it("blocks a scope over twenty words without previewing or creating it", async () => {
+    const user = userEvent.setup();
+    renderDrawer(Array.from({ length: 21 }, (_, index) => index + 1));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "一次最多 20 个单词",
+    );
+    const createButton = screen.getByRole("button", { name: "开始混合记忆" });
+    expect(createButton).toBeDisabled();
+    await user.click(createButton);
+
+    await waitFor(() => {
+      expect(
+        requestMock.mock.calls.some(
+          ([descriptor]) => descriptor.url === "/learning-session/capabilities",
+        ),
+      ).toBe(true);
+    });
+    expect(
+      requestMock.mock.calls.some(
+        ([descriptor]) => descriptor.url === "/learning-session/preview",
+      ),
+    ).toBe(false);
+    expect(
+      requestMock.mock.calls.some(
+        ([descriptor]) => descriptor.url === "/learning-session/create",
+      ),
+    ).toBe(false);
+  });
 });

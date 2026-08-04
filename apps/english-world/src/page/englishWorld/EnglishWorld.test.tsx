@@ -240,6 +240,43 @@ describe("EnglishWorld ToC routing", () => {
     expect(previewCall?.[0].data.wordIds).toEqual([1]);
   });
 
+  it("blocks more than twenty selected words before setup or preview", async () => {
+    requestMock.mockResolvedValue({
+      list: makeWordList(21),
+      total: 21,
+      totalPages: 1,
+    });
+    render(
+      <MemoryRouter initialEntries={["/englishWorld/words"]}>
+        <EnglishWorld />
+      </MemoryRouter>,
+    );
+    await screen.findByRole("checkbox", { name: "选择 word-21" });
+    const tableProps = tablePropsMock.mock.calls.at(-1)?.[0] as {
+      rowSelection?: { onChange?: (keys: React.Key[]) => void };
+    };
+
+    act(() => {
+      tableProps.rowSelection?.onChange?.(
+        Array.from({ length: 21 }, (_, index) => index + 1),
+      );
+    });
+
+    expect(screen.getByRole("alert")).toHaveTextContent("一次最多 20 个单词");
+    expect(screen.getByRole("button", { name: "开始记忆" })).toBeDisabled();
+    expect(screen.queryByRole("dialog", { name: "开始混合记忆" })).not.toBeInTheDocument();
+    expect(
+      requestMock.mock.calls.some(
+        ([descriptor]) => descriptor.url === "/learning-session/preview",
+      ),
+    ).toBe(false);
+    expect(
+      requestMock.mock.calls.some(
+        ([descriptor]) => descriptor.url === "/learning-session/create",
+      ),
+    ).toBe(false);
+  });
+
   it("fills and automatically searches the word from the URL", async () => {
     render(
       <MemoryRouter
