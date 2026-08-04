@@ -2,6 +2,7 @@ import "@testing-library/jest-dom/vitest";
 import {
   act,
   cleanup,
+  fireEvent,
   render,
   screen,
   waitFor,
@@ -49,6 +50,32 @@ let taskEventHandler:
 function LocationProbe() {
   const location = useLocation();
   return <div data-testid="location">{`${location.pathname}${location.search}`}</div>;
+}
+
+function buildSelectedWordHistory(article: string) {
+  return {
+    list: [
+      {
+        id: 12,
+        taskId: 12,
+        status: "succeeded",
+        sourceType: "custom",
+        words: ["urban farming", "insects"],
+        articleExerciseId: 88,
+        article,
+        questions: [
+          {
+            id: "q1",
+            stem: "What is the passage about?",
+            options: ["Urban farming", "Space travel"],
+          },
+        ],
+      },
+    ],
+    total: 1,
+    page: 1,
+    pageSize: 10,
+  };
 }
 
 vi.mock("@font/api", () => ({
@@ -2715,164 +2742,217 @@ describe("ContextLabPage", () => {
   it(
     "adds selected article text to the word library through AI completion",
     async () => {
+      let resolveEnrichment: (value: unknown) => void = () => undefined;
+      const pendingEnrichment = new Promise((resolve) => {
+        resolveEnrichment = resolve;
+      });
       requestMock.mockImplementation((config) => {
         if (config.url === "/context-lab/history") {
+          return Promise.resolve(
+            buildSelectedWordHistory(
+              "Urban Ecology\n\nInsects support urban farming.",
+            ),
+          );
+        }
+        if (config.url === "/english/importMissingWords/enrich-preview") {
+          return pendingEnrichment;
+        }
+        if (config.url === "/english/importMissingWords/preview") {
           return Promise.resolve({
-            list: [
-              {
-                id: 12,
-                taskId: 12,
-                status: "succeeded",
-                sourceType: "custom",
-                words: ["urban farming"],
-                articleExerciseId: 88,
-                article:
-                  "Urban Farming\n\nUrban farming improves local food supply.",
-                questions: [
-                  {
-                    id: "q1",
-                    stem: "What is the passage about?",
-                    options: ["Urban farming", "Space travel"],
-                  },
-                ],
-              },
-            ],
-            total: 1,
-            page: 1,
-            pageSize: 10,
+            received: 1,
+            normalized: 1,
+            importable: 1,
+            skippedExisting: 0,
+            skippedDuplicate: 0,
+            existingWords: [],
+            duplicateWords: [],
           });
         }
-        if (config.url === "/word-agent/query") {
+        if (config.url === "/english/importMissingWords") {
           return Promise.resolve({
-            words: [
-              {
-                word: "urban farming",
-                phonetic: "/ˈɜːbən ˈfɑːmɪŋ/",
-                meaning: "城市农业；都市农耕",
-                partOfSpeech: [2],
-                examples: [],
-                ieltsCase: null,
-              },
-            ],
+            received: 1,
+            normalized: 1,
+            inserted: 1,
+            updated: 0,
+            skippedExisting: 0,
+            skippedDuplicate: 0,
+            insertedWords: ["insect"],
+            updatedWords: [],
+            skippedWords: [],
           });
-        }
-        if (config.url === "/english/existEnglishWord") {
-          return Promise.resolve(false);
-        }
-        if (config.url === "/english/AddEnglishWord") {
-          return Promise.resolve({ success: true });
         }
         return Promise.resolve({});
       });
+
+      const user = userEvent.setup();
+      render(<ContextLabPage />);
+
+      await user.click(
+        await screen.findByRole("button", { name: "开始练习" }),
+      );
+      const paragraph = await screen.findByText(
+        "Insects support urban farming.",
+      );
+      vi.spyOn(window, "getSelection").mockReturnValue({
+        toString: () => "insects",
+        rangeCount: 1,
+        removeAllRanges: vi.fn(),
+      } as unknown as Selection);
+
+      await user.pointer({ target: paragraph, keys: "[MouseRight]" });
+      await user.click(await screen.findByText("一键添加到词库"));
+
+      const preview = await screen.findByRole("region", {
+        name: "导入预览",
+      });
+      expect(within(preview).getByDisplayValue("insects")).toBeInTheDocument();
+      expect(within(preview).getByText("AI 补全中")).toBeInTheDocument();
+      expect(screen.queryByText("添加单词")).not.toBeInTheDocument();
+
+      await act(async () => {
+        resolveEnrichment({
+          received: 1,
+          aiEnhanced: true,
+          items: [
+            {
+              englishWord: "insect",
+              englishPhonetic: "/ˈɪnsekt/",
+              englishChinese: "昆虫",
+              englishPartSpeech: [2],
+              englishLevel: 0,
+              englishType: 0,
+              englishNote: "原始词形：insects（复数形式）",
+              englishReference: "AI 批量导入",
+            },
+          ],
+        });
+      });
+
+      expect(await within(preview).findByDisplayValue("insect")).toBeInTheDocument();
+      expect(within(preview).getByDisplayValue("/ˈɪnsekt/")).toBeInTheDocument();
+      expect(within(preview).getByDisplayValue("昆虫")).toBeInTheDocument();
+      expect(
+        within(preview).getByDisplayValue("原始词形：insects（复数形式）"),
+      ).toBeInTheDocument();
+
+      await user.click(
+        within(preview).getByRole("button", { name: "确认导入" }),
+      );
+
+      await waitFor(() => {
+        expect(requestMock).toHaveBeenCalledWith({
+          url: "/english/importMissingWords",
+          method: "POST",
+          data: {
+            overwriteExisting: false,
+            words: [
+              expect.objectContaining({
+                englishWord: "insect",
+                englishNote: "原始词形：insects（复数形式）",
+                englishReference:
+                  "/englishWorld/context-lab?taskId=12&articleExerciseId=88&word=insects",
+              }),
+            ],
+          },
+          __responseType: undefined,
+        });
+      });
+      const requestedUrls = requestMock.mock.calls.map(([config]) => config.url);
+      expect(requestedUrls).not.toContain("/word-agent/query");
+      expect(requestedUrls).not.toContain("/english/existEnglishWord");
+      expect(requestedUrls).not.toContain("/english/AddEnglishWord");
+    },
+    25_000,
+  );
+
+  it("keeps the selected word editable when AI enrichment fails", async () => {
+    const errorSpy = vi.spyOn(message, "error");
+    requestMock.mockImplementation((config) => {
+      if (config.url === "/context-lab/history") {
+        return Promise.resolve(
+          buildSelectedWordHistory(
+            "Urban Ecology\n\nInsects support urban farming.",
+          ),
+        );
+      }
+      if (config.url === "/english/importMissingWords/enrich-preview") {
+        return Promise.reject(new Error("AI 补全暂不可用"));
+      }
+      return Promise.resolve({});
+    });
 
     const user = userEvent.setup();
     render(<ContextLabPage />);
 
     await user.click(await screen.findByRole("button", { name: "开始练习" }));
-    const paragraph = await screen.findByText(
-      "Urban farming improves local food supply.",
-    );
-    const selection = {
-      toString: () => "urban farming",
+    const paragraph = await screen.findByText("Insects support urban farming.");
+    vi.spyOn(window, "getSelection").mockReturnValue({
+      toString: () => "  “insects,” ",
       rangeCount: 1,
       removeAllRanges: vi.fn(),
-    };
-    vi.spyOn(window, "getSelection").mockReturnValue(
-      selection as unknown as Selection,
-    );
+    } as unknown as Selection);
 
     await user.pointer({ target: paragraph, keys: "[MouseRight]" });
     await user.click(await screen.findByText("一键添加到词库"));
 
+    const preview = await screen.findByRole("region", { name: "导入预览" });
+    expect(within(preview).getByDisplayValue("insects")).toBeInTheDocument();
+    expect(screen.queryByText("添加单词")).not.toBeInTheDocument();
     await waitFor(() => {
-      expect(requestMock).toHaveBeenCalledWith({
-        url: "/word-agent/query",
-        method: "POST",
-        data: { word: "urban farming" },
-        __responseType: undefined,
-      });
+      expect(errorSpy).toHaveBeenCalledWith("AI 补全暂不可用");
     });
-    expect(await screen.findByText("添加单词")).toBeInTheDocument();
-    expect(screen.getByLabelText("单词名")).toHaveValue("urban farming");
-    expect(screen.getByLabelText("音标")).toHaveValue("/ˈɜːbən ˈfɑːmɪŋ/");
-    expect(screen.getByLabelText("中文")).toHaveValue("城市农业；都市农耕");
+    expect(within(preview).getByDisplayValue("insects")).toBeInTheDocument();
+  }, 20_000);
 
-    const addWordModalTitle = screen.getByText("添加单词");
-    const addWordModal = addWordModalTitle.closest(".ant-modal");
-    expect(addWordModal).not.toBeNull();
-    await user.click(
-      within(addWordModal as HTMLElement).getByRole("button", {
-        name: /确\s*认/,
-      }),
-    );
-
-    await waitFor(() => {
-      expect(requestMock).toHaveBeenCalledWith({
-        url: "/english/AddEnglishWord",
-        method: "POST",
-        data: expect.objectContaining({
-          englishWord: "urban farming",
-          englishPhonetic: "/ˈɜːbən ˈfɑːmɪŋ/",
-          englishChinese: "城市农业；都市农耕",
-          englishPartSpeech: [2],
-          englishLevel: 0,
-          englishType: 1,
-          englishReference:
-            "/englishWorld/context-lab?taskId=12&articleExerciseId=88&word=urban+farming",
-        }),
-      });
-    });
-    },
-    20_000,
-  );
-
-  it("keeps the add modal open and does not save when the selected word already exists", async () => {
+  it("keeps marked words after importing one directly selected word", async () => {
     requestMock.mockImplementation((config) => {
       if (config.url === "/context-lab/history") {
-        return Promise.resolve({
-          list: [
-            {
-              id: 12,
-              taskId: 12,
-              status: "succeeded",
-              sourceType: "custom",
-              words: ["urban farming"],
-              articleExerciseId: 88,
-              article:
-                "Urban Farming\n\nUrban farming improves local food supply.",
-              questions: [
-                {
-                  id: "q1",
-                  stem: "What is the passage about?",
-                  options: ["Urban farming", "Space travel"],
-                },
-              ],
-            },
-          ],
-          total: 1,
-          page: 1,
-          pageSize: 10,
-        });
+        return Promise.resolve(
+          buildSelectedWordHistory(
+            "Urban Ecology\n\nUrban farming relies on insects.",
+          ),
+        );
       }
-      if (config.url === "/word-agent/query") {
+      if (config.url === "/english/importMissingWords/enrich-preview") {
         return Promise.resolve({
-          words: [
+          received: 1,
+          aiEnhanced: true,
+          items: [
             {
-              word: "urban farming",
-              phonetic: "/ˈɜːbən ˈfɑːmɪŋ/",
-              meaning: "城市农业；都市农耕",
-              partOfSpeech: [2],
-              examples: [],
-              ieltsCase: null,
+              englishWord: "insect",
+              englishPhonetic: "/ˈɪnsekt/",
+              englishChinese: "昆虫",
+              englishPartSpeech: [2],
+              englishLevel: 0,
+              englishType: 0,
+              englishNote: "原始词形：insects（复数形式）",
             },
           ],
         });
       }
-      if (config.url === "/english/existEnglishWord") {
-        return Promise.resolve(true);
+      if (config.url === "/english/importMissingWords/preview") {
+        return Promise.resolve({
+          received: 1,
+          normalized: 1,
+          importable: 1,
+          skippedExisting: 0,
+          skippedDuplicate: 0,
+          existingWords: [],
+          duplicateWords: [],
+        });
       }
-      if (config.url === "/english/AddEnglishWord") {
-        throw new Error("wordAdd should not be called for duplicate words");
+      if (config.url === "/english/importMissingWords") {
+        return Promise.resolve({
+          received: 1,
+          normalized: 1,
+          inserted: 1,
+          updated: 0,
+          skippedExisting: 0,
+          skippedDuplicate: 0,
+          insertedWords: ["insect"],
+          updatedWords: [],
+          skippedWords: [],
+        });
       }
       return Promise.resolve({});
     });
@@ -2882,31 +2962,104 @@ describe("ContextLabPage", () => {
 
     await user.click(await screen.findByRole("button", { name: "开始练习" }));
     const paragraph = await screen.findByText(
-      "Urban farming improves local food supply.",
+      "Urban farming relies on insects.",
     );
+    let selectedText = "urban farming";
+    vi.spyOn(window, "getSelection").mockImplementation(
+      () =>
+        ({
+          toString: () => selectedText,
+          rangeCount: 1,
+          removeAllRanges: vi.fn(),
+        }) as unknown as Selection,
+    );
+
+    await user.pointer({ target: paragraph, keys: "[MouseRight]" });
+    await user.click(await screen.findByText("标记生词"));
+    const markedPanel = await screen.findByLabelText("已标记生词");
+    expect(within(markedPanel).getByText("urban farming")).toBeInTheDocument();
+
+    selectedText = "insects";
+    await user.pointer({ target: paragraph, keys: "[MouseRight]" });
+    await user.click(await screen.findByText("一键添加到词库"));
+
+    const preview = await screen.findByRole("region", { name: "导入预览" });
+    expect(await within(preview).findByDisplayValue("insect")).toBeInTheDocument();
+    await user.click(
+      within(preview).getByRole("button", { name: "确认导入" }),
+    );
+
+    await waitFor(() => {
+      expect(requestMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          url: "/english/importMissingWords",
+          data: expect.objectContaining({
+            words: [expect.objectContaining({ englishWord: "insect" })],
+          }),
+        }),
+      );
+    });
+    expect(within(markedPanel).getByText("urban farming")).toBeInTheDocument();
+  }, 25_000);
+
+  it("ignores enrichment after the selected-word preview is closed", async () => {
+    let resolveEnrichment: (value: unknown) => void = () => undefined;
+    const pendingEnrichment = new Promise((resolve) => {
+      resolveEnrichment = resolve;
+    });
+    requestMock.mockImplementation((config) => {
+      if (config.url === "/context-lab/history") {
+        return Promise.resolve(
+          buildSelectedWordHistory(
+            "Urban Ecology\n\nInsects support urban farming.",
+          ),
+        );
+      }
+      if (config.url === "/english/importMissingWords/enrich-preview") {
+        return pendingEnrichment;
+      }
+      return Promise.resolve({});
+    });
+
+    const user = userEvent.setup();
+    render(<ContextLabPage />);
+
+    await user.click(await screen.findByRole("button", { name: "开始练习" }));
+    const paragraph = await screen.findByText("Insects support urban farming.");
     vi.spyOn(window, "getSelection").mockReturnValue({
-      toString: () => "  “urban farming,” ",
+      toString: () => "insects",
       rangeCount: 1,
       removeAllRanges: vi.fn(),
     } as unknown as Selection);
 
     await user.pointer({ target: paragraph, keys: "[MouseRight]" });
     await user.click(await screen.findByText("一键添加到词库"));
-    expect(await screen.findByText("添加单词")).toBeInTheDocument();
-    const addWordModalTitle = screen.getByText("添加单词");
-    const addWordModal = addWordModalTitle.closest(".ant-modal");
-    expect(addWordModal).not.toBeNull();
-    await user.click(
-      within(addWordModal as HTMLElement).getByRole("button", {
-        name: /确\s*认/,
-      }),
+    const preview = await screen.findByRole("region", { name: "导入预览" });
+    expect(within(preview).getByDisplayValue("insects")).toBeInTheDocument();
+
+    fireEvent.click(
+      within(preview).getByRole("button", { name: "继续标记" }),
     );
 
-    expect(screen.getByLabelText("单词名")).toHaveValue("urban farming");
-    expect(requestMock).not.toHaveBeenCalledWith(
-      expect.objectContaining({ url: "/english/AddEnglishWord" }),
-    );
-  }, 25_000);
+    await act(async () => {
+      resolveEnrichment({
+        received: 1,
+        aiEnhanced: true,
+        items: [
+          {
+            englishWord: "insect",
+            englishChinese: "昆虫",
+            englishPartSpeech: [2],
+            englishLevel: 0,
+            englishType: 0,
+          },
+        ],
+      });
+    });
+
+    expect(within(preview).getByDisplayValue("insects")).toBeInTheDocument();
+    expect(within(preview).queryByDisplayValue("insect")).not.toBeInTheDocument();
+  }, 20_000);
 
   it("hides the selected text add menu when the reading pane scrolls", async () => {
     requestMock.mockResolvedValue({

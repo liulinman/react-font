@@ -46,8 +46,6 @@ import {
   type WordAgentItem,
 } from "@/server/wordAgent/wordAgent";
 import {
-  wordAdd,
-  wordExist,
   wordImportMissing,
   wordImportMissingEnrichPreview,
   wordImportMissingPreview,
@@ -103,7 +101,6 @@ import {
   getContextLabStatusTone,
   isContextLabTaskActive,
 } from "./contextLabTask";
-import { EditAddModal, type AddInitialValues } from "../component/EditAddModal";
 import {
   buildContextLabReference,
   parseContextLabReference,
@@ -177,6 +174,7 @@ type ContextLabAnswerItem = {
 };
 
 type ContextLabHistorySourceFilter = "all" | ContextLabTask["sourceType"];
+type ImportPreviewSource = "single" | "marked";
 type MarkedVocabularyItem = Omit<WordList, "id"> & {
   key: string;
 };
@@ -217,21 +215,6 @@ function cleanSelectedVocabularyText(text: string) {
 
 function getVocabularyKey(text: string) {
   return cleanSelectedVocabularyText(text).toLocaleLowerCase();
-}
-
-function wordAgentItemToAddInitial(
-  item: WordAgentItem,
-  fallbackWord: string,
-): AddInitialValues {
-  const englishWord = cleanSelectedVocabularyText(item.word || fallbackWord);
-  return {
-    englishWord,
-    englishPhonetic: item.phonetic,
-    englishChinese: item.meaning,
-    englishPartSpeech: item.partOfSpeech?.length ? item.partOfSpeech : undefined,
-    englishLevel: 0,
-    englishType: englishWord.includes(" ") ? 1 : 0,
-  };
 }
 
 function buildMarkedVocabularyItem(
@@ -474,15 +457,13 @@ function ContextLabPageContent({
   const [importOverwriteExisting, setImportOverwriteExisting] = useState(false);
   const [importConflict, setImportConflict] =
     useState<ImportMissingWordsPreviewResult | null>(null);
-  const [addingSelectedWord, setAddingSelectedWord] = useState(false);
+  const [importPreviewSource, setImportPreviewSource] =
+    useState<ImportPreviewSource | null>(null);
   const [translatingSelectedWord, setTranslatingSelectedWord] = useState(false);
   const [importingMarkedWords, setImportingMarkedWords] = useState(false);
   const [confirmingMarkedImport, setConfirmingMarkedImport] = useState(false);
   const [translationResult, setTranslationResult] =
     useState<WordAgentItem | null>(null);
-  const [addModalVisible, setAddModalVisible] = useState(false);
-  const [addInitialValues, setAddInitialValues] =
-    useState<AddInitialValues | null>(null);
   const [highlightWord, setHighlightWord] = useState("");
   const [microCreateError, setMicroCreateError] = useState("");
   const [microWaitLong, setMicroWaitLong] = useState(false);
@@ -515,6 +496,7 @@ function ContextLabPageContent({
   const submitInFlightRef = useRef(false);
   const focusedTaskRequestGenerationRef = useRef(0);
   const userTaskNavigationGenerationRef = useRef(0);
+  const importPreviewRequestIdRef = useRef(0);
 
   const closeSelectionMenu = () => {
     setSelectionMenu((prev) => ({ ...prev, open: false }));
@@ -1259,6 +1241,56 @@ function ContextLabPageContent({
     });
   };
 
+  const resetImportPreview = () => {
+    importPreviewRequestIdRef.current += 1;
+    setImportPreviewOpen(false);
+    setImportPreviewWords([]);
+    setImportOverwriteExisting(false);
+    setImportConflict(null);
+    setImportPreviewSource(null);
+    setImportingMarkedWords(false);
+  };
+
+  const openImportPreviewWithAi = async (
+    wordsSnapshot: MarkedVocabularyItem[],
+    source: ImportPreviewSource,
+  ) => {
+    const requestId = importPreviewRequestIdRef.current + 1;
+    importPreviewRequestIdRef.current = requestId;
+    setImportPreviewSource(source);
+    setImportPreviewWords(wordsSnapshot);
+    setImportOverwriteExisting(false);
+    setImportConflict(null);
+    setImportPreviewOpen(true);
+    setImportingMarkedWords(true);
+
+    try {
+      const response = await request<ImportMissingWordsEnrichPreviewResult>(
+        wordImportMissingEnrichPreview({
+          words: wordsSnapshot.map(toImportWordPayload),
+          defaultLevel: 0,
+          useAi: true,
+        }),
+      );
+      if (requestId !== importPreviewRequestIdRef.current) return;
+
+      setImportPreviewWords((currentWords) =>
+        mergeImportPreviewWithEnrichment(
+          currentWords.length ? currentWords : wordsSnapshot,
+          wordsSnapshot,
+          response.items ?? [],
+        ),
+      );
+    } catch (error: unknown) {
+      if (requestId !== importPreviewRequestIdRef.current) return;
+      message.error(error instanceof Error ? error.message : "AI 补全标记词失败");
+    } finally {
+      if (requestId === importPreviewRequestIdRef.current) {
+        setImportingMarkedWords(false);
+      }
+    }
+  };
+
   const handleMarkSelectedVocabulary = () => {
     const text = cleanSelectedVocabularyText(selectedVocabulary);
     if (!text) {
@@ -1278,9 +1310,7 @@ function ContextLabPageContent({
       ...prev,
       buildMarkedVocabularyItem(text, currentTask),
     ]);
-    setImportPreviewWords([]);
-    setImportPreviewOpen(false);
-    setImportOverwriteExisting(false);
+    resetImportPreview();
     message.success("已标记，稍后可一键导入");
     closeSelectionMenu();
     window.getSelection()?.removeAllRanges();
@@ -1288,25 +1318,16 @@ function ContextLabPageContent({
 
   const handleRemoveMarkedVocabulary = (key: string) => {
     setMarkedVocabulary((prev) => prev.filter((item) => item.key !== key));
-    setImportPreviewWords([]);
-    setImportPreviewOpen(false);
-    setImportOverwriteExisting(false);
-    setImportConflict(null);
+    resetImportPreview();
   };
 
   const handleClearMarkedVocabulary = () => {
     setMarkedVocabulary([]);
-    setImportPreviewWords([]);
-    setImportPreviewOpen(false);
-    setImportOverwriteExisting(false);
-    setImportConflict(null);
+    resetImportPreview();
   };
 
   const handleCloseImportPreview = () => {
-    setImportPreviewOpen(false);
-    setImportPreviewWords([]);
-    setImportOverwriteExisting(false);
-    setImportConflict(null);
+    resetImportPreview();
   };
 
   const handleImportMarkedVocabulary = async () => {
@@ -1315,31 +1336,7 @@ function ContextLabPageContent({
       return;
     }
 
-    const wordsSnapshot = markedVocabulary;
-    setImportPreviewWords(wordsSnapshot);
-    setImportOverwriteExisting(false);
-    setImportPreviewOpen(true);
-    setImportingMarkedWords(true);
-    try {
-      const response = await request<ImportMissingWordsEnrichPreviewResult>(
-        wordImportMissingEnrichPreview({
-          words: wordsSnapshot.map(toImportWordPayload),
-          defaultLevel: 0,
-          useAi: true,
-        }),
-      );
-      setImportPreviewWords((prev) =>
-        mergeImportPreviewWithEnrichment(
-          prev.length ? prev : wordsSnapshot,
-          wordsSnapshot,
-          response.items ?? [],
-        ),
-      );
-    } catch (error: unknown) {
-      message.error(error instanceof Error ? error.message : "AI 补全标记词失败");
-    } finally {
-      setImportingMarkedWords(false);
-    }
+    await openImportPreviewWithAi(markedVocabulary, "marked");
   };
 
   const importMarkedVocabulary = async (
@@ -1357,9 +1354,10 @@ function ContextLabPageContent({
     } else {
       message.info("标记词都已在词库，无需重复导入");
     }
-    handleClearMarkedVocabulary();
-    setImportPreviewWords([]);
-    setImportConflict(null);
+    if (importPreviewSource === "marked") {
+      setMarkedVocabulary([]);
+    }
+    resetImportPreview();
   };
 
   const handleConfirmMarkedVocabularyImport = async () => {
@@ -1446,78 +1444,12 @@ function ContextLabPageContent({
       message.warning("请先选中单词或短语");
       return;
     }
-    setAddingSelectedWord(true);
-    try {
-      const item = await querySelectedVocabulary(text);
-      if (!item) {
-        message.warning("AI 没有返回可添加的词条");
-        return;
-      }
-      setAddInitialValues({
-        ...wordAgentItemToAddInitial(item, text),
-        englishReference:
-          currentTask && currentTask.taskId
-            ? buildContextLabReference(currentTask, text)
-            : undefined,
-      });
-      setAddModalVisible(true);
-      setSelectionMenu((prev) => ({ ...prev, open: false }));
-      window.getSelection()?.removeAllRanges();
-    } catch (error: unknown) {
-      message.error(error instanceof Error ? error.message : "AI 补全失败");
-    } finally {
-      setAddingSelectedWord(false);
-    }
-  };
-
-  const handleAddModalOk = async (
-    data: WordList,
-    type: "edit" | "add",
-  ): Promise<boolean> => {
-    if (type !== "add") return false;
-    const englishWord = (data.englishWord ?? "").trim();
-    if (!englishWord) {
-      message.warning("请输入单词名");
-      return false;
-    }
-    try {
-      const exists = await request<boolean>(wordExist({ englishWord }));
-      if (exists) {
-        message.warning("该词已在词库，无需重复添加");
-        setAddInitialValues((prev) =>
-          prev ??
-          wordAgentItemToAddInitial(
-            {
-              word: englishWord,
-              phonetic: data.englishPhonetic ?? "",
-              meaning: data.englishChinese ?? "",
-              partOfSpeech: data.englishPartSpeech,
-              examples: [],
-              ieltsCase: null,
-            },
-            englishWord,
-          ),
-        );
-        return false;
-      }
-      await request(wordAdd(data));
-      message.success(
-        data.englishReference
-          ? "已保存到词库，并关联当前阅读来源"
-          : "已保存到单词本",
-      );
-      setAddModalVisible(false);
-      setAddInitialValues(null);
-      return true;
-    } catch (error: unknown) {
-      message.error(error instanceof Error ? error.message : "保存失败");
-      return false;
-    }
-  };
-
-  const handleAddModalCancel = () => {
-    setAddModalVisible(false);
-    setAddInitialValues(null);
+    closeSelectionMenu();
+    window.getSelection()?.removeAllRanges();
+    await openImportPreviewWithAi(
+      [buildMarkedVocabularyItem(text, currentTask)],
+      "single",
+    );
   };
 
   const renderTaskStatus = (task: ContextLabTask) => (
@@ -1872,7 +1804,6 @@ function ContextLabPageContent({
                 翻译
               </Button>
               <Button
-                loading={addingSelectedWord}
                 size="small"
                 type="text"
                 onClick={handleAddSelectedVocabulary}
@@ -2955,17 +2886,6 @@ function ContextLabPageContent({
         onCancel={() => setImportConflict(null)}
         onContinue={handleContinueMarkedVocabularyImport}
       />
-
-      {addModalVisible && (
-        <EditAddModal
-          addInitialValues={addInitialValues}
-          currentRecord={null}
-          isModalVisible={addModalVisible}
-          type="add"
-          onCancel={handleAddModalCancel}
-          onOk={handleAddModalOk}
-        />
-      )}
     </>
   );
 }
