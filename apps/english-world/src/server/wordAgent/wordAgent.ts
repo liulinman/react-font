@@ -19,6 +19,12 @@ export interface IeltsCase {
   sentenceZh?: string;
 }
 
+export type WordAgentInputStatus =
+  | "exact"
+  | "inflected"
+  | "misspelled"
+  | "uncertain";
+
 export interface WordAgentItem {
   word: string;
   phonetic: string;
@@ -27,6 +33,8 @@ export interface WordAgentItem {
   partOfSpeech?: number[];
   examples: ExampleItem[];
   ieltsCase: IeltsCase | null;
+  inputStatus?: WordAgentInputStatus;
+  correctionReason?: string;
 }
 
 export interface WordAgentResponse {
