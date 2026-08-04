@@ -716,7 +716,7 @@ describe("EditAddModal AI completion", () => {
     expect(screen.getByLabelText("中文")).toHaveValue("预填含义");
   });
 
-  it("derives the candidate word type when the previous type was only defaulted", async () => {
+  it("submits the default word type when accepting a valid suggestion", async () => {
     const onOk = vi.fn();
     requestMock.mockResolvedValueOnce({
       words: [
@@ -743,9 +743,10 @@ describe("EditAddModal AI completion", () => {
     await new Promise((resolve) => window.setTimeout(resolve, 0));
 
     fireEvent.change(screen.getByLabelText("单词名"), {
-      target: { value: "running shoes" },
+      target: { value: "running" },
     });
     await new Promise((resolve) => window.setTimeout(resolve, 700));
+    expect(screen.getByText(/running → run/)).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: "使用建议" }));
     fireEvent.click(screen.getByRole("button", { name: /确\s*认/ }));
 
@@ -787,9 +788,10 @@ describe("EditAddModal AI completion", () => {
     await new Promise((resolve) => window.setTimeout(resolve, 0));
 
     fireEvent.change(screen.getByLabelText("单词名"), {
-      target: { value: "running shoes" },
+      target: { value: "running" },
     });
     await new Promise((resolve) => window.setTimeout(resolve, 700));
+    expect(screen.getByText(/running → run/)).toBeVisible();
     fireEvent.mouseDown(screen.getByLabelText("类型"));
     fireEvent.click(await screen.findByText("句子"));
     fireEvent.click(screen.getByRole("button", { name: "使用建议" }));
