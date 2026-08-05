@@ -181,11 +181,29 @@ export function LearningSetupDrawer({
     >
       <div className="learning-setup-content">
         <section aria-label="学习范围" className="learning-setup-scope">
-          <strong>本次 {requestedWordIds.length} 个词</strong>
+          <strong>本次 {scope.count} 个词</strong>
           <span>{scope.masteryFilterLabel}</span>
           <span>
             {scope.kind === "selection" ? "范围：手动选择" : "范围：当前筛选结果"}
           </span>
+          {excludedWordIds.length > 0 ? (
+            <>
+              <span>
+                已排除 {excludedWordIds.length} 个，本轮学习 {requestedWordIds.length} 个
+              </span>
+              <Button
+                aria-label="恢复全部词条"
+                size="small"
+                type="link"
+                onClick={() => {
+                  setExcludedWordIds([]);
+                  setCreateError("");
+                }}
+              >
+                恢复全部词条
+              </Button>
+            </>
+          ) : null}
         </section>
 
         {scopeTooLarge ? (

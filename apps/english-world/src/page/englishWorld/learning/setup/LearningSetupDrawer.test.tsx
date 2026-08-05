@@ -94,11 +94,27 @@ describe("LearningSetupDrawer", () => {
       if (descriptor.url === "/learning-session/capabilities") {
         return {
           modes: [
-            { mode: "root_family", status: "coming_soon", reason: "词根词族即将开放" },
-            { mode: "micro_scene", status: "coming_soon", reason: "微场景即将开放" },
-            { mode: "confusion", status: "coming_soon", reason: "易混辨析即将开放" },
+            {
+              mode: "root_family",
+              status: "coming_soon",
+              reason: "LEARNING_MODE_COMING_SOON:root_family",
+            },
+            {
+              mode: "micro_scene",
+              status: "coming_soon",
+              reason: "LEARNING_MODE_COMING_SOON:micro_scene",
+            },
+            {
+              mode: "confusion",
+              status: "coming_soon",
+              reason: "LEARNING_MODE_COMING_SOON:confusion",
+            },
             { mode: "listening", status: "enabled" },
-            { mode: "output", status: "coming_soon", reason: "主动输出即将开放" },
+            {
+              mode: "output",
+              status: "coming_soon",
+              reason: "LEARNING_MODE_COMING_SOON:output",
+            },
           ],
         };
       }
@@ -123,11 +139,14 @@ describe("LearningSetupDrawer", () => {
     expect(screen.getByRole("dialog", { name: "开始混合记忆" })).toBeVisible();
     expect(screen.getByText("本次 2 个词")).toBeInTheDocument();
     expect(screen.getByText("已选词条（不限掌握程度）")).toBeInTheDocument();
-    expect(screen.getByRole("checkbox", { name: "听音记忆" })).toBeChecked();
+    const listeningMode = screen.getByRole("checkbox", { name: "听音记忆" });
+    expect(listeningMode).toBeChecked();
     expect(screen.getByRole("checkbox", { name: "词根词族" })).toBeDisabled();
     expect(screen.getByRole("checkbox", { name: "微场景" })).toBeDisabled();
     expect(screen.getByRole("checkbox", { name: "易混辨析" })).toBeDisabled();
     expect(screen.getByRole("checkbox", { name: "主动输出" })).toBeDisabled();
+    await waitFor(() => expect(listeningMode).toBeEnabled());
+    expect(screen.queryByText(/LEARNING_MODE_COMING_SOON/)).not.toBeInTheDocument();
     expect(await screen.findByText("预计 1 分 10 秒")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "开始混合记忆" }));
@@ -143,6 +162,41 @@ describe("LearningSetupDrawer", () => {
     expect(createCall.data.wordIds).toEqual([7, 9]);
     expect(createCall.data.selectedModes).toEqual(["listening"]);
     expect(createCall.data.requestUid).toEqual(expect.any(String));
+  });
+
+  it("keeps the selected total visible and lets the learner restore excluded words", async () => {
+    const user = userEvent.setup();
+    requestMock.mockImplementation(async (descriptor: { url: string; data?: unknown }) => {
+      if (descriptor.url === "/learning-session/capabilities") {
+        return { modes: [{ mode: "listening", status: "enabled" }] };
+      }
+      if (descriptor.url === "/learning-session/preview") {
+        const wordIds = (descriptor.data as { wordIds: number[] }).wordIds;
+        return {
+          ...adaptedPreview(wordIds),
+          words: adaptedPreview(wordIds).words.map((word) => ({
+            ...word,
+            primaryMode: undefined,
+            eligibleModes: [],
+            adaptationStatus: "unadapted" as const,
+            audioEligibility: "ineligible" as const,
+            reason: "缺少可用音频",
+          })),
+        };
+      }
+      throw new Error(`unexpected request: ${descriptor.url}`);
+    });
+    renderDrawer();
+
+    await user.click(await screen.findByRole("checkbox", { name: "排除词条 7" }));
+    await user.click(await screen.findByRole("checkbox", { name: "排除词条 9" }));
+
+    expect(screen.getByText("本次 2 个词")).toBeInTheDocument();
+    expect(screen.getByText("已排除 2 个，本轮学习 0 个")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "恢复全部词条" }));
+
+    expect(await screen.findByRole("checkbox", { name: "排除词条 7" })).toBeVisible();
+    expect(screen.getByText("本次 2 个词")).toBeInTheDocument();
   });
 
   it("keeps create disabled until each unadapted word is explicitly excluded and re-previewed", async () => {

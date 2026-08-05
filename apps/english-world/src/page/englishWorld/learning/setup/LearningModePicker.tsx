@@ -23,6 +23,18 @@ export interface LearningModePickerProps {
   onChange(modes: LearningMode[]): void;
 }
 
+function visibleCapabilityReason(reason?: string) {
+  const normalizedReason = reason?.trim();
+  if (
+    !normalizedReason ||
+    normalizedReason === "即将开放" ||
+    normalizedReason.startsWith("LEARNING_MODE_")
+  ) {
+    return undefined;
+  }
+  return normalizedReason;
+}
+
 export function LearningModePicker({
   capabilities,
   selectedModes,
@@ -49,9 +61,9 @@ export function LearningModePicker({
           const capability = capabilityByMode.get(mode) ?? {
             mode,
             status: "coming_soon" as const,
-            reason: "即将开放",
           };
           const enabled = capability.status === "enabled";
+          const visibleReason = visibleCapabilityReason(capability.reason);
           return (
             <label
               className={`learning-mode-card${
@@ -72,8 +84,8 @@ export function LearningModePicker({
               <span className="learning-mode-status">
                 {enabled ? "可用" : "即将开放"}
               </span>
-              {!enabled && capability.reason ? (
-                <span className="learning-mode-reason">{capability.reason}</span>
+              {!enabled && visibleReason ? (
+                <span className="learning-mode-reason">{visibleReason}</span>
               ) : null}
             </label>
           );
