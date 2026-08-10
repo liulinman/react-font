@@ -1,7 +1,7 @@
 import type { LearningMode } from "../contracts/activity-contract";
 import type { LearningModeCapabilityV1 } from "../contracts/learning-session";
 
-const MODE_ORDER: LearningMode[] = [
+export const MODE_ORDER: LearningMode[] = [
   "root_family",
   "micro_scene",
   "confusion",

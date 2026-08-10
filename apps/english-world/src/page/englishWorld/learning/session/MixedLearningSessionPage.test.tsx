@@ -73,6 +73,26 @@ const completedSnapshot: LearningSessionDetailV1 = {
   },
 };
 
+const outputSnapshot: LearningSessionDetailV1 = {
+  sessionId: 42,
+  status: "active",
+  sessionVersion: 6,
+  submittedResults: [],
+  currentItem: {
+    schemaVersion: 1,
+    mode: "output",
+    phase: "recall",
+    itemId: 74,
+    item: {
+      itemType: "output_word",
+      itemUid: "output-74",
+      wordId: 7,
+      prompt: "请根据释义写出目标英文单词。",
+      cue: { firstLetter: "i", length: 7 },
+    },
+  },
+};
+
 function renderPage() {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
@@ -170,6 +190,38 @@ describe("MixedLearningSessionPage", () => {
       hintTypes: ["replay_slow", "show_spelling"],
     });
     expect(localStorage.getItem("english-world.learning-draft.v1.42.opaque-item-71")).toBeNull();
+  });
+
+  it("submits the output draft unchanged with its output answer kind", async () => {
+    const user = userEvent.setup();
+    requestMock.mockImplementation(async (descriptor: { url: string }) => {
+      if (descriptor.url === "/learning-session/detail") return outputSnapshot;
+      if (descriptor.url === "/learning-session/submit") {
+        return {
+          attemptId: 98,
+          status: "final",
+          outcome: "correct",
+          dimensionResults: [{ dimension: "output", outcome: "correct" }],
+          feedback: { kind: "spelling", expected: "inspect", diff: [{ text: "inspect", kind: "same" }] },
+          sessionVersion: 7,
+        };
+      }
+      throw new Error(`unexpected request: ${descriptor.url}`);
+    });
+    renderPage();
+
+    await user.type(await screen.findByRole("textbox", { name: "写下你的回答" }), "inspect");
+    await user.click(screen.getByRole("button", { name: "提交答案" }));
+
+    const submitCall = requestMock.mock.calls.find(
+      ([descriptor]) => descriptor.url === "/learning-session/submit",
+    )?.[0];
+    expect(submitCall.data).toMatchObject({
+      sessionId: 42,
+      itemId: 74,
+      sessionVersion: 6,
+      answer: { kind: "output", text: "inspect" },
+    });
   });
 
   it("retries a failed logical submit with the exact attempt UID and draft", async () => {

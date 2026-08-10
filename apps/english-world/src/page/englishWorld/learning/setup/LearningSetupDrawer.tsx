@@ -16,7 +16,7 @@ import type {
   LearningSessionCreateResultV1,
 } from "../contracts/learning-session";
 import type { LearningMode } from "../contracts/activity-contract";
-import { LearningModePicker } from "./LearningModePicker";
+import { LearningModePicker, MODE_ORDER } from "./LearningModePicker";
 import { LearningPreviewPanel } from "./LearningPreviewPanel";
 import "../learning.css";
 
@@ -66,9 +66,7 @@ export function LearningSetupDrawer({
   onClose,
 }: LearningSetupDrawerProps) {
   const navigate = useNavigate();
-  const [selectedModes, setSelectedModes] = useState<LearningMode[]>([
-    "listening",
-  ]);
+  const [selectedModes, setSelectedModes] = useState<LearningMode[]>([]);
   const [excludedWordIds, setExcludedWordIds] = useState<number[]>([]);
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState("");
@@ -79,7 +77,7 @@ export function LearningSetupDrawer({
 
   useEffect(() => {
     if (!open) return;
-    setSelectedModes(["listening"]);
+    setSelectedModes([]);
     setExcludedWordIds([]);
     setCreateError("");
     createIdentityRef.current = undefined;
@@ -100,6 +98,24 @@ export function LearningSetupDrawer({
     enabled: open,
     staleTime: 60_000,
   });
+  const enabledModes = new Set(
+    capabilitiesQuery.data?.modes
+      .filter((capability) => capability.status === "enabled")
+      .map((capability) => capability.mode) ?? [],
+  );
+
+  useEffect(() => {
+    if (!open || !capabilitiesQuery.isSuccess) return;
+    setSelectedModes((current) => {
+      const available = MODE_ORDER.filter((mode) => enabledModes.has(mode));
+      if (current.length > 0) return current.filter((mode) => enabledModes.has(mode));
+      const recommended = MODE_ORDER.filter(
+        (mode) => (mode === "micro_scene" || mode === "listening") && enabledModes.has(mode),
+      );
+      return recommended.length > 0 ? recommended : available.slice(0, 1);
+    });
+  }, [capabilitiesQuery.data, capabilitiesQuery.isSuccess, open]);
+
   const previewQuery = useQuery({
     queryKey: learningKeys.preview(inputHash),
     queryFn: () =>
@@ -108,20 +124,17 @@ export function LearningSetupDrawer({
       ),
     enabled:
       open &&
+      capabilitiesQuery.isSuccess &&
       !scopeTooLarge &&
       requestedWordIds.length > 0 &&
-      selectedModes.length > 0,
+      selectedModes.length > 0 &&
+      selectedModes.every((mode) => enabledModes.has(mode)),
     retry: false,
   });
 
   const preview = previewQuery.data;
   const hasUnadaptedWords = Boolean(
     preview?.words.some((word) => word.adaptationStatus === "unadapted"),
-  );
-  const enabledModes = new Set(
-    capabilitiesQuery.data?.modes
-      .filter((capability) => capability.status === "enabled")
-      .map((capability) => capability.mode) ?? [],
   );
   const selectionIsEnabled =
     selectedModes.length > 0 && selectedModes.every((mode) => enabledModes.has(mode));

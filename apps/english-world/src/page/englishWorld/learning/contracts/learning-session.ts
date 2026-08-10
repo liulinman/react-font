@@ -39,10 +39,7 @@ export type LearningHintTypeV1 =
   | "replay_slow"
   | "show_meaning";
 
-export type SubmitLearningAnswerV1 = Exclude<
-  LearningAnswerV1,
-  { kind: "output" }
->;
+export type SubmitLearningAnswerV1 = LearningAnswerV1;
 
 export interface SubmitLearningAttemptCommandV1 {
   sessionId: number;
@@ -73,7 +70,7 @@ export interface LearningPlanPreviewV1 {
     items: Array<{
       wordId: number;
       sourceOrder: number;
-      itemType: "listening_meaning" | "listening_spelling";
+      itemType: ActivityEnvelopeV1["item"]["itemType"];
     }>;
     answerItemCount: number;
     estimatedSeconds: number;
@@ -133,7 +130,7 @@ export interface LearningAttemptResultSummaryV1 {
   status: "final";
   outcome: "correct" | "incorrect" | "skipped";
   dimensionResults: Array<{
-    dimension: "meaning_recognition" | "listening" | "spelling";
+    dimension: MasteryDimension;
     outcome: "correct" | "incorrect" | "skipped";
   }>;
   sessionVersion: number;
@@ -145,7 +142,7 @@ export interface SubmitLearningAttemptResultV1 {
   status: "final";
   outcome: "correct" | "incorrect" | "skipped";
   dimensionResults: Array<{
-    dimension: "meaning_recognition" | "listening" | "spelling";
+    dimension: MasteryDimension;
     outcome: "correct" | "incorrect" | "skipped";
   }>;
   feedback:

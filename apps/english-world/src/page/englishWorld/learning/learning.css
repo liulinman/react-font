@@ -22,6 +22,13 @@
 .learning-session-feedback-correct { color: #166534; background: #f0fdf4; }
 .learning-session-feedback-skipped { color: #92400e; background: #fffbeb; }
 .learning-sync-actions { display: flex; gap: 10px; }
+.learning-activity { display: flex; flex-direction: column; gap: 14px; max-width: 720px; }
+.learning-activity fieldset { display: flex; flex-direction: column; gap: 10px; padding: 14px; border: 1px solid #dbe4ef; border-radius: 12px; }
+.learning-activity blockquote { margin: 0; padding: 16px; border-radius: 10px; background: #f8fafc; }
+.learning-choice { display: flex; align-items: center; gap: 8px; padding: 8px; }
+.learning-root, .learning-target-word { margin: 0; font-size: 20px; font-weight: 700; }
+.learning-output-cue { margin: 0; color: #475569; }
+.output-activity textarea { display: block; width: 100%; margin-top: 8px; resize: vertical; }
 .listening-spelling-hint { width: fit-content; margin: 8px 0; padding: 8px 12px; border-radius: 8px; color: #1e3a8a; background: #eff6ff; }
 .learning-result-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 20px 0; }
 .learning-result-metrics article { display: flex; flex-direction: column; gap: 4px; padding: 16px; border-radius: 12px; background: #f8fafc; }

@@ -140,7 +140,7 @@ describe("LearningSetupDrawer", () => {
     expect(screen.getByText("本次 2 个词")).toBeInTheDocument();
     expect(screen.getByText("已选词条（不限掌握程度）")).toBeInTheDocument();
     const listeningMode = screen.getByRole("checkbox", { name: "听音记忆" });
-    expect(listeningMode).toBeChecked();
+    await waitFor(() => expect(listeningMode).toBeChecked());
     expect(screen.getByRole("checkbox", { name: "词根词族" })).toBeDisabled();
     expect(screen.getByRole("checkbox", { name: "微场景" })).toBeDisabled();
     expect(screen.getByRole("checkbox", { name: "易混辨析" })).toBeDisabled();
@@ -162,6 +162,62 @@ describe("LearningSetupDrawer", () => {
     expect(createCall.data.wordIds).toEqual([7, 9]);
     expect(createCall.data.selectedModes).toEqual(["listening"]);
     expect(createCall.data.requestUid).toEqual(expect.any(String));
+  });
+
+  it("waits for capabilities, then keeps every enabled mode selectable in stable order", async () => {
+    const user = userEvent.setup();
+    requestMock.mockImplementation(async (descriptor: { url: string; data?: unknown }) => {
+      if (descriptor.url === "/learning-session/capabilities") {
+        return {
+          modes: [
+            { mode: "root_family", status: "enabled" },
+            { mode: "micro_scene", status: "enabled" },
+            { mode: "confusion", status: "enabled" },
+            { mode: "listening", status: "enabled" },
+            { mode: "output", status: "enabled" },
+          ],
+        };
+      }
+      if (descriptor.url === "/learning-session/preview") {
+        return adaptedPreview((descriptor.data as { wordIds: number[] }).wordIds);
+      }
+      if (descriptor.url === "/learning-session/create") {
+        return { sessionId: 31, status: "active", sessionVersion: 1, currentItemId: 101 };
+      }
+      throw new Error(`unexpected request: ${descriptor.url}`);
+    });
+    renderDrawer();
+
+    const root = await screen.findByRole("checkbox", { name: "词根词族" });
+    const micro = screen.getByRole("checkbox", { name: "微场景" });
+    const confusion = screen.getByRole("checkbox", { name: "易混辨析" });
+    const listening = screen.getByRole("checkbox", { name: "听音记忆" });
+    const output = screen.getByRole("checkbox", { name: "主动输出" });
+    await waitFor(() => {
+      expect(micro).toBeChecked();
+      expect(listening).toBeChecked();
+      expect(root).toBeEnabled();
+    });
+    await user.click(root);
+    await user.click(confusion);
+    await user.click(output);
+    await waitFor(() => expect(screen.getByRole("button", { name: "开始混合记忆" })).toBeEnabled());
+    await user.click(screen.getByRole("button", { name: "开始混合记忆" }));
+
+    let createCall: { data?: { selectedModes: string[] } } | undefined;
+    await waitFor(() => {
+      createCall = requestMock.mock.calls.find(
+        ([descriptor]) => descriptor.url === "/learning-session/create",
+      )?.[0] as { data?: { selectedModes: string[] } } | undefined;
+      expect(createCall).toBeDefined();
+    });
+    expect(createCall!.data?.selectedModes).toEqual([
+      "root_family",
+      "micro_scene",
+      "confusion",
+      "listening",
+      "output",
+    ]);
   });
 
   it("keeps the selected total visible and lets the learner restore excluded words", async () => {

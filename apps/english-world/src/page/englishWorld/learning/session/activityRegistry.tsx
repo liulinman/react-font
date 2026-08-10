@@ -1,22 +1,42 @@
-import type { ComponentType } from "react";
-import type { ListeningActivityProps } from "../activities/listening/ListeningActivity";
+import type { ReactNode } from "react";
+import { ConfusionActivity } from "../activities/confusion/ConfusionActivity";
 import { ListeningActivity } from "../activities/listening/ListeningActivity";
-import type { LearningMode } from "../contracts/activity-contract";
+import { MicroSceneActivity } from "../activities/micro-scene/MicroSceneActivity";
+import { OutputActivity } from "../activities/output/OutputActivity";
+import { RootFamilyActivity } from "../activities/root-family/RootFamilyActivity";
+import type { HintType, LearningAnswerDraft } from "../activities/shared/answerDraft";
+import type { LearningMode, PublicLearningItemV1 } from "../contracts/activity-contract";
 
-export type ActivityRenderer = ComponentType<ListeningActivityProps>;
+export interface SharedActivityProps {
+  item: PublicLearningItemV1;
+  draft: LearningAnswerDraft;
+  submitting?: boolean;
+  hints?: readonly HintType[];
+  onDraftChange(draft: LearningAnswerDraft): void;
+  onRevealHint(hint: HintType): void;
+  onSubmit(draft: LearningAnswerDraft): void;
+}
 
-function UnsupportedActivity() {
-  return (
-    <section aria-label="暂不支持的学习活动" role="status">
-      此学习模式即将开放，当前会话无法进入该活动。
-    </section>
-  );
+export type ActivityRenderer = (props: SharedActivityProps) => ReactNode;
+
+function InvalidActivity() {
+  return <section aria-label="学习活动数据无效" role="alert">学习活动数据无效，请刷新后继续。</section>;
 }
 
 export const activityRegistry: Record<LearningMode, ActivityRenderer> = {
-  listening: ListeningActivity,
-  root_family: UnsupportedActivity,
-  micro_scene: UnsupportedActivity,
-  confusion: UnsupportedActivity,
-  output: UnsupportedActivity,
+  listening: (props) => props.item.itemType === "listening_meaning" || props.item.itemType === "listening_spelling"
+    ? <ListeningActivity {...props} item={props.item} />
+    : <InvalidActivity />,
+  root_family: (props) => props.item.itemType === "root_family_choice"
+    ? <RootFamilyActivity {...props} item={props.item} />
+    : <InvalidActivity />,
+  micro_scene: (props) => props.item.itemType === "micro_scene_choice"
+    ? <MicroSceneActivity {...props} item={props.item} />
+    : <InvalidActivity />,
+  confusion: (props) => props.item.itemType === "confusion_choice"
+    ? <ConfusionActivity {...props} item={props.item} />
+    : <InvalidActivity />,
+  output: (props) => props.item.itemType === "output_word"
+    ? <OutputActivity {...props} item={props.item} />
+    : <InvalidActivity />,
 };

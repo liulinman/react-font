@@ -59,9 +59,17 @@ function defaultDraft(
 ): LearningAnswerDraft | null {
   const item = snapshot.currentItem?.item;
   if (!item) return null;
-  return item.itemType === "listening_meaning"
-    ? { kind: "choice", selectedValue: "" }
-    : { kind: "spelling", text: "" };
+  switch (item.itemType) {
+    case "listening_meaning":
+    case "root_family_choice":
+    case "micro_scene_choice":
+    case "confusion_choice":
+      return { kind: "choice", selectedValue: "" };
+    case "listening_spelling":
+      return { kind: "spelling", text: "" };
+    case "output_word":
+      return { kind: "output", text: "" };
+  }
 }
 
 function draftMatchesCurrentItem(
@@ -70,9 +78,19 @@ function draftMatchesCurrentItem(
 ) {
   const itemType = snapshot.currentItem?.item.itemType;
   if (draft.kind === "skip") return itemType !== undefined;
-  if (itemType === "listening_meaning") return draft.kind === "choice";
-  if (itemType === "listening_spelling") return draft.kind === "spelling";
-  return false;
+  switch (itemType) {
+    case "listening_meaning":
+    case "root_family_choice":
+    case "micro_scene_choice":
+    case "confusion_choice":
+      return draft.kind === "choice";
+    case "listening_spelling":
+      return draft.kind === "spelling";
+    case "output_word":
+      return draft.kind === "output";
+    default:
+      return false;
+  }
 }
 
 function editingInteraction(

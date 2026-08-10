@@ -177,7 +177,7 @@ export function useLearningSession(sessionId: number) {
         itemId: item.itemId,
         sessionVersion: current.snapshot.sessionVersion,
         attemptUid,
-        answer: draft.kind === "output" ? { kind: "skip", reason: "dont_know" } : draft,
+        answer: draft,
         hintCount: current.interaction.hints.length,
         hintTypes: [...current.interaction.hints],
       };
