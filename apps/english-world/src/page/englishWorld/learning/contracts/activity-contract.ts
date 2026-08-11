@@ -46,6 +46,43 @@ export interface MicroScenePublicItemV1 {
   choices: Array<{ value: string; label: string }>;
 }
 
+export type MicroSceneThemeV1 =
+  | "life"
+  | "work"
+  | "travel"
+  | "study"
+  | "public_service"
+  | "news";
+
+export interface MicroSceneContextPublicItemV1 {
+  itemType: "micro_scene_context_choice";
+  itemUid: string;
+  wordId: number;
+  scene: {
+    sceneKey: string;
+    title: string;
+    theme: MicroSceneThemeV1;
+    sentences: string[];
+  };
+  targetWords: Array<{ wordId: number; word: string; meaning: string }>;
+  showStoryInitially: boolean;
+  clozeSentence: string;
+  prompt: string;
+  choices: Array<{ value: string; label: string }>;
+}
+
+export interface MicroSceneTransferPublicItemV1 {
+  itemType: "micro_scene_transfer_output";
+  itemUid: string;
+  wordId: number;
+  sceneTitle: string;
+  theme: MicroSceneThemeV1;
+  meaning: string;
+  transferSentence: string;
+  usageNote: string;
+  cue: { firstLetter: string; length: number };
+}
+
 export interface ConfusionPublicItemV1 {
   itemType: "confusion_choice";
   itemUid: string;
@@ -68,6 +105,8 @@ export type PublicLearningItemV1 =
   | ListeningPublicItemV1
   | RootFamilyPublicItemV1
   | MicroScenePublicItemV1
+  | MicroSceneContextPublicItemV1
+  | MicroSceneTransferPublicItemV1
   | ConfusionPublicItemV1
   | OutputPublicItemV1;
 
@@ -80,7 +119,12 @@ interface ActivityEnvelopeBaseV1<TMode extends LearningMode, TItem extends Publi
 
 export type ActivityEnvelopeV1 =
   | ActivityEnvelopeBaseV1<"root_family", RootFamilyPublicItemV1>
-  | ActivityEnvelopeBaseV1<"micro_scene", MicroScenePublicItemV1>
+  | ActivityEnvelopeBaseV1<
+      "micro_scene",
+      | MicroScenePublicItemV1
+      | MicroSceneContextPublicItemV1
+      | MicroSceneTransferPublicItemV1
+    >
   | ActivityEnvelopeBaseV1<"confusion", ConfusionPublicItemV1>
   | ActivityEnvelopeBaseV1<"listening", ListeningPublicItemV1>
   | ActivityEnvelopeBaseV1<"output", OutputPublicItemV1>;

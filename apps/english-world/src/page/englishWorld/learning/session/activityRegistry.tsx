@@ -30,7 +30,9 @@ export const activityRegistry: Record<LearningMode, ActivityRenderer> = {
   root_family: (props) => props.item.itemType === "root_family_choice"
     ? <RootFamilyActivity {...props} item={props.item} />
     : <InvalidActivity />,
-  micro_scene: (props) => props.item.itemType === "micro_scene_choice"
+  micro_scene: (props) => props.item.itemType === "micro_scene_choice" ||
+    props.item.itemType === "micro_scene_context_choice" ||
+    props.item.itemType === "micro_scene_transfer_output"
     ? <MicroSceneActivity {...props} item={props.item} />
     : <InvalidActivity />,
   confusion: (props) => props.item.itemType === "confusion_choice"

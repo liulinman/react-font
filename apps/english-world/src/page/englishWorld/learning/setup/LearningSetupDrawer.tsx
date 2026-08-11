@@ -146,6 +146,7 @@ export function LearningSetupDrawer({
     selectionIsEnabled &&
     !previewQuery.isFetching &&
     !creating;
+  const generatingMicroScene = creating && selectedModes.includes("micro_scene");
 
   const handleCreate = async () => {
     if (!canCreate) return;
@@ -174,7 +175,9 @@ export function LearningSetupDrawer({
           ? "创建请求已变化，请关闭后重新选择词条。"
           : code === "LEARNING_RESOURCE_UNAVAILABLE"
             ? "词条状态已变化，请返回词库刷新后重试。"
-            : "创建失败，请重试。",
+            : code === "LEARNING_CONTENT_GENERATION_FAILED"
+              ? "微短文生成失败，请重试。"
+              : "创建失败，请重试。",
       );
     } finally {
       setCreating(false);
@@ -185,12 +188,17 @@ export function LearningSetupDrawer({
     <Drawer
       aria-label="开始混合记忆"
       className="learning-setup-drawer"
+      closable={!creating}
       destroyOnHidden
+      keyboard={!creating}
+      maskClosable={!creating}
       open={open}
       placement="right"
       title="开始混合记忆"
       width={560}
-      onClose={onClose}
+      onClose={() => {
+        if (!creating) onClose();
+      }}
     >
       <div className="learning-setup-content">
         <section aria-label="学习范围" className="learning-setup-scope">
@@ -245,9 +253,18 @@ export function LearningSetupDrawer({
           }}
         />
 
+        {generatingMicroScene ? (
+          <p
+            aria-label="微短文生成进度"
+            className="learning-generation-status"
+            role="status"
+          >
+            正在生成微短文，通常需要 5–15 秒…
+          </p>
+        ) : null}
         {createError ? <p role="alert">{createError}</p> : null}
         <div className="learning-setup-actions">
-          <Button onClick={onClose}>取消</Button>
+          <Button disabled={creating} onClick={onClose}>取消</Button>
           <Button
             aria-label="开始混合记忆"
             disabled={!canCreate}

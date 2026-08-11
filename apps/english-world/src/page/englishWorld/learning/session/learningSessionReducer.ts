@@ -63,11 +63,13 @@ function defaultDraft(
     case "listening_meaning":
     case "root_family_choice":
     case "micro_scene_choice":
+    case "micro_scene_context_choice":
     case "confusion_choice":
       return { kind: "choice", selectedValue: "" };
     case "listening_spelling":
       return { kind: "spelling", text: "" };
     case "output_word":
+    case "micro_scene_transfer_output":
       return { kind: "output", text: "" };
   }
 }
@@ -82,11 +84,13 @@ function draftMatchesCurrentItem(
     case "listening_meaning":
     case "root_family_choice":
     case "micro_scene_choice":
+    case "micro_scene_context_choice":
     case "confusion_choice":
       return draft.kind === "choice";
     case "listening_spelling":
       return draft.kind === "spelling";
     case "output_word":
+    case "micro_scene_transfer_output":
       return draft.kind === "output";
     default:
       return false;

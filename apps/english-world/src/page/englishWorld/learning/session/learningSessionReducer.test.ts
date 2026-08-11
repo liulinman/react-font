@@ -47,6 +47,64 @@ const meaningSnapshot: LearningSessionSnapshotV1 = {
 };
 
 describe("learningSessionReducer", () => {
+  it("initializes the new micro-scene stages with matching answer drafts", () => {
+    const context = createLearningSessionState({
+      ...meaningSnapshot,
+      currentItem: {
+        schemaVersion: 1,
+        mode: "micro_scene",
+        phase: "understand",
+        itemId: 11,
+        item: {
+          itemType: "micro_scene_context_choice",
+          itemUid: "context-11",
+          wordId: 7,
+          scene: {
+            sceneKey: "office-alarm",
+            title: "A False Alarm",
+            theme: "work",
+            sentences: ["One.", "Two.", "Three.", "Four."],
+          },
+          targetWords: [{ wordId: 7, word: "suppress", meaning: "压制" }],
+          showStoryInitially: true,
+          clozeSentence: "She tried to ___ her worry.",
+          prompt: "根据语境选词。",
+          choices: [
+            { value: "one", label: "suppress" },
+            { value: "two", label: "sustain" },
+          ],
+        },
+      },
+    });
+    const transfer = createLearningSessionState({
+      ...meaningSnapshot,
+      currentItem: {
+        schemaVersion: 1,
+        mode: "micro_scene",
+        phase: "recall",
+        itemId: 12,
+        item: {
+          itemType: "micro_scene_transfer_output",
+          itemUid: "transfer-12",
+          wordId: 7,
+          sceneTitle: "A False Alarm",
+          theme: "work",
+          meaning: "压制",
+          transferSentence: "The coach asked him to ___ his anger.",
+          usageNote: "控制情绪。",
+          cue: { firstLetter: "s", length: 8 },
+        },
+      },
+    });
+
+    expect(context.interaction).toMatchObject({
+      draft: { kind: "choice", selectedValue: "" },
+    });
+    expect(transfer.interaction).toMatchObject({
+      draft: { kind: "output", text: "" },
+    });
+  });
+
   it("replaces the item without carrying its draft or hints and accepts only the supplied matching recovery", () => {
     const previous: LearningSessionState = {
       snapshot: spellingSnapshot,

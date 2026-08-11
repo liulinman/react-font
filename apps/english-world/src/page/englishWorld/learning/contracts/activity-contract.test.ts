@@ -22,4 +22,33 @@ describe("ActivityEnvelopeV1 fixture", () => {
 
     expect(activityEnvelope).toEqual(envelope);
   });
+
+  it("accepts the public v4 context contract without a private answer", () => {
+    const envelope: ActivityEnvelopeV1 = {
+      schemaVersion: 1,
+      mode: "micro_scene",
+      phase: "understand",
+      item: {
+        itemType: "micro_scene_context_choice",
+        itemUid: "context-7",
+        wordId: 7,
+        scene: {
+          sceneKey: "office-alarm",
+          title: "A False Alarm",
+          theme: "work",
+          sentences: ["One.", "Two.", "Three.", "Four."],
+        },
+        targetWords: [{ wordId: 7, word: "suppress", meaning: "压制" }],
+        showStoryInitially: true,
+        clozeSentence: "She tried to ___ her worry.",
+        prompt: "根据语境选词。",
+        choices: [
+          { value: "opaque-1", label: "suppress" },
+          { value: "opaque-2", label: "sustain" },
+        ],
+      },
+    };
+
+    expect(JSON.stringify(envelope)).not.toMatch(/correctValue|accepted/);
+  });
 });

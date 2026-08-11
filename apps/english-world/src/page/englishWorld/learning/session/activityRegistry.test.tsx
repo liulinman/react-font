@@ -6,6 +6,7 @@ import { useState, type ComponentType } from "react";
 import type { LearningAnswerDraft } from "../activities/shared/answerDraft";
 import type {
   ConfusionPublicItemV1,
+  MicroSceneContextPublicItemV1,
   MicroScenePublicItemV1,
   OutputPublicItemV1,
   PublicLearningItemV1,
@@ -43,6 +44,31 @@ const microSceneItem: MicroScenePublicItemV1 = {
   choices: [
     { value: "inspect", label: "检查" },
     { value: "ignore", label: "忽略" },
+  ],
+};
+
+const microSceneContextItem: MicroSceneContextPublicItemV1 = {
+  itemType: "micro_scene_context_choice",
+  itemUid: "scene-context-2",
+  wordId: 2,
+  scene: {
+    sceneKey: "document-check",
+    title: "The Missing Signature",
+    theme: "work",
+    sentences: [
+      "Mina prepared a contract for a new customer.",
+      "She tried to inspect every page before the meeting.",
+      "One signature was missing near the final section.",
+      "Her careful check prevented a delay that afternoon.",
+    ],
+  },
+  targetWords: [{ wordId: 2, word: "inspect", meaning: "检查" }],
+  showStoryInitially: false,
+  clozeSentence: "She tried to ___ every page before the meeting.",
+  prompt: "结合短文语境选择单词。",
+  choices: [
+    { value: "one", label: "inspect" },
+    { value: "two", label: "ignore" },
   ],
 };
 
@@ -118,5 +144,24 @@ describe("activityRegistry", () => {
     expect(onDraftChange).toHaveBeenLastCalledWith({ kind: "output", text: "I inspect it." });
     await user.click(screen.getByRole("button", { name: "提交答案" }));
     expect(onSubmit).toHaveBeenCalledWith({ kind: "output", text: "I inspect it." });
+  });
+
+  it("routes the new contextual item through the micro-scene renderer", () => {
+    const Activity = activityRegistry.micro_scene as unknown as ComponentType<
+      ActivityProps<MicroSceneContextPublicItemV1>
+    >;
+    render(
+      <Activity
+        item={microSceneContextItem}
+        draft={{ kind: "choice", selectedValue: "" }}
+        hints={[]}
+        onDraftChange={vi.fn()}
+        onRevealHint={vi.fn()}
+        onSubmit={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText(microSceneContextItem.clozeSentence)).toBeVisible();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 });

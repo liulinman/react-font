@@ -334,6 +334,81 @@ describe("LearningSetupDrawer", () => {
     expect(createCalls[0][0].data).toEqual(createCalls[1][0].data);
   });
 
+  it("shows explicit micro-story generation progress and blocks duplicate closing actions", async () => {
+    const user = userEvent.setup();
+    let resolveCreate!: (value: unknown) => void;
+    requestMock.mockImplementation(async (descriptor: { url: string; data?: unknown }) => {
+      if (descriptor.url === "/learning-session/capabilities") {
+        return { modes: [{ mode: "micro_scene", status: "enabled" }] };
+      }
+      if (descriptor.url === "/learning-session/preview") {
+        return adaptedPreview((descriptor.data as { wordIds: number[] }).wordIds);
+      }
+      if (descriptor.url === "/learning-session/create") {
+        return new Promise((resolve) => {
+          resolveCreate = resolve;
+        });
+      }
+      throw new Error(`unexpected request: ${descriptor.url}`);
+    });
+    renderDrawer([7]);
+    const start = await screen.findByRole("button", { name: "开始混合记忆" });
+    await waitFor(() => expect(start).toBeEnabled());
+
+    await user.click(start);
+
+    expect(screen.getByRole("status", { name: "微短文生成进度" })).toHaveTextContent(
+      "正在生成微短文，通常需要 5–15 秒",
+    );
+    expect(start).toBeDisabled();
+    expect(screen.getByRole("button", { name: /取\s*消/ })).toBeDisabled();
+    resolveCreate({ sessionId: 31, status: "active", sessionVersion: 1, currentItemId: 101 });
+    await waitFor(() =>
+      expect(screen.getByLabelText("当前位置")).toHaveTextContent(
+        "/englishWorld/learn/session/31",
+      ),
+    );
+  });
+
+  it("shows the stable micro-story generation error and reuses the request identity", async () => {
+    const user = userEvent.setup();
+    let createAttempts = 0;
+    requestMock.mockImplementation(async (descriptor: { url: string; data?: unknown }) => {
+      if (descriptor.url === "/learning-session/capabilities") {
+        return { modes: [{ mode: "micro_scene", status: "enabled" }] };
+      }
+      if (descriptor.url === "/learning-session/preview") {
+        return adaptedPreview((descriptor.data as { wordIds: number[] }).wordIds);
+      }
+      if (descriptor.url === "/learning-session/create") {
+        createAttempts += 1;
+        if (createAttempts === 1) {
+          throw {
+            errorCode: "LEARNING_CONTENT_GENERATION_FAILED",
+            message: "upstream detail must stay hidden",
+          };
+        }
+        return { sessionId: 31, status: "active", sessionVersion: 1, currentItemId: 101 };
+      }
+      throw new Error(`unexpected request: ${descriptor.url}`);
+    });
+    renderDrawer([7]);
+    const start = await screen.findByRole("button", { name: "开始混合记忆" });
+    await waitFor(() => expect(start).toBeEnabled());
+
+    await user.click(start);
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "微短文生成失败，请重试",
+    );
+    await user.click(start);
+
+    const createCalls = requestMock.mock.calls.filter(
+      ([descriptor]) => descriptor.url === "/learning-session/create",
+    );
+    expect(createCalls).toHaveLength(2);
+    expect(createCalls[0][0].data.requestUid).toBe(createCalls[1][0].data.requestUid);
+  });
+
   it("blocks a scope over twenty words without previewing or creating it", async () => {
     const user = userEvent.setup();
     renderDrawer(Array.from({ length: 21 }, (_, index) => index + 1));
