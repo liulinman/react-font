@@ -1,21 +1,29 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Form, Input, Button, Card, Tabs, message } from "antd";
 import { UserOutlined, LockOutlined } from "@ant-design/icons";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import loginStarryVocabulary from "@/assets/login-starry-vocabulary.png";
-import LoginStarfieldCanvas from "./LoginStarfieldCanvas";
 import "./Login.css";
 
 const { TabPane } = Tabs;
 const DEFAULT_AFTER_LOGIN_PATH = "/englishWorld/recite";
 
-const AMBIENT_WORDS = [
-  { word: "memory", tone: "cyan" },
-  { word: "context", tone: "violet" },
-  { word: "review", tone: "green" },
-  { word: "fluent", tone: "blue" },
-  { word: "listen", tone: "cyan" },
+const LOGIN_POINTS = [
+  {
+    label: "每日复习",
+    detail: "用短而稳定的节奏巩固高价值词汇。",
+    tone: "blue",
+  },
+  {
+    label: "AI 语境实验室",
+    detail: "把单词放进文章、问题和真实语境里。",
+    tone: "teal",
+  },
+  {
+    label: "记忆地图",
+    detail: "看见每个词从陌生到熟练的学习轨迹。",
+    tone: "violet",
+  },
 ];
 
 type LocationState = {
@@ -24,18 +32,12 @@ type LocationState = {
   };
 };
 
-type LoginContainerStyle = React.CSSProperties & {
-  "--login-parallax-x": string;
-  "--login-parallax-y": string;
-};
-
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { login, register, isAuthenticated } = useAuth();
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<string>("login");
-  const [parallax, setParallax] = useState({ x: 0, y: 0 });
 
   // 如果已登录，跳转到原页面或首页
   useEffect(() => {
@@ -93,46 +95,45 @@ const Login: React.FC = () => {
     }
   };
 
-  const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
-    const rect = event.currentTarget.getBoundingClientRect();
-    const x = (event.clientX - rect.left) / rect.width - 0.5;
-    const y = (event.clientY - rect.top) / rect.height - 0.5;
-    setParallax({ x: Number(x.toFixed(3)), y: Number(y.toFixed(3)) });
-  };
-
-  const handlePointerLeave = () => {
-    setParallax({ x: 0, y: 0 });
-  };
-
-  const loginContainerStyle: LoginContainerStyle = {
-    "--login-parallax-x": `${parallax.x * 18}px`,
-    "--login-parallax-y": `${parallax.y * 18}px`,
-    backgroundImage: `linear-gradient(115deg, rgba(3, 7, 18, 0.32), rgba(15, 23, 42, 0.44) 48%, rgba(3, 7, 18, 0.72)), url(${loginStarryVocabulary})`,
-  };
-
   return (
-    <div
-      className="login-container"
-      style={loginContainerStyle}
-      onPointerMove={handlePointerMove}
-      onPointerLeave={handlePointerLeave}
-    >
-      <div className="login-starfield" aria-hidden="true" />
-      <div className="login-orbit" aria-hidden="true" />
-      <LoginStarfieldCanvas />
+    <div className="login-container login-workspace">
+      <div className="login-ambient-shape login-ambient-shape-blue" aria-hidden="true" />
+      <div className="login-ambient-shape login-ambient-shape-teal" aria-hidden="true" />
+      <div className="login-constellation" aria-hidden="true">
+        <span className="login-constellation-dot login-constellation-dot-one" />
+        <span className="login-constellation-dot login-constellation-dot-two" />
+        <span className="login-constellation-dot login-constellation-dot-three" />
+        <span className="login-constellation-line login-constellation-line-one" />
+        <span className="login-constellation-line login-constellation-line-two" />
+      </div>
       <section className="login-hero" aria-label="英语世界登录">
         <div className="login-copy">
-          <div className="login-kicker">AI vocabulary constellation</div>
+          <div className="login-brand-lockup">
+            <span className="login-brand-mark" aria-hidden="true">
+              EW
+            </span>
+            <span>
+              <strong>English World</strong>
+              <small>AI vocabulary learning</small>
+            </span>
+          </div>
+          <div className="login-kicker">PERSONAL LEARNING SPACE</div>
           <h1>把每个单词点亮成星图</h1>
-          <p>登录后进入今日复习、AI 语境实验室和记忆地图，让单词不再散落。</p>
-          <div className="login-word-cloud" aria-hidden="true">
-            {AMBIENT_WORDS.map((item) => (
-              <span
-                key={item.word}
-                className={`login-word-chip login-word-chip-${item.tone}`}
-              >
-                {item.word}
-              </span>
+          <p>
+            登录后进入你的学习空间，用更轻松的节奏积累词汇，把每一次复习都变成看得见的进步。
+          </p>
+          <div className="login-copy-points">
+            {LOGIN_POINTS.map((item) => (
+              <div className="login-copy-point" key={item.label}>
+                <span
+                  aria-hidden="true"
+                  className={`login-copy-point-icon login-copy-point-icon-${item.tone}`}
+                />
+                <span>
+                  <strong>{item.label}</strong>
+                  <small>{item.detail}</small>
+                </span>
+              </div>
             ))}
           </div>
         </div>
@@ -141,19 +142,15 @@ const Login: React.FC = () => {
           <div className="login-card-header">
             <span className="login-card-mark" />
             <div>
-              <div className="login-title">英语世界 · AI 单词</div>
-              <div className="login-subtitle">进入你的词汇星域</div>
+              <div className="login-title">欢迎回来</div>
+              <div className="login-subtitle">进入你的个人词汇空间</div>
             </div>
-          </div>
-          <div className="login-status-strip">
-            <span>今日复习</span>
-            <strong>Ready</strong>
-            <span>记忆地图同步</span>
           </div>
           <Tabs activeKey={activeTab} onChange={setActiveTab} centered>
             <TabPane tab="登录" key="login">
               <Form
                 name="login"
+                className="login-form login-form-compact"
                 onFinish={handleLogin}
                 autoComplete="off"
                 layout="vertical"
@@ -191,6 +188,7 @@ const Login: React.FC = () => {
                   <Button
                     type="primary"
                     htmlType="submit"
+                    className="login-form-submit"
                     data-cy="login-submit"
                     block
                     loading={loading}
@@ -204,6 +202,7 @@ const Login: React.FC = () => {
             <TabPane tab="注册" key="register">
               <Form
                 name="register"
+                className="login-form login-form-compact"
                 onFinish={handleRegister}
                 autoComplete="off"
                 layout="vertical"
@@ -270,6 +269,7 @@ const Login: React.FC = () => {
                   <Button
                     type="primary"
                     htmlType="submit"
+                    className="login-form-submit"
                     data-cy="register-submit"
                     block
                     loading={loading}
@@ -280,8 +280,13 @@ const Login: React.FC = () => {
               </Form>
             </TabPane>
           </Tabs>
+          <div className="login-card-footer">
+            <span className="login-card-footer-dot" aria-hidden="true" />
+            <span>你的学习进度会安全地保存在这里</span>
+          </div>
         </Card>
       </section>
+      <div className="login-footer">English World · Learn with context</div>
     </div>
   );
 };
