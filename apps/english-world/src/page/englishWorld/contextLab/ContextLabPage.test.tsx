@@ -2516,7 +2516,6 @@ describe("ContextLabPage", () => {
     });
 
     render(<ContextLabPage />);
-
     await userEvent.click(await screen.findByRole("button", { name: "开始练习" }));
     expect(
       screen.getByRole("region", { name: /AI 语境练习/ }),
@@ -2529,6 +2528,56 @@ describe("ContextLabPage", () => {
       "context-lab-article-paragraph",
     );
     expect(screen.queryByText("文章主题")).toBeInTheDocument();
+  });
+
+  it("translates the article once and toggles the Chinese paragraphs", async () => {
+    const article =
+      "Urban Green Space and Public Trust\n\nFirst body paragraph.\n\nSecond body paragraph.\n\nThird body paragraph.";
+    requestMock.mockImplementation((config) => {
+      if (config.url === "/context-lab/translate-article") {
+        return Promise.resolve({
+          translations: ["城市绿地与公共信任", "第一段中文。", "第二段中文。", "第三段中文。"],
+        });
+      }
+      return Promise.resolve({
+        list: [
+          {
+            id: 12,
+            taskId: 12,
+            status: "succeeded",
+            sourceType: "custom",
+            words: ["fragile", "steady", "recover"],
+            articleExerciseId: 88,
+            article,
+            questions: [
+              {
+                id: "q1",
+                stem: "What does fragile mean?",
+                options: ["Easy to break", "Very fast"],
+              },
+            ],
+          },
+        ],
+        total: 1,
+        page: 1,
+        pageSize: 10,
+      });
+    });
+
+    const user = userEvent.setup();
+    render(<ContextLabPage />);
+    await user.click(await screen.findByRole("button", { name: "开始练习" }));
+
+    const translateButton = screen.getByRole("button", { name: "翻译全文" });
+    await user.click(translateButton);
+    expect(await screen.findByText("第一段中文。")).toBeInTheDocument();
+    expect(requestMock.mock.calls.filter(([config]) => config.url === "/context-lab/translate-article")).toHaveLength(1);
+
+    await user.click(screen.getByRole("button", { name: "隐藏译文" }));
+    expect(screen.queryByText("第一段中文。")).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "翻译全文" }));
+    expect(screen.getByText("第一段中文。")).toBeInTheDocument();
+    expect(requestMock.mock.calls.filter(([config]) => config.url === "/context-lab/translate-article")).toHaveLength(1);
   });
 
   it("renders a two-pane practice workspace with an answering timer", async () => {

@@ -39,6 +39,7 @@ import {
   ReloadOutlined,
   SearchOutlined,
   SendOutlined,
+  TranslationOutlined,
 } from "@ant-design/icons";
 import request from "@font/api";
 import {
@@ -65,6 +66,7 @@ import {
   contextLabAttemptHistory,
   contextLabAttemptDetail,
   contextLabSubmit,
+  contextLabTranslateArticle,
   downloadContextLabPdfTemplate,
   downloadContextLabTaskPdf,
   subscribeContextLabTaskEvents,
@@ -121,6 +123,9 @@ import {
   toBulkImportWordPayload,
 } from "../bulkImport/bulkImportPreview";
 import { stripGeneratedMarkdownEmphasis } from "./articleText";
+import {
+  buildArticleTranslationBlocks,
+} from "./articleTranslation";
 import {
   CONTEXT_LAB_PASTED_QUESTION_TYPE_OPTIONS,
   formatContextLabQuestionTypeLabel,
@@ -464,6 +469,16 @@ function ContextLabPageContent({
   const [confirmingMarkedImport, setConfirmingMarkedImport] = useState(false);
   const [translationResult, setTranslationResult] =
     useState<WordAgentItem | null>(null);
+  const [articleTranslations, setArticleTranslations] = useState<string[] | null>(
+    null,
+  );
+  const [articleTranslationArticle, setArticleTranslationArticle] = useState<
+    string | null
+  >(null);
+  const [articleTranslationVisible, setArticleTranslationVisible] =
+    useState(false);
+  const [articleTranslationLoading, setArticleTranslationLoading] =
+    useState(false);
   const [highlightWord, setHighlightWord] = useState("");
   const [microCreateError, setMicroCreateError] = useState("");
   const [microWaitLong, setMicroWaitLong] = useState(false);
@@ -1438,6 +1453,29 @@ function ContextLabPageContent({
     }
   };
 
+  const handleToggleArticleTranslation = async () => {
+    const article = currentTask?.article?.trim();
+    if (!article || articleTranslationLoading) return;
+    if (articleTranslations && articleTranslationArticle === article) {
+      setArticleTranslationVisible((visible) => !visible);
+      return;
+    }
+
+    setArticleTranslationLoading(true);
+    try {
+      const response = await request(
+        contextLabTranslateArticle({ article, modelProvider }),
+      );
+      setArticleTranslationArticle(article);
+      setArticleTranslations(response.translations ?? []);
+      setArticleTranslationVisible(true);
+    } catch (error: unknown) {
+      message.error(error instanceof Error ? error.message : "文章翻译失败");
+    } finally {
+      setArticleTranslationLoading(false);
+    }
+  };
+
   const handleAddSelectedVocabulary = async () => {
     const text = cleanSelectedVocabularyText(selectedVocabulary);
     if (!text) {
@@ -1686,18 +1724,44 @@ function ContextLabPageContent({
       return null;
     }
 
+    const activeArticleTranslations =
+      articleTranslationArticle === currentTask.article
+        ? articleTranslations
+        : null;
+    const activeArticleTranslationVisible =
+      Boolean(activeArticleTranslations) && articleTranslationVisible;
+
     return (
       <section
         aria-label="文章阅读区"
         className="context-lab-reading-pane"
         onScroll={closeSelectionMenu}
       >
+        <div className="context-lab-article-toolbar">
+          <Button
+            icon={<TranslationOutlined aria-hidden="true" />}
+            loading={articleTranslationLoading}
+            onClick={handleToggleArticleTranslation}
+          >
+            {activeArticleTranslationVisible ? "隐藏译文" : "翻译全文"}
+          </Button>
+        </div>
         <div
           className="context-lab-article"
           onContextMenu={isMicroMode ? undefined : handleReadingContextMenu}
         >
           {(() => {
             const articleContent = parseArticleContent(currentTask.article);
+            const translatedBlocks = activeArticleTranslations
+              ? buildArticleTranslationBlocks(
+                  currentTask.article,
+                  activeArticleTranslations,
+                )
+              : [];
+            const translatedTopic = articleContent.topic
+              ? translatedBlocks[0]?.chinese
+              : undefined;
+            const translatedParagraphOffset = articleContent.topic ? 1 : 0;
             return (
               <>
                 <div className="context-lab-article-topic-wrap">
@@ -1714,16 +1778,33 @@ function ContextLabPageContent({
                       <h4 className="context-lab-article-topic">
                         {renderHighlightedArticleText(articleContent.topic)}
                       </h4>
+                      {activeArticleTranslationVisible && translatedTopic && (
+                        <div className="context-lab-article-translation context-lab-article-topic-translation">
+                          {translatedTopic}
+                        </div>
+                      )}
                     </>
                   )}
                 </div>
                 {articleContent.paragraphs.map((paragraph, index) => (
-                  <p
-                    className="context-lab-article-paragraph"
+                  <div
+                    className="context-lab-article-paragraph-group"
                     key={`${paragraph}-${index}`}
                   >
-                    {renderHighlightedArticleText(paragraph)}
-                  </p>
+                    <p className="context-lab-article-paragraph">
+                      {renderHighlightedArticleText(paragraph)}
+                    </p>
+                    {activeArticleTranslationVisible &&
+                      translatedBlocks[index + translatedParagraphOffset]
+                        ?.chinese && (
+                        <p className="context-lab-article-translation">
+                          {
+                            translatedBlocks[index + translatedParagraphOffset]
+                              .chinese
+                          }
+                        </p>
+                      )}
+                  </div>
                 ))}
               </>
             );

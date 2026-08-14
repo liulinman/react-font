@@ -4215,6 +4215,12 @@ html[data-theme="dark"] .overwrite-stats-table .ant-table-thead > tr > th {
   padding: 10px 14px 12px;
 }
 
+.context-lab-article-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
 .context-lab-question-pane {
   display: flex;
   flex-direction: column;
@@ -4285,6 +4291,7 @@ html[data-theme="dark"] .overwrite-stats-table .ant-table-thead > tr > th {
 
 .context-lab-article-topic-wrap {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
   gap: 6px;
   min-width: 0;
@@ -4320,6 +4327,34 @@ html[data-theme="dark"] .overwrite-stats-table .ant-table-thead > tr > th {
   line-height: 1.68;
   text-align: left;
   text-indent: 2em;
+}
+
+.context-lab-article-paragraph-group {
+  margin-bottom: 8px;
+}
+
+.context-lab-article-paragraph-group:last-child {
+  margin-bottom: 0;
+}
+
+.context-lab-article-translation {
+  margin: -2px 0 10px;
+  padding: 8px 12px;
+  border-left: 3px solid #93c5fd;
+  border-radius: 0 6px 6px 0;
+  background: #eff6ff;
+  color: #334155;
+  font-size: 14px;
+  line-height: 1.65;
+  text-indent: 0;
+}
+
+.context-lab-article-topic-translation {
+  flex-basis: 100%;
+  margin: 2px 0 0;
+  padding: 4px 8px;
+  border-left-width: 2px;
+  font-size: 13px;
 }
 
 .context-lab-article-paragraph:last-child {

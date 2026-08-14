@@ -13,6 +13,7 @@ import type {
   ContextLabGenerateParams,
   ContextLabHistoryParams,
   ContextLabHistoryResponse,
+  ContextLabModelProvider,
   ContextLabTask,
   DailyCoachPlan,
   DailyCoachSummary,
@@ -62,6 +63,16 @@ export const contextLabSubmit = (
   method: "POST",
   data,
   __responseType: undefined as unknown as ContextLabSubmitResult,
+});
+
+export const contextLabTranslateArticle = (data: {
+  article: string;
+  modelProvider?: ContextLabModelProvider;
+}): YTRequest<{ translations: string[] }> => ({
+  url: "/context-lab/translate-article",
+  method: "POST",
+  data,
+  __responseType: undefined as unknown as { translations: string[] },
 });
 
 export const contextLabCreateTask = (

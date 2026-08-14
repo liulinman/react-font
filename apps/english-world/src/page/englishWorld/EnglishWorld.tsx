@@ -40,7 +40,11 @@ import { LearningCockpitPage } from "./cockpit/LearningCockpitPage";
 import { MemoryMapPage } from "./memoryMap/MemoryMapPage";
 import { ContextLabPage } from "./contextLab/ContextLabPage";
 import { WordAgentTab } from "./component/WordAgentTab";
-import { contextLabCreateTask, contextLabDetail } from "./server/learning";
+import {
+  contextLabCreateTask,
+  contextLabDetail,
+  contextLabTranslateArticle,
+} from "./server/learning";
 import type { ContextLabModelProvider, ContextLabTask } from "./types/learning";
 import {
   DEFAULT_CONTEXT_LAB_MODEL_PROVIDER,
@@ -94,6 +98,9 @@ import {
   type ParsedContextLabReference,
   parseContextLabReference,
 } from "./utils/contextLabReference";
+import {
+  buildArticleTranslationBlocks,
+} from "./contextLab/articleTranslation";
 import "./EnglishWorld.css";
 const { RangePicker } = DatePicker;
 const { Text, Title } = Typography;
@@ -157,6 +164,13 @@ const EnglishWorld: React.FC = () => {
   const [sourcePreviewTask, setSourcePreviewTask] =
     useState<ContextLabTask | null>(null);
   const [sourcePreviewError, setSourcePreviewError] = useState("");
+  const [sourcePreviewTranslations, setSourcePreviewTranslations] = useState<
+    string[] | null
+  >(null);
+  const [sourcePreviewTranslationVisible, setSourcePreviewTranslationVisible] =
+    useState(false);
+  const [sourcePreviewTranslationLoading, setSourcePreviewTranslationLoading] =
+    useState(false);
   const { mutateAsync: mutateWordAdd, isPending: buttonPending } =
     useMutation(wordAdd);
   const location = useLocation();
@@ -312,6 +326,8 @@ const EnglishWorld: React.FC = () => {
   const closeSourcePreview = () => {
     setSourcePreviewOpen(false);
     setSourcePreviewFullscreen(false);
+    setSourcePreviewTranslations(null);
+    setSourcePreviewTranslationVisible(false);
   };
 
   const handleOpenContextLabReference = async (
@@ -322,6 +338,8 @@ const EnglishWorld: React.FC = () => {
     setSourcePreviewRecord(record ?? null);
     setSourcePreviewTask(null);
     setSourcePreviewError("");
+    setSourcePreviewTranslations(null);
+    setSourcePreviewTranslationVisible(false);
     setSourcePreviewFullscreen(false);
     setSourcePreviewOpen(true);
     setSourcePreviewLoading(true);
@@ -339,6 +357,28 @@ const EnglishWorld: React.FC = () => {
       );
     } finally {
       setSourcePreviewLoading(false);
+    }
+  };
+
+  const handleToggleSourcePreviewTranslation = async () => {
+    const article = sourcePreviewTask?.article?.trim();
+    if (!article || sourcePreviewTranslationLoading) return;
+    if (sourcePreviewTranslations) {
+      setSourcePreviewTranslationVisible((visible) => !visible);
+      return;
+    }
+
+    setSourcePreviewTranslationLoading(true);
+    try {
+      const response = await request(
+        contextLabTranslateArticle({ article, modelProvider: "deepseek" }),
+      );
+      setSourcePreviewTranslations(response.translations ?? []);
+      setSourcePreviewTranslationVisible(true);
+    } catch (error: unknown) {
+      message.error(error instanceof Error ? error.message : "文章翻译失败");
+    } finally {
+      setSourcePreviewTranslationLoading(false);
     }
   };
 
@@ -743,6 +783,16 @@ const EnglishWorld: React.FC = () => {
   const renderSourcePreviewArticle = () => {
     if (!sourcePreviewTask?.article) return null;
     const articleContent = parseContextLabArticleContent(sourcePreviewTask.article);
+    const translatedBlocks = sourcePreviewTranslations
+      ? buildArticleTranslationBlocks(
+          sourcePreviewTask.article,
+          sourcePreviewTranslations,
+        )
+      : [];
+    const translatedTopic = articleContent.topic
+      ? translatedBlocks[0]?.chinese
+      : undefined;
+    const translatedParagraphOffset = articleContent.topic ? 1 : 0;
 
     return (
       <section aria-label="文章阅读区" className="context-lab-reading-pane">
@@ -758,16 +808,29 @@ const EnglishWorld: React.FC = () => {
                 <h4 className="context-lab-article-topic">
                   {renderSourcePreviewText(articleContent.topic)}
                 </h4>
+                {sourcePreviewTranslationVisible && translatedTopic && (
+                  <div className="context-lab-article-translation context-lab-article-topic-translation">
+                    {translatedTopic}
+                  </div>
+                )}
               </>
             )}
           </div>
           {articleContent.paragraphs.map((paragraph, index) => (
-            <p
-              className="context-lab-article-paragraph"
+            <div
+              className="context-lab-article-paragraph-group"
               key={`${paragraph}-${index}`}
             >
-              {renderSourcePreviewText(paragraph)}
-            </p>
+              <p className="context-lab-article-paragraph">
+                {renderSourcePreviewText(paragraph)}
+              </p>
+              {sourcePreviewTranslationVisible &&
+                translatedBlocks[index + translatedParagraphOffset]?.chinese && (
+                  <p className="context-lab-article-translation">
+                    {translatedBlocks[index + translatedParagraphOffset].chinese}
+                  </p>
+                )}
+            </div>
           ))}
         </div>
         <div className="learning-cockpit-word-strip">
@@ -1397,12 +1460,22 @@ const EnglishWorld: React.FC = () => {
                     <Title level={4}>
                       {sourcePreviewReference?.word
                         ? `定位：${sourcePreviewReference.word}`
-                        : "来源定位"}
+                      : "来源定位"}
                     </Title>
                   </div>
-                  <Text type="secondary">
-                    这里只查看单词出现的原文，需要做题时再开始练习。
-                  </Text>
+                  <Space align="end" direction="vertical" size={8}>
+                    <Text type="secondary">
+                      这里只查看单词出现的原文，需要做题时再开始练习。
+                    </Text>
+                    <Button
+                      icon={<TranslationOutlined aria-hidden="true" />}
+                      loading={sourcePreviewTranslationLoading}
+                      disabled={!sourcePreviewTask || sourcePreviewLoading}
+                      onClick={handleToggleSourcePreviewTranslation}
+                    >
+                      {sourcePreviewTranslationVisible ? "隐藏译文" : "翻译全文"}
+                    </Button>
+                  </Space>
                 </div>
                 {sourcePreviewLoading ? (
                   <div className="context-lab-history-empty">

@@ -636,6 +636,79 @@ describe("EnglishWorld ToC routing", () => {
     ).toBeInTheDocument();
   });
 
+  it("translates the source article and reuses the cached result when toggled", async () => {
+    const user = userEvent.setup();
+    const article =
+      "Urban Farming\n\nUrban farming improves local food supply.\n\nIt also strengthens communities.\n\nLong-term planning remains essential.";
+    requestMock.mockImplementation((config) => {
+      if (config.url === "/context-lab/detail") {
+        return Promise.resolve({
+          id: 12,
+          taskId: 12,
+          status: "succeeded",
+          sourceType: "custom",
+          words: ["urban farming"],
+          article,
+          questions: [],
+        });
+      }
+      if (config.url === "/context-lab/translate-article") {
+        return Promise.resolve({
+          translations: [
+            "城市农业",
+            "城市农业改善了当地的食品供应。",
+            "它也增强了社区凝聚力。",
+            "长期规划仍然至关重要。",
+          ],
+        });
+      }
+      return Promise.resolve({ list: [], total: 0, totalPages: 0 });
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/englishWorld/words"]}>
+        <EnglishWorld />
+      </MemoryRouter>,
+    );
+    const tableProps = tablePropsMock.mock.calls.at(-1)?.[0] as {
+      columns?: Array<{
+        dataIndex?: string;
+        render?: (value: string) => React.ReactNode;
+      }>;
+    };
+    const referenceColumn = tableProps.columns?.find(
+      (column) => column.dataIndex === "englishReference",
+    );
+    render(
+      <MemoryRouter>
+        {referenceColumn?.render?.(
+          "/englishWorld/context-lab?taskId=12&word=urban+farming",
+        )}
+      </MemoryRouter>,
+    );
+    await user.click(
+      screen.getByRole("button", { name: "来自阅读 · 练习包 #12" }),
+    );
+    const dialog = await screen.findByRole("dialog", {
+      name: /单词来源文章/,
+    });
+    await user.click(
+      within(dialog).getByRole("button", { name: "翻译全文" }),
+    );
+    expect(
+      await within(dialog).findByText("城市农业改善了当地的食品供应。"),
+    ).toBeInTheDocument();
+    expect(
+      requestMock.mock.calls.filter(
+        ([config]) => config.url === "/context-lab/translate-article",
+      ),
+    ).toHaveLength(1);
+    await user.click(within(dialog).getByRole("button", { name: "隐藏译文" }));
+    expect(
+      within(dialog).queryByText("城市农业改善了当地的食品供应。"),
+    ).not.toBeInTheDocument();
+  });
+
   it("shows a stale reference state when the source task has been deleted", async () => {
     const user = userEvent.setup();
     requestMock.mockImplementation((config) => {
