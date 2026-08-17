@@ -14,6 +14,7 @@ export type MobileWordFilters = {
   englishLevel?: number;
   startTime?: string;
   endTime?: string;
+  sort?: "newest" | "oldest" | "alphabetical";
 };
 
 type MobileWordFilterRequest = FilterWordList & {
@@ -48,25 +49,31 @@ function canonicalizeFilters(filters: MobileWordFilters) {
       : {}),
     ...(filters.startTime !== undefined ? { startTime: filters.startTime } : {}),
     ...(filters.endTime !== undefined ? { endTime: filters.endTime } : {}),
+    ...(filters.sort !== undefined ? { sort: filters.sort } : {}),
   });
 }
 
 export const wordKeys = {
   all: ["mobile", "words"] as const,
+  lists: ["mobile", "words", "list"] as const,
   list: (filters: MobileWordFilters) =>
-    [...wordKeys.all, "list", canonicalizeFilters(filters)] as const,
+    [...wordKeys.lists, canonicalizeFilters(filters)] as const,
   detail: (id: number) => [...wordKeys.all, "detail", id] as const,
 };
 
 export async function fetchMobileWords(
   filters: MobileWordFilters,
 ): Promise<MobileWordPage> {
+  const search = filters.search?.trim() ?? "";
+  const exactType = search === "单词" ? 0 : search === "短语" ? 1 : search === "句子" ? 2 : undefined;
+  const exactLevel = search === "不会" ? 0 : search === "一般" ? 1 : search === "熟练" ? 2 : search === "精通" ? 3 : undefined;
+  const isChineseSearch = /[\u3400-\u9fff]/.test(search);
   const quickFilters = normalizeMobileWordFilters(
     {
-      englishType: filters.englishType,
-      englishLevel: filters.englishLevel,
+      englishType: filters.englishType ?? exactType,
+      englishLevel: filters.englishLevel ?? exactLevel,
     },
-    filters.search ?? "",
+    isChineseSearch || exactType !== undefined || exactLevel !== undefined ? "" : search,
   );
   return request<MobileWordPage>(
     wordFilter({
@@ -78,6 +85,8 @@ export async function fetchMobileWords(
         : {}),
       ...(filters.englishChinese !== undefined
         ? { englishChinese: filters.englishChinese }
+        : isChineseSearch && exactType === undefined && exactLevel === undefined
+          ? { englishChinese: search }
         : {}),
       ...(filters.englishPhonetic !== undefined
         ? { englishPhonetic: filters.englishPhonetic }

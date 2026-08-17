@@ -79,6 +79,25 @@ describe("mobile word queries", () => {
     });
   });
 
+  it("maps mobile q truthfully to Chinese, English, or an exact existing label without sending sort to the API", async () => {
+    requestMock.mockResolvedValue({ list: [], total: 0, totalPages: 0 });
+
+    await fetchMobileWords({ page: 1, pageSize: 20, search: "保留", sort: "alphabetical" });
+    expect(requestMock).toHaveBeenLastCalledWith(expect.objectContaining({
+      data: { page: 1, pageSize: 20, englishChinese: "保留" },
+    }));
+
+    await fetchMobileWords({ page: 1, pageSize: 20, search: "精通" });
+    expect(requestMock).toHaveBeenLastCalledWith(expect.objectContaining({
+      data: { page: 1, pageSize: 20, englishLevel: 3 },
+    }));
+
+    expect(wordKeys.lists).toEqual(["mobile", "words", "list"]);
+    expect(wordKeys.list({ page: 1, pageSize: 20, search: "retain", sort: "alphabetical" })).toEqual([
+      "mobile", "words", "list", { page: 1, pageSize: 20, search: "retain", sort: "alphabetical" },
+    ]);
+  });
+
   it("rejects invalid detail IDs before requesting the broad fallback", async () => {
     await expect(fetchMobileWordDetail(0)).rejects.toThrow("单词 ID 无效。");
     expect(requestMock).not.toHaveBeenCalled();

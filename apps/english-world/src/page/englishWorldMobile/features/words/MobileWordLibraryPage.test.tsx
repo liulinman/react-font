@@ -6,6 +6,7 @@ import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { WordList } from "@/server/word/word.type";
 import { MobileActivityLockProvider } from "../../offline/MobileActivityLockContext";
+import { wordKeys } from "./wordQueries";
 import { MobileWordLibraryPage } from "./MobileWordLibraryPage";
 
 const { requestMock, fetchWordsMock } = vi.hoisted(() => ({
@@ -46,7 +47,7 @@ function renderLibrary(route = "/mobile/words?q=ret") {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
-  return render(
+  const result = render(
     <QueryClientProvider client={client}>
       <MobileActivityLockProvider>
         <MemoryRouter initialEntries={[route]}>
@@ -60,6 +61,7 @@ function renderLibrary(route = "/mobile/words?q=ret") {
       </MobileActivityLockProvider>
     </QueryClientProvider>,
   );
+  return { ...result, client };
 }
 
 describe("MobileWordLibraryPage", () => {
@@ -106,6 +108,54 @@ describe("MobileWordLibraryPage", () => {
     expect(screen.getByTestId("location")).toHaveTextContent("/mobile/words?q=ret&word=exact&meaning=%E9%87%8A%E4%B9%89&level=3");
   });
 
+  it("keeps every URL filter including zero, dates, sort, and clear state", async () => {
+    const user = userEvent.setup();
+    renderLibrary();
+    await screen.findByRole("link", { name: /retain/ });
+    await user.click(screen.getByRole("button", { name: "筛选" }));
+    await user.selectOptions(screen.getByLabelText("词条类型"), "0");
+    await user.selectOptions(screen.getByLabelText("掌握程度"), "0");
+    await user.type(screen.getByLabelText("开始日期"), "2026-08-01");
+    await user.type(screen.getByLabelText("结束日期"), "2026-08-02");
+    await user.selectOptions(screen.getByLabelText("排序"), "alphabetical");
+    await user.click(screen.getByRole("button", { name: "应用筛选" }));
+    expect(screen.getByTestId("location")).toHaveTextContent("type=0&level=0&start=2026-08-01&end=2026-08-02&sort=alphabetical");
+    await user.click(screen.getByRole("button", { name: "筛选" }));
+    await user.click(screen.getByRole("button", { name: "清除筛选" }));
+    await user.click(screen.getByRole("button", { name: "应用筛选" }));
+    expect(screen.getByTestId("location")).toHaveTextContent("/mobile/words");
+  });
+
+  it("uses a modal bottom sheet that focuses, traps keyboard traversal, and restores focus on Escape", async () => {
+    const user = userEvent.setup();
+    renderLibrary();
+    await screen.findByRole("link", { name: /retain/ });
+    const trigger = screen.getByRole("button", { name: "筛选" });
+    await user.click(trigger);
+    await waitFor(() => expect(screen.getByLabelText("英文单词")).toHaveFocus());
+    const close = screen.getByRole("button", { name: "关闭" });
+    screen.getByRole("button", { name: "应用筛选" }).focus();
+    await user.tab();
+    expect(close).toHaveFocus();
+    await user.tab({ shift: true });
+    expect(screen.getByRole("button", { name: "应用筛选" })).toHaveFocus();
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("dialog", { name: "筛选词库" })).not.toBeInTheDocument();
+    expect(trigger).toHaveFocus();
+  });
+
+  it("resolves and globally sorts the complete deduplicated filtered result", async () => {
+    const first: WordList = { id: 8, englishWord: "zebra" };
+    const second: WordList = { id: 7, englishWord: "apple" };
+    fetchWordsMock
+      .mockResolvedValueOnce({ list: [first], total: 2, totalPages: 1 })
+      .mockResolvedValueOnce({ list: [second], total: 2, totalPages: 1 });
+    renderLibrary("/mobile/words?sort=alphabetical");
+    await screen.findByRole("link", { name: "apple" });
+    expect(screen.getAllByRole("link").slice(0, 2).map((link) => link.getAttribute("aria-label"))).toEqual(["apple", "zebra"]);
+    expect(fetchWordsMock).toHaveBeenCalledTimes(2);
+  });
+
   it("enters explicit selection mode and exposes a bottom-safe selection toolbar", async () => {
     const user = userEvent.setup();
     renderLibrary();
@@ -135,11 +185,22 @@ describe("MobileWordLibraryPage", () => {
     expect(screen.queryByRole("button", { name: "加载更多" })).not.toBeInTheDocument();
   });
 
+  it("stops pagination when an overlapping page makes no unique progress", async () => {
+    const user = userEvent.setup();
+    fetchWordsMock
+      .mockResolvedValueOnce({ list: [retain], total: 2, totalPages: 1 })
+      .mockResolvedValueOnce({ list: [retain], total: 2, totalPages: 1 });
+    renderLibrary();
+    await screen.findByRole("link", { name: "retain" });
+    await user.click(screen.getByRole("button", { name: "加载更多" }));
+    await waitFor(() => expect(screen.queryByRole("button", { name: "加载更多" })).not.toBeInTheDocument());
+  });
+
   it("rejects a changed current-filter result before batch actions", async () => {
     const user = userEvent.setup();
     fetchWordsMock
       .mockResolvedValueOnce({ list: [retain], total: 1, totalPages: 1 })
-      .mockResolvedValueOnce({ list: [retain], total: 2, totalPages: 1 });
+      .mockResolvedValueOnce({ list: [retain, retain], total: 2, totalPages: 1 });
     renderLibrary();
 
     await screen.findByRole("link", { name: /retain/ });
@@ -154,7 +215,9 @@ describe("MobileWordLibraryPage", () => {
   it("rolls optimistic mastery changes back when a batch request fails without invalidating the list", async () => {
     const user = userEvent.setup();
     requestMock.mockRejectedValueOnce(new Error("network"));
-    renderLibrary();
+    const { client } = renderLibrary();
+    const detail = { ...retain, englishLevel: 2 };
+    client.setQueryData(wordKeys.detail(retain.id), detail);
 
     await screen.findByRole("link", { name: /retain/ });
     await user.click(screen.getByRole("button", { name: "选择" }));
@@ -164,6 +227,20 @@ describe("MobileWordLibraryPage", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent("批量设置失败，已恢复原来的掌握程度。");
     expect(screen.getByLabelText("掌握程度：一般")).toBeVisible();
+    expect(client.getQueryData(wordKeys.detail(retain.id))).toBe(detail);
+  });
+
+  it("invalidates the word family only after a successful batch update", async () => {
+    const user = userEvent.setup();
+    requestMock.mockResolvedValue({});
+    renderLibrary();
+    await screen.findByRole("link", { name: /retain/ });
+    await user.click(screen.getByRole("button", { name: "选择" }));
+    await user.click(screen.getByRole("checkbox", { name: "选择 retain" }));
+    await user.selectOptions(screen.getByLabelText("批量掌握程度"), "3");
+    await user.click(screen.getByRole("button", { name: "确认批量设置" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("已更新所选词条的掌握程度。");
+    await waitFor(() => expect(fetchWordsMock).toHaveBeenCalledTimes(2));
   });
 
   it("shows a precise offline cached state and never enables batch mutations offline", async () => {

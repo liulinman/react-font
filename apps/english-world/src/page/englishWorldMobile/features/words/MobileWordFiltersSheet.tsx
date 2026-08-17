@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
 
 export type MobileWordUrlFilters = {
   q?: string;
@@ -17,6 +17,7 @@ type MobileWordFiltersSheetProps = {
   onApply(filters: MobileWordUrlFilters): void;
   onClose(): void;
   open: boolean;
+  returnFocusRef?: RefObject<HTMLButtonElement | null>;
 };
 
 function valueOrEmpty(value?: string | number) {
@@ -28,8 +29,46 @@ export function MobileWordFiltersSheet({
   onApply,
   onClose,
   open,
+  returnFocusRef,
 }: MobileWordFiltersSheetProps) {
   const [draft, setDraft] = useState<MobileWordUrlFilters>(filters);
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!open || !dialog) return;
+    const returnFocusTarget = returnFocusRef?.current;
+    const getFocusable = () => Array.from(dialog.querySelectorAll<HTMLElement>(
+      'button:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
+    ));
+    const focusFirst = () => getFocusable()[1]?.focus();
+    const frame = requestAnimationFrame(focusFirst);
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onClose();
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const focusable = getFocusable();
+      const first = focusable[0];
+      const last = focusable.at(-1);
+      if (!first || !last) return;
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    dialog.addEventListener("keydown", onKeyDown);
+    return () => {
+      cancelAnimationFrame(frame);
+      dialog.removeEventListener("keydown", onKeyDown);
+      returnFocusTarget?.focus();
+    };
+  }, [onClose, open, returnFocusRef]);
 
   if (!open) return null;
 
@@ -38,7 +77,10 @@ export function MobileWordFiltersSheet({
   ) => setDraft((current) => ({ ...current, [key]: value || undefined }));
 
   return (
-    <div aria-label="筛选词库" aria-modal="true" className="mobile-word-filters" role="dialog">
+    <div className="mobile-word-filters-scrim" onMouseDown={(event) => {
+      if (event.target === event.currentTarget) onClose();
+    }}>
+    <div aria-label="筛选词库" aria-modal="true" className="mobile-word-filters" ref={dialogRef} role="dialog" tabIndex={-1}>
       <div className="mobile-word-filters__header">
         <h2>筛选词库</h2>
         <button onClick={onClose} type="button">关闭</button>
@@ -107,6 +149,7 @@ export function MobileWordFiltersSheet({
         <button onClick={() => setDraft({})} type="button">清除筛选</button>
         <button onClick={() => onApply(draft)} type="button">应用筛选</button>
       </div>
+    </div>
     </div>
   );
 }
