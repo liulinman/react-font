@@ -27,27 +27,28 @@ export type MobileWordPage = {
 };
 
 function canonicalizeFilters(filters: MobileWordFilters) {
-  const canonical: MobileWordFilters = {
+  return Object.freeze({
     page: filters.page,
     pageSize: filters.pageSize,
-  };
-
-  for (const key of [
-    "search",
-    "englishWord",
-    "englishChinese",
-    "englishPhonetic",
-    "englishType",
-    "englishLevel",
-    "startTime",
-    "endTime",
-  ] as const) {
-    if (filters[key] !== undefined) {
-      canonical[key] = filters[key];
-    }
-  }
-
-  return Object.freeze(canonical);
+    ...(filters.search !== undefined ? { search: filters.search } : {}),
+    ...(filters.englishWord !== undefined
+      ? { englishWord: filters.englishWord }
+      : {}),
+    ...(filters.englishChinese !== undefined
+      ? { englishChinese: filters.englishChinese }
+      : {}),
+    ...(filters.englishPhonetic !== undefined
+      ? { englishPhonetic: filters.englishPhonetic }
+      : {}),
+    ...(filters.englishType !== undefined
+      ? { englishType: filters.englishType }
+      : {}),
+    ...(filters.englishLevel !== undefined
+      ? { englishLevel: filters.englishLevel }
+      : {}),
+    ...(filters.startTime !== undefined ? { startTime: filters.startTime } : {}),
+    ...(filters.endTime !== undefined ? { endTime: filters.endTime } : {}),
+  });
 }
 
 export const wordKeys = {
@@ -67,28 +68,30 @@ export async function fetchMobileWords(
     },
     filters.search ?? "",
   );
-  const explicitFilters: Omit<MobileWordFilters, "page" | "pageSize" | "search"> = {};
-
-  for (const key of [
-    "englishWord",
-    "englishChinese",
-    "englishPhonetic",
-    "englishType",
-    "englishLevel",
-    "startTime",
-    "endTime",
-  ] as const) {
-    if (filters[key] !== undefined) {
-      explicitFilters[key] = filters[key];
-    }
-  }
-
   return request<MobileWordPage>(
     wordFilter({
       page: filters.page,
       pageSize: filters.pageSize,
       ...quickFilters,
-      ...explicitFilters,
+      ...(filters.englishWord !== undefined
+        ? { englishWord: filters.englishWord }
+        : {}),
+      ...(filters.englishChinese !== undefined
+        ? { englishChinese: filters.englishChinese }
+        : {}),
+      ...(filters.englishPhonetic !== undefined
+        ? { englishPhonetic: filters.englishPhonetic }
+        : {}),
+      ...(filters.englishType !== undefined
+        ? { englishType: filters.englishType }
+        : {}),
+      ...(filters.englishLevel !== undefined
+        ? { englishLevel: filters.englishLevel }
+        : {}),
+      ...(filters.startTime !== undefined
+        ? { startTime: filters.startTime }
+        : {}),
+      ...(filters.endTime !== undefined ? { endTime: filters.endTime } : {}),
     } as MobileWordFilterRequest),
   );
 }
