@@ -37,6 +37,9 @@ describe("MobileAppShell", () => {
     expect(
       document.querySelector(".adm-safe-area-position-bottom"),
     ).toBeInTheDocument();
+    expect(
+      getComputedStyle(document.querySelector(".mobile-app-shell")!).paddingBottom,
+    ).toBe("0px");
     expect(screen.getByRole("tab", { name: "词库" })).toHaveAttribute(
       "aria-selected",
       "true",

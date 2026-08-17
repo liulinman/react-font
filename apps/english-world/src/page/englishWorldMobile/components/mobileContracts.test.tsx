@@ -31,6 +31,11 @@ describe("mobile shared contracts", () => {
         <button type="button">Save</button>
         <div aria-label="Open details" role="button" tabIndex={0} />
         <div aria-label="Library" role="tab" tabIndex={0} />
+        <a href="#words">Words</a>
+        <div aria-label="Open word" role="link" tabIndex={0} />
+        <input aria-label="Include learned words" type="checkbox" />
+        <input aria-label="Review now" type="radio" />
+        <div aria-label="Study reminders" role="switch" tabIndex={0} />
       </div>,
     );
 
@@ -38,10 +43,17 @@ describe("mobile shared contracts", () => {
       screen.getByRole("button", { name: "Save" }),
       screen.getByRole("button", { name: "Open details" }),
       screen.getByRole("tab", { name: "Library" }),
+      screen.getByRole("link", { name: "Words" }),
+      screen.getByRole("link", { name: "Open word" }),
+      screen.getByRole("checkbox", { name: "Include learned words" }),
+      screen.getByRole("radio", { name: "Review now" }),
+      screen.getByRole("switch", { name: "Study reminders" }),
     ]) {
       expect(Number.parseFloat(getComputedStyle(control).minHeight)).toBeGreaterThanOrEqual(44);
       expect(Number.parseFloat(getComputedStyle(control).minWidth)).toBeGreaterThanOrEqual(44);
     }
+
+    expect(getComputedStyle(screen.getByRole("link", { name: "Words" })).display).not.toBe("inline");
   });
 
   it("exposes page actions as a labelled safe-area region", () => {
@@ -52,6 +64,29 @@ describe("mobile shared contracts", () => {
     );
 
     expect(screen.getByRole("region", { name: "页面操作" })).toHaveClass("mobile-safe-area-actions");
+  });
+
+  it("keeps a growing action area in normal flow after the final page content", () => {
+    render(
+      <div className="mobile-app-shell">
+        <MobilePage title="词库">
+          <p>Final page content</p>
+          <SafeAreaActions style={{ width: "100px" }}>
+            <button type="button">Save draft</button>
+            <button type="button">Continue study</button>
+            <button type="button">Review later</button>
+          </SafeAreaActions>
+        </MobilePage>
+      </div>,
+    );
+
+    const page = screen.getByRole("region", { name: "词库" });
+    const actions = screen.getByRole("region", { name: "页面操作" });
+
+    expect(page.lastElementChild).toBe(actions);
+    expect(actions.previousElementSibling).toHaveTextContent("Final page content");
+    expect(getComputedStyle(actions).position).toBe("static");
+    expect(getComputedStyle(actions).flexWrap).toBe("wrap");
   });
 
   it.each([

@@ -1,7 +1,5 @@
 .mobile-app-shell {
   --mobile-safe-top: env(safe-area-inset-top, 0px);
-  --mobile-safe-bottom: env(safe-area-inset-bottom, 0px);
-  --mobile-action-bar-reserve: calc(var(--mobile-target-min) + var(--mobile-space-6));
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -12,7 +10,8 @@
   min-height: 100vh;
   min-height: 100dvh;
   margin-inline: auto;
-  padding-block: var(--mobile-safe-top) var(--mobile-safe-bottom);
+  padding-top: var(--mobile-safe-top);
+  padding-bottom: 0;
   overflow: hidden;
   overflow-x: clip;
   color: var(--mobile-ink-primary);
@@ -27,7 +26,7 @@
   min-height: 0;
   overflow-x: clip;
   overflow-y: auto;
-  scroll-padding-block-end: calc(var(--mobile-action-bar-reserve) + var(--mobile-safe-bottom));
+  scroll-padding-block-end: var(--mobile-space-6);
   -webkit-overflow-scrolling: touch;
 }
 
@@ -44,7 +43,6 @@
 .mobile-app-shell select,
 .mobile-app-shell [contenteditable="true"] {
   box-sizing: border-box;
-  min-height: var(--mobile-target-min);
   font-family: var(--mobile-font-family);
   font-size: 16px;
   font-weight: 400;
@@ -52,20 +50,41 @@
 }
 
 .mobile-app-shell button,
+.mobile-app-shell a[href],
+.mobile-app-shell input:not([type="hidden"]),
+.mobile-app-shell textarea,
+.mobile-app-shell select,
+.mobile-app-shell [contenteditable="true"],
 .mobile-app-shell [role="button"],
-.mobile-app-shell [role="tab"] {
+.mobile-app-shell [role="link"],
+.mobile-app-shell [role="tab"],
+.mobile-app-shell [role="switch"],
+.mobile-app-shell [role="checkbox"],
+.mobile-app-shell [role="radio"],
+.mobile-app-shell [role="menuitem"] {
   box-sizing: border-box;
   min-width: 44px;
   min-height: 44px;
 }
 
+.mobile-app-shell a[href] {
+  display: inline-flex;
+  align-items: center;
+}
+
 .mobile-app-shell button,
-.mobile-app-shell [role="button"],
-.mobile-app-shell [role="tab"],
-.mobile-app-shell input,
+.mobile-app-shell a[href],
+.mobile-app-shell input:not([type="hidden"]),
 .mobile-app-shell textarea,
 .mobile-app-shell select,
-.mobile-app-shell [contenteditable="true"] {
+.mobile-app-shell [contenteditable="true"],
+.mobile-app-shell [role="button"],
+.mobile-app-shell [role="link"],
+.mobile-app-shell [role="tab"],
+.mobile-app-shell [role="switch"],
+.mobile-app-shell [role="checkbox"],
+.mobile-app-shell [role="radio"],
+.mobile-app-shell [role="menuitem"] {
   touch-action: manipulation;
 }
 
@@ -79,8 +98,7 @@
   display: grid;
   min-width: 0;
   gap: var(--mobile-space-4);
-  padding: var(--mobile-space-6) var(--mobile-page-gutter)
-    calc(var(--mobile-action-bar-reserve) + var(--mobile-safe-bottom));
+  padding: var(--mobile-space-6) var(--mobile-page-gutter);
 }
 
 .mobile-page__title {
@@ -113,14 +131,11 @@
 }
 
 .mobile-safe-area-actions {
-  position: sticky;
-  bottom: 0;
-  z-index: 1;
+  position: static;
   display: flex;
   flex-wrap: wrap;
   gap: var(--mobile-space-3);
-  padding: var(--mobile-space-3) var(--mobile-page-gutter)
-    calc(var(--mobile-space-3) + var(--mobile-safe-bottom));
+  padding: var(--mobile-space-3) var(--mobile-page-gutter);
   background: var(--mobile-surface-raised);
   border-top: 1px solid var(--mobile-separator);
 }
