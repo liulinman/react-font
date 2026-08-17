@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>English World Mobile PWA — Key Screens</title>
+  <style>
+    :root { color-scheme: light dark; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif; }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 32px; background: #e9edf3; color: #111827; }
+    h1 { margin: 0 0 8px; font-size: 28px; }
+    .intro { margin: 0 0 28px; color: #64748b; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 28px; align-items: start; }
+    .screen { margin: 0; }
+    .screen .caption { margin-top: 12px; text-align: center; font-weight: 700; }
+    .phone { width: min(100%, 320px); height: 650px; margin: auto; overflow: hidden; position: relative; border: 7px solid #111827; border-radius: 38px; background: #f2f2f7; box-shadow: 0 18px 45px #0f172a26; }
+    .island { width: 92px; height: 24px; margin: 7px auto 3px; border-radius: 14px; background: #111827; }
+    .nav { min-height: 54px; padding: 8px 16px; display: flex; align-items: center; justify-content: space-between; background: #f9f9fbeF; border-bottom: 1px solid #d7d7dc; }
+    .nav strong { font-size: 20px; }
+    .nav span, .link, .play { color: #007aff; }
+    .content { padding: 12px 14px 90px; }
+    .search { min-height: 50px; display: flex; align-items: center; padding: 0 14px; border-radius: 14px; background: white; color: #8e8e93; font-size: 16px; }
+    .quick { margin: 10px 0 18px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .quick div { min-height: 62px; padding: 9px 4px; text-align: center; border-radius: 13px; background: white; font-size: 11px; }
+    .quick b { display: block; margin-bottom: 5px; color: #007aff; font-size: 18px; }
+    .section-title { margin: 15px 3px 7px; display: flex; justify-content: space-between; font-size: 13px; }
+    .group, .card { overflow: hidden; border-radius: 15px; background: white; }
+    .row { min-height: 62px; padding: 9px 13px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #e5e5ea; }
+    .row:last-child { border-bottom: 0; }
+    .row-main { min-width: 0; flex: 1; }
+    .row-main b, .row-main span { display: block; }
+    .row-main span { margin-top: 3px; overflow: hidden; color: #6b7280; font-size: 11px; white-space: nowrap; text-overflow: ellipsis; }
+    .dot { width: 9px; height: 9px; flex: 0 0 auto; border-radius: 50%; background: #ff9f0a; }
+    .dot.good { background: #34c759; }
+    .review-card { margin-top: 12px; padding: 15px; border-radius: 16px; background: white; }
+    .review-card h3 { margin: 4px 0; font-size: 18px; }
+    .review-card p { margin: 0; color: #6b7280; font-size: 12px; }
+    .tabs { position: absolute; inset: auto 0 0; height: 74px; padding: 9px 8px 17px; display: grid; grid-template-columns: repeat(4, 1fr); background: #f9f9fbed; border-top: 1px solid #d7d7dc; }
+    .tab { text-align: center; color: #6b7280; font-size: 10px; }
+    .tab b { display: block; margin-bottom: 3px; font-size: 19px; }
+    .tab.active { color: #007aff; }
+    .chips { padding: 10px 14px; display: flex; gap: 7px; overflow: hidden; }
+    .chip { padding: 6px 10px; border: 1px solid #d7d7dc; border-radius: 999px; background: white; color: #4b5563; font-size: 11px; white-space: nowrap; }
+    .chip.active, .mode { color: white; background: #007aff; border-color: #007aff; }
+    .alpha { padding: 7px 16px 4px; color: #6b7280; font-size: 11px; font-weight: 700; }
+    .progress { height: 4px; background: #dce0e6; }
+    .progress i { display: block; width: 38%; height: 100%; background: #007aff; }
+    .stage { padding: 22px 16px 120px; }
+    .meta { margin-bottom: 16px; display: flex; justify-content: space-between; color: #6b7280; font-size: 11px; }
+    .mode { padding: 4px 8px; border-radius: 999px; font-weight: 700; }
+    .question { min-height: 315px; padding: 28px 18px; text-align: center; border-radius: 20px; background: white; }
+    .question h2 { margin: 30px 0 7px; font-size: 32px; }
+    .question p { color: #6b7280; }
+    .audio { width: 54px; height: 54px; margin: 28px auto 18px; display: grid; place-items: center; border-radius: 50%; background: #eaf2ff; color: #007aff; font-size: 22px; }
+    .answer { width: 100%; height: 48px; margin-top: 12px; border: 1px solid #c7cbd1; border-radius: 12px; text-align: center; font: inherit; font-size: 16px; }
+    .actions { position: absolute; inset: auto 0 0; padding: 12px 16px 24px; background: #f9f9fbed; border-top: 1px solid #d7d7dc; }
+    .primary { width: 100%; min-height: 48px; border: 0; border-radius: 13px; background: #007aff; color: white; font-size: 16px; font-weight: 700; }
+    .steps { padding: 10px; display: flex; justify-content: center; gap: 6px; background: white; }
+    .step { width: 8px; height: 8px; border-radius: 999px; background: #cfd3d9; }
+    .step.done { background: #34c759; }
+    .step.active { width: 24px; background: #007aff; }
+    .reader { padding: 19px 18px 110px; background: white; }
+    .reader small { color: #6b7280; }
+    .reader h2 { margin: 8px 0 18px; font: 700 24px/1.2 Georgia, serif; }
+    .reader p { margin: 0 0 14px; font: 16px/1.65 Georgia, serif; }
+    .mark { padding: 0 2px; border-radius: 3px; background: #fff0a7; }
+    .dual-actions { position: absolute; inset: auto 16px 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .secondary { min-height: 46px; border: 0; border-radius: 12px; background: #e5e5ea; font-weight: 650; }
+    @media (prefers-color-scheme: dark) { body { background: #111827; color: #f8fafc; } }
+    @media (max-width: 520px) { body { padding: 20px 12px; } }
+  </style>
+</head>
+<body>
+  <h1>English World Mobile PWA</h1>
+  <p class="intro">Approved key-screen directions. Detailed behavior and remaining screens are governed by DESIGN.md and EXPERIENCE.md.</p>
+  <div class="grid">
+    <div class="screen">
+      <div class="phone">
+        <div class="island"></div><div class="nav"><strong>查词与词库</strong><span>LL</span></div>
+        <div class="content"><div class="search">⌕　输入英文单词或中文释义</div><div class="quick"><div><b>＋</b>手动添加</div><div><b>AI</b>智能补全</div><div><b>⇧</b>批量导入</div></div><div class="section-title"><b>最近查看</b><span class="link">查看全部</span></div><div class="group"><div class="row"><i class="dot"></i><div class="row-main"><b>abandon</b><span>放弃；遗弃 · 一般</span></div><span class="play">▶</span><span>›</span></div><div class="row"><i class="dot good"></i><div class="row-main"><b>significant</b><span>重要的；显著的 · 熟练</span></div><span class="play">▶</span><span>›</span></div></div><div class="review-card"><small>今日学习</small><h3>18 个单词等待复习</h3><p>预计 8 分钟 · 薄弱词优先</p></div></div>
+        <div class="tabs"><div class="tab active"><b>⌂</b>学习</div><div class="tab"><b>▤</b>词库</div><div class="tab"><b>▦</b>工具</div><div class="tab"><b>●</b>我的</div></div>
+      </div><div class="caption">学习首页 · 搜索优先</div>
+    </div>
+    <div class="screen">
+      <div class="phone">
+        <div class="island"></div><div class="nav"><strong>词库</strong><span>＋ 添加</span></div><div class="search" style="margin:5px 14px">⌕　搜索单词、释义或笔记</div><div class="chips"><span class="chip active">全部 428</span><span class="chip">待复习</span><span class="chip">雅思核心</span></div><div class="alpha">A</div><div class="group"><div class="row"><i class="dot"></i><div class="row-main"><b>abandon</b><span>/əˈbændən/ · 放弃；遗弃</span></div><span class="play">▶</span><span>›</span></div><div class="row"><i class="dot good"></i><div class="row-main"><b>ability</b><span>/əˈbɪləti/ · 能力；才能</span></div><span class="play">▶</span><span>›</span></div><div class="row"><i class="dot"></i><div class="row-main"><b>abrupt</b><span>/əˈbrʌpt/ · 突然的；唐突的</span></div><span class="play">▶</span><span>›</span></div></div>
+        <div class="tabs"><div class="tab"><b>⌂</b>学习</div><div class="tab active"><b>▤</b>词库</div><div class="tab"><b>▦</b>工具</div><div class="tab"><b>●</b>我的</div></div>
+      </div><div class="caption">词库 · 紧凑列表＋独立详情页</div>
+    </div>
+    <div class="screen">
+      <div class="phone">
+        <div class="island"></div><div class="nav"><span>‹ 退出</span><strong style="font-size:16px">今日复习</strong><span>3 / 18</span></div><div class="progress"><i></i></div><div class="stage"><div class="meta"><span class="mode">英 → 中</span><span>预计剩余 6 分钟</span></div><div class="question"><small>回忆这个单词的含义</small><h2>abandon</h2><p>/əˈbændən/</p><div class="audio">▶</div><input class="answer" placeholder="输入中文释义"></div></div><div class="actions"><button class="primary">确认答案</button></div>
+      </div><div class="caption">复习 · 单题全屏阶段</div>
+    </div>
+    <div class="screen">
+      <div class="phone">
+        <div class="island"></div><div class="nav"><span>‹ 任务</span><strong style="font-size:16px">文章阅读</strong><span>•••</span></div><div class="steps"><i class="step done"></i><i class="step active"></i><i class="step"></i><i class="step"></i></div><div class="reader"><small>IELTS · Environment · Band 7</small><h2>Why Cities Need More Quiet Spaces</h2><p>Modern cities are designed around movement, yet few places allow people to pause.</p><p>The effect is especially <span class="mark">significant</span> for learners who need to <span class="mark">retain</span> complex information.</p></div><div class="dual-actions"><button class="secondary">查看标记词 2</button><button class="primary">开始答题</button></div>
+      </div><div class="caption">Context Lab · 页面逐层推进</div>
+    </div>
+  </div>
+</body>
+</html>
