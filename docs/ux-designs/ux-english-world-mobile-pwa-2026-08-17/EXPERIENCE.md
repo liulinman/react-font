@@ -44,7 +44,7 @@ The product inherits iOS conventions for system gestures, navigation, safe areas
 | Memory map `/mobile/tools/memory-map` | Tools / word detail | Memory summary, clusters, one word's learning journey. |
 | Statistics `/mobile/tools/stats` | Tools / cockpit | Summary, timeline, trends, accessible chart explanations. |
 | Bulk import `/mobile/tools/bulk-import` | Home / Tools | Choose/paste source, validate, preview, resolve conflicts, import. |
-| Overwrite stats `/mobile/tools/overwrite-stats` | Tools | Preview and explicitly execute statistics overwrite. |
+| Coverage statistics `/mobile/tools/overwrite-stats` | Tools | Browse words ranked by overwrite count and open the related word; this surface is read-only. |
 | Account `/mobile/me` | `我的` | Identity, sign out, notifications, settings, appearance, PWA status. |
 | Notifications `/mobile/me/notifications` | Account / unread badge | Browse/mark in-app notifications read; no system-push permission flow. |
 | Settings `/mobile/me/settings` | Account | System and learning preferences. |
@@ -120,7 +120,7 @@ Visual specs live in `DESIGN.md.Components`; names are exact cross-spine contrac
 | Empty | `empty-state` with reason and one valid next action. |
 | Request failure | Keep cached data and all input; local `status-banner` with retry. |
 | Offline | Shell/recent reads work; drafts and answers persist. AI, fresh stats, new tasks, uploads, submissions require connection. |
-| Reconnected | Announce and offer resume/submit. Never auto-replay delete, overwrite, or import confirmation. |
+| Reconnected | Announce and offer resume/submit. Never auto-replay delete, overwrite-existing import, or another destructive confirmation. |
 | Permission/file failure | Name denied permission or invalid type/size/upload beside `file-picker`; preserve form. |
 | Focus/keyboard | Visible focus, 16px+ editable type, active field/action above visual keyboard. |
 | Mutation | Disable initiating action, show busy, prevent duplicates, warn before abandoning risky work. |
@@ -256,13 +256,13 @@ Failure: permission/type/parse/network failure preserves source and decisions, n
 
 Failure: offline keeps cached figures labeled stale, text summaries readable, and waits for explicit refresh.
 
-### Flow 8 — Overwrite statistics safely (小林, correcting imported history)
+### Flow 8 — Inspect coverage frequency (小林, finding repeatedly replaced words)
 
-1. He enters supported data, resolves validation, and reviews an exact preview/diff.
-2. A confirmation sheet repeats scope/irreversibility; he confirms online.
-3. **Climax:** success reports affected counts and links to refreshed Statistics.
+1. He opens Coverage statistics and sees words sorted by `englishOverwriteCount`.
+2. He pages through compact rows and compares mastery, type, part of speech, and overwrite count.
+3. **Climax:** he opens a repeatedly replaced word and chooses the appropriate review or maintenance action.
 
-Failure: offline blocks execution; server failure retains preview and requires fresh confirmation; SW never queues overwrite.
+Failure: offline shows the latest cached page labeled stale; an uncached page requires network and keeps the current filters/page selection.
 
 ### Flow 9 — Notifications, settings, appearance, and PWA update (小林, finishing study)
 

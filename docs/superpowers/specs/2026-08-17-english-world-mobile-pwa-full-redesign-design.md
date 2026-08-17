@@ -1,7 +1,7 @@
 # English World Full Mobile PWA Redesign
 
 Date: 2026-08-17
-Status: approved design, pending written review
+Status: approved
 
 ## Goal
 
@@ -87,7 +87,7 @@ The mobile shell has four persistent bottom destinations.
 | Memory map | `/mobile/tools/memory-map` |
 | English statistics | `/mobile/tools/stats` |
 | Bulk import | `/mobile/tools/bulk-import` |
-| Overwrite statistics | `/mobile/tools/overwrite-stats` |
+| Coverage statistics (words ranked by overwrite count) | `/mobile/tools/overwrite-stats` |
 | System settings | `/mobile/me/settings` |
 | Theme settings | `/mobile/me/appearance` |
 | Notification inbox | `/mobile/me/notifications` |
