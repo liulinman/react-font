@@ -104,6 +104,8 @@ describe("english world mobile foundation routes", () => {
     cy.wait("@currentUser");
 
     cy.location("pathname").should("eq", "/mobile");
+    cy.location("search").should("eq", "");
+    cy.window().its("history.state.idx").should("eq", 0);
     expectMobileShell("学习");
   });
 
