@@ -10,11 +10,13 @@ import { OverwriteStatsPage } from "@/page/englishWorld/overwriteStats/Overwrite
 import { RecitePage } from "@/page/englishWorld/recite/RecitePage";
 import { MixedLearningSessionPage } from "@/page/englishWorld/learning/session/MixedLearningSessionPage";
 import { WordAgentTab } from "@/page/englishWorld/component/WordAgentTab";
-import EnglishWorldMobile from "@/page/englishWorldMobile/EnglishWorldMobile";
 import Login from "@/page/login/Login";
 import { ProtectedRoute } from "@font/ui";
 import { useAuth } from "@/contexts/AuthContext";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { MobileAppShell } from "@/page/englishWorldMobile/app/MobileAppShell";
+import { MobileProtectedRoute } from "@/page/englishWorldMobile/app/MobileProtectedRoute";
+import { MobileRouteFallback } from "@/page/englishWorldMobile/app/MobileRouteFallback";
+import { mobileRouteConfig } from "@/page/englishWorldMobile/app/mobileRouteConfig";
 
 function ProtectedWrapper({ children }: { children: React.ReactNode }) {
   const auth = useAuth();
@@ -144,13 +146,18 @@ export const router = createBrowserRouter([
   },
   {
     path: "/englishWorldMobile",
+    element: <Navigate to="/mobile" replace />,
+  },
+  {
+    path: "/mobile",
     element: (
-      <ErrorBoundary>
-        <ProtectedWrapper>
-          <EnglishWorldMobile />
-        </ProtectedWrapper>
-      </ErrorBoundary>
+      <MobileProtectedRoute>
+        <MobileRouteFallback>
+          <MobileAppShell />
+        </MobileRouteFallback>
+      </MobileProtectedRoute>
     ),
+    children: mobileRouteConfig,
   },
   { path: "*", element: <Navigate to="/login" replace /> },
 ]);
