@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Form, Input, Button, Card, Tabs, message } from "antd";
 import { UserOutlined, LockOutlined } from "@ant-design/icons";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import MobileLoginForm from "./MobileLoginForm";
 import "./Login.css";
 
 const { TabPane } = Tabs;
@@ -26,11 +27,34 @@ const LOGIN_POINTS = [
   },
 ];
 
-type LocationState = {
+export type LocationState = {
   from?: {
     pathname?: string;
+    search?: string;
+    hash?: string;
   };
 };
+
+export function isMobileLoginSurface(state: LocationState | null): boolean {
+  const from = state?.from?.pathname ?? "";
+  if (from.startsWith("/mobile")) return true;
+
+  return typeof window !== "undefined"
+    && typeof window.matchMedia === "function"
+    && window.matchMedia("(display-mode: standalone)").matches;
+}
+
+export function resolveAfterLoginPath(
+  state: LocationState | null,
+  mobileSurface: boolean,
+): string {
+  const from = state?.from;
+  if (from?.pathname) {
+    return `${from.pathname}${from.search ?? ""}${from.hash ?? ""}`;
+  }
+
+  return mobileSurface ? "/mobile" : DEFAULT_AFTER_LOGIN_PATH;
+}
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -38,35 +62,49 @@ const Login: React.FC = () => {
   const { login, register, isAuthenticated } = useAuth();
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<string>("login");
+  const hasNavigatedRef = useRef(false);
+  const locationState = location.state as LocationState | null;
+  const mobileSurface = isMobileLoginSurface(locationState);
+  const afterLoginPath = resolveAfterLoginPath(locationState, mobileSurface);
+
+  const navigateAfterLogin = useCallback(() => {
+    if (hasNavigatedRef.current) return;
+    hasNavigatedRef.current = true;
+    navigate(afterLoginPath, { replace: true });
+  }, [afterLoginPath, navigate]);
 
   // 如果已登录，跳转到原页面或首页
   useEffect(() => {
     if (isAuthenticated) {
-      const from =
-        (location.state as LocationState | null)?.from?.pathname ||
-        DEFAULT_AFTER_LOGIN_PATH;
-      navigate(from, { replace: true });
+      navigateAfterLogin();
     }
-  }, [isAuthenticated, navigate, location]);
+  }, [isAuthenticated, navigateAfterLogin]);
+
+  const authenticate = async (values: { username: string; password: string }) => {
+    setLoading(true);
+    try {
+      await login(values.username, values.password);
+      navigateAfterLogin();
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // 登录表单提交
   const handleLogin = async (values: {
     username: string;
     password: string;
   }) => {
-    setLoading(true);
     try {
-      await login(values.username, values.password);
-      const from =
-        (location.state as LocationState | null)?.from?.pathname ||
-        DEFAULT_AFTER_LOGIN_PATH;
-      navigate(from, { replace: true });
+      await authenticate(values);
     } catch (error) {
       // 错误已在 AuthContext 中处理
       console.error("Login failed:", error);
-    } finally {
-      setLoading(false);
     }
+  };
+
+  const handleMobileLogin = async (values: { username: string; password: string }) => {
+    await authenticate(values);
   };
 
   // 注册表单提交
@@ -94,6 +132,28 @@ const Login: React.FC = () => {
       setLoading(false);
     }
   };
+
+  const handleMobileRegister = async (values: {
+    username: string;
+    password: string;
+  }) => {
+    setLoading(true);
+    try {
+      await register(values.username, values.password);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (mobileSurface) {
+    return (
+      <MobileLoginForm
+        busy={loading}
+        onLogin={handleMobileLogin}
+        onRegister={handleMobileRegister}
+      />
+    );
+  }
 
   return (
     <div className="login-container login-workspace">

@@ -488,6 +488,118 @@
   letter-spacing: 0.04em;
 }
 
+.mobile-login {
+  box-sizing: border-box;
+  display: grid;
+  min-height: 100dvh;
+  place-items: center;
+  padding:
+    max(24px, env(safe-area-inset-top))
+    max(20px, env(safe-area-inset-right))
+    max(24px, env(safe-area-inset-bottom))
+    max(20px, env(safe-area-inset-left));
+  background: linear-gradient(160deg, #eff6ff 0%, #f8fafc 44%, #ecfdf5 100%);
+  color: #0f172a;
+}
+
+.mobile-login__surface {
+  width: min(100%, 420px);
+  padding: 28px 20px;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.12);
+}
+
+.mobile-login__brand {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border-radius: 13px;
+  background: linear-gradient(135deg, #2563eb, #14b8a6);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.mobile-login__eyebrow {
+  margin: 20px 0 5px;
+  color: #2563eb;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+.mobile-login h1 {
+  margin: 0;
+  font-size: 30px;
+  letter-spacing: -0.03em;
+}
+
+.mobile-login__description {
+  margin: 10px 0 22px;
+  color: #64748b;
+  font-size: 16px;
+  line-height: 1.55;
+}
+
+.mobile-login__switch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 24px;
+  padding: 4px;
+  border-radius: 14px;
+  background: #f1f5f9;
+}
+
+.mobile-login .mobile-login__switch-button {
+  min-height: 44px;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.mobile-login__field {
+  margin-bottom: 17px;
+}
+
+.mobile-login__field label {
+  display: block;
+  margin-bottom: 7px;
+  color: #334155;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.mobile-login__field .adm-input {
+  min-height: 48px;
+  padding: 0 13px;
+  border: 1px solid #cbd5e1;
+  border-radius: 13px;
+  background: #f8fafc;
+}
+
+.mobile-login__field .adm-input input {
+  font-size: 16px;
+}
+
+.mobile-login__field [role="alert"] {
+  display: block;
+  margin-top: 6px;
+  color: #e11d48;
+  font-size: 14px;
+}
+
+.mobile-login__submit {
+  min-height: 48px;
+  margin-top: 7px;
+  border-radius: 13px;
+  font-size: 16px;
+  font-weight: 800;
+}
+
 @media (max-width: 900px) {
   .login-container {
     align-items: flex-start;
