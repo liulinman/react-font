@@ -28,5 +28,10 @@
   "packageManager": "pnpm@10.8.1",
   "engines": {
     "node": ">=18"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "sharp"
+    ]
   }
 }

@@ -37,12 +37,25 @@ export default defineConfig({
         ],
       },
       workbox: {
-        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
+        globPatterns: [
+          "index.html",
+          "assets/app-shell-*.js",
+          "assets/index-*.css",
+          "assets/workbox-window*.js",
+        ],
         navigateFallback: "/index.html",
         runtimeCaching: [],
       },
     }),
   ],
+  build: {
+    manifest: true,
+    rollupOptions: {
+      output: {
+        entryFileNames: "assets/app-shell-[hash].js",
+      },
+    },
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "src"),
