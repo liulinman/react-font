@@ -161,10 +161,13 @@ describe("MobileWordLibraryPage", () => {
     renderLibrary();
 
     await screen.findByRole("link", { name: /retain/ });
+    expect(screen.getByRole("link", { name: /retain/ }).closest("article")).toHaveAttribute("data-selection-mode", "false");
     await user.click(screen.getByRole("button", { name: "选择" }));
     await user.click(screen.getByRole("checkbox", { name: "选择 retain" }));
 
     expect(screen.getByRole("toolbar", { name: "已选择 1 个词" })).toBeVisible();
+    expect(screen.getByRole("link", { name: /retain/ }).closest("article")).toHaveAttribute("data-selection-mode", "true");
+    expect(screen.getByRole("toolbar", { name: "已选择 1 个词" })).toHaveClass("mobile-word-selection-bar");
     expect(screen.getByRole("button", { name: "全选当前页" })).toBeVisible();
     expect(screen.getByRole("button", { name: "使用当前筛选结果" })).toBeVisible();
   });

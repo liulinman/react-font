@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useInfiniteQuery, useQueryClient, type InfiniteData } from "@tanstack/react-query";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { PullToRefresh } from "antd-mobile";
@@ -158,12 +158,13 @@ export function MobileWordLibraryPage() {
   const selectedIds = selection.mode === "ids" ? selection.wordIds : words.map((word) => word.id);
   const selectedCount = selection.mode === "current-filter" ? selection.expectedTotal : selectedIds.length;
 
-  const applyFilters = (next: MobileWordUrlFilters) => {
+  const closeFilters = useCallback(() => setFilterOpen(false), []);
+  const applyFilters = useCallback((next: MobileWordUrlFilters) => {
     setFilterOpen(false);
     setSelection({ mode: "ids", wordIds: [] });
     setSearchDraft(next.q ?? "");
     setSearchParams(updateSearchParams(searchParams, next), { replace: true });
-  };
+  }, [searchParams, setSearchParams]);
 
   const submitSearch = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -196,10 +197,11 @@ export function MobileWordLibraryPage() {
       page: 1,
       pageSize: selection.expectedTotal,
     });
-    if (result.total !== selection.expectedTotal || dedupeWords(result.list).length !== selection.expectedTotal) {
+    const uniqueWords = dedupeWords(result.list);
+    if (result.total !== selection.expectedTotal || uniqueWords.length !== selection.expectedTotal) {
       throw new Error("筛选结果已变化，请重新选择。");
     }
-    return { ids: result.list.map((word) => word.id), words: result.list };
+    return { ids: uniqueWords.map((word) => word.id), words: uniqueWords };
   };
 
   const handleSelectionAction = async (
@@ -278,10 +280,10 @@ export function MobileWordLibraryPage() {
   const cachedContent = words.length > 0;
   const refreshWords = async () => {
     const result = await query.refetch({ cancelRefetch: true });
-    if (result.isError && cachedContent) setAlert("刷新失败，正在显示缓存内容。请检查网络后重试。");
+    if (!result.isError) setAlert(null);
   };
   return (
-    <MobilePage className="mobile-word-library-page" title="词库">
+    <MobilePage className="mobile-word-library-page" data-selection-mode={selectionMode ? "true" : "false"} title="词库">
       <form aria-label="搜索词库" onSubmit={submitSearch} role="search">
         <label htmlFor="mobile-library-search">搜索英语单词、中文释义或类型/掌握标签</label>
         <input id="mobile-library-search" onChange={(event) => setSearchDraft(event.target.value)} type="search" value={searchDraft} />
@@ -290,12 +292,12 @@ export function MobileWordLibraryPage() {
         <button onClick={() => setSelectionMode((current) => !current)} type="button">{selectionMode ? "取消选择" : "选择"}</button>
       </form>
 
-      {filterOpen && <MobileWordFiltersSheet filters={filters} onApply={applyFilters} onClose={() => setFilterOpen(false)} open returnFocusRef={filterTriggerRef} />}
+      {filterOpen && <MobileWordFiltersSheet filters={filters} onApply={applyFilters} onClose={closeFilters} open returnFocusRef={filterTriggerRef} />}
       {alert && <p role="alert">{alert}</p>}
-      {query.isError && cachedContent && <button onClick={() => void refreshWords()} type="button">重试刷新</button>}
+      {query.isError && cachedContent && <MobileStateView action={<button onClick={() => void refreshWords()} type="button">重试刷新</button>} message="刷新失败，正在显示缓存内容，内容可能不是最新。" state="error" />}
       {!online && cachedContent && <p>当前离线，正在显示已缓存的词库内容。</p>}
       {query.isPending && <MobileStateView state="loading" />}
-      {query.isError && !cachedContent && <MobileStateView message="词库暂时无法加载，请稍后重试。" state={online ? "error" : "offline"} />}
+      {query.isError && !cachedContent && <MobileStateView action={<button onClick={() => void refreshWords()} type="button">重试加载</button>} message="词库暂时无法加载，请检查网络后重试。" state={online ? "error" : "offline"} />}
       {!query.isPending && !query.isError && !words.length && <MobileStateView message="还没有符合条件的单词。" state="empty" />}
       <PullToRefresh onRefresh={refreshWords}>
         {words.map((word) => (

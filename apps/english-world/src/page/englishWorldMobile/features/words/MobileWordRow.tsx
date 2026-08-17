@@ -30,7 +30,7 @@ export function MobileWordRow({
   const mastery = getLevelLabel(word.englishLevel);
 
   return (
-    <article className="mobile-word-row">
+    <article className="mobile-word-row" data-selection-mode={selectionMode ? "true" : "false"}>
       {selectionMode && (
         <label className="mobile-word-row__selection">
           <input
