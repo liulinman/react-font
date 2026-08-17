@@ -4,10 +4,19 @@ import { fileURLToPath } from "node:url";
 
 const appRoot = fileURLToPath(new URL("../", import.meta.url));
 const distRoot = fileURLToPath(new URL("../dist/", import.meta.url));
+const rootPackage = JSON.parse(
+  await readFile(new URL("../../../package.json", import.meta.url), "utf8"),
+);
 const html = await readFile(new URL("../dist/index.html", import.meta.url), "utf8");
 const serviceWorker = await readFile(new URL("../dist/sw.js", import.meta.url), "utf8");
 const scriptUrls = [...html.matchAll(/<script[^>]+src="\/([^"]+)"/g)].map((match) => match[1]);
 const styleUrls = [...html.matchAll(/<link[^>]+href="\/([^"]+\.css)"/g)].map((match) => match[1]);
+
+assert.equal(
+  rootPackage.engines?.node,
+  "^20.19.0 || >=22.12.0",
+  "root Node engine must match the supported Vite, Workbox, Vitest, and jsdom runtime",
+);
 
 assert.equal(scriptUrls.length, 1, "index.html must load exactly one module entry");
 const entryUrl = scriptUrls[0];

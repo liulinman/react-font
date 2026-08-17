@@ -1,9 +1,29 @@
 import "@testing-library/jest-dom/vitest";
+import "antd-mobile/es/global";
 import type { ReactNode } from "react";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { RouterProvider, useLocation, useParams } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { MobileActivityLockProvider } from "@/page/englishWorldMobile/offline/MobileActivityLockContext";
+import {
+  PwaUpdateProvider,
+  type PwaRegistrationAdapter,
+} from "@/page/englishWorldMobile/pwa/PwaUpdateContext";
 import { router } from "./router";
+
+const registration: PwaRegistrationAdapter = {
+  register: () => () => undefined,
+};
+
+function renderRouter() {
+  return render(
+    <MobileActivityLockProvider>
+      <PwaUpdateProvider registration={registration}>
+        <RouterProvider router={router} />
+      </PwaUpdateProvider>
+    </MobileActivityLockProvider>,
+  );
+}
 
 const authState = {
   isAuthenticated: true,
@@ -96,7 +116,7 @@ describe("application router mobile branch", () => {
   });
 
   it("replaces the legacy mobile entry with the lazy four-tab application", async () => {
-    render(<RouterProvider router={router} />);
+    renderRouter();
 
     await router.navigate("/englishWorldMobile");
 
@@ -107,7 +127,7 @@ describe("application router mobile branch", () => {
 
   it("hands an unauthenticated mobile deep link to login without the desktop spinner", async () => {
     authState.isAuthenticated = false;
-    render(<RouterProvider router={router} />);
+    renderRouter();
 
     await router.navigate("/mobile/words");
 
@@ -129,7 +149,7 @@ describe("application router desktop branch", () => {
   });
 
   it("preserves plain desktop pages and the learning-session parameter", async () => {
-    render(<RouterProvider router={router} />);
+    renderRouter();
 
     for (const [path, content] of [
       ["/englishWorld", "english-world-page:/englishWorld"],
@@ -145,7 +165,7 @@ describe("application router desktop branch", () => {
   });
 
   it("preserves every desktop layout active key and child page", async () => {
-    render(<RouterProvider router={router} />);
+    renderRouter();
 
     for (const [path, activeKey, content] of [
       ["/englishWorld/ai-word", "aiWord", "ai-word-page"],
@@ -168,7 +188,7 @@ describe("application router desktop branch", () => {
 
   it("preserves the desktop auth redirect and source location", async () => {
     authState.isAuthenticated = false;
-    render(<RouterProvider router={router} />);
+    renderRouter();
 
     await router.navigate("/englishWorld/settings");
 

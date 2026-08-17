@@ -1,18 +1,6 @@
 :root {
-  --mobile-surface-base: #f2f2f7;
-  --mobile-surface-raised: #ffffff;
-  --mobile-surface-sunken: #e5e5ea;
-  --mobile-ink-primary: #000000;
-  --mobile-ink-secondary: #3c3c43;
-  --mobile-ink-tertiary: #8e8e93;
-  --mobile-separator: #c6c6c8;
-  --mobile-accent: #007aff;
   --mobile-on-accent: #ffffff;
-  --mobile-success: #248a3d;
-  --mobile-warning: #b25000;
-  --mobile-destructive: #d70015;
   --mobile-on-destructive: #ffffff;
-  --mobile-focus-ring: #005fcc;
   --mobile-scrim: #00000066;
   --mobile-font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
   --mobile-page-gutter: 16px;
@@ -33,19 +21,34 @@
   --mobile-tab-bar-height: 49px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --mobile-surface-base: #000000;
-    --mobile-surface-raised: #1c1c1e;
-    --mobile-surface-sunken: #2c2c2e;
-    --mobile-ink-primary: #ffffff;
-    --mobile-ink-secondary: #ebebf5;
-    --mobile-ink-tertiary: #8e8e93;
-    --mobile-separator: #38383a;
-    --mobile-accent: #0a84ff;
-    --mobile-success: #30d158;
-    --mobile-warning: #ffd60a;
-    --mobile-destructive: #ff453a;
-    --mobile-focus-ring: #64d2ff;
-  }
+html[data-theme="light"] {
+  color-scheme: light;
+  --mobile-surface-base: #f2f2f7;
+  --mobile-surface-raised: #ffffff;
+  --mobile-surface-sunken: #e5e5ea;
+  --mobile-ink-primary: #000000;
+  --mobile-ink-secondary: #3c3c43;
+  --mobile-ink-tertiary: #8e8e93;
+  --mobile-separator: #c6c6c8;
+  --mobile-accent: #007aff;
+  --mobile-success: #248a3d;
+  --mobile-warning: #b25000;
+  --mobile-destructive: #d70015;
+  --mobile-focus-ring: #005fcc;
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --mobile-surface-base: #000000;
+  --mobile-surface-raised: #1c1c1e;
+  --mobile-surface-sunken: #2c2c2e;
+  --mobile-ink-primary: #ffffff;
+  --mobile-ink-secondary: #ebebf5;
+  --mobile-ink-tertiary: #8e8e93;
+  --mobile-separator: #38383a;
+  --mobile-accent: #0a84ff;
+  --mobile-success: #30d158;
+  --mobile-warning: #ffd60a;
+  --mobile-destructive: #ff453a;
+  --mobile-focus-ring: #64d2ff;
 }

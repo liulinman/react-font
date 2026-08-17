@@ -16,7 +16,6 @@
   overflow-x: clip;
   color: var(--mobile-ink-primary);
   background: var(--mobile-surface-base);
-  color-scheme: light dark;
   font-family: var(--mobile-font-family);
 }
 

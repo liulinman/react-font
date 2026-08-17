@@ -1,6 +1,7 @@
 import "@testing-library/jest-dom/vitest";
-import { act, cleanup, render, screen } from "@testing-library/react";
+import { act, cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { renderToString } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   MobileActivityLockContext,
@@ -45,9 +46,11 @@ function StatusProbe() {
 function Harness({
   activityLocked,
   registration,
+  showStatus = false,
 }: {
   activityLocked: boolean;
   registration: PwaRegistrationAdapter;
+  showStatus?: boolean;
 }) {
   const activityLock: MobileActivityLockValue = {
     locked: activityLocked,
@@ -59,6 +62,7 @@ function Harness({
     <MobileActivityLockContext.Provider value={activityLock}>
       <PwaUpdateProvider registration={registration}>
         <PwaUpdatePrompt />
+        {showStatus ? <PwaUpdateStatusSurface /> : null}
       </PwaUpdateProvider>
     </MobileActivityLockContext.Provider>
   );
@@ -92,6 +96,55 @@ describe("PwaUpdateProvider", () => {
 
     expect(registration.activate).toHaveBeenCalledOnce();
     expect(registration.activate).toHaveBeenCalledWith(true);
+  });
+
+  it("fails loudly when the shell prompt is rendered without its provider", () => {
+    expect(() => renderToString(<PwaUpdatePrompt />)).toThrow(
+      "usePwaUpdate must be used inside PwaUpdateProvider",
+    );
+  });
+
+  it("dismisses only the shell prompt while the application page keeps the ready update", async () => {
+    const user = userEvent.setup();
+    const registration = createRegistration();
+    render(
+      <Harness
+        activityLocked={false}
+        registration={registration.adapter}
+        showStatus
+      />,
+    );
+
+    act(() => registration.updateAvailable());
+    const prompt = screen.getByRole("status");
+    await user.click(within(prompt).getByRole("button", { name: "稍后" }));
+
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+    const applicationSurface = screen
+      .getByRole("heading", { name: "应用更新" })
+      .closest("section")!;
+    expect(within(applicationSurface).getByText("新版本已准备好")).toBeVisible();
+    await user.click(
+      within(applicationSurface).getByRole("button", { name: "立即更新" }),
+    );
+    expect(registration.activate).toHaveBeenCalledOnce();
+    expect(registration.activate).toHaveBeenCalledWith(true);
+  });
+
+  it("shows the shell prompt again for the next refresh-ready event", async () => {
+    const user = userEvent.setup();
+    const registration = createRegistration();
+    render(<Harness activityLocked={false} registration={registration.adapter} />);
+
+    act(() => registration.updateAvailable());
+    await user.click(
+      within(screen.getByRole("status")).getByRole("button", { name: "稍后" }),
+    );
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+
+    act(() => registration.updateAvailable());
+    expect(screen.getByRole("status")).toBeVisible();
+    expect(registration.activate).not.toHaveBeenCalled();
   });
 
   it("reports when the application becomes available offline", () => {

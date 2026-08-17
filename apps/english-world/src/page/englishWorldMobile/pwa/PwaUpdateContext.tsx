@@ -33,6 +33,7 @@ const browserRegistration: PwaRegistrationAdapter = {
 export type PwaUpdateValue = {
   status: "idle" | "ready" | "offline-ready";
   locked: boolean;
+  refreshRequestId: number;
   applyUpdate(): void;
 };
 
@@ -44,12 +45,16 @@ export function PwaUpdateProvider({ children, registration = browserRegistration
 }) {
   const { locked } = useMobileActivityLockContext();
   const [status, setStatus] = useState<PwaUpdateValue["status"]>("idle");
+  const [refreshRequestId, setRefreshRequestId] = useState(0);
   const updateAction = useRef<PwaUpdateAction | null>(null);
 
   useEffect(() => {
     if (!registration) return;
     updateAction.current = registration.register({
-      onNeedRefresh: () => setStatus("ready"),
+      onNeedRefresh: () => {
+        setStatus("ready");
+        setRefreshRequestId((current) => current + 1);
+      },
       onOfflineReady: () => setStatus("offline-ready"),
     });
   }, [registration]);
@@ -61,8 +66,8 @@ export function PwaUpdateProvider({ children, registration = browserRegistration
   }, [locked, status]);
 
   const value = useMemo<PwaUpdateValue>(
-    () => ({ status, locked, applyUpdate }),
-    [applyUpdate, locked, status],
+    () => ({ status, locked, refreshRequestId, applyUpdate }),
+    [applyUpdate, locked, refreshRequestId, status],
   );
 
   return (
@@ -81,18 +86,21 @@ export function usePwaUpdate() {
 }
 
 export function PwaUpdatePrompt() {
-  const value = useContext(PwaUpdateContext);
+  const { applyUpdate, locked, refreshRequestId, status } = usePwaUpdate();
+  const [dismissedRequestId, setDismissedRequestId] = useState<number | null>(null);
 
-  if (!value) return null;
-
-  const { applyUpdate, locked, status } = value;
-
-  if (status !== "ready") return null;
+  if (status !== "ready" || dismissedRequestId === refreshRequestId) return null;
 
   return (
     <aside aria-live="polite" className="mobile-state-view" role="status">
       <strong>新版本已准备好</strong>
       {locked ? <p>学习活动进行中，完成后可更新</p> : null}
+      <button
+        onClick={() => setDismissedRequestId(refreshRequestId)}
+        type="button"
+      >
+        稍后
+      </button>
       <button disabled={locked} onClick={applyUpdate} type="button">
         立即更新
       </button>

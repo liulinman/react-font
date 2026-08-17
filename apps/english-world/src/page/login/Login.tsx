@@ -4,6 +4,7 @@ import { UserOutlined, LockOutlined } from "@ant-design/icons";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import MobileLoginForm from "./MobileLoginForm";
+import "../englishWorldMobile/styles/mobile-tokens.css";
 import "./Login.css";
 
 const { TabPane } = Tabs;
