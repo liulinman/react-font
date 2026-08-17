@@ -31,6 +31,7 @@ export function MobileAppShell() {
         <div aria-label="主要导航" role="tablist">
           <TabBar
             activeKey={activeKey}
+            safeArea
             onChange={(key) => {
               const destination = MOBILE_TABS.find((item) => item.key === key);
               if (destination) {

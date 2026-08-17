@@ -34,6 +34,9 @@ describe("MobileAppShell", () => {
       "我的",
     ]);
     expect(screen.getByRole("tablist", { name: "主要导航" })).toBeInTheDocument();
+    expect(
+      document.querySelector(".adm-safe-area-position-bottom"),
+    ).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "词库" })).toHaveAttribute(
       "aria-selected",
       "true",
