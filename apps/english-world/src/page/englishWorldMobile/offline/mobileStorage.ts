@@ -220,6 +220,16 @@ class MobileStorageRepository implements MobileStorage {
     }
   }
 
+  private async write(operation: (database: MobileStorageDb) => Promise<void>) {
+    await operation(this.memory);
+    if (this.fallback) return;
+    try {
+      await operation(this.primary);
+    } catch {
+      this.fallback = true;
+    }
+  }
+
   async getDraft<T>(userId: number, kind: MobileDraftKind, key: string): Promise<T | null> {
     const record = await this.access((database) => database.get("drafts", [userId, kind, key]));
     return isStoredDraft(record, userId, kind, key) ? record.value as T : null;
@@ -227,11 +237,11 @@ class MobileStorageRepository implements MobileStorage {
 
   async putDraft<T>(record: MobileDraftRecord<T>) {
     const stored: StoredDraft = { ...record, version: RECORD_VERSION };
-    await this.access((database) => database.put("drafts", stored));
+    await this.write((database) => database.put("drafts", stored));
   }
 
   async deleteDraft(userId: number, kind: MobileDraftKind, key: string) {
-    await this.access((database) => database.delete("drafts", [userId, kind, key]));
+    await this.write((database) => database.delete("drafts", [userId, kind, key]));
   }
 
   async getSnapshot<T>(userId: number, key: string): Promise<T | null> {
@@ -248,11 +258,11 @@ class MobileStorageRepository implements MobileStorage {
       updatedAt: new Date().toISOString(),
       value,
     };
-    await this.access((database) => database.put("snapshots", stored));
+    await this.write((database) => database.put("snapshots", stored));
   }
 
   async clearUser(userId: number) {
-    await this.access((database) => database.clearUser(userId));
+    await this.write((database) => database.clearUser(userId));
   }
 }
 

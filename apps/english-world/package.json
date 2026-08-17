@@ -49,6 +49,7 @@
     "autoprefixer": "^10.4.22",
     "cypress": "^15.15.0",
     "cypress-mochawesome-reporter": "^4.0.2",
+    "fake-indexeddb": "^6.2.5",
     "jsdom": "^28.1.0",
     "mochawesome": "^7.1.4",
     "postcss": "^8.5.6",
