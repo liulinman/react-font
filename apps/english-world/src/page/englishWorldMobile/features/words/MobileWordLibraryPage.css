@@ -1,4 +1,5 @@
-.mobile-word-library-page[data-selection-mode="true"] { padding-bottom: calc(250px + env(safe-area-inset-bottom, 0px)); }
+.mobile-word-library-page { --mobile-word-selection-sheet-height: min(46dvh, 360px); }
+.mobile-word-library-page[data-selection-mode="true"] { padding-bottom: calc(var(--mobile-word-selection-sheet-height) + 56px + env(safe-area-inset-bottom, 0px)); }
 
 .mobile-word-library-page form[role="search"] {
   display: grid;
@@ -34,7 +35,7 @@
 .mobile-word-row__menu summary { display: grid; min-width: 44px; min-height: 44px; place-items: center; cursor: pointer; }
 .mobile-word-row__menu div { position: absolute; right: var(--mobile-page-gutter); z-index: 3; display: grid; padding: var(--mobile-space-2); background: var(--mobile-surface-raised); border: 1px solid var(--mobile-separator); border-radius: var(--mobile-radius-sm); }
 
-.mobile-word-selection-bar { position: fixed; right: 50%; bottom: calc(56px + env(safe-area-inset-bottom, 0px)); z-index: 10; box-sizing: border-box; width: min(100%, 430px); max-height: min(46dvh, 360px); padding: var(--mobile-space-2) var(--mobile-page-gutter); overflow-y: auto; transform: translateX(50%); background: var(--mobile-surface-base); }
+.mobile-word-selection-bar { position: fixed; right: 50%; bottom: calc(56px + env(safe-area-inset-bottom, 0px)); z-index: 10; box-sizing: border-box; width: min(100%, 430px); max-height: var(--mobile-word-selection-sheet-height); padding: var(--mobile-space-2) var(--mobile-page-gutter); overflow-y: auto; transform: translateX(50%); background: var(--mobile-surface-base); }
 .mobile-word-selection-bar > p { margin: 0; color: var(--mobile-ink-secondary); }
 .mobile-word-selection-bar .mobile-safe-area-actions { position: relative; padding-bottom: calc(var(--mobile-space-3) + env(safe-area-inset-bottom, 0px)); box-shadow: 0 -8px 18px color-mix(in srgb, var(--mobile-ink-primary) 10%, transparent); }
 

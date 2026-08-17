@@ -1,4 +1,6 @@
 import "@testing-library/jest-dom/vitest";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -75,6 +77,18 @@ describe("MobileWordLibraryPage", () => {
   afterEach(() => {
     cleanup();
     vi.clearAllMocks();
+  });
+
+  it("keeps row columns, wrapping, and selection-sheet reservation under one CSS contract", () => {
+    const css = readFileSync(resolve(process.cwd(), "src/page/englishWorldMobile/features/words/MobileWordLibraryPage.css"), "utf8");
+    expect(css).toContain("--mobile-word-selection-sheet-height: min(46dvh, 360px)");
+    expect(css).toContain("padding-bottom: calc(var(--mobile-word-selection-sheet-height) + 56px + env(safe-area-inset-bottom, 0px))");
+    expect(css).toContain("max-height: var(--mobile-word-selection-sheet-height)");
+    expect(css).toContain("grid-template-columns: minmax(0, 1fr) auto auto");
+    expect(css).toContain("grid-template-columns: auto minmax(0, 1fr) auto auto");
+    expect(css).toContain("overflow-wrap: anywhere");
+    expect(css).not.toContain("text-overflow: ellipsis");
+    expect(css).not.toContain("white-space: nowrap");
   });
 
   it("renders compact result rows, keeps pronunciation isolated, and opens the full filter sheet", async () => {
@@ -197,6 +211,7 @@ describe("MobileWordLibraryPage", () => {
     await screen.findByRole("link", { name: "retain" });
     await user.click(screen.getByRole("button", { name: "加载更多" }));
     await waitFor(() => expect(screen.queryByRole("button", { name: "加载更多" })).not.toBeInTheDocument());
+    expect(screen.getAllByRole("link", { name: "retain" })).toHaveLength(1);
   });
 
   it("rejects a changed current-filter result before batch actions", async () => {
