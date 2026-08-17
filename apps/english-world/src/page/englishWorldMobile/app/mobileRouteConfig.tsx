@@ -34,6 +34,11 @@ function lazyFoundationSurface(title: string, pending: boolean) {
   });
 }
 
+async function lazyMobileHomePage() {
+  const { MobileHomePage } = await import("../features/home/MobileHomePage");
+  return { Component: MobileHomePage };
+}
+
 const orderedMobilePaths = [
   ...MOBILE_ROUTE_PATHS.filter((path) => !path.includes(":")),
   ...MOBILE_ROUTE_PATHS.filter((path) => path.includes(":")),
@@ -45,9 +50,11 @@ export const mobileRouteConfig: RouteObject[] = orderedMobilePaths.map((mobilePa
     TAB_ROOTS,
     mobilePath,
   );
-  const lazy = mobilePath === "/mobile/me/app"
-    ? async () => ({ Component: MobilePwaStatusPage })
-    : lazyFoundationSurface(title, pending);
+  const lazy = mobilePath === "/mobile"
+    ? lazyMobileHomePage
+    : mobilePath === "/mobile/me/app"
+      ? async () => ({ Component: MobilePwaStatusPage })
+      : lazyFoundationSurface(title, pending);
 
   if (mobilePath === "/mobile") {
     return { index: true, lazy };
