@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="English World">
+  <rect width="512" height="512" fill="#007AFF"/>
+  <path fill="#FFFFFF" d="M120 178h116v31h-80v31h70v31h-70v32h83v31H120V178Z"/>
+  <path fill="#FFFFFF" d="M240 178h32l18 108 22-75h28l20 75 18-108h30l-26 156h-30l-26-80-24 80h-30l-32-156Z"/>
+</svg>

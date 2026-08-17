@@ -1,5 +1,6 @@
 import { TabBar } from "antd-mobile";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import { PwaUpdatePrompt } from "../pwa/PwaUpdateContext";
 import "../styles/mobile-tokens.css";
 import "../styles/mobile-shell.css";
 
@@ -27,6 +28,7 @@ export function MobileAppShell() {
   return (
     <div className="mobile-app-shell">
       <main className="mobile-app-shell__content">
+        <PwaUpdatePrompt />
         <Outlet />
       </main>
       <nav aria-label="主要导航" className="mobile-app-shell__navigation">

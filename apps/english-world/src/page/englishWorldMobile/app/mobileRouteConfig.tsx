@@ -1,6 +1,7 @@
 import type { ComponentType } from "react";
 import type { RouteObject } from "react-router-dom";
 import { MOBILE_ROUTE_PATHS } from "../testing/mobileCapabilityManifest";
+import { PwaUpdateStatusSurface } from "../pwa/PwaUpdateContext";
 
 const TAB_ROOTS: Record<string, string> = {
   "/mobile": "学习",
@@ -14,6 +15,15 @@ function MobileFoundationSurface({ title, pending }: { title: string; pending: b
     <section aria-labelledby="mobile-route-title">
       <h1 id="mobile-route-title">{title}</h1>
       <p>{pending ? "此功能将在后续交付中提供。" : "移动学习空间正在准备中。"}</p>
+    </section>
+  );
+}
+
+function MobilePwaStatusPage() {
+  return (
+    <section aria-labelledby="mobile-route-title" className="mobile-page">
+      <h1 className="mobile-page__title" id="mobile-route-title">应用</h1>
+      <PwaUpdateStatusSurface />
     </section>
   );
 }
@@ -35,7 +45,9 @@ export const mobileRouteConfig: RouteObject[] = orderedMobilePaths.map((mobilePa
     TAB_ROOTS,
     mobilePath,
   );
-  const lazy = lazyFoundationSurface(title, pending);
+  const lazy = mobilePath === "/mobile/me/app"
+    ? async () => ({ Component: MobilePwaStatusPage })
+    : lazyFoundationSurface(title, pending);
 
   if (mobilePath === "/mobile") {
     return { index: true, lazy };
