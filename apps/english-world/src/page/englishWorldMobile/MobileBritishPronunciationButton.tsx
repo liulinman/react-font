@@ -5,10 +5,12 @@ import { SoundOutline } from "antd-mobile-icons";
 import { playBritishPronunciation } from "@/page/englishWorld/utils/pronunciation";
 
 type MobileBritishPronunciationButtonProps = {
+  ariaLabel?: string;
   word?: string;
 };
 
 export function MobileBritishPronunciationButton({
+  ariaLabel = "播放英式发音",
   word,
 }: MobileBritishPronunciationButtonProps) {
   const [loading, setLoading] = useState(false);
@@ -35,7 +37,7 @@ export function MobileBritishPronunciationButton({
 
   return (
     <Button
-      aria-label="播放英式发音"
+      aria-label={ariaLabel}
       className="mobile-pronunciation-button"
       fill="none"
       loading={loading}

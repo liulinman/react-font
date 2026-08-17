@@ -10,6 +10,12 @@ vi.mock("@/page/englishWorld/utils/pronunciation", () => ({
 }));
 
 describe("MobileBritishPronunciationButton", () => {
+  it("uses an explicit contextual accessible label when a row supplies one", () => {
+    render(<MobileBritishPronunciationButton ariaLabel="播放 retain 的英式发音" word="retain" />);
+
+    expect(screen.getByRole("button", { name: "播放 retain 的英式发音" })).toBeTruthy();
+  });
+
   afterEach(() => {
     cleanup();
     vi.clearAllMocks();
