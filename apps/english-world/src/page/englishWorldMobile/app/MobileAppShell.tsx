@@ -1,5 +1,7 @@
 import { TabBar } from "antd-mobile";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import "../styles/mobile-tokens.css";
+import "../styles/mobile-shell.css";
 
 export const MOBILE_TABS = [
   { key: "learn", label: "学习", path: "/mobile" },
@@ -24,10 +26,10 @@ export function MobileAppShell() {
 
   return (
     <div className="mobile-app-shell">
-      <main>
+      <main className="mobile-app-shell__content">
         <Outlet />
       </main>
-      <nav aria-label="主要导航">
+      <nav aria-label="主要导航" className="mobile-app-shell__navigation">
         <div aria-label="主要导航" role="tablist">
           <TabBar
             activeKey={activeKey}

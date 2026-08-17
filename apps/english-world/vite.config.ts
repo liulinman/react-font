@@ -10,6 +10,7 @@ export default defineConfig({
     },
   },
   test: {
+    css: true,
     environment: "jsdom",
     testTimeout: 30000,
   },
