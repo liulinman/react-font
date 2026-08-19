@@ -49,6 +49,11 @@ async function lazyMobileWordDetailPage() {
   return { Component: MobileWordDetailPage };
 }
 
+async function lazyMobileWordFormPage() {
+  const { MobileWordFormPage } = await import("../features/words/MobileWordFormPage");
+  return { Component: MobileWordFormPage };
+}
+
 const orderedMobilePaths = [
   ...MOBILE_ROUTE_PATHS.filter((path) => !path.includes(":")),
   ...MOBILE_ROUTE_PATHS.filter((path) => path.includes(":")),
@@ -66,6 +71,10 @@ export const mobileRouteConfig: RouteObject[] = orderedMobilePaths.map((mobilePa
       ? lazyMobileWordLibraryPage
     : mobilePath === "/mobile/words/:wordId"
       ? lazyMobileWordDetailPage
+    : mobilePath === "/mobile/words/new"
+      ? lazyMobileWordFormPage
+    : mobilePath === "/mobile/words/:wordId/edit"
+      ? lazyMobileWordFormPage
     : mobilePath === "/mobile/me/app"
       ? async () => ({ Component: MobilePwaStatusPage })
       : lazyFoundationSurface(title, pending);
