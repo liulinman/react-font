@@ -1,14 +1,15 @@
 import "@testing-library/jest-dom/vitest";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider, type InfiniteData } from "@tanstack/react-query";
+import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import type { ReactNode } from "react";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { WordList } from "@/server/word/word.type";
 import { MobileActivityLockProvider } from "../../offline/MobileActivityLockContext";
-import { wordKeys } from "./wordQueries";
+import { wordKeys, type MobileWordPage } from "./wordQueries";
 import { MobileWordLibraryPage } from "./MobileWordLibraryPage";
 
 const { requestMock, fetchWordsMock } = vi.hoisted(() => ({
@@ -19,6 +20,18 @@ const { requestMock, fetchWordsMock } = vi.hoisted(() => ({
 let online = true;
 
 vi.mock("@font/api", () => ({ default: requestMock }));
+vi.mock("antd-mobile", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("antd-mobile")>();
+  return {
+    ...actual,
+    PullToRefresh: ({ children, onRefresh }: { children: ReactNode; onRefresh(): Promise<void> }) => (
+      <section>
+        <button onClick={() => void onRefresh()} type="button">下拉刷新词库</button>
+        {children}
+      </section>
+    ),
+  };
+});
 vi.mock("../../offline/useConnectivity", () => ({ useConnectivity: () => online }));
 vi.mock("@/page/englishWorld/utils/pronunciation", () => ({
   playBritishPronunciation: vi.fn().mockResolvedValue(undefined),
@@ -158,6 +171,37 @@ describe("MobileWordLibraryPage", () => {
     expect(trigger).toHaveFocus();
   });
 
+  it("keeps a non-first filter field focused across parent query rerenders before restoring the trigger", async () => {
+    const user = userEvent.setup();
+    const { client } = renderLibrary();
+    await screen.findByRole("link", { name: /retain/ });
+    const trigger = screen.getByRole("button", { name: "筛选" });
+    await user.click(trigger);
+    const meaning = screen.getByLabelText("中文释义");
+    meaning.focus();
+    expect(meaning).toHaveFocus();
+
+    const cacheKey = wordKeys.list({ page: 1, pageSize: 20, search: "ret" });
+    act(() => {
+      client.setQueryData<InfiniteData<MobileWordPage>>(cacheKey, (current) => current ? {
+        ...current,
+        pages: current.pages.map((page, index) => index === 0 ? {
+          ...page,
+          list: page.list.map((word) => word.id === retain.id ? { ...word, englishChinese: "重新保留" } : word),
+        } : page),
+      } : current);
+    });
+    expect(await screen.findByText(/重新保留/)).toBeVisible();
+    await act(async () => {
+      await new Promise<void>((resolveFrame) => requestAnimationFrame(() => resolveFrame()));
+    });
+    expect(meaning).toHaveFocus();
+
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("dialog", { name: "筛选词库" })).not.toBeInTheDocument();
+    expect(trigger).toHaveFocus();
+  });
+
   it("resolves and globally sorts the complete deduplicated filtered result", async () => {
     const first: WordList = { id: 8, englishWord: "zebra" };
     const second: WordList = { id: 7, englishWord: "apple" };
@@ -228,6 +272,65 @@ describe("MobileWordLibraryPage", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent("筛选结果已变化，请重新选择。");
     expect(fetchWordsMock).toHaveBeenLastCalledWith(expect.objectContaining({ page: 1, pageSize: 1 }));
+  });
+
+  it("starts mixed learning with one unique ID when a same-total filter response contains duplicates", async () => {
+    const user = userEvent.setup();
+    fetchWordsMock
+      .mockResolvedValueOnce({ list: [retain], total: 1, totalPages: 1 })
+      .mockResolvedValueOnce({ list: [retain, retain], total: 1, totalPages: 1 });
+    renderLibrary();
+
+    await screen.findByRole("link", { name: /retain/ });
+    await user.click(screen.getByRole("button", { name: "选择" }));
+    await user.click(screen.getByRole("button", { name: "使用当前筛选结果" }));
+    await user.click(screen.getByRole("button", { name: "开始混合记忆" }));
+
+    await waitFor(() => expect(screen.getByTestId("location").textContent).toBe("/mobile/learn?scope=selection&wordIds=4"));
+    const selectedIds = new URLSearchParams(screen.getByTestId("location").textContent?.split("?")[1]).get("wordIds")?.split(",");
+    expect(selectedIds).toEqual(["4"]);
+  });
+
+  it("keeps cached words and recovers with one request per refresh action", async () => {
+    const user = userEvent.setup();
+    const recovered = { ...retain, englishChinese: "重新保留" };
+    fetchWordsMock
+      .mockResolvedValueOnce({ list: [retain], total: 1, totalPages: 1 })
+      .mockRejectedValueOnce(new Error("refresh failed"))
+      .mockResolvedValueOnce({ list: [recovered], total: 1, totalPages: 1 });
+    renderLibrary();
+
+    await screen.findByRole("link", { name: /retain/ });
+    expect(fetchWordsMock).toHaveBeenCalledTimes(1);
+    await user.click(screen.getByRole("button", { name: "下拉刷新词库" }));
+    expect(await screen.findByText("刷新失败，正在显示缓存内容，内容可能不是最新。")).toBeVisible();
+    expect(screen.getByRole("link", { name: /retain/ })).toBeVisible();
+    expect(screen.getByRole("button", { name: "重试刷新" })).toBeVisible();
+    expect(fetchWordsMock).toHaveBeenCalledTimes(2);
+
+    await user.click(screen.getByRole("button", { name: "重试刷新" }));
+    expect(await screen.findByText(/重新保留/)).toBeVisible();
+    expect(screen.queryByText("刷新失败，正在显示缓存内容，内容可能不是最新。")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "重试刷新" })).not.toBeInTheDocument();
+    expect(fetchWordsMock).toHaveBeenCalledTimes(3);
+  });
+
+  it("recovers a cold initial failure with one retry request", async () => {
+    const user = userEvent.setup();
+    fetchWordsMock
+      .mockRejectedValueOnce(new Error("initial failed"))
+      .mockResolvedValueOnce({ list: [retain], total: 1, totalPages: 1 });
+    renderLibrary();
+
+    expect(await screen.findByText("词库暂时无法加载，请检查网络后重试。")).toBeVisible();
+    expect(screen.getByRole("button", { name: "重试加载" })).toBeVisible();
+    expect(fetchWordsMock).toHaveBeenCalledTimes(1);
+    await user.click(screen.getByRole("button", { name: "重试加载" }));
+
+    expect(await screen.findByRole("link", { name: /retain/ })).toBeVisible();
+    expect(screen.queryByText("词库暂时无法加载，请检查网络后重试。")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "重试加载" })).not.toBeInTheDocument();
+    expect(fetchWordsMock).toHaveBeenCalledTimes(2);
   });
 
   it("rolls optimistic mastery changes back when a batch request fails without invalidating the list", async () => {

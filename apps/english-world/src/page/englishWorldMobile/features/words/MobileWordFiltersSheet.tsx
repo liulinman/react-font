@@ -41,7 +41,14 @@ export function MobileWordFiltersSheet({
     const getFocusable = () => Array.from(dialog.querySelectorAll<HTMLElement>(
       'button:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
     ));
-    const focusFirst = () => getFocusable()[1]?.focus();
+    const focusFirst = () => {
+      const focusable = getFocusable();
+      // The open rAF autofocus may fire after the user (or a parent rerender)
+      // has already moved focus into the sheet. Only claim focus when nothing
+      // inside the dialog is focused, so an open sheet keeps the current field.
+      if (focusable.some((element) => element === document.activeElement)) return;
+      focusable[1]?.focus();
+    };
     const frame = requestAnimationFrame(focusFirst);
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
