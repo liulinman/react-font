@@ -1,3 +1,4 @@
+import { createMemoryRouter, RouterProvider } from "react-router-dom";
 import "@testing-library/jest-dom/vitest";
 import { createElement } from "react";
 import type { ModalProps } from "antd";
@@ -86,6 +87,35 @@ describe("EditAddModal AI completion", () => {
   afterEach(() => {
     cleanup();
     requestMock.mockReset();
+  });
+
+  it("protects a dirty word note when navigating back within the app", async () => {
+    const router = createMemoryRouter([
+      {path:"/previous",element:<p>previous</p>},
+      {path:"/words",element:<EditAddModal isModalVisible type="edit" currentRecord={{id:7, englishWord:"find", englishLevel:0, englishType:0, englishNote:"原笔记"}} onOk={vi.fn()} onCancel={vi.fn()} />}
+    ], {initialEntries:["/previous","/words"]});
+    render(<RouterProvider router={router}/>);
+    await waitFor(()=>expect(screen.getByLabelText("笔记")).toHaveValue("原笔记"));
+    fireEvent.change(screen.getByLabelText("笔记"),{target:{value:"重要修改"}});
+    await act(()=>router.navigate(-1));
+    await screen.findByRole("alertdialog");
+    fireEvent.click(screen.getByRole("button",{name:"继续编辑"}));
+    expect(screen.getByLabelText("笔记")).toHaveValue("重要修改");
+  });
+
+  it("keeps the complete form draft while editing a long note in focus mode", async () => {
+    const onOk = vi.fn().mockResolvedValue(true);
+    render(<EditAddModal isModalVisible type="edit" currentRecord={{id:7, englishWord:"find", englishLevel:0, englishType:0, englishChinese:"原释义", englishNote:"第一行\n第二行"}} onOk={onOk} onCancel={vi.fn()} />);
+    await waitFor(() => expect(screen.getByLabelText("中文")).toHaveValue("原释义"));
+    fireEvent.change(screen.getByLabelText("中文"), {target:{value:"新释义"}});
+    fireEvent.click(screen.getByRole("button",{name:"展开编辑"}));
+    fireEvent.change(screen.getByLabelText("完整笔记"),{target:{value:"修改后\n完整的长笔记"}});
+    expect(onOk).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button",{name:"返回表单"}));
+    expect(screen.getByLabelText("中文")).toHaveValue("新释义");
+    expect(screen.getByLabelText("笔记")).toHaveValue("修改后\n完整的长笔记");
+    fireEvent.click(screen.getByRole("button",{name:"确 认"}));
+    await waitFor(()=>expect(onOk).toHaveBeenCalledWith(expect.objectContaining({englishChinese:"新释义",englishNote:"修改后\n完整的长笔记"}),"edit"));
   });
 
   it("auto-fills empty add-word fields from AI after the word input settles", async () => {

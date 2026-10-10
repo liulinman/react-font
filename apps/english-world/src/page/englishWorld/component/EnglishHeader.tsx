@@ -49,6 +49,7 @@ const navItems: MenuProps["items"] = [
       },
     ],
   },
+  { key: "knowledgeNotes", icon: <FileTextOutlined />, label: "知识笔记", title: "知识笔记" },
   { key: "stats", icon: <BarChartOutlined />, label: "数据", title: "数据" },
 ];
 

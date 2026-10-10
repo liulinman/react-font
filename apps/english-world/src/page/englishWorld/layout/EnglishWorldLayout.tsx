@@ -1,3 +1,4 @@
+import "../EnglishWorld.css";
 import { LeftOutlined } from "@ant-design/icons";
 import { useState, type ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router-dom";

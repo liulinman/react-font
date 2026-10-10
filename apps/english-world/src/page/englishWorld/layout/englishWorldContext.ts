@@ -1,5 +1,6 @@
 const PRIMARY_LABELS: Record<string, string> = {
   cockpit: "今天",
+  knowledgeNotes: "知识笔记",
   words: "词库",
   recite: "学习",
   stats: "数据",

@@ -1,3 +1,4 @@
+import { WordKnowledgeLinks } from "@/page/englishWorld/component/WordNoteDisplay";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient, type InfiniteData } from "@tanstack/react-query";
 import { Link, useNavigate, useParams } from "react-router-dom";
@@ -191,6 +192,7 @@ export function MobileWordDetailPage() {
         {word.englishNote && <p>{word.englishNote}</p>}
       </section>
 
+      <WordKnowledgeLinks wordId={word.id} hasNote={Boolean(word.englishNote?.trim())} mobile />
       <section aria-label="来源">
         <h3>来源</h3>
         {word.englishReference && isExternalReference(word.englishReference) ? (

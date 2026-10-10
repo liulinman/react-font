@@ -1,4 +1,5 @@
 export const MOBILE_CAPABILITIES = [
+  { id: "knowledge-notes", desktopPath: "/englishWorld/knowledge-notes/*", mobilePath: "/mobile/tools/knowledge-notes/*" },
   { id: "home", desktopPath: "/englishWorld", mobilePath: "/mobile" },
   { id: "review", desktopPath: "/englishWorld/recite", mobilePath: "/mobile/review" },
   { id: "learning-setup", desktopPath: "/englishWorld/words", mobilePath: "/mobile/learn" },

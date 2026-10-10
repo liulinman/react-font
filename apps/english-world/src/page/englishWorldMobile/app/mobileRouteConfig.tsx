@@ -1,5 +1,5 @@
 import type { ComponentType } from "react";
-import type { RouteObject } from "react-router-dom";
+import { Link, type RouteObject } from "react-router-dom";
 import { MOBILE_ROUTE_PATHS } from "../testing/mobileCapabilityManifest";
 import { PwaUpdateStatusSurface } from "../pwa/PwaUpdateContext";
 
@@ -14,6 +14,7 @@ function MobileFoundationSurface({ title, pending }: { title: string; pending: b
   return (
     <section aria-labelledby="mobile-route-title">
       <h1 id="mobile-route-title">{title}</h1>
+      {title === "工具" && <Link to="/mobile/tools/knowledge-notes">知识笔记 · 记录语法、句型和易错点</Link>}
       <p>{pending ? "此功能将在后续交付中提供。" : "移动学习空间正在准备中。"}</p>
     </section>
   );
@@ -75,6 +76,8 @@ export const mobileRouteConfig: RouteObject[] = orderedMobilePaths.map((mobilePa
       ? lazyMobileWordFormPage
     : mobilePath === "/mobile/words/:wordId/edit"
       ? lazyMobileWordFormPage
+    : mobilePath === "/mobile/tools/knowledge-notes/*"
+      ? async () => ({ Component: (await import("../../englishWorld/knowledgeNotes/KnowledgeNotesPage")).KnowledgeNotesPage })
     : mobilePath === "/mobile/me/app"
       ? async () => ({ Component: MobilePwaStatusPage })
       : lazyFoundationSurface(title, pending);

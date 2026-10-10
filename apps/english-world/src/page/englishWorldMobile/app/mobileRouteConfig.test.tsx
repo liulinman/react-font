@@ -16,6 +16,7 @@ type RouteContract = {
 };
 
 const routeContracts: Record<MobileCapabilityId, RouteContract> = {
+  "knowledge-notes": { url: "/mobile/tools/knowledge-notes/new", path: "tools/knowledge-notes/*", params: { "*": "new" } },
   home: { url: "/mobile", index: true },
   review: { url: "/mobile/review", path: "review" },
   "learning-setup": { url: "/mobile/learn", path: "learn" },

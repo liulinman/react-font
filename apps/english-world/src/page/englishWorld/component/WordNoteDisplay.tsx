@@ -5,6 +5,7 @@ import { hasDisplayNote } from "../utils/wordNote";
 
 type WordCardNoteProps = {
   word: string;
+  wordId?: number;
   note?: string | null;
 };
 
@@ -13,7 +14,7 @@ type WordExpandedNoteProps = {
   onEdit: (record: WordList) => void;
 };
 
-export function WordCardNote({ word, note }: WordCardNoteProps) {
+export function WordCardNote({ word, note, wordId }: WordCardNoteProps) {
   const [expanded, setExpanded] = useState(false);
   const [overflowing, setOverflowing] = useState(false);
   const contentRef = useRef<HTMLParagraphElement>(null);
@@ -74,6 +75,7 @@ export function WordCardNote({ word, note }: WordCardNoteProps) {
       >
         {note}
       </p>
+      {wordId && <WordKnowledgeLinks wordId={wordId} hasNote />}
     </div>
   );
 }
@@ -101,6 +103,15 @@ export function WordExpandedNote({
         </Button>
       </div>
       <p className="word-note-expanded-text">{record.englishNote}</p>
+      <WordKnowledgeLinks wordId={record.id} hasNote />
     </div>
   );
+}
+
+export function WordKnowledgeLinks({wordId,hasNote,mobile=false}:{wordId:number;hasNote?:boolean;mobile?:boolean}) {
+  const base=mobile ? "/mobile/tools/knowledge-notes" : "/englishWorld/knowledge-notes";
+  return <div className="word-knowledge-links" style={{display:"flex",gap:16,flexWrap:"wrap",marginTop:12}} onClick={event=>event.stopPropagation()}>
+    {hasNote && <a href={`${base}/new?copyWord=${wordId}`}>复制为知识笔记</a>}
+    <a href={`${base}?wordId=${wordId}`}>关联知识笔记</a>
+  </div>;
 }

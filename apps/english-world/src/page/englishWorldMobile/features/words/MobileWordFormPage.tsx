@@ -1,3 +1,5 @@
+import { AutoGrowTextarea } from "@/page/englishWorld/knowledgeNotes/AutoGrowTextarea";
+import "@/page/englishWorld/component/wordNoteEditor.css";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Dialog, Toast } from "antd-mobile";
@@ -100,6 +102,7 @@ export function MobileWordFormPage() {
 
   const [values, setValues] = useState<MobileWordFormValues>(EMPTY_VALUES);
   const [loaded, setLoaded] = useState(false);
+  const [noteFocused, setNoteFocused] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [imageUploading, setImageUploading] = useState(false);
   const [backConfirmOpen, setBackConfirmOpen] = useState(false);
@@ -289,6 +292,15 @@ export function MobileWordFormPage() {
     );
   }
 
+  if (noteFocused) return (
+    <MobilePage className="word-editor word-note-mobile-focus" title="编辑笔记">
+      <button type="button" onClick={() => setNoteFocused(false)}>返回表单</button>
+      <p>返回表单后点击“保存”提交单词。当前输入保留在表单中。</p>
+      <label>完整笔记<AutoGrowTextarea aria-label="完整笔记" rows={18} value={values.englishNote ?? ""} onChange={event => setField("englishNote",event.target.value)} /></label>
+    </MobilePage>
+  );
+
+
   return (
     <MobilePage title={isEdit ? "编辑单词" : "添加单词"}>
       <a
@@ -371,12 +383,13 @@ export function MobileWordFormPage() {
         ))}
       </fieldset>
 
+      <button type="button" onClick={() => setNoteFocused(true)}>展开编辑笔记</button>
       <label>
         笔记
-        <textarea
+        <AutoGrowTextarea
           aria-label="笔记"
           onChange={(event) => setField("englishNote", event.target.value)}
-          rows={3}
+          rows={6}
           value={values.englishNote ?? ""}
         />
       </label>

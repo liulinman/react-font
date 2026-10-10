@@ -107,6 +107,10 @@ const memoryMapRoute = protectedDesktopLayoutRoute("memoryMap", () =>
   ),
 );
 
+const knowledgeNotesRoute = protectedDesktopLayoutRoute("knowledgeNotes", () =>
+  import("@/page/englishWorld/knowledgeNotes/KnowledgeNotesPage").then(({ KnowledgeNotesPage }) => ({ default: KnowledgeNotesPage })),
+);
+
 export const router = createBrowserRouter([
   { path: "/", element: <Navigate to="/login" replace /> },
   {
@@ -118,6 +122,7 @@ export const router = createBrowserRouter([
   },
   { path: "/englishWorld", lazy: englishWorldRoute },
   { path: "/englishWorld/words", lazy: englishWorldRoute },
+  { path: "/englishWorld/knowledge-notes/*", lazy: knowledgeNotesRoute },
   { path: "/englishWorld/stats", lazy: englishWorldRoute },
   { path: "/englishWorld/settings", lazy: settingsRoute },
   { path: "/englishWorld/ai-word", lazy: aiWordRoute },

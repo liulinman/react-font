@@ -53,12 +53,28 @@ jobs:
       - name: Build Admin
         run: pnpm --filter @font/admin build
 
+      - name: Preserve verified production assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-assets
+          path: |
+            apps/english-world/dist/
+            apps/admin/dist/
+          if-no-files-found: error
+          retention-days: 3
+
   deploy:
     needs: verify
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
+
+      - name: Download verified production assets
+        uses: actions/download-artifact@v4
+        with:
+          name: production-assets
+          path: apps
 
       - name: Set up SSH
         uses: webfactory/ssh-agent@v0.9.1
@@ -77,8 +93,6 @@ jobs:
             --exclude=.git \
             --exclude=node_modules \
             --exclude='**/node_modules' \
-            --exclude=dist \
-            --exclude='**/dist' \
             --exclude=coverage \
             --exclude='**/coverage' \
             --exclude='.env*' \
@@ -121,8 +135,18 @@ jobs:
           sudo install -m 0644 "$TARGET/nginx.conf" "$COMPOSE_DIR/nginx.conf"
 
           cd "$COMPOSE_DIR"
-          sudo docker compose build "$SERVICE"
-          sudo docker compose up -d --no-deps "$SERVICE"
+          test -s "$TARGET/apps/english-world/dist/index.html"
+          test -s "$TARGET/apps/admin/dist/index.html"
+          service_image_name="$(sudo docker inspect --format '{{.Config.Image}}' "$CONTAINER")"
+          sudo docker build -f "$TARGET/Dockerfile.production" -t "$service_image_name" "$TARGET"
+          sudo docker compose up -d --no-deps --no-build "$SERVICE"
+          for app in english-world admin; do
+            container_index=/usr/share/nginx/html/index.html
+            if [ "$app" = admin ]; then container_index=/usr/share/nginx/html/admin/index.html; fi
+            expected="$(sha256sum "$TARGET/apps/$app/dist/index.html" | cut -d ' ' -f 1)"
+            actual="$(sudo docker exec "$CONTAINER" sha256sum "$container_index" | cut -d ' ' -f 1)"
+            test "$expected" = "$actual"
+          done
 
           for attempt in $(seq 1 30); do
             if curl --fail --silent --show-error http://127.0.0.1/ >/dev/null; then
