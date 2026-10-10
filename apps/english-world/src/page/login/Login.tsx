@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Form, Input, Button, Card, Tabs, message } from "antd";
+import { Form, Input, Button, Card, Tabs, Alert, message } from "antd";
 import { UserOutlined, LockOutlined } from "@ant-design/icons";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -62,6 +62,7 @@ const Login: React.FC = () => {
   const location = useLocation();
   const { login, register, isAuthenticated } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>("login");
   const hasNavigatedRef = useRef(false);
   const locationState = location.state as LocationState | null;
@@ -96,11 +97,17 @@ const Login: React.FC = () => {
     username: string;
     password: string;
   }) => {
+    setLoginError(null);
     try {
       await authenticate(values);
     } catch (error) {
-      // 错误已在 AuthContext 中处理
-      console.error("Login failed:", error);
+      // The API intentionally suppresses code 4001 to avoid anonymous-session toasts.
+      // A rejected explicit login still needs visible feedback in the form.
+      setLoginError(
+        error && typeof error === "object" && "message" in error && typeof error.message === "string"
+          ? error.message
+          : "登录失败，请稍后重试",
+      );
     }
   };
 
@@ -209,6 +216,7 @@ const Login: React.FC = () => {
           </div>
           <Tabs activeKey={activeTab} onChange={setActiveTab} centered>
             <TabPane tab="登录" key="login">
+              {loginError && <Alert type="error" showIcon message={loginError} role="alert" />}
               <Form
                 name="login"
                 className="login-form login-form-compact"

@@ -1,9 +1,11 @@
 import "@testing-library/jest-dom/vitest";
 import "antd-mobile/es/global";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import Login from "./Login";
+
+const { login } = vi.hoisted(() => ({ login: vi.fn() }));
 
 vi.mock("./LoginStarfieldCanvas", () => ({
   default: () => null,
@@ -11,7 +13,7 @@ vi.mock("./LoginStarfieldCanvas", () => ({
 
 vi.mock("@/contexts/AuthContext", () => ({
   useAuth: () => ({
-    login: vi.fn(),
+    login,
     register: vi.fn(),
     isAuthenticated: false,
   }),
@@ -19,6 +21,7 @@ vi.mock("@/contexts/AuthContext", () => ({
 
 describe("Login", () => {
   beforeEach(() => {
+    login.mockReset();
     Object.defineProperty(window, "matchMedia", {
       configurable: true,
       value: vi.fn().mockImplementation((query: string) => ({
@@ -74,5 +77,14 @@ describe("Login", () => {
     expect(form?.querySelector('[data-cy="login-submit"]')).toHaveClass(
       "login-form-submit",
     );
+  });
+
+  it("shows a rejected login error even when the shared API suppresses code 4001", async () => {
+    login.mockRejectedValue({ code: 4001, message: "用户名或密码错误" });
+    const { container } = render(<MemoryRouter><Login /></MemoryRouter>);
+    fireEvent.change(container.querySelector('[data-cy="login-username"]')!, { target: { value: 'learner' } });
+    fireEvent.change(container.querySelector('[data-cy="login-password"]')!, { target: { value: 'wrong-password' } });
+    fireEvent.submit(container.querySelector('.login-card form')!);
+    expect(await screen.findByRole('alert')).toHaveTextContent('用户名或密码错误');
   });
 });
