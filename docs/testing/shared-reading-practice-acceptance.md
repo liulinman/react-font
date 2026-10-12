@@ -56,3 +56,8 @@
 
 回退：在 `/opt/english-world/deploy` 将两份 `:before-reading-20261012-1800` 镜像重新标记 `:latest`，执行 `docker compose up -d --no-deps --no-build backend frontend`；必要时用 baseline.tar.gz 恢复源码。**保留新增数据表及用户提交，不删表回滚**。
 设置后端 `READING_PRACTICE_ENABLED=false` 可暂停生成及自动发布；手工审核和历史结果仍保留。
+
+最终版本记录：前端功能提交 `50a2ec5`，后端功能提交 `d454554`；混合既有改动的接入文件仍在工作区，实际发布内容以源码指纹文件为准。
+后台镜像 ID：`sha256:4df5b369c7253469d16ea61c322edcd5e010dbcb242c17dc8cb508cb4b676c7f`。
+前端镜像 ID：`sha256:67a4ac5d9164f9fc618f5e587a0408721a0449d3b8fb6093f8efb0ba4daeadf4`。
+18:01 外网冒烟完成，路由、JS/CSS、401 鉴权均符合预期；MySQL 和 Redis 保持原容器运行。
