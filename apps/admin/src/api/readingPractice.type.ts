@@ -1,0 +1,4 @@
+export interface PracticeConfig { topic:string; wordCount:number; questionCount:number; ieltsBand:number; questionTypes:('choice'|'true_false_not_given')[];targetType:'all'|'selected';targetUserIds?:number[] }
+export interface PracticeContent {title:string;paragraphs:string[];questions:{id:string;kind:string;stem:string;options:string[];correctIndex:number;explanation:string;evidence:{paragraph:number;quote?:string;missingInformation?:string}}[]}
+export interface AdminPractice {id:number;title:string;status:'queued'|'generating'|'draft'|'published'|'withdrawn'|'failed';config:PracticeConfig;content?:PracticeContent;createdAt:string;publishedAt?:string;failureSummary?:string;assignedCount:number;submittedCount:number}
+export const practiceDefaults:PracticeConfig={topic:'',wordCount:400,questionCount:5,ieltsBand:6,questionTypes:['choice','true_false_not_given'],targetType:'all'};

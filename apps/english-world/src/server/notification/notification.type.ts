@@ -1,4 +1,5 @@
 export type NotificationCategory =
+  | "reading_practice"
   | "announcement"
   | "ielts_daily"
   | "recent_event"
@@ -11,6 +12,7 @@ export type NotificationTargetType = "all" | "selected";
 
 export interface NotificationItem {
   id: number;
+  action?: { type: "reading_practice"; practiceId: number };
   title: string;
   body: string;
   category: NotificationCategory;

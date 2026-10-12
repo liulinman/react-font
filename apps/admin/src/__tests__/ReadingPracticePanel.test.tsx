@@ -1,0 +1,11 @@
+import '@testing-library/jest-dom/vitest';
+import {cleanup,render,screen,waitFor} from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import {afterEach,beforeEach,expect,it,vi} from 'vitest';
+import {ReadingPracticePanel} from '../ReadingPracticePanel';
+const send=vi.hoisted(()=>vi.fn());vi.mock('@font/api',()=>({default:send}));
+let writes:string[];
+beforeEach(()=>{writes=[];Object.defineProperty(window,'matchMedia',{writable:true,value:()=>({matches:false,addListener(){},removeListener(){},addEventListener(){},removeEventListener(){}})});send.mockImplementation(async(r:{url:string;method:string})=>{if(r.method==='POST'){writes.push(r.url);return {};}return {list:[{id:1,title:'Garden paper',status:'draft',config:{ieltsBand:6,questionCount:5,targetType:'all'},assignedCount:0,submittedCount:0}],total:1};});});
+afterEach(()=>{cleanup();vi.clearAllMocks();});
+it('publishes only after explicit confirmation, with a single pending write',async()=>{const user=userEvent.setup();render(<ReadingPracticePanel/>);await user.click(await screen.findByRole('button',{name:'发布练习'}));expect(writes).toEqual([]);await user.click(screen.getByRole('button',{name:'确认发布'}));await waitFor(()=>expect(writes).toEqual(['/admin/reading-practices/1/publish']));});
+it('cancel leaves the draft untouched',async()=>{const user=userEvent.setup();render(<ReadingPracticePanel/>);await user.click(await screen.findByRole('button',{name:'发布练习'}));await user.click(screen.getByRole('button',{name:/取\s*消/}));expect(writes).toEqual([]);});

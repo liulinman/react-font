@@ -35,6 +35,7 @@ const navItems: MenuProps["items"] = [
     label: <span title="学习">学习</span>,
     title: "学习",
     children: [
+      { key: "readingPractices", icon: <ReadOutlined />, label: "阅读练习" },
       { key: "recite", icon: <ReadOutlined />, label: "今日复习" },
       { key: "contextLab", icon: <FileTextOutlined />, label: "语境实验室" },
       {
