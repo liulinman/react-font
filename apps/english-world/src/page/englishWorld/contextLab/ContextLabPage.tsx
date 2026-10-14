@@ -42,6 +42,7 @@ import {
   TranslationOutlined,
 } from "@ant-design/icons";
 import request from "@font/api";
+import { ContextLabExam } from "./ContextLabExam";
 import {
   wordAgentQuery,
   type WordAgentItem,
@@ -434,6 +435,7 @@ function ContextLabPageContent({
   const [sourcePreviewOpen, setSourcePreviewOpen] = useState(false);
   const [sourcePreviewFullscreen, setSourcePreviewFullscreen] = useState(false);
   const [practiceModalOpen, setPracticeModalOpen] = useState(false);
+  const [examTask, setExamTask] = useState<ContextLabTask | null>(null);
   const [practiceFullscreen, setPracticeFullscreen] = useState(false);
   const [attemptDrawerOpen, setAttemptDrawerOpen] = useState(false);
   const [attemptTask, setAttemptTask] = useState<ContextLabTask | null>(null);
@@ -2512,6 +2514,19 @@ function ContextLabPageContent({
                       开始练习
                     </Button>
                   )}
+                  {task.status === "succeeded" && task.mode !== "micro" && (
+                    <Button
+                      size="small"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setPracticeModalOpen(false);
+                        setSourcePreviewOpen(false);
+                        setExamTask(task);
+                      }}
+                    >
+                      雅思机考
+                    </Button>
+                  )}
                   {task.status === "failed" && (
                     <Button
                       size="small"
@@ -2598,6 +2613,14 @@ function ContextLabPageContent({
         )}
       </div>
 
+      {examTask && (
+        <ContextLabExam
+          task={examTask}
+          onExit={() => setExamTask(null)}
+          onCompleted={() => { void loadHistory(); }}
+        />
+      )}
+
       <Modal
         aria-label={isMicroMode ? "错词语境巩固" : "AI 语境练习"}
         className={`context-lab-practice-modal${
@@ -2609,6 +2632,15 @@ function ContextLabPageContent({
         title={
           <div className="context-lab-practice-modal-title">
             <span>{isMicroMode ? "错词语境巩固" : "AI 语境练习"}</span>
+            {!isMicroMode && currentTask?.status === "succeeded" && (
+              <Button onClick={() => {
+                closeSelectionMenu();
+                setPracticeModalOpen(false);
+                setExamTask(currentTask);
+              }}>
+                雅思机考模式
+              </Button>
+            )}
             <Button
               aria-label={practiceFullscreen ? "退出满屏" : "占满屏幕"}
               icon={

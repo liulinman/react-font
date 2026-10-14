@@ -1,0 +1,444 @@
+.ielts-exam {
+  --exam-ink: #172b3a;
+  --exam-paper: #fff;
+  --exam-muted: #526474;
+  --exam-line: #cbd5df;
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  flex-direction: column;
+  background: var(--exam-paper);
+  color: var(--exam-ink);
+  font:
+    15px/1.5 Arial,
+    sans-serif;
+  color-scheme: light;
+}
+.ielts-exam * {
+  box-sizing: border-box;
+}
+.ielts-exam button,
+.ielts-exam select,
+.ielts-exam textarea {
+  font: inherit;
+  color: inherit;
+}
+.ielts-exam button {
+  cursor: pointer;
+  min-height: 38px;
+  padding: 6px 14px;
+  border: 1px solid var(--exam-line);
+  border-radius: 5px;
+  background: var(--exam-paper);
+}
+.ielts-exam button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.ielts-exam :focus-visible {
+  outline: 3px solid #2183ca;
+  outline-offset: 3px;
+}
+.ielts-exam select {
+  padding: 6px;
+  background: var(--exam-paper);
+  border: 1px solid var(--exam-line);
+  border-radius: 4px;
+}
+.ielts-exam input {
+  accent-color: #166899;
+}
+.ielts-exam h1,
+.ielts-exam h2,
+.ielts-exam h3,
+.ielts-exam p {
+  color: inherit;
+  margin: 0 0 14px;
+}
+.ielts-exam-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  min-height: 80px;
+  padding: 12px 28px;
+  border-bottom: 4px solid #0c638d;
+  background: #f0f5f8;
+}
+.ielts-exam-header > div:first-child {
+  display: flex;
+  flex-direction: column;
+}
+.ielts-exam-header strong {
+  font-size: 23px;
+}
+.ielts-exam-header span {
+  color: var(--exam-muted);
+  font-size: 13px;
+}
+.ielts-exam-clock {
+  font-size: 28px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  text-align: center;
+}
+.ielts-exam-clock small {
+  display: block;
+  font-size: 12px;
+  font-weight: 400;
+}
+.ielts-exam-clock.is-urgent {
+  color: #b52925;
+}
+.ielts-exam-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 28px;
+  border-bottom: 1px solid var(--exam-line);
+}
+.ielts-exam-tools > span {
+  flex: 1;
+  color: var(--exam-muted);
+}
+.ielts-exam-tools label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+.ielts-exam-split-control input {
+  width: 80px;
+}
+.ielts-exam-status {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 36px;
+  padding: 6px 28px;
+  font-size: 13px;
+  background: #edf5fa;
+}
+.ielts-exam-warning {
+  padding: 8px 28px;
+  background: #fff0e3;
+  color: #873900 !important;
+  margin: 0 !important;
+}
+.ielts-exam-panes {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: var(--exam-split) minmax(0, 1fr);
+  overflow: hidden;
+}
+.ielts-exam-passage,
+.ielts-exam-questions {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  min-width: 0;
+  padding: 28px 32px 48px;
+  font-size: var(--exam-font-size);
+}
+.ielts-exam-passage {
+  border-right: 5px solid #e0e6eb;
+}
+.ielts-exam-passage h2 {
+  font-size: 21px;
+  margin-bottom: 24px;
+}
+.ielts-exam-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.85;
+  user-select: text;
+}
+.ielts-exam mark {
+  background: #ffe67a;
+  color: #172b3a;
+  padding: 1px 0;
+}
+.ielts-exam-question {
+  scroll-margin-top: 20px;
+  padding: 16px 18px 24px;
+  margin: 0 0 20px;
+  border: 1px solid var(--exam-line);
+  border-left: 4px solid transparent;
+  border-radius: 4px;
+}
+.ielts-exam-question.is-active {
+  border-left-color: #1276ae;
+}
+.ielts-exam-question-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.ielts-exam-question-heading h3 {
+  margin: 0;
+  font-size: 17px;
+}
+.ielts-exam-question-heading label {
+  font-size: 13px;
+  white-space: nowrap;
+}
+.ielts-exam fieldset {
+  padding: 0;
+  margin: 16px 0 0;
+  border: 0;
+  min-width: 0;
+}
+.ielts-exam-option {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  padding: 8px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.ielts-exam-option:has(input:checked) {
+  background: #e8f2fa;
+}
+.ielts-exam-option input {
+  flex-shrink: 0;
+}
+.ielts-exam .ielts-exam-link {
+  border: 0;
+  text-decoration: underline;
+  font-size: 13px;
+  color: #176b98;
+}
+.ielts-exam-feedback {
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid var(--exam-line);
+  font-size: 15px;
+}
+.ielts-exam-footer {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 14px 24px max(14px, env(safe-area-inset-bottom));
+  border-top: 1px solid var(--exam-line);
+  background: #f0f5f8;
+}
+.ielts-exam-footer > div:first-child {
+  display: flex;
+  flex-direction: column;
+  font-size: 13px;
+  white-space: nowrap;
+}
+.ielts-exam-footer nav {
+  display: flex;
+  gap: 6px;
+  flex: 1;
+  flex-wrap: wrap;
+  max-height: 110px;
+  overflow-y: auto;
+  padding: 4px;
+}
+.ielts-exam-footer nav button {
+  min-width: 36px;
+  padding: 4px 8px;
+  position: relative;
+}
+.ielts-exam-footer nav button.is-answered {
+  background: #d6eaf5;
+  border-color: #6f9dbb;
+}
+.ielts-exam-footer nav button[aria-current] {
+  outline: 2px solid #176d9a;
+  outline-offset: 1px;
+}
+.ielts-exam-footer sup {
+  position: absolute;
+  top: -5px;
+  right: 1px;
+  color: #a15b00;
+}
+.ielts-exam-navigation {
+  display: flex;
+  gap: 8px;
+}
+.ielts-exam .ielts-exam-primary {
+  background: #09658e;
+  border-color: #09658e;
+  color: white;
+  font-weight: 700;
+}
+.ielts-exam-intro {
+  max-width: 780px;
+  width: 100%;
+  margin: auto;
+  padding: 40px;
+  overflow-y: auto;
+}
+.ielts-exam-intro h1 {
+  font-size: 30px;
+  margin-top: 12px;
+}
+.ielts-exam-eyebrow {
+  color: #176d9a;
+  letter-spacing: 2px;
+  font-size: 12px;
+}
+.ielts-exam-intro li {
+  margin: 12px 0;
+}
+.ielts-exam-intro > label {
+  display: block;
+  margin: 24px 0;
+}
+.ielts-exam-intro > button {
+  padding: 10px 35px;
+}
+.ielts-exam-notes {
+  font-size: 14px;
+  border-top: 1px solid var(--exam-line);
+  padding: 20px 0;
+}
+.ielts-exam blockquote {
+  margin: 10px 0;
+  border-left: 3px solid #ddbd49;
+  padding-left: 12px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.ielts-exam textarea {
+  width: 100%;
+  min-height: 72px;
+  padding: 8px;
+  border: 1px solid var(--exam-line);
+  border-radius: 4px;
+  background: var(--exam-paper);
+  resize: vertical;
+}
+.ielts-exam-annotation-editor {
+  position: absolute;
+  right: 24px;
+  bottom: 100px;
+  width: min(390px, calc(100vw - 48px));
+  padding: 18px;
+  border: 1px solid #c2aa59;
+  background: #fffae7;
+  color: #172b3a;
+  box-shadow: 0 8px 28px #172b3a33;
+  border-radius: 8px;
+}
+.ielts-exam-annotation-editor blockquote {
+  max-height: 100px;
+  overflow-y: auto;
+}
+.ielts-exam-annotation-editor > div,
+.ielts-exam-dialog > div {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 14px;
+}
+.ielts-exam-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: #14253488;
+  padding: 24px;
+}
+.ielts-exam-dialog {
+  width: min(490px, 100%);
+  padding: 28px;
+  background: var(--exam-paper);
+  border-radius: 10px;
+  box-shadow: 0 12px 48px #0004;
+}
+.ielts-exam-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+.ielts-exam-contrast {
+  --exam-ink: #fff;
+  --exam-paper: #131b23;
+  --exam-muted: #d4e0e9;
+  --exam-line: #758594;
+  color-scheme: dark;
+}
+.ielts-exam-contrast .ielts-exam-header,
+.ielts-exam-contrast .ielts-exam-footer,
+.ielts-exam-contrast .ielts-exam-status {
+  background: #202e3a;
+}
+.ielts-exam-contrast .ielts-exam-option:has(input:checked),
+.ielts-exam-contrast .ielts-exam-footer nav button.is-answered {
+  background: #234d68;
+}
+.ielts-exam-contrast .ielts-exam-clock.is-urgent {
+  color: #ffaf91;
+}
+@media (max-width: 760px) {
+  .ielts-exam-header {
+    padding: 10px 14px;
+    gap: 8px;
+  }
+  .ielts-exam-header strong {
+    font-size: 18px;
+  }
+  .ielts-exam-header button {
+    font-size: 12px;
+    padding: 5px 8px;
+  }
+  .ielts-exam-tools {
+    padding: 8px 14px;
+    gap: 10px;
+  }
+  .ielts-exam-tools > span,
+  .ielts-exam-split-control {
+    display: none !important;
+  }
+  .ielts-exam-panes {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .ielts-exam-passage,
+  .ielts-exam-questions {
+    padding: 16px;
+  }
+  .ielts-exam-passage {
+    border-right: 0;
+    border-bottom: 4px solid #e0e6eb;
+  }
+  .ielts-exam-footer {
+    gap: 10px;
+    padding: 10px;
+    flex-wrap: wrap;
+  }
+  .ielts-exam-footer nav {
+    min-width: 50%;
+  }
+  .ielts-exam-status {
+    padding: 6px 14px;
+  }
+  .ielts-exam-intro {
+    padding: 24px;
+  }
+  .ielts-exam button {
+    min-height: 44px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ielts-exam * {
+    scroll-behavior: auto !important;
+  }
+}
+
+.ielts-exam-contrast .ielts-exam-annotation-editor {
+  background: var(--exam-paper);
+  color: var(--exam-ink);
+}
