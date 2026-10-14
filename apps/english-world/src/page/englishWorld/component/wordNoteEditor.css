@@ -1,0 +1,41 @@
+.word-note-focus-modal {
+  top: 16px;
+  padding-bottom: 16px;
+}
+.word-note-focus-content textarea {
+  display: block;
+  width: 100%;
+  padding: 16px;
+  font: inherit;
+  font-size: 16px;
+  line-height: 1.9;
+  border: 1px solid #c4ccd8;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  overflow-wrap: anywhere;
+}
+.word-note-focus-content p {
+  color: #738096;
+  margin: 0 0 16px;
+}
+.word-note-focus-content label {
+  display: block;
+  margin-bottom: 10px;
+}
+.word-note-mobile-focus textarea {
+  width: 100%;
+  font-size: 16px;
+  line-height: 1.9;
+}
+.word-note-mobile-focus > button {
+  position: sticky;
+  top: 0;
+  min-height: 44px;
+  z-index: 2;
+}
+.word-knowledge-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}

@@ -17,7 +17,7 @@ export function ReadingPracticePanel({initialId}:{initialId?:number}) {
  useEffect(()=>{if(!rows.some(r=>['queued','generating'].includes(r.status)))return;const timer=setInterval(()=>void refresh(),5000);return()=>clearInterval(timer);},[rows,refresh]);
  const openPreview=useCallback(async(id:number)=>{try{setPreview(await request(getPractice(id)));}catch{setError('预览加载失败，请重试。');}},[]);
  useEffect(()=>{if(initialId)void openPreview(initialId);},[initialId,openPreview]);
- const act=async(id:number,action:'publish'|'withdraw'|'retry'|'delete')=>{if(lock.current)return;lock.current=true;setBusy(true);try{await request(practiceAction(id,action));setPending(null);await refresh();}catch{setError('操作未完成，请检查练习状态和接收人后重试。');}finally{lock.current=false;setBusy(false);}};
+ const act=async(id:number,action:'publish'|'withdraw'|'retry'|'delete')=>{if(lock.current)return;lock.current=true;setBusy(true);try{await request(practiceAction(id,action));setPending(null);if(action==='publish')setPreview(null);await refresh();}catch{setError('操作未完成，请检查练习状态和接收人后重试。');}finally{lock.current=false;setBusy(false);}};
  return <section className="admin-panel">
   <div className="admin-list-toolbar"><div><h2>阅读练习 <span className="admin-count">{total}</span></h2><p>AI 生成文章与配套题，审核后发给用户独立完成。</p></div><Space><Button onClick={()=>void refresh()} loading={loading}>刷新练习</Button><Button type="primary" onClick={()=>{setInitial(undefined);setEditor(true);}}>新建练习</Button></Space></div>
   {error&&<Alert message={error} type="error" showIcon/>}
@@ -27,8 +27,7 @@ export function ReadingPracticePanel({initialId}:{initialId?:number}) {
    {title:'完成 / 接收',width:120,render:(_,r:AdminPractice)=>`${r.submittedCount} / ${r.assignedCount}`},
    {title:'创建时间',dataIndex:'createdAt',width:165,render:formatDate},
    {title:'操作',width:285,render:(_,r:AdminPractice)=><Space wrap size={0}>
-    <Button type="link" onClick={()=>void openPreview(r.id)}>预览</Button>
-    {r.status==='draft'&&<Button type="link" onClick={()=>setPending({row:r,action:'publish'})}>发布练习</Button>}
+    <Button type="link" onClick={()=>void openPreview(r.id)}>{r.status==='draft'?'审核练习':'预览'}</Button>
     {r.status==='published'&&<Button type="text" onClick={()=>setPending({row:r,action:'withdraw'})}>撤回</Button>}
     {r.status==='failed'&&<Button loading={busy} onClick={()=>void act(r.id,'retry')}>重试生成</Button>}
     {!['queued','generating'].includes(r.status)&&<Button type="text" onClick={()=>{setInitial(r.config);setEditor(true);}}>再生成</Button>}
@@ -36,8 +35,8 @@ export function ReadingPracticePanel({initialId}:{initialId?:number}) {
    </Space>},
   ]}/>
   {editor&&<ReadingPracticeEditor open onClose={()=>setEditor(false)} initial={initial} onCreated={()=>void refresh()}/>}
-  <ReadingPracticePreview paper={preview} onClose={()=>setPreview(null)}/>
-  <Modal open={!!pending} title={pending?.action==='publish'?'确认发布练习':pending?.action==='withdraw'?'确认撤回练习':'确认删除草稿'} okText={pending?.action==='publish'?'确认发布':pending?.action==='withdraw'?'确认撤回':'确认删除'} cancelText="取消" confirmLoading={busy} cancelButtonProps={{disabled:busy}} closable={!busy} maskClosable={!busy} keyboard={!busy} onCancel={()=>{if(!busy)setPending(null);}} onOk={()=>{if(pending)void act(pending.row.id,pending.action);}}>
+  <ReadingPracticePreview paper={preview} onClose={()=>setPreview(null)} busy={busy} onApprove={row=>setPending({row,action:"publish"})}/>
+  <Modal open={!!pending} title={pending?.action==='publish'?'审核通过并发布练习':pending?.action==='withdraw'?'确认撤回练习':'确认删除草稿'} okText={pending?.action==='publish'?'确认发布':pending?.action==='withdraw'?'确认撤回':'确认删除'} cancelText="取消" confirmLoading={busy} cancelButtonProps={{disabled:busy}} closable={!busy} maskClosable={!busy} keyboard={!busy} onCancel={()=>{if(!busy)setPending(null);}} onOk={()=>{if(pending)void act(pending.row.id,pending.action);}}>
    <h3>{pending?.row.title}</h3><p>{pending?.action==='publish'?`将发布给${pending.row.config.targetType==='all'?'当前全部正常用户':`${pending.row.config.targetUserIds?.length??0} 位指定用户`}。发布后内容固定，每人可提交一次。`:pending?.action==='withdraw'?'停止新的提交，已经提交的用户仍可查看成绩与解析。':'将删除这份未发布练习。'}</p>{error&&<Alert type="error" message={error}/>}
   </Modal>
  </section>;

@@ -1,3 +1,4 @@
+import { WordKnowledgeLinks } from "@/page/englishWorld/component/WordNoteDisplay";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient, type InfiniteData } from "@tanstack/react-query";
 import { Link, useNavigate, useParams } from "react-router-dom";
@@ -83,7 +84,7 @@ export function MobileWordDetailPage() {
     queryFn: async () => {
       if (wordId === null) throw new Error("单词 ID 无效。");
       // Prefer the already-fetched list cache so a navigation from the library
-      // resolves instantly without the broad `wordFindList` fallback.
+      // resolves instantly without fetching every vocabulary page again.
       const cached = readWordFromListCache(queryClient, wordId);
       if (cached) return cached;
       return fetchMobileWordDetail(wordId);
@@ -173,11 +174,11 @@ export function MobileWordDetailPage() {
   const deleteDialogTitle = `删除 ${word.englishWord}？`;
 
   return (
-    <MobilePage title={word.englishWord}>
+    <MobilePage className="study-word-detail" title={word.englishWord} actions={<MobileBritishPronunciationButton ariaLabel={`播放 ${word.englishWord} 的英式发音`} word={word.englishWord} />}>
       <a href="/mobile/words" onClick={(event) => { event.preventDefault(); navigate("/mobile/words"); }}>返回词库</a>
       <section aria-label="单词概况">
         {word.englishPhonetic && <p>{word.englishPhonetic}</p>}
-        {word.englishChinese && <p>{word.englishChinese}</p>}
+        {word.englishChinese && <p className="word-detail-meaning">{word.englishChinese}</p>}
         <p>
           <span aria-label={`类型：${typeLabel.label}`}>{typeLabel.label}</span>
           <span aria-label={`掌握程度：${levelLabel.label}`}>{levelLabel.label}</span>
@@ -187,10 +188,9 @@ export function MobileWordDetailPage() {
         </p>
       </section>
 
-      <section aria-label="释义与笔记">
-        {word.englishNote && <p>{word.englishNote}</p>}
-      </section>
+      {word.englishNote && <section aria-label="释义与笔记"><h3>笔记</h3><p>{word.englishNote}</p></section>}
 
+      <WordKnowledgeLinks wordId={word.id} hasNote={Boolean(word.englishNote?.trim())} mobile />
       <section aria-label="来源">
         <h3>来源</h3>
         {word.englishReference && isExternalReference(word.englishReference) ? (
@@ -210,9 +210,8 @@ export function MobileWordDetailPage() {
 
       <section aria-label="操作">
         <Link to={`/mobile/words/${word.id}/edit`}>编辑</Link>
-        <Link to="/mobile/learn">开始复习</Link>
+        <Link to={`/mobile/review?wordIds=${word.id}`}>开始复习</Link>
         <a href={dictionaryHref} rel="noopener noreferrer" target="_blank">百度查询</a>
-        <MobileBritishPronunciationButton ariaLabel={`播放 ${word.englishWord} 的英式发音`} word={word.englishWord} />
         <button
           disabled={!online || deleting}
           onClick={() => setDeleteOpen(true)}

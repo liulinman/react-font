@@ -1,11 +1,16 @@
 import "@testing-library/jest-dom/vitest";
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { NotificationProvider, useNotifications } from "./NotificationContext";
+
+const native = vi.hoisted(() => ({ enabled: false }));
+vi.mock("@/native/runtime", () => ({ isNativeApp: () => native.enabled }));
 
 const requestMock = vi.hoisted(() => vi.fn());
 const notificationOpenMock = vi.hoisted(() => vi.fn());
 const notificationErrorMock = vi.hoisted(() => vi.fn());
+const checkAuthMock = vi.hoisted(() => vi.fn());
 const logoutMock = vi.hoisted(() => vi.fn());
 const locationAssignMock = vi.hoisted(() => vi.fn());
 
@@ -18,6 +23,7 @@ vi.mock("@/contexts/AuthContext", () => ({
   useAuth: () => ({
     isAuthenticated: true,
     logout: logoutMock,
+    checkAuth: checkAuthMock,
   }),
 }));
 
@@ -65,6 +71,9 @@ function Probe() {
   return (
     <div>
       <span data-testid="count">{notifications.unreadCount}</span>
+      <span data-testid="center-state">
+        {notifications.centerOpen ? "open" : "closed"}
+      </span>
       {notifications.items.map((item) => (
         <span key={item.id}>{item.title}</span>
       ))}
@@ -94,8 +103,38 @@ describe("NotificationProvider", () => {
 
   afterEach(() => {
     cleanup();
+    native.enabled = false;
+    vi.useRealTimers();
     vi.unstubAllGlobals();
     vi.clearAllMocks();
+  });
+
+  it("polls native notifications without opening a cross-site EventSource and stops after unmount", async () => {
+    native.enabled = true;
+    vi.useFakeTimers();
+    const view = render(<NotificationProvider><Probe /></NotificationProvider>);
+    await act(async () => { await Promise.resolve(); });
+    expect(MockEventSource.instances).toHaveLength(0);
+    requestMock.mockClear();
+    await act(async () => { await vi.advanceTimersByTimeAsync(30000); });
+    expect(requestMock).toHaveBeenCalledWith(expect.objectContaining({ url: "/notifications/unread-count" }));
+    view.unmount();
+    requestMock.mockClear();
+    await vi.advanceTimersByTimeAsync(30000);
+    expect(requestMock).not.toHaveBeenCalled();
+  });
+
+  it("rechecks native authentication when the session expires, but preserves auth on network errors", async () => {
+    native.enabled = true;
+    requestMock.mockRejectedValue({ code: 4001 });
+    const view = render(<NotificationProvider><Probe /></NotificationProvider>);
+    await waitFor(() => expect(checkAuthMock).toHaveBeenCalledOnce());
+    view.unmount();
+    checkAuthMock.mockClear();
+    requestMock.mockRejectedValue({ code: 'CORS_ERROR' });
+    render(<NotificationProvider><Probe /></NotificationProvider>);
+    await act(async () => { await Promise.resolve(); });
+    expect(checkAuthMock).not.toHaveBeenCalled();
   });
 
   it("connects to SSE and shows a top-right toast for incoming notifications", async () => {
@@ -128,11 +167,145 @@ describe("NotificationProvider", () => {
     expect(screen.getByTestId("count")).toHaveTextContent("1");
     expect(notificationOpenMock).toHaveBeenCalledWith(
       expect.objectContaining({
+        key: "english-world-live-notification",
         message: "今日雅思表达",
         description: "mitigate = reduce risk",
         placement: "topRight",
+        duration: 4.5,
+        role: "status",
       }),
     );
+  });
+
+  it("keeps urgent live notifications visible with alert semantics", async () => {
+    render(
+      <NotificationProvider>
+        <Probe />
+      </NotificationProvider>,
+    );
+
+    await waitFor(() => expect(MockEventSource.instances).toHaveLength(1));
+    MockEventSource.instances[0].emit({
+      type: "notification",
+      data: {
+        id: 13,
+        title: "系统维护",
+        body: "请立即保存学习进度",
+        category: "system",
+        priority: "urgent",
+        sourceType: "manual",
+        publishedAt: "2026-07-29T08:00:00.000Z",
+      },
+    });
+
+    expect(await screen.findByText("系统维护")).toBeInTheDocument();
+    expect(notificationOpenMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        duration: 0,
+        role: "alert",
+      }),
+    );
+  });
+
+  it("gives important live notifications more reading time without making them persistent", async () => {
+    render(
+      <NotificationProvider>
+        <Probe />
+      </NotificationProvider>,
+    );
+
+    await waitFor(() => expect(MockEventSource.instances).toHaveLength(1));
+    MockEventSource.instances[0].emit({
+      type: "notification",
+      data: {
+        id: 14,
+        title: "学习计划调整",
+        body: "今日复习任务已更新",
+        category: "announcement",
+        priority: "important",
+        sourceType: "manual",
+        publishedAt: "2026-07-29T08:00:00.000Z",
+      },
+    });
+
+    expect(await screen.findByText("学习计划调整")).toBeInTheDocument();
+    expect(notificationOpenMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        duration: 8,
+        role: "status",
+      }),
+    );
+  });
+
+  it("opens the notification center from the live notification action", async () => {
+    const user = userEvent.setup();
+    render(
+      <NotificationProvider>
+        <Probe />
+      </NotificationProvider>,
+    );
+
+    await waitFor(() => expect(MockEventSource.instances).toHaveLength(1));
+    MockEventSource.instances[0].emit({
+      type: "notification",
+      data: {
+        id: 15,
+        title: "新的复习任务",
+        body: "有 12 个单词进入今日复习",
+        category: "exam_vocabulary",
+        priority: "normal",
+        sourceType: "manual",
+        publishedAt: "2026-07-29T08:00:00.000Z",
+      },
+    });
+
+    await screen.findByText("新的复习任务");
+    const toastOptions = notificationOpenMock.mock.calls[0][0];
+    render(toastOptions.actions);
+    await user.click(screen.getByRole("button", { name: "查看通知" }));
+
+    expect(screen.getByTestId("center-state")).toHaveTextContent("open");
+  });
+
+  it("summarizes additional notifications instead of stacking live toasts", async () => {
+    render(
+      <NotificationProvider>
+        <Probe />
+      </NotificationProvider>,
+    );
+
+    await waitFor(() => expect(MockEventSource.instances).toHaveLength(1));
+    const source = MockEventSource.instances[0];
+    source.emit({
+      type: "notification",
+      data: {
+        id: 16,
+        title: "第一条消息",
+        body: "第一条正文",
+        category: "custom",
+        priority: "normal",
+        sourceType: "manual",
+        publishedAt: "2026-07-29T08:00:00.000Z",
+      },
+    });
+    source.emit({
+      type: "notification",
+      data: {
+        id: 17,
+        title: "第二条消息",
+        body: "第二条正文",
+        category: "custom",
+        priority: "normal",
+        sourceType: "manual",
+        publishedAt: "2026-07-29T08:01:00.000Z",
+      },
+    });
+
+    await screen.findByText("第二条消息");
+    const latestToastOptions = notificationOpenMock.mock.calls[1][0];
+    render(latestToastOptions.description);
+
+    expect(screen.getByText("另有 1 条通知")).toBeInTheDocument();
   });
 
   it("removes withdrawn notifications from the visible list", async () => {

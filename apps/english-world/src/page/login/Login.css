@@ -701,3 +701,17 @@
     transition: none;
   }
 }
+
+/* Personal mobile app: the same quiet visual language as the study space. */
+.mobile-login { align-items: center; padding: calc(36px + env(safe-area-inset-top, 0px)) 24px calc(36px + env(safe-area-inset-bottom, 0px)); }
+.mobile-login__surface { border: 0; padding: 12px 4px; background: transparent; }
+.mobile-login__brand { width: 52px; height: 58px; border-radius: 12px 20px 12px 12px; background: #28634e; transform: rotate(-7deg); font: 20px Georgia,serif; }
+.mobile-login__eyebrow { margin-top: 32px; color: var(--mobile-accent); font-size: 10px; font-weight: 600; letter-spacing: .17em; }
+.mobile-login h1 { margin-top: 14px; font-size: 34px; line-height: 1.3; }
+.mobile-login__description { font-size: 14px; margin-bottom: 32px; }
+.mobile-login__switch { margin-bottom: 28px; border-radius: 14px; }
+.mobile-login .mobile-login__switch-button { font-size: 14px; font-weight: 500; }
+.mobile-login .mobile-login__switch-button.adm-button-fill-solid { background: var(--mobile-surface-raised); border: 0; color: var(--mobile-ink-primary); box-shadow: 0 2px 6px #00000008; }
+.mobile-login__field label { font-size: 13px; font-weight: 500; margin-bottom: 10px; }
+.mobile-login__field .adm-input { min-height: 54px; border-radius: 15px; }
+.mobile-login__submit { min-height: 54px; border-radius: 16px; background: #28634e; border-color: #28634e; color: white; font-weight: 500; margin-top: 16px; }

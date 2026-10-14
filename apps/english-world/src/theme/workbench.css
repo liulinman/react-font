@@ -1,0 +1,208 @@
+/* Shared presentation rules for the learning workspace. */
+:root:root {
+  --ew-page-bg: #f6f7f9;
+  --ew-text: #20252d;
+  --ew-text-secondary: #626b78;
+  --ew-border: #e1e4e9;
+  --ew-radius-sm: 6px;
+  --ew-radius-md: 8px;
+  --ew-radius-lg: 8px;
+  --ew-shadow-soft: none;
+  --ew-shadow-lifted: 0 6px 24px #17212f12;
+}
+:root[data-theme=dark] {
+  --ew-page-bg: #14171c;
+  --ew-text: #e5e7eb;
+  --ew-text-secondary: #a4adba;
+  --ew-border: #343b46;
+}
+body { font-family: -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif; }
+.english-world-shell .english-world-main { padding: 24px 28px; }
+.english-world-shell .english-world-header { background: var(--ew-surface); border-right: 1px solid var(--ew-border); color: var(--ew-text); }
+.english-world-shell .english-world-header-inner { padding: 22px 12px; }
+.english-world-shell .english-world-brand { gap: 10px; padding: 0 8px 24px; color: var(--ew-text); }
+.english-world-shell .english-world-brand-title { font-size: 16px; color: var(--ew-text); }
+.english-world-shell .english-world-brand-mark { width: 34px; height: 34px; border-radius: 6px; background: var(--ew-accent); font-size: 13px; font-weight: 700; }
+.english-world-shell .english-world-brand-subtitle { display: none; }
+.english-world-shell .english-world-nav { min-height: 0; overflow-x: hidden; overflow-y: auto; }
+.english-world-shell .english-world-nav-menu.ant-menu { background: transparent; color: var(--ew-text-secondary); }
+.english-world-shell .english-world-nav-menu.ant-menu :is(.ant-menu-item,.ant-menu-submenu-title) { border-radius: 5px; color: var(--ew-text-secondary); font-weight: 500; box-shadow: none; }
+.english-world-shell .english-world-nav-menu.ant-menu .ant-menu-sub { background: transparent; }
+.english-world-shell .english-world-nav-menu.ant-menu .ant-menu-sub .ant-menu-item { width: calc(100% - 16px); }
+.english-world-shell .english-world-nav-menu.ant-menu :is(.ant-menu-item-selected,.ant-menu-item-selected:hover) { color: var(--ew-accent); background: var(--ew-accent-soft); font-weight: 600; }
+.english-world-shell .english-world-nav-menu.ant-menu :is(.ant-menu-item:hover,.ant-menu-submenu-title:hover) { color: var(--ew-text); background: var(--ew-surface-muted); }
+.english-world-shell .english-world-sidebar-toggle { box-shadow: none; border-radius: 6px; }
+.english-world-shell .english-world-context-bar { background: var(--ew-surface); backdrop-filter: none; border-color: var(--ew-border); padding-inline: 28px; }
+.english-world-shell .english-world-context-path { font-size: 13px; }
+.english-world-shell .english-world-notification-button.ant-btn { border-radius: 6px; box-shadow: none; border-color: transparent; background: transparent; }
+.english-world-shell :is(.english-world-page-eyebrow,.learning-cockpit-eyebrow,.context-lab-history-kicker) { display: none; }
+.english-world-shell :is(.english-world-page-header,.learning-cockpit-hero,.ielts-core-hero,.bulk-import-hero,.overwrite-stats-hero,.memory-map-hero,.context-lab-hero) { background: transparent; box-shadow: none; border-radius: 0; padding: 0; margin-bottom: 20px; }
+.english-world-shell :is(.english-world-page-header,.learning-cockpit-hero,.ielts-core-hero,.bulk-import-hero,.overwrite-stats-hero,.memory-map-hero,.context-lab-hero) h1 { font-size: 24px; line-height: 1.4; letter-spacing: 0; margin: 0 0 8px; color: var(--ew-text); }
+.english-world-shell :is(.english-world-page-header p,.learning-cockpit-hero-copy p) { font-size: 14px; line-height: 1.6; color: var(--ew-text-secondary); }
+.english-world-shell :is(.learning-cockpit,.english-world-stack,.context-lab-page,.ielts-core-page,.memory-map-page) { gap: 20px; }
+.english-world-shell :is(.learning-cockpit-card,.learning-snapshot,.learning-cockpit-task-item,.english-world-filter-panel,.english-world-table-panel,.bulk-import-input-card,.bulk-import-result-card,.overwrite-stats-panel,.ielts-core-source-panel,.memory-map-entry-button,.context-lab-panel,.context-lab-history-panel,.word-card) { border-radius: 8px; border-color: var(--ew-border); box-shadow: none; }
+.english-world-shell :is(.learning-cockpit-card,.learning-snapshot) { padding: 20px; background: var(--ew-surface); }
+.english-world-shell .word-card { padding: 16px; }
+.english-world-shell .word-card:hover { transform: none; border-color: var(--ew-accent); }
+.english-world-shell .ant-card { border-radius: 8px; box-shadow: none; border-color: var(--ew-border); }
+.english-world-shell .ant-card .ant-card-head { min-height: 48px; font-size: 16px; }
+.english-world-shell .ant-card .ant-card-body { padding: 20px; }
+.english-world-shell .ant-btn { border-radius: 6px; box-shadow: none; }
+.english-world-shell .ant-table-thead > tr > th { background: var(--ew-surface-muted); font-size: 13px; font-weight: 600; }
+.english-world-shell .ant-table-tbody > tr > td { padding-block: 12px; }
+.english-world-shell .ant-tag { border-radius: 4px; }
+.english-world-shell .knowledge-notes { max-width: none; border: 1px solid var(--ew-border); border-radius: 8px; padding: 24px; }
+.english-world-shell .knowledge-notes h1 { font-size: 24px; }
+.english-world-shell :is(button,a,input,textarea,select):focus-visible,
+.english-world-main .reading-practice :is(button,a,input):focus-visible { outline: 2px solid var(--ew-accent); outline-offset: 3px; }
+/* Reading pages share the same typography and action colors as the rest of the app. */
+.english-world-main .reading-practice.reading-practice { --rp-ink: var(--ew-text); --rp-accent: var(--ew-accent); --rp-border: var(--ew-border); padding: 0; max-width: none; }
+.english-world-main .reading-practice .rp-eyebrow { display: none; }
+.english-world-main .reading-practice .rp-heading { margin: 0 0 24px; }
+.english-world-main .reading-practice .rp-heading h1 { font-size: 24px; font-weight: 650; margin: 0 0 8px; }
+.english-world-main .reading-practice .rp-heading p { font-size: 14px; color: var(--ew-text-secondary); margin: 0; }
+.english-world-main .reading-practice .rp-grid { display: block; border-top: 1px solid var(--ew-border); }
+.english-world-main .reading-practice .rp-card { display: grid; grid-template-columns: minmax(0,1fr) 120px 100px 200px; gap: 16px; align-items: center; padding: 20px 16px; border: 0; border-bottom: 1px solid var(--ew-border); border-radius: 0; background: var(--ew-surface); }
+.english-world-main .reading-practice .rp-card h2 { font-size: 17px; line-height: 1.5; margin: 0; font-weight: 600; grid-column: 1; grid-row: 1; }
+.english-world-main .reading-practice .rp-card > p { font-size: 13px; margin: 0; grid-column: 2; grid-row: 1; }
+.english-world-main .reading-practice .rp-card > .rp-status { grid-column: 3; grid-row: 1; justify-self: start; }
+.english-world-main .reading-practice .rp-card > div { grid-column: 4; grid-row: 1; margin: 0; gap: 10px; justify-content: flex-end; font-size: 13px; }
+.english-world-main .reading-practice .rp-card a { white-space: nowrap; font-weight: 500; }
+.english-world-main .reading-practice .rp-status { border-radius: 4px; background: var(--ew-surface-muted); color: var(--ew-text-secondary); padding: 3px 7px; }
+.english-world-main .reading-practice .rp-score { padding: 12px 16px; margin: 12px 0 16px; border-radius: 6px; background: var(--ew-surface); border: 1px solid var(--ew-border); gap: 20px; }
+.english-world-main .reading-practice .rp-score strong { font-size: 28px; }
+.english-world-main .reading-practice .rp-score h2 { font-size: 16px; }
+.english-world-main .reading-practice .rp-score p { font-size: 13px; margin: 4px 0 0; color: var(--ew-text-secondary); }
+.english-world-main .reading-practice .rp-score { padding: 12px 16px; }
+.english-world-main .reading-practice :is(.rp-article,.rp-questions) { border-radius: 6px; background: var(--ew-surface); }
+.english-world-main .reading-practice .rp-article { font-size: 18px; line-height: 1.85; }
+.english-world-main .reading-practice :is(.rp-article h2,.rp-questions h2) { font-size: 18px; }
+.english-world-main .reading-practice .rp-result { padding: 16px 0; }
+.english-world-main .reading-practice .rp-result:first-of-type { padding-top: 0; }
+.english-world-main .reading-practice .rp-result h3 { font-size: 16px; }
+.english-world-main .reading-practice .rp-result blockquote { background: var(--ew-surface-muted); border-left-color: var(--ew-border); padding: 10px 14px; }
+.english-world-main .reading-practice .rp-questions label { border-radius: 5px; }
+.english-world-main .reading-practice .rp-questions label.is-selected { background: var(--ew-accent-soft); }
+.english-world-main .reading-practice .rp-submit { border-radius: 6px; background: var(--ew-surface); }
+.english-world-main .reading-practice .rp-submit button { border-radius: 6px; }
+.english-world-main .reading-practice > a { display: inline-flex; align-items: center; align-self: flex-start; min-height: 32px; font-size: 13px; margin-bottom: 8px; }
+/* Remove ornamental login backgrounds while retaining the existing form behavior. */
+.login-container.login-container { background: var(--ew-page-bg); }
+.login-container.login-container::before,.login-container.login-container::after,.login-container .login-ambient-shape { display: none; }
+.login-container :is(.login-card,.login-panel) { border-radius: 10px; box-shadow: none; border: 1px solid var(--ew-border); }
+@media(max-width:1100px) {
+  .english-world-main .reading-practice .rp-card { grid-template-columns: minmax(0,1fr) 100px 175px; }
+  .english-world-main .reading-practice .rp-card > p { grid-column: 1; grid-row: 2; }
+  .english-world-main .reading-practice .rp-card > .rp-status { grid-column: 2; }
+  .english-world-main .reading-practice .rp-card > div { grid-column: 3; }
+}
+@media(max-width:760px) {
+  .english-world-shell .english-world-main { padding: 18px 12px; }
+  .english-world-main .reading-practice.reading-practice { padding: 16px 12px 28px; }
+  .english-world-main .reading-practice .rp-card { grid-template-columns: minmax(0,1fr) auto; gap: 8px 12px; padding: 18px 12px; }
+  .english-world-main .reading-practice .rp-card h2 { grid-column: 1/-1; font-size: 17px; }
+  .english-world-main .reading-practice .rp-card > p { grid-column: 1; grid-row: 2; }
+  .english-world-main .reading-practice .rp-card > .rp-status { grid-column: 2; grid-row: 2; justify-self: end; }
+  .english-world-main .reading-practice .rp-card > div { grid-column: 1/-1; grid-row: 3; justify-content: space-between; }
+  .english-world-main .reading-practice .rp-card a { min-height: 44px; margin-left: auto; }
+  .english-world-shell .knowledge-notes { padding: 16px; }
+  .english-world-shell .ant-card .ant-card-body { padding: 16px; }
+}
+
+.english-world-shell .english-world-nav-menu.ant-menu .ant-menu-submenu-selected > .ant-menu-submenu-title { color: var(--ew-text); background: transparent; }
+.english-world-shell .english-world-nav-menu.ant-menu .ant-menu-item:not(.ant-menu-item-selected):hover { color: var(--ew-text); background: var(--ew-surface-muted); }
+.english-world-shell .english-world-nav-child-note { color: var(--ew-text-secondary); border-color: var(--ew-border); border-radius: 4px; font-weight: 500; }
+.english-world-shell .english-world-user { border-radius: 6px; box-shadow: none; border-color: transparent; }
+.english-world-shell .learning-snapshot-heading > strong { display: none; }
+.english-world-shell .memory-map-orbit { display: none; }
+.english-world-shell .learning-cockpit-card-icon { display: none; }
+.english-world-shell .learning-cockpit-card-heading h4 { font-size: 18px; }
+.english-world-main .reading-practice .rp-empty { border-radius: 6px; border-style: solid; padding: 32px 20px; background: var(--ew-surface); }
+.english-world-main .reading-practice .rp-empty h2 { font-size: 18px; margin-bottom: 8px; }
+.english-world-main .reading-practice .rp-empty p { font-size: 14px; color: var(--ew-text-secondary); }
+.english-world-main .reading-practice .rp-grid:empty { border: 0; }
+.login-container :is(.login-kicker,.login-constellation,.login-copy-points,.login-brand-lockup small,.login-footer,.login-card-footer) { display: none; }
+.login-container .login-hero { max-width: 880px; gap: 64px; }
+.login-container .login-copy h1 { font-size: 30px; line-height: 1.4; letter-spacing: 0; }
+.login-container .login-copy p { font-size: 15px; line-height: 1.8; }
+.login-container .login-brand-mark { border-radius: 6px; background: var(--ew-accent); box-shadow: none; }
+.login-container .login-card { backdrop-filter: none; }
+.english-world-shell .english-world-nav-menu.ant-menu .ant-menu-sub .ant-menu-item:not(.ant-menu-item-selected) { color: var(--ew-text-secondary); }
+.english-world-main .reading-practice :is(.rp-card p,.rp-submit small) { color: var(--ew-text-secondary); }
+:root[data-theme=dark][data-accent=blue] { --ew-accent: #8cb4ff; }
+:root[data-theme=dark][data-accent=green] { --ew-accent: #5fd095; }
+:root[data-theme=dark][data-accent=purple] { --ew-accent: #b7a1fa; }
+:root[data-theme=dark] { --ew-accent-soft: color-mix(in srgb,var(--ew-accent) 15%,var(--ew-surface)); }
+.login-container .login-card .login-form-submit { background: var(--ew-accent); border-radius: 6px; box-shadow: none; }
+.login-container .login-card-mark { background: var(--ew-accent); border-radius: 6px; box-shadow: none; }
+.login-container .login-card :is(.ant-input-affix-wrapper,.ant-segmented) { border-radius: 6px; }
+
+/* Desktop surface hierarchy: workspace, task, and reading paper. */
+.english-world-shell {
+  --ew-page-bg: #f3f2ee;
+  --ew-text: #243446;
+  --ew-text-secondary: #646d76;
+  --ew-border: #dedfdc;
+  --workbench-paper: #fffdf8;
+  --workbench-rail: #eaece9;
+  --workbench-task: #edf2f7;
+  --workbench-success: #27654b;
+  --workbench-error: #a34732;
+  background: var(--ew-page-bg);
+}
+:root[data-theme=dark] .english-world-shell {
+  --ew-page-bg: #191d22;
+  --ew-text: #e3e8ed;
+  --ew-text-secondary: #a8b1ba;
+  --ew-border: #384149;
+  --workbench-paper: #242724;
+  --workbench-rail: #20272d;
+  --workbench-task: #263544;
+  --workbench-success: #8ccbaa;
+  --workbench-error: #eeac95;
+}
+.english-world-shell .english-world-main { background: var(--ew-page-bg); }
+.english-world-shell .english-world-header { background: var(--workbench-rail); }
+.english-world-shell .english-world-context-bar { background: var(--ew-page-bg); }
+.english-world-shell .english-world-brand-title { letter-spacing: -.3px; }
+.english-world-shell .english-world-nav-menu.ant-menu .ant-menu-item-selected {
+  box-shadow: inset 3px 0 var(--ew-accent);
+  background: var(--ew-surface);
+}
+/* The first action is the visual anchor; supporting statistics stay quieter. */
+.english-world-shell .learning-cockpit-card-primary { border-top: 3px solid var(--ew-accent); padding: 24px; }
+.english-world-shell .learning-cockpit-card-primary h3 { font-size: 26px; letter-spacing: -.5px; }
+.english-world-shell .learning-cockpit-card-primary .learning-cockpit-label { color: var(--ew-accent); }
+.english-world-shell .learning-cockpit-task-item { border: 0; border-top: 1px solid var(--ew-border); border-radius: 0; background: transparent; }
+.english-world-shell .learning-cockpit-task-item-primary { border: 1px solid var(--ew-border); border-left: 3px solid var(--ew-accent); border-radius: 6px; background: var(--workbench-task); }
+.english-world-shell .learning-cockpit-task-item-primary .learning-cockpit-task-index { background: var(--ew-accent); color: #fff; }
+.english-world-shell .learning-cockpit-support-rail .learning-cockpit-card { background: transparent; border-color: transparent; border-top-color: var(--ew-border); border-radius: 0; }
+.english-world-shell .learning-snapshot { background: var(--workbench-rail); border-color: transparent; }
+/* Reading uses editorial typography, with the controls on a separate surface. */
+.english-world-main .reading-practice .rp-heading { padding-block: 6px 18px; border-bottom: 1px solid var(--ew-border); }
+.english-world-main .reading-practice .rp-grid { border: 1px solid var(--ew-border); border-radius: 6px; overflow: hidden; counter-reset: practice; }
+.english-world-main .reading-practice .rp-card { background: var(--workbench-paper); padding-block: 24px; }
+.english-world-main .reading-practice .rp-card:last-child { border-bottom: 0; }
+.english-world-main .reading-practice .rp-card h2 { font-family: Georgia,"Times New Roman",serif; font-size: 20px; font-weight: 500; }
+.english-world-main .reading-practice .rp-card:hover { background: color-mix(in srgb,var(--workbench-paper) 94%,var(--ew-accent)); }
+.english-world-main .reading-practice .rp-card a { padding: 7px 10px; border: 1px solid var(--ew-border); border-radius: 4px; background: var(--ew-surface); }
+.english-world-main .reading-practice .rp-card a:hover { border-color: var(--ew-accent); }
+.english-world-main .reading-practice .rp-article { background: var(--workbench-paper); border-top: 3px solid #b6a27e; padding-inline: clamp(24px,3vw,44px); }
+.english-world-main .reading-practice .rp-article h2 { font-family: Georgia,"Times New Roman",serif; font-size: 24px; line-height: 1.4; padding-bottom: 18px; border-bottom: 1px solid var(--ew-border); }
+.english-world-main .reading-practice .rp-article p { max-width: 68ch; margin-inline: auto; }
+.english-world-main .reading-practice .rp-paragraph-number { color: var(--ew-text-secondary); font-family: inherit; }
+.english-world-main .reading-practice .rp-article p:target { background: var(--workbench-task); outline: 2px solid var(--ew-accent); outline-offset: 5px; }
+.english-world-main .reading-practice .rp-questions { border-top: 3px solid var(--ew-accent); }
+.english-world-main .reading-practice .rp-score { border: 0; border-bottom: 1px solid var(--ew-border); border-radius: 0; background: transparent; padding-left: 0; }
+.english-world-main .reading-practice .rp-score strong { font-family: Georgia,serif; font-size: 36px; }
+.english-world-main .reading-practice .rp-result.is-correct > .rp-status { color: var(--workbench-success); background: color-mix(in srgb,var(--workbench-success) 10%,var(--ew-surface)); }
+.english-world-main .reading-practice .rp-result.is-incorrect > .rp-status { color: var(--workbench-error); background: color-mix(in srgb,var(--workbench-error) 10%,var(--ew-surface)); }
+.english-world-main .reading-practice .rp-result blockquote { background: var(--workbench-paper); border-left: 2px solid #b6a27e; }
+/* Notes retain a useful writing measure instead of spanning the entire window. */
+.english-world-shell .knowledge-notes { --kn-ink: var(--ew-text); --kn-muted: var(--ew-text-secondary); --kn-line: var(--ew-border); --kn-bg: var(--workbench-paper); background: var(--workbench-paper); border-top: 3px solid #b6a27e; }
+.english-world-shell .knowledge-article { max-width: 76ch; margin-inline: auto; padding-block: 24px; }
+.english-world-shell .knowledge-body { font-family: Georgia,"Songti SC","SimSun",serif; font-size: 18px; line-height: 1.95; }
+.english-world-shell .knowledge-list-heading h2 { font-size: 18px; }
+.english-world-shell .knowledge-list > li > a:hover { background: var(--workbench-task); }
+.english-world-shell .english-world-table-panel { border-top: 2px solid var(--ew-text-secondary); }
+.english-world-shell .english-world-filter-panel { background: var(--workbench-rail); }

@@ -428,7 +428,7 @@ describe("EnglishWorld ToC routing", () => {
       screen.getByRole("button", { name: "编辑 preserve 的笔记" }),
     );
     expect(
-      await screen.findByRole("dialog", { name: "编辑单词" }),
+      await screen.findByRole("dialog", { name: "preserve · 编辑笔记" }),
     ).toBeInTheDocument();
 
     const onExpand = vi.fn();

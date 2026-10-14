@@ -22,7 +22,7 @@ export function ReadingPracticeEditor({open,onClose,onCreated,initial}:{open:boo
  const [form]=Form.useForm<PracticeConfig>();const [busy,setBusy]=useState(false);const [error,setError]=useState('');const lock=useRef(false);const attempt=useRef<{signature:string;uid:string} | undefined>(undefined);
  const create=async(config:PracticeConfig)=>{if(lock.current)return;lock.current=true;setBusy(true);setError('');const signature=JSON.stringify(config);if(attempt.current?.signature!==signature)attempt.current={signature,uid:newRequestId()};try{await request(generatePractice(config,attempt.current.uid));onCreated();onClose();}catch{setError('生成任务创建失败，参数已保留，可以重试。');}finally{setBusy(false);lock.current=false;}};
  return <Drawer title="新建阅读练习" width={640} open={open} onClose={()=>{if(!busy)onClose();}} maskClosable={!busy} closable={!busy} keyboard={!busy}>
-  <Alert type="info" showIcon message="先生成，预览后发布" description="每位接收人独立作答，提交后才能查看答案和中文解析。"/>
+  <Alert type="info" showIcon message="老师生成 → 审核 → 发布" description="生成后仅保存为待审核草稿。老师审核通过后手动发布，无需设置发布时间；学生提交后才能查看答案和解析。"/>
   {error&&<Alert type="error" message={error}/>}
   <Form form={form} layout="vertical" initialValues={initial??practiceDefaults} onFinish={v=>void create(v)} disabled={busy} style={{marginTop:24}}>
    <PracticeFields/><Button type="primary" htmlType="submit" loading={busy}>生成草稿</Button>

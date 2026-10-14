@@ -1,5 +1,6 @@
-import { BellOutlined } from "@ant-design/icons";
-import { Badge, Button, Drawer, Empty, List, Space, Tag, Typography } from "antd";
+import { practiceActionPath } from '@/readingPractice/api';
+import { BellOutlined, CheckOutlined, DownOutlined } from "@ant-design/icons";
+import { Badge, Button, Drawer, Empty, List, Tag, Typography, message } from "antd";
 import { useMemo, useState } from "react";
 import { useNotifications } from "./NotificationContext";
 import type {
@@ -9,6 +10,7 @@ import type {
 } from "@/server/notification/notification.type";
 
 const categoryLabels: Record<NotificationCategory, string> = {
+  reading_practice: "阅读练习",
   announcement: "公告",
   ielts_daily: "雅思",
   recent_event: "事件表达",
@@ -29,18 +31,70 @@ const priorityColors: Record<NotificationPriority, string> = {
   urgent: "red",
 };
 
+function formatNotificationTime(publishedAt: string) {
+  const published = new Date(publishedAt);
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const isSameDay = (left: Date, right: Date) =>
+    left.getFullYear() === right.getFullYear() &&
+    left.getMonth() === right.getMonth() &&
+    left.getDate() === right.getDate();
+  const time = `${String(published.getHours()).padStart(2, "0")}:${String(
+    published.getMinutes(),
+  ).padStart(2, "0")}`;
+
+  if (isSameDay(published, today)) return `今天 ${time}`;
+  if (isSameDay(published, yesterday)) return `昨天 ${time}`;
+  if (published.getFullYear() === today.getFullYear()) {
+    return `${published.getMonth() + 1}月${published.getDate()}日`;
+  }
+  return `${published.getFullYear()}年${published.getMonth() + 1}月${published.getDate()}日`;
+}
+
 export function NotificationBell() {
-  const { items, unreadCount, loading, markRead, markAllRead } =
-    useNotifications();
-  const [open, setOpen] = useState(false);
+  const [expandedId, setExpandedId] = useState<number | null>(null);
+  const {
+    items,
+    unreadCount,
+    loading,
+    centerOpen,
+    openCenter,
+    closeCenter,
+    markRead,
+    markAllRead,
+  } = useNotifications();
   const ariaLabel = useMemo(
     () => (unreadCount > 0 ? `通知，${unreadCount} 条未读` : "通知"),
     [unreadCount],
   );
+  const sections = useMemo(() => {
+    const now = new Date();
+    const isToday = (publishedAt: string | null) => {
+      if (!publishedAt) return false;
+      const published = new Date(publishedAt);
+      return (
+        published.getFullYear() === now.getFullYear() &&
+        published.getMonth() === now.getMonth() &&
+        published.getDate() === now.getDate()
+      );
+    };
+
+    return [
+      { label: "今天", items: items.filter((item) => isToday(item.publishedAt)) },
+      { label: "更早", items: items.filter((item) => !isToday(item.publishedAt)) },
+    ].filter((section) => section.items.length > 0);
+  }, [items]);
 
   const handleItemClick = async (item: NotificationItem) => {
-    if (!item.readAt) {
-      await markRead(item.id);
+    const expanding = expandedId !== item.id;
+    setExpandedId(expanding ? item.id : null);
+    if (expanding && !item.readAt) {
+      try {
+        await markRead(item.id);
+      } catch {
+        message.error("未能标记已读，请稍后重试");
+      }
     }
   };
 
@@ -54,62 +108,108 @@ export function NotificationBell() {
           loading={loading}
           shape="circle"
           type="text"
-          onClick={() => setOpen(true)}
+          onClick={openCenter}
         />
       </Badge>
       <Drawer
         aria-label="通知中心"
-        title="通知中心"
-        open={open}
-        onClose={() => setOpen(false)}
-        width={380}
+        className="english-world-notification-drawer"
+        title={
+          <div className="english-world-notification-title">
+            <span>通知</span>
+            {unreadCount > 0 && <small>{unreadCount} 条未读</small>}
+          </div>
+        }
+        open={centerOpen}
+        onClose={() => {
+          setExpandedId(null);
+          closeCenter();
+        }}
+        width={440}
         extra={
-          <Button size="small" onClick={markAllRead} disabled={!unreadCount}>
+          <Button
+            size="small"
+            type="text"
+            icon={<CheckOutlined aria-hidden="true" />}
+            onClick={markAllRead}
+            disabled={!unreadCount}
+          >
             全部已读
           </Button>
         }
       >
         {items.length ? (
-          <List
-            className="english-world-notification-list"
-            dataSource={items}
-            renderItem={(item) => (
-              <List.Item
-                className={
-                  item.readAt
-                    ? "english-world-notification-item"
-                    : "english-world-notification-item english-world-notification-item-unread"
+          <div className="english-world-notification-sections">
+            {sections.map((section) => (
+              <List
+                key={section.label}
+                className="english-world-notification-list"
+                dataSource={section.items}
+                header={
+                  <Typography.Text type="secondary">
+                    {section.label}
+                  </Typography.Text>
                 }
-                onClick={() => void handleItemClick(item)}
-              >
-                <List.Item.Meta
-                  title={
-                    <Space size={6} wrap>
-                      <Typography.Text strong={!item.readAt}>
-                        {item.title}
-                      </Typography.Text>
-                      <Tag>{categoryLabels[item.category] ?? item.category}</Tag>
-                      <Tag color={priorityColors[item.priority]}>
-                        {priorityLabels[item.priority]}
-                      </Tag>
-                    </Space>
-                  }
-                  description={
-                    <Space direction="vertical" size={4}>
-                      <Typography.Text type="secondary">
-                        {item.body}
-                      </Typography.Text>
-                      {item.publishedAt && (
-                        <Typography.Text type="secondary" className="text-xs">
-                          {new Date(item.publishedAt).toLocaleString()}
+                renderItem={(item) => (
+                  <List.Item
+                    className={
+                      item.readAt
+                        ? "english-world-notification-item"
+                        : "english-world-notification-item english-world-notification-item-unread"
+                    }
+                  >
+                    <button
+                      type="button"
+                      className="english-world-notification-item-button"
+                      aria-expanded={expandedId === item.id}
+                      onClick={() => void handleItemClick(item)}
+                    >
+                      <span
+                        className="english-world-notification-unread-dot"
+                        aria-hidden="true"
+                      />
+                      <span className="english-world-notification-item-content">
+                        <span className="english-world-notification-item-heading">
+                          <Typography.Text
+                            className="english-world-notification-item-title"
+                            strong={!item.readAt}
+                          >
+                            {item.title}
+                          </Typography.Text>
+                          {item.priority === "urgent" && (
+                            <Tag color={priorityColors[item.priority]}>
+                              {priorityLabels[item.priority]}
+                            </Tag>
+                          )}
+                        </span>
+                        <Typography.Text
+                          type="secondary"
+                          className="english-world-notification-item-body"
+                        >
+                          {item.body}
                         </Typography.Text>
-                      )}
-                    </Space>
-                  }
-                />
-              </List.Item>
-            )}
-          />
+                        <span className="english-world-notification-item-meta">
+                          <span>
+                            {categoryLabels[item.category] ?? item.category}
+                          </span>
+                          {item.publishedAt && (
+                            <time dateTime={item.publishedAt}>
+                              {formatNotificationTime(item.publishedAt)}
+                            </time>
+                          )}
+                          <span className="english-world-notification-expand">
+                            {expandedId === item.id ? "收起" : "展开"}
+                            <DownOutlined aria-hidden="true" />
+                          </span>
+                        </span>
+                      </span>
+                    </button>
+                    {practiceActionPath(item.action, window.location.pathname.startsWith("/mobile")) && <a className="english-world-practice-link" style={{display:"block",padding:"8px 16px",whiteSpace:"nowrap"}} href={practiceActionPath(item.action, window.location.pathname.startsWith("/mobile"))!} onClick={closeCenter}>开始练习 →</a>}
+                  </List.Item>
+                )}
+              />
+            ))}
+          </div>
         ) : (
           <Empty description="暂无通知" />
         )}

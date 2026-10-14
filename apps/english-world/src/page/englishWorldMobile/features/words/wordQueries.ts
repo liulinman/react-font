@@ -1,5 +1,5 @@
 import request from "@font/api";
-import { wordFilter, wordFindList } from "@/server/word/word";
+import { wordFilter } from "@/server/word/word";
 import type { FilterWordList, WordList } from "@/server/word/word.type";
 import { normalizeMobileWordFilters } from "@/page/englishWorld/utils/wordFilters";
 
@@ -105,12 +105,42 @@ export async function fetchMobileWords(
   );
 }
 
+// Learning and detail views need the complete vocabulary, not just its first page.
+export async function fetchAllMobileWords(): Promise<WordList[]> {
+  const pageSize = 100;
+  const words = new Map<number, WordList>();
+  let expectedTotal: number | undefined;
+  for (let page = 1; ; page += 1) {
+    const result = await fetchMobileWords({ page, pageSize });
+    if (
+      !result || !Array.isArray(result.list) ||
+      !Number.isSafeInteger(result.total) || result.total < 0 ||
+      result.totalPages !== Math.ceil(result.total / pageSize) ||
+      (expectedTotal !== undefined && result.total !== expectedTotal)
+    ) {
+      throw new Error("词库数据发生变化或返回不完整，请重新加载。");
+    }
+    expectedTotal = result.total;
+    const expectedLength = Math.min(pageSize, Math.max(0, expectedTotal - (page - 1) * pageSize));
+    if (result.list.length !== expectedLength) {
+      throw new Error("词库数据返回不完整，请重新加载。");
+    }
+    for (const word of result.list) {
+      if (!word || !Number.isSafeInteger(word.id) || word.id <= 0 || words.has(word.id)) {
+        throw new Error("词库数据发生变化，请重新加载。");
+      }
+      words.set(word.id, word);
+    }
+    if (words.size === expectedTotal) return [...words.values()];
+  }
+}
+
 export async function fetchMobileWordDetail(id: number): Promise<WordList> {
   if (!Number.isFinite(id) || id <= 0) {
     throw new Error("单词 ID 无效。");
   }
 
-  const words = await request<WordList[]>(wordFindList());
+  const words = await fetchAllMobileWords();
   const word = words.find((item) => item.id === id);
 
   if (!word) {

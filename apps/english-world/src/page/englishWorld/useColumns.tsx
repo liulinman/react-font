@@ -303,13 +303,14 @@ export const useColumns = (props: Props) => {
       },
     },
     {
-      width: 136,
+      width: 198,
       title: "操作",
       key: "action",
       fixed: "right",
       align: "center",
       render: (_text: number, record: WordList) => (
         <span className="word-action-group">
+          <Button type="link" size="small" href={`/englishWorld/knowledge-notes?wordId=${record.id}`} aria-label={`查看 ${record.englishWord} 的知识笔记`}>知识笔记</Button>
           <Button
             type="text"
             size="small"

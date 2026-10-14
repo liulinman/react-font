@@ -5,9 +5,8 @@ describe('Shared reading practice release acceptance',()=>{
   cy.request('POST','/api/admin/login',{username:'automation_admin',password:'AutomationAdmin123!'});
   cy.visit('/admin/');cy.contains('nav button','阅读练习').click();cy.contains('button','新建练习').click();
   cy.get('textarea').filter(':visible').type('Community gardens and everyday life');cy.contains('button','生成草稿').click();
-  cy.contains('待审核',{timeout:30000}).should('be.visible');cy.contains('button','预览').first().click();cy.contains('练习预览 · 含标准答案').should('be.visible');cy.contains('题目与解析').should('exist');
-  cy.get('.ant-drawer-close').filter(':visible').click();cy.get('.ant-drawer-content-wrapper').should('not.be.visible');
-  cy.contains('button','发布练习').click();cy.contains('button','确认发布').click();cy.contains('已发布',{timeout:10000}).should('be.visible');cy.screenshot('admin-reading-published',{capture:'viewport'});
+  cy.contains('待审核',{timeout:30000}).should('be.visible');cy.contains('button','审核练习').first().click();cy.contains('审核练习 · 含标准答案').should('be.visible');cy.contains('题目与解析').should('exist');
+  cy.contains('button','审核通过并发布').should('be.disabled');cy.contains('我已核对文章、题目、正确答案和解析').click();cy.contains('button','审核通过并发布').click();cy.contains('button','确认发布').click();cy.contains('已发布',{timeout:10000}).should('be.visible');cy.screenshot('admin-reading-published',{capture:'viewport'});
   cy.request('POST','/api/user/login',{username:'automation_learner',password:'Automation123!'});
   cy.request('/api/reading-practices').then(({body})=>{
    const id=body.data.list[0].id;

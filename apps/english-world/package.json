@@ -17,10 +17,17 @@
     "e2e:screenshot:auto:html": "mkdir -p cypress/reports && pnpm cypress:ensure && start-server-and-test \"vite --host 127.0.0.1 --port 5175 --strictPort\" http://127.0.0.1:5175 \"cypress run --spec cypress/e2e/screenshot-demo.cy.ts --reporter cypress-mochawesome-reporter --reporter-options reportDir=cypress/reports,reportFilename=screenshot-demo,charts=true,embeddedScreenshots=true,inlineAssets=true,overwrite=true\"",
     "e2e:report": "mkdir -p cypress/reports && pnpm cypress:ensure && start-server-and-test \"vite --host 127.0.0.1 --port 5175 --strictPort\" http://127.0.0.1:5175 \"cypress run --reporter xunit --reporter-options output=cypress/reports/e2e-results.xml,suiteName=english-world-e2e\"",
     "e2e:report:html": "mkdir -p cypress/reports && pnpm cypress:ensure && start-server-and-test \"vite --host 127.0.0.1 --port 5175 --strictPort\" http://127.0.0.1:5175 \"cypress run --reporter cypress-mochawesome-reporter --reporter-options reportDir=cypress/reports,reportFilename=e2e-results,charts=true,embeddedScreenshots=true,inlineAssets=true,overwrite=true\"",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "build:ios": "tsc -b && vite build --mode ios",
+    "ios:sync": "pnpm build:ios && cap sync ios",
+    "ios:open": "cap open ios",
+    "ios": "pnpm ios:sync && cap open ios",
+    "test:ios": "bash scripts/test-ios.sh"
   },
   "dependencies": {
     "@ant-design/icons": "^6.0.0",
+    "@capacitor/core": "8.5.3",
+    "@capacitor/ios": "8.5.3",
     "@font/api": "workspace:*",
     "@font/ui": "workspace:*",
     "@font/utils": "workspace:*",
@@ -41,6 +48,7 @@
     "react-router-dom": "^7.2.0"
   },
   "devDependencies": {
+    "@capacitor/cli": "8.5.3",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",

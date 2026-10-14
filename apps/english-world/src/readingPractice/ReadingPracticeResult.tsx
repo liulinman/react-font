@@ -12,5 +12,5 @@ export function ResultContent({result,paper}:{result:PracticeResult;paper:Public
 export function ReadingPracticeResult({practiceId,basePath}:{practiceId:number;basePath:string}) {
  const [data,setData]=useState<{paper:PublicPractice;result:PracticeResult}>(),[error,setError]=useState(''),[retry,setRetry]=useState(0);
  useEffect(()=>{let active=true;void Promise.all([request(getPractice(practiceId)),request(getResult(practiceId))]).then(([paper,result])=>{if(active){setData({paper,result});setError('');}}).catch(()=>{if(active)setError('无法读取结果，请确认你已提交这套练习。');});return()=>{active=false;};},[practiceId,retry]);
- return <main className="reading-practice"><Link to={basePath}>← 阅读练习</Link>{error?<div role="alert">{error}<button onClick={()=>setRetry(n=>n+1)}>重试</button></div>:data?<ResultContent {...data}/>:<p role="status">正在读取结果…</p>}</main>;
+ return <main className="reading-practice"><Link to={basePath}>← 返回练习列表</Link>{error?<div role="alert">{error}<button onClick={()=>setRetry(n=>n+1)}>重试</button></div>:data?<ResultContent {...data}/>:<p role="status">正在读取结果…</p>}</main>;
 }

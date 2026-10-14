@@ -1,8 +1,11 @@
+import { AutoGrowTextarea } from "@/page/englishWorld/knowledgeNotes/AutoGrowTextarea";
+import "@/page/englishWorld/component/wordNoteEditor.css";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Dialog, Toast } from "antd-mobile";
 import { useQueryClient } from "@tanstack/react-query";
 import request from "@font/api";
+import { resolveMediaUrl } from "@/native/mediaUrl";
 import { uploadFile, wordAdd, wordExist, wordFilter, wordUpdate } from "@/server/word/word";
 import type { WordList } from "@/server/word/word.type";
 import { useAuth } from "@/contexts/AuthContext";
@@ -100,6 +103,7 @@ export function MobileWordFormPage() {
 
   const [values, setValues] = useState<MobileWordFormValues>(EMPTY_VALUES);
   const [loaded, setLoaded] = useState(false);
+  const [noteFocused, setNoteFocused] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [imageUploading, setImageUploading] = useState(false);
   const [backConfirmOpen, setBackConfirmOpen] = useState(false);
@@ -283,14 +287,22 @@ export function MobileWordFormPage() {
 
   if (!loaded) {
     return (
-      <MobilePage title={isEdit ? "编辑单词" : "添加单词"}>
+      <MobilePage className="word-editor" title={isEdit ? "编辑单词" : "添加单词"}>
         <MobileStateView state="loading" />
       </MobilePage>
     );
   }
 
+  if (noteFocused) return (
+    <MobilePage className="word-editor word-note-mobile-focus" title="编辑笔记">
+      <button type="button" onClick={() => setNoteFocused(false)}>返回表单</button>
+      <p>返回表单后点击“保存”提交单词。当前输入保留在表单中。</p>
+      <label>完整笔记<AutoGrowTextarea aria-label="完整笔记" rows={18} value={values.englishNote ?? ""} onChange={event => setField("englishNote",event.target.value)} /></label>
+    </MobilePage>
+  );
+
   return (
-    <MobilePage title={isEdit ? "编辑单词" : "添加单词"}>
+    <MobilePage className="word-editor" title={isEdit ? "编辑单词" : "添加单词"}>
       <a
         href={isEdit && editingId ? `/mobile/words/${editingId}` : "/mobile/words"}
         onClick={(event) => {
@@ -301,10 +313,11 @@ export function MobileWordFormPage() {
         返回
       </a>
 
+      <p className="word-editor-intro">记下一个新词，让下次遇见更熟悉。</p>
       <label>
         单词或短语
         <input
-          aria-label="单词或短语"
+          aria-label="单词或短语" placeholder="例如 serendipity" autoCapitalize="none" autoCorrect="off"
           onChange={(event) => setField("englishWord", event.target.value)}
           value={values.englishWord}
         />
@@ -322,13 +335,14 @@ export function MobileWordFormPage() {
       <label>
         中文释义
         <textarea
-          aria-label="中文释义"
+          aria-label="中文释义" placeholder="写下它的含义"
           onChange={(event) => setField("englishChinese", event.target.value)}
           rows={2}
           value={values.englishChinese ?? ""}
         />
       </label>
 
+      <details className="word-editor-extras" open={isEdit}><summary>更多信息 <span>词性、掌握程度、笔记与图片</span></summary>
       <fieldset>
         <legend>类型</legend>
         {TYPE_OPTIONS.map((option) => (
@@ -371,12 +385,13 @@ export function MobileWordFormPage() {
         ))}
       </fieldset>
 
+      <button type="button" onClick={() => setNoteFocused(true)}>展开编辑笔记</button>
       <label>
         笔记
-        <textarea
+        <AutoGrowTextarea
           aria-label="笔记"
           onChange={(event) => setField("englishNote", event.target.value)}
-          rows={3}
+          rows={6}
           value={values.englishNote ?? ""}
         />
       </label>
@@ -403,19 +418,21 @@ export function MobileWordFormPage() {
           }}
           type="file"
         />
-        {values.englishImg && <img alt="单词图片" src={values.englishImg} />}
+        {values.englishImg && <img alt="单词图片" src={resolveMediaUrl(values.englishImg)} />}
       </label>
 
       {values.englishImg && (
         <button onClick={() => setField("englishImg", undefined)} type="button">移除图片</button>
       )}
 
+      </details>
       {!online && (
         <p>当前离线，保存需要联网。你的输入已保留为草稿。</p>
       )}
 
       <SafeAreaActions>
         <button
+          className="study-primary"
           disabled={submitting || wordInvalid}
           onClick={() => void handleSubmit()}
           type="button"

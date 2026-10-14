@@ -1,3 +1,5 @@
+import { isNativeApp } from "@/native/runtime";
+import { speakNativeEnglish } from "@/native/pronunciation";
 type DictionaryPhonetic = {
   text?: string;
   audio?: string;
@@ -81,6 +83,8 @@ function speakBritish(word: string) {
 export async function playBritishPronunciation(word: string) {
   const normalizedWord = word.trim();
   if (!normalizedWord) return;
+
+  if (isNativeApp()) { await speakNativeEnglish(normalizedWord); return; }
 
   const audioUrl = await getBritishAudioUrl(normalizedWord);
 

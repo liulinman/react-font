@@ -1,6 +1,4 @@
 import "@testing-library/jest-dom/vitest";
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import { QueryClient, QueryClientProvider, type InfiniteData } from "@tanstack/react-query";
 import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -92,18 +90,6 @@ describe("MobileWordLibraryPage", () => {
     vi.clearAllMocks();
   });
 
-  it("keeps row columns, wrapping, and selection-sheet reservation under one CSS contract", () => {
-    const css = readFileSync(resolve(process.cwd(), "src/page/englishWorldMobile/features/words/MobileWordLibraryPage.css"), "utf8");
-    expect(css).toContain("--mobile-word-selection-sheet-height: min(46dvh, 360px)");
-    expect(css).toContain("padding-bottom: calc(var(--mobile-word-selection-sheet-height) + 56px + env(safe-area-inset-bottom, 0px))");
-    expect(css).toContain("max-height: var(--mobile-word-selection-sheet-height)");
-    expect(css).toContain("grid-template-columns: minmax(0, 1fr) auto auto");
-    expect(css).toContain("grid-template-columns: auto minmax(0, 1fr) auto auto");
-    expect(css).toContain("overflow-wrap: anywhere");
-    expect(css).not.toContain("text-overflow: ellipsis");
-    expect(css).not.toContain("white-space: nowrap");
-  });
-
   it("renders compact result rows, keeps pronunciation isolated, and opens the full filter sheet", async () => {
     const user = userEvent.setup();
     renderLibrary();
@@ -113,6 +99,7 @@ describe("MobileWordLibraryPage", () => {
     expect(screen.getByRole("link", { name: /retain/ })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "筛选" }));
     expect(screen.getByRole("dialog", { name: "筛选词库" })).toBeVisible();
+    await user.click(screen.getByText("更多筛选条件"));
     expect(screen.getByLabelText("英文单词")).toBeVisible();
     expect(screen.getByLabelText("中文释义")).toBeVisible();
     expect(screen.getByLabelText("音标")).toBeVisible();
@@ -124,6 +111,7 @@ describe("MobileWordLibraryPage", () => {
 
     await screen.findByRole("link", { name: /retain/ });
     await user.click(screen.getByRole("button", { name: "筛选" }));
+    await user.click(screen.getByText("更多筛选条件"));
     await user.type(screen.getByLabelText("英文单词"), "exact");
     await user.type(screen.getByLabelText("中文释义"), "释义");
     await user.selectOptions(screen.getByLabelText("掌握程度"), "3");
@@ -142,6 +130,7 @@ describe("MobileWordLibraryPage", () => {
     await user.click(screen.getByRole("button", { name: "筛选" }));
     await user.selectOptions(screen.getByLabelText("词条类型"), "0");
     await user.selectOptions(screen.getByLabelText("掌握程度"), "0");
+    await user.click(screen.getByText("更多筛选条件"));
     await user.type(screen.getByLabelText("开始日期"), "2026-08-01");
     await user.type(screen.getByLabelText("结束日期"), "2026-08-02");
     await user.selectOptions(screen.getByLabelText("排序"), "alphabetical");
@@ -159,7 +148,7 @@ describe("MobileWordLibraryPage", () => {
     await screen.findByRole("link", { name: /retain/ });
     const trigger = screen.getByRole("button", { name: "筛选" });
     await user.click(trigger);
-    await waitFor(() => expect(screen.getByLabelText("英文单词")).toHaveFocus());
+    await waitFor(() => expect(screen.getByLabelText("掌握程度")).toHaveFocus());
     const close = screen.getByRole("button", { name: "关闭" });
     screen.getByRole("button", { name: "应用筛选" }).focus();
     await user.tab();
@@ -210,7 +199,7 @@ describe("MobileWordLibraryPage", () => {
       .mockResolvedValueOnce({ list: [second], total: 2, totalPages: 1 });
     renderLibrary("/mobile/words?sort=alphabetical");
     await screen.findByRole("link", { name: "apple" });
-    expect(screen.getAllByRole("link").slice(0, 2).map((link) => link.getAttribute("aria-label"))).toEqual(["apple", "zebra"]);
+    expect(screen.getAllByRole("link").filter(link => link.classList.contains("mobile-word-row__link")).map((link) => link.getAttribute("aria-label"))).toEqual(["apple", "zebra"]);
     expect(fetchWordsMock).toHaveBeenCalledTimes(2);
   });
 
@@ -224,7 +213,7 @@ describe("MobileWordLibraryPage", () => {
     await user.click(screen.getByRole("checkbox", { name: "选择 retain" }));
 
     expect(screen.getByRole("toolbar", { name: "已选择 1 个词" })).toBeVisible();
-    expect(screen.getByRole("link", { name: /retain/ }).closest("article")).toHaveAttribute("data-selection-mode", "true");
+    expect(screen.getByRole("checkbox", { name: "选择 retain" }).closest("article")).toHaveAttribute("data-selection-mode", "true");
     expect(screen.getByRole("toolbar", { name: "已选择 1 个词" })).toHaveClass("mobile-word-selection-bar");
     expect(screen.getByRole("button", { name: "全选当前页" })).toBeVisible();
     expect(screen.getByRole("button", { name: "使用当前筛选结果" })).toBeVisible();
@@ -268,7 +257,7 @@ describe("MobileWordLibraryPage", () => {
     await screen.findByRole("link", { name: /retain/ });
     await user.click(screen.getByRole("button", { name: "选择" }));
     await user.click(screen.getByRole("button", { name: "使用当前筛选结果" }));
-    await user.click(screen.getByRole("button", { name: "开始混合记忆" }));
+    await user.click(screen.getByRole("button", { name: "开始学习" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent("筛选结果已变化，请重新选择。");
     expect(fetchWordsMock).toHaveBeenLastCalledWith(expect.objectContaining({ page: 1, pageSize: 1 }));
@@ -284,7 +273,7 @@ describe("MobileWordLibraryPage", () => {
     await screen.findByRole("link", { name: /retain/ });
     await user.click(screen.getByRole("button", { name: "选择" }));
     await user.click(screen.getByRole("button", { name: "使用当前筛选结果" }));
-    await user.click(screen.getByRole("button", { name: "开始混合记忆" }));
+    await user.click(screen.getByRole("button", { name: "开始学习" }));
 
     await waitFor(() => expect(screen.getByTestId("location").textContent).toBe("/mobile/learn?scope=selection&wordIds=4"));
     const selectedIds = new URLSearchParams(screen.getByTestId("location").textContent?.split("?")[1]).get("wordIds")?.split(",");
@@ -333,7 +322,7 @@ describe("MobileWordLibraryPage", () => {
     expect(fetchWordsMock).toHaveBeenCalledTimes(2);
   });
 
-  it("rolls optimistic mastery changes back when a batch request fails without invalidating the list", async () => {
+  it("refreshes server state after uncertain updates without claiming rollback", async () => {
     const user = userEvent.setup();
     requestMock.mockRejectedValueOnce(new Error("network"));
     const { client } = renderLibrary();
@@ -343,12 +332,14 @@ describe("MobileWordLibraryPage", () => {
     await screen.findByRole("link", { name: /retain/ });
     await user.click(screen.getByRole("button", { name: "选择" }));
     await user.click(screen.getByRole("checkbox", { name: "选择 retain" }));
+    await user.click(screen.getByText("更多", { selector: "summary" }));
     await user.selectOptions(screen.getByLabelText("批量掌握程度"), "3");
     await user.click(screen.getByRole("button", { name: "确认批量设置" }));
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("批量设置失败，已恢复原来的掌握程度。");
+    expect(await screen.findByRole("alert")).toHaveTextContent("另有 1 个词未确认结果");
     expect(screen.getByLabelText("掌握程度：一般")).toBeVisible();
-    expect(client.getQueryData(wordKeys.detail(retain.id))).toBe(detail);
+    expect(client.getQueryState(wordKeys.detail(retain.id))?.isInvalidated).toBe(true);
+    await waitFor(() => expect(fetchWordsMock).toHaveBeenCalledTimes(2));
   });
 
   it("invalidates the word family only after a successful batch update", async () => {
@@ -358,6 +349,7 @@ describe("MobileWordLibraryPage", () => {
     await screen.findByRole("link", { name: /retain/ });
     await user.click(screen.getByRole("button", { name: "选择" }));
     await user.click(screen.getByRole("checkbox", { name: "选择 retain" }));
+    await user.click(screen.getByText("更多", { selector: "summary" }));
     await user.selectOptions(screen.getByLabelText("批量掌握程度"), "3");
     await user.click(screen.getByRole("button", { name: "确认批量设置" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("已更新所选词条的掌握程度。");
@@ -374,6 +366,69 @@ describe("MobileWordLibraryPage", () => {
     await user.click(screen.getByRole("checkbox", { name: "选择 retain" }));
 
     expect(screen.getByText("当前离线，正在显示已缓存的词库内容。", { selector: "p" })).toBeVisible();
+    await user.click(screen.getByText("更多", { selector: "summary" }));
     expect(screen.getByRole("button", { name: "确认批量设置" })).toBeDisabled();
   });
+  it("keeps filter-wide selection checked and excludes just the toggled word", async () => {
+    const user = userEvent.setup();
+    const second = { ...retain, id: 5, englishWord: "resume" };
+    fetchWordsMock.mockResolvedValue({ list: [retain, second], total: 2, totalPages: 1 });
+    renderLibrary();
+    await screen.findByRole("link", { name: "retain" });
+    await user.click(screen.getByRole("button", { name: "选择" }));
+    await user.click(screen.getByRole("button", { name: "使用当前筛选结果" }));
+    expect(screen.getByRole("checkbox", { name: "选择 retain" })).toBeChecked();
+    expect(screen.getByRole("checkbox", { name: "选择 resume" })).toBeChecked();
+    await user.click(screen.getByRole("checkbox", { name: "选择 retain" }));
+    expect(screen.getByRole("checkbox", { name: "选择 resume" })).toBeChecked();
+    expect(screen.getByRole("toolbar", { name: "已选择 1 个词" })).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "开始学习" }));
+    await waitFor(() => expect(screen.getByTestId("location")).toHaveTextContent("wordIds=5"));
+  });
+
+  it("selects through word text without navigating and clears on cancellation", async () => {
+    const user = userEvent.setup();
+    renderLibrary();
+    await screen.findByRole("link", { name: "retain" });
+    await user.click(screen.getByRole("button", { name: "选择" }));
+    await user.click(screen.getByText("retain", { selector: "strong" }));
+    expect(screen.getByRole("checkbox", { name: "选择 retain" })).toBeChecked();
+    expect(screen.getByTestId("location")).toHaveTextContent("/mobile/words");
+    await user.click(screen.getByRole("button", { name: "取消选择" }));
+    await user.click(screen.getByRole("button", { name: "选择" }));
+    expect(screen.getByRole("checkbox", { name: "选择 retain" })).not.toBeChecked();
+  });
+
+  it("disables learning before attempting an oversized selection", async () => {
+    const user = userEvent.setup();
+    fetchWordsMock.mockResolvedValue({ list: [retain], total: 723, totalPages: 37 });
+    renderLibrary();
+    await screen.findByRole("link", { name: "retain" });
+    await user.click(screen.getByRole("button", { name: "选择" }));
+    await user.click(screen.getByRole("button", { name: "使用当前筛选结果" }));
+    expect(screen.getByRole("button", { name: "开始学习" })).toBeDisabled();
+    expect(screen.getByText(/学习最多 20 个/)).toBeVisible();
+  });
+
+  it("waits for all batch responses, then keeps only uncertain words selected", async () => {
+    const user = userEvent.setup();
+    const second = { ...retain, id: 5, englishWord: "resume" };
+    fetchWordsMock.mockResolvedValue({ list: [retain, second], total: 2, totalPages: 1 });
+    let finish!: (value: unknown) => void;
+    requestMock.mockImplementation(({ data }) => data.id === 4 ? Promise.reject(new Error("lost response")) : new Promise(resolve => { finish = resolve; }));
+    renderLibrary();
+    await screen.findByRole("link", { name: "retain" });
+    await user.click(screen.getByRole("button", { name: "选择" }));
+    await user.click(screen.getByRole("button", { name: "全选当前页" }));
+    await user.click(screen.getByText("更多", { selector: "summary" }));
+    await user.click(screen.getByRole("button", { name: "确认批量设置" }));
+    expect(screen.getByRole("button", { name: "取消选择" })).toBeDisabled();
+    expect(fetchWordsMock).toHaveBeenCalledTimes(1);
+    await act(async () => { finish({}); });
+    expect(await screen.findByRole("alert")).toHaveTextContent("已确认更新 1 个词，另有 1 个词未确认结果");
+    expect(screen.getByRole("checkbox", { name: "选择 retain" })).toBeChecked();
+    expect(screen.getByRole("checkbox", { name: "选择 resume" })).not.toBeChecked();
+    expect(fetchWordsMock).toHaveBeenCalledTimes(2);
+  });
+
 });

@@ -5,6 +5,11 @@ import { MobileAppShell } from "@/page/englishWorldMobile/app/MobileAppShell";
 import { MobileProtectedRoute } from "@/page/englishWorldMobile/app/MobileProtectedRoute";
 import { MobileRouteFallback } from "@/page/englishWorldMobile/app/MobileRouteFallback";
 import { mobileRouteConfig } from "@/page/englishWorldMobile/app/mobileRouteConfig";
+import { isNativeApp } from "@/native/runtime";
+
+function AppEntry() {
+  return <Navigate to={isNativeApp() ? "/mobile" : "/login"} replace />;
+}
 
 type DesktopPageLoader = () => Promise<{ default: ComponentType }>;
 
@@ -107,8 +112,14 @@ const memoryMapRoute = protectedDesktopLayoutRoute("memoryMap", () =>
   ),
 );
 
+const knowledgeNotesRoute = protectedDesktopLayoutRoute("knowledgeNotes", () =>
+  import("@/page/englishWorld/knowledgeNotes/KnowledgeNotesPage").then(({ KnowledgeNotesPage }) => ({ default: KnowledgeNotesPage })),
+);
+
+const readingPracticeRoute = protectedDesktopLayoutRoute("readingPractices", () => import("@/readingPractice/ReadingPracticePage"));
+
 export const router = createBrowserRouter([
-  { path: "/", element: <Navigate to="/login" replace /> },
+  { path: "/", element: <AppEntry /> },
   {
     path: "/login",
     lazy: async () => {
@@ -116,8 +127,10 @@ export const router = createBrowserRouter([
       return { Component: Login };
     },
   },
+  ...["/englishWorld/reading-practices", "/englishWorld/reading-practices/:id", "/englishWorld/reading-practices/:id/result"].map(path => ({ path, lazy: readingPracticeRoute })),
   { path: "/englishWorld", lazy: englishWorldRoute },
   { path: "/englishWorld/words", lazy: englishWorldRoute },
+  { path: "/englishWorld/knowledge-notes/*", lazy: knowledgeNotesRoute },
   { path: "/englishWorld/stats", lazy: englishWorldRoute },
   { path: "/englishWorld/settings", lazy: settingsRoute },
   { path: "/englishWorld/ai-word", lazy: aiWordRoute },
@@ -146,5 +159,5 @@ export const router = createBrowserRouter([
     ),
     children: mobileRouteConfig,
   },
-  { path: "*", element: <Navigate to="/login" replace /> },
+  { path: "*", element: <AppEntry /> },
 ]);

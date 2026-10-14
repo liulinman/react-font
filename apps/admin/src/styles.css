@@ -100,3 +100,48 @@ button, input { font: inherit; }
 .admin-reading-preview section { border: 1px solid #e3e8ef; border-radius: 12px; padding: 20px; margin: 18px 0; }
 .admin-reading-preview blockquote { background: #f3f7fc; border-left: 3px solid #3d73b9; padding: 12px; margin: 12px 0; }
 .admin-reading-preview .ant-tag { margin-left: 12px; }
+
+/* Consistent, compact administration workspace. */
+body { background: #f6f7f9; color: #20252d; }
+.admin-sidebar { background: #fff; color: #20252d; border-right: 1px solid #e1e4e9; padding: 24px 12px; }
+.admin-brand strong { color: #20252d; }
+.admin-brand small { color: #626b78; }
+.admin-brand-mark { width: 34px; height: 34px; border-radius: 6px; }
+.admin-nav-label { padding-top: 28px; color: #626b78; letter-spacing: 0; }
+.admin-nav button { color: #626b78; border-radius: 5px; }
+.admin-nav button:hover { background: #f5f6f8; color: #20252d; }
+.admin-nav button[aria-current=page] { color: #245edb; background: #edf3ff; box-shadow: none; }
+.admin-site-link { color: #626b78; }
+.admin-site-link:hover { color: #245edb; }
+.admin-workspace { padding: 24px 28px 40px; }
+.admin-eyebrow { display: none; }
+.admin-toolbar { margin-bottom: 24px; }
+.admin-toolbar h1 { margin: 0 0 6px; font-size: 24px; letter-spacing: 0; }
+.admin-panel { border-radius: 8px; border-color: #e1e4e9; box-shadow: none; }
+.admin-list-toolbar,.admin-panel-heading { padding: 18px 20px; }
+.admin-panel .ant-table-tbody > tr > td { padding: 12px 20px; }
+.admin-panel .ant-table-thead > tr > th { color: #626b78; background: #f8f9fb; }
+.admin-panel .ant-table .ant-btn { font-size: 13px; }
+.admin-form { padding: 20px; }
+.admin-reading-preview section { border: 0; border-top: 1px solid #e1e4e9; border-radius: 0; padding: 18px 0; margin: 0; }
+.admin-reading-preview blockquote { margin: 12px 0; border-left: 3px solid #d5dbe5; padding: 8px 12px; background: #f8f9fb; }
+.admin-login-panel { border-radius: 8px; box-shadow: none; }
+.admin-shell .ant-btn { border-radius: 6px; box-shadow: none; }
+.admin-shell :is(button,a,input,textarea):focus-visible { outline: 2px solid #245edb; outline-offset: 2px; }
+@media(max-width:760px) {
+ .admin-sidebar { padding: 16px 12px; gap: 16px; border-right: 0; border-bottom: 1px solid #e1e4e9; }
+ .admin-nav { display: flex; overflow-x: auto; gap: 4px; }
+ .admin-nav button { flex: 0 0 auto; min-height: 44px; padding: 10px 12px; }
+ .admin-workspace { padding: 20px 12px; }
+ .admin-list-toolbar,.admin-panel-heading,.admin-form { padding: 16px; }
+}
+
+/* Administration stays cool and compact beside the warmer learning workspace. */
+body { background: #f0f2f5; color: #243446; }
+.admin-sidebar { background: #e7ebef; border-color: #d8dee5; }
+.admin-brand strong,.admin-toolbar h1 { color: #243446; }
+.admin-nav button[aria-current=page] { background: #fff; box-shadow: inset 3px 0 #245edb; color: #214b82; }
+.admin-panel { border-top: 2px solid #64758a; }
+.admin-list-toolbar,.admin-panel-heading { background: #f9fafb; border-radius: 6px 6px 0 0; }
+.admin-reading-preview { background: #fffdf8; padding: 24px; border: 1px solid #e3dfd5; }
+.admin-reading-preview blockquote { background: #f3f0e8; border-left-color: #b6a27e; }

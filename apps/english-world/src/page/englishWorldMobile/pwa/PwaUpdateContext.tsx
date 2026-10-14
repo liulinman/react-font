@@ -11,6 +11,7 @@ import {
   type ReactNode,
 } from "react";
 import { registerSW } from "virtual:pwa-register";
+import { isNativeApp } from "@/native/runtime";
 import { useMobileActivityLockContext } from "../offline/MobileActivityLockContext";
 
 export type PwaRegistrationCallbacks = {
@@ -49,7 +50,7 @@ export function PwaUpdateProvider({ children, registration = browserRegistration
   const updateAction = useRef<PwaUpdateAction | null>(null);
 
   useEffect(() => {
-    if (!registration) return;
+    if (!registration || isNativeApp()) return;
     updateAction.current = registration.register({
       onNeedRefresh: () => {
         setStatus("ready");
@@ -115,6 +116,15 @@ export function PwaUpdateStatusSurface() {
     : status === "offline-ready"
       ? "应用已可离线使用"
       : "当前已是最新版本";
+
+  if (isNativeApp()) {
+    return (
+      <section aria-labelledby="native-update-title" className="mobile-state-view">
+        <h2 id="native-update-title">应用更新</h2>
+        <p>通过 Xcode 安装新版本</p>
+      </section>
+    );
+  }
 
   return (
     <section aria-labelledby="pwa-update-title" className="mobile-state-view">

@@ -61,3 +61,19 @@
 后台镜像 ID：`sha256:4df5b369c7253469d16ea61c322edcd5e010dbcb242c17dc8cb508cb4b676c7f`。
 前端镜像 ID：`sha256:67a4ac5d9164f9fc618f5e587a0408721a0449d3b8fb6093f8efb0ba4daeadf4`。
 18:01 外网冒烟完成，路由、JS/CSS、401 鉴权均符合预期；MySQL 和 Redis 保持原容器运行。
+
+### 2026-10-12: Independent desktop scrolling follow-up
+
+- Article and questions/results now scroll independently inside a viewport-sized workspace. Compact heading and a reserved footer keep submission visible without covering content. Mobile tabs retain their existing flow.
+- Browser regression `reading-scroll.cy.ts`: 3 passed, covering independent offsets, no outer overflow, 1200×680 / 1024×600 desktop, missing-question focus, result layout, and 390px mobile tabs. Original CSS failed the scrollability assertion. Layout tests use fixture API responses; no production data is changed.
+- Production-baseline frontend TypeScript/Vite build passed. Frontend-only image `english-world-frontend:reading-scroll-20261012` deployed; rollback tag `english-world-frontend:before-reading-scroll-20261012`. Release artifacts: `/opt/english-world/releases/reading-scroll-20261012`. Backend/database unchanged.
+- Production page/assets and delivered scroll CSS verified over HTTP after deployment.
+
+### 2026-10-12: Teacher review required before release
+
+- Reading practice now follows manual generation → draft review → explicit approval and immediate publication. The review drawer shows passage, questions, answers and explanations; publication requires the teacher's checkbox confirmation and final audience confirmation. There is no scheduled release setting or student-facing publication date.
+- Publishing API requires `reviewed: true`. Worker never auto-publishes, even for legacy auto-publish drafts. Reading schedules cannot be created or manually executed, are excluded from scheduler execution/listing, and their legacy runner rejects execution.
+- `nestjs/migrations/require-reading-review.sql` disables old reading schedules and clears auto-publish flags without deleting papers, schedules, assignments or results. Already published papers remain available.
+- Validation: real local MySQL/API 16 tests passed, admin 17 tests passed, production-aligned backend 631 tests passed, all three builds passed. Cypress full teacher-review/publication/two-user desktop/mobile submission flow passed; only external AI HTTP was replaced by a fixture.
+- Production scheduler has additional selected-recipient transaction validation absent from the local checkout; release source preserves it. Exact deployment source is under `/opt/english-world/releases/reading-review-20261012/source`, not a copy of the entire dirty local tree.
+- Release images `english-world-{backend,frontend}:reading-review-20261012`; rollback tags `:before-reading-review-20261012`. Database backup and prior source retained in release directory. On application rollback, keep reading schedules disabled and flags cleared to avoid restoring unreviewed publication.

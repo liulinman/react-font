@@ -10,9 +10,10 @@ describe("English World desktop context", () => {
     expect(getEnglishWorldSectionLabel("words")).toBe("词库");
     expect(getEnglishWorldSectionLabel("bulkImport")).toBe("批量导入");
     expect(getEnglishWorldSectionLabel("overwriteStats")).toBe("覆盖统计");
-    expect(getEnglishWorldSectionLabel("memoryMap")).toBe("词库");
-    expect(getEnglishWorldSectionLabel("contextLab")).toBe("学习");
+    expect(getEnglishWorldSectionLabel("memoryMap")).toBe("词汇掌握情况");
+    expect(getEnglishWorldSectionLabel("contextLab")).toBe("语境练习");
     expect(getEnglishWorldSectionLabel("ieltsCore")).toBe("雅思核心复习");
+    expect(getEnglishWorldSectionLabel("readingPractices")).toBe("阅读练习");
     expect(getEnglishWorldSectionLabel("unknown")).toBe("English World");
   });
 

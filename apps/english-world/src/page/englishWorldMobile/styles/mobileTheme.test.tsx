@@ -23,17 +23,17 @@ const themeCases: ThemeCase[] = [
     appearance: "light",
     systemDark: true,
     resolved: "light",
-    surfaceBase: "#f2f2f7",
+    surfaceBase: "#f5f6f8",
     surfaceRaised: "#ffffff",
-    inkPrimary: "#000000",
+    inkPrimary: "#20242a",
   },
   {
     name: "explicit dark",
     appearance: "dark",
     systemDark: false,
     resolved: "dark",
-    surfaceBase: "#000000",
-    surfaceRaised: "#1c1c1e",
+    surfaceBase: "#15181d",
+    surfaceRaised: "#20252c",
     inkPrimary: "#ffffff",
   },
   {
@@ -41,8 +41,8 @@ const themeCases: ThemeCase[] = [
     appearance: "system",
     systemDark: true,
     resolved: "dark",
-    surfaceBase: "#000000",
-    surfaceRaised: "#1c1c1e",
+    surfaceBase: "#15181d",
+    surfaceRaised: "#20252c",
     inkPrimary: "#ffffff",
   },
 ];
@@ -105,7 +105,7 @@ describe("mobile semantic theme spine", () => {
       expect(getComputedStyle(login).background).toBe("var(--mobile-surface-base)");
       expect(getComputedStyle(login).color).toBe("var(--mobile-ink-primary)");
       expect(getComputedStyle(loginSurface).background).toBe(
-        "var(--mobile-surface-raised)",
+        "rgba(0, 0, 0, 0)",
       );
     },
   );

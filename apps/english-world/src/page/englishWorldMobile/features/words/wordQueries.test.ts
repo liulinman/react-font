@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { WordList } from "@/server/word/word.type";
 import {
+  fetchAllMobileWords,
   fetchMobileWordDetail,
   fetchMobileWords,
   findWordById,
@@ -103,23 +104,58 @@ describe("mobile word queries", () => {
     expect(requestMock).not.toHaveBeenCalled();
   });
 
-  it("returns one word from the fallback detail response", async () => {
+  it("returns one word using the supported paginated endpoint", async () => {
     const word: WordList = { id: 4, englishWord: "retain" };
-    requestMock.mockResolvedValue([word]);
+    requestMock.mockResolvedValue({ list: [word], total: 1, totalPages: 1 });
 
     await expect(fetchMobileWordDetail(4)).resolves.toEqual(word);
     expect(requestMock).toHaveBeenCalledWith({
-      url: "/english/findWordList",
-      method: "GET",
+      url: "/english/filterWordList",
+      method: "POST",
+      data: { page: 1, pageSize: 100 },
     });
   });
 
   it("uses a stable Chinese error when a valid detail ID is absent", async () => {
-    requestMock.mockResolvedValue([{ id: 8, englishWord: "other" }]);
+    requestMock.mockResolvedValue({ list: [{ id: 8, englishWord: "other" }], total: 1, totalPages: 1 });
 
     await expect(fetchMobileWordDetail(4)).rejects.toThrow(
       "单词不存在或已被删除。",
     );
+  });
+
+
+  const firstPage = Array.from({ length: 100 }, (_, i) => ({ id: i + 1, englishWord: "word" + i }));
+  it("loads a detail beyond the first 100 words", async () => {
+    const target = { id: 101, englishWord: "target" };
+    requestMock.mockResolvedValueOnce({ list: firstPage, total: 101, totalPages: 2 })
+      .mockResolvedValueOnce({ list: [target], total: 101, totalPages: 2 });
+    await expect(fetchMobileWordDetail(101)).resolves.toEqual(target);
+    expect(requestMock).toHaveBeenLastCalledWith({
+      url: "/english/filterWordList", method: "POST", data: { page: 2, pageSize: 100 },
+    });
+  });
+
+  it("allows an empty vocabulary", async () => {
+    requestMock.mockResolvedValue({ list: [], total: 0, totalPages: 0 });
+    await expect(fetchAllMobileWords()).resolves.toEqual([]);
+  });
+
+  it("propagates a later-page failure instead of returning partial vocabulary", async () => {
+    requestMock.mockResolvedValueOnce({ list: firstPage, total: 101, totalPages: 2 })
+      .mockRejectedValueOnce(new Error("network unavailable"));
+    await expect(fetchMobileWordDetail(101)).rejects.toThrow("network unavailable");
+  });
+
+  it.each([
+    { list: [firstPage[0]], total: 101, totalPages: 2 },
+    { list: [], total: 101, totalPages: 2 },
+    { list: [{ id: 101, englishWord: "target" }], total: 102, totalPages: 2 },
+  ])("rejects inconsistent later pages without looping: %j", async (secondPage) => {
+    requestMock.mockResolvedValueOnce({ list: firstPage, total: 101, totalPages: 2 })
+      .mockResolvedValueOnce(secondPage);
+    await expect(fetchAllMobileWords()).rejects.toThrow("请重新加载");
+    expect(requestMock).toHaveBeenCalledTimes(2);
   });
 
   it("finds a cached word across pages or returns null", () => {

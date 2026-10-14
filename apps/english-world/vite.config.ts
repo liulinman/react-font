@@ -3,10 +3,11 @@ import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
 import * as path from "path";
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     VitePWA({
+      disable: mode === 'ios',
       registerType: "prompt",
       includeAssets: ["icons/apple-touch-icon-180x180.png"],
       manifest: {
@@ -44,11 +45,13 @@ export default defineConfig({
           "assets/workbox-window*.js",
         ],
         navigateFallback: "/index.html",
+        navigateFallbackDenylist: [/^\/admin(?:\/|$)/],
         runtimeCaching: [],
       },
     }),
   ],
   build: {
+    outDir: mode === 'ios' ? 'dist-ios' : 'dist',
     manifest: true,
     rollupOptions: {
       output: {
@@ -77,4 +80,4 @@ export default defineConfig({
       },
     },
   },
-});
+}));

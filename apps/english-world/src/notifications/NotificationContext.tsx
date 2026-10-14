@@ -9,8 +9,9 @@ import {
   type ReactNode,
 } from "react";
 import request, { getApiBaseUrl } from "@font/api";
-import { notification } from "antd";
+import { Button, notification } from "antd";
 import { useAuth } from "@/contexts/AuthContext";
+import { isNativeApp } from "@/native/runtime";
 import {
   notificationList,
   notificationMarkAllRead,
@@ -32,6 +33,9 @@ type NotificationContextValue = {
   items: NotificationItem[];
   unreadCount: number;
   loading: boolean;
+  centerOpen: boolean;
+  openCenter: () => void;
+  closeCenter: () => void;
   refresh: () => Promise<void>;
   markRead: (id: number) => Promise<void>;
   markAllRead: () => Promise<void>;
@@ -45,6 +49,9 @@ const fallbackNotificationContext: NotificationContextValue = {
   items: [],
   unreadCount: 0,
   loading: false,
+  centerOpen: false,
+  openCenter: () => undefined,
+  closeCenter: () => undefined,
   refresh: async () => undefined,
   markRead: async () => undefined,
   markAllRead: async () => undefined,
@@ -57,14 +64,16 @@ export function useNotifications() {
 
 export function NotificationProvider({ children }: { children: ReactNode }) {
   const auth = useAuth();
-  const { isAuthenticated, logout } = auth;
+  const { isAuthenticated, logout, checkAuth } = auth;
   const [items, setItems] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [centerOpen, setCenterOpen] = useState(false);
   const retryTimerRef = useRef<number | null>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
   const retryCountRef = useRef(0);
   const accountRevocationHandledRef = useRef(false);
+  const liveNotificationBurstRef = useRef({ count: 0, lastAt: 0 });
 
   const refresh = useCallback(async () => {
     if (!isAuthenticated) return;
@@ -135,12 +144,40 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const handleEvent = useCallback(
     async (event: SseEvent) => {
       if (event.type === "notification") {
+        const now = Date.now();
+        const burst = liveNotificationBurstRef.current;
+        burst.count = now - burst.lastAt <= 10000 ? burst.count + 1 : 1;
+        burst.lastAt = now;
         setItems((current) => [event.data, ...current]);
         setUnreadCount((count) => count + 1);
         notification.open({
+          key: "english-world-live-notification",
           message: event.data.title,
-          description: event.data.body,
+          description:
+            burst.count > 1 ? (
+              <div className="english-world-live-notification-content">
+                <span>{event.data.body}</span>
+                <span className="english-world-live-notification-summary">
+                  另有 {burst.count - 1} 条通知
+                </span>
+              </div>
+            ) : (
+              event.data.body
+            ),
           placement: "topRight",
+          className: `english-world-live-notification english-world-live-notification-${event.data.priority}`,
+          duration:
+            event.data.priority === "urgent"
+              ? 0
+              : event.data.priority === "important"
+                ? 8
+                : 4.5,
+          role: event.data.priority === "urgent" ? "alert" : "status",
+          actions: (
+            <Button type="link" size="small" onClick={() => setCenterOpen(true)}>
+              查看通知
+            </Button>
+          ),
         });
       } else if (event.type === "unread-count") {
         setUnreadCount(event.data.count);
@@ -195,24 +232,53 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       setUnreadCount(0);
       return;
     }
+    if (isNativeApp()) {
+      // Browser EventSource cannot use URLSession's cookie jar. Native polling
+      // uses the same authenticated HTTP transport as the rest of the app.
+      let refreshing = false;
+      const refreshNative = async () => {
+        if (refreshing || document.visibilityState === "hidden") return;
+        refreshing = true;
+        try {
+          await refresh();
+        } catch (error) {
+          if ((error as { code?: number } | null)?.code === 4001) {
+            await checkAuth();
+          }
+          // Transient network failures retry on the next tick.
+        } finally {
+          refreshing = false;
+        }
+      };
+      void refreshNative();
+      const timer = window.setInterval(() => void refreshNative(), 30000);
+      document.addEventListener("visibilitychange", refreshNative);
+      return () => {
+        window.clearInterval(timer);
+        document.removeEventListener("visibilitychange", refreshNative);
+      };
+    }
     void refresh();
     connect();
     return () => {
       closeEventSource();
       if (retryTimerRef.current) window.clearTimeout(retryTimerRef.current);
     };
-  }, [closeEventSource, connect, isAuthenticated, refresh]);
+  }, [checkAuth, closeEventSource, connect, isAuthenticated, refresh]);
 
   const value = useMemo(
     () => ({
       items,
       unreadCount,
       loading,
+      centerOpen,
+      openCenter: () => setCenterOpen(true),
+      closeCenter: () => setCenterOpen(false),
       refresh,
       markRead,
       markAllRead,
     }),
-    [items, loading, markAllRead, markRead, refresh, unreadCount],
+    [centerOpen, items, loading, markAllRead, markRead, refresh, unreadCount],
   );
 
   return (

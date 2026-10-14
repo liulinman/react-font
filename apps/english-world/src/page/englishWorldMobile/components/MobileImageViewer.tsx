@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { PhotoProvider, PhotoView } from "react-photo-view";
 import "react-photo-view/dist/react-photo-view.css";
+import { resolveMediaUrl } from "@/native/mediaUrl";
 
 type MobileImageViewerProps = {
   alt: string;
@@ -46,7 +47,7 @@ export function MobileImageViewer({
       maskClosable
       onVisibleChange={(visible) => setOpen(visible)}
     >
-      <PhotoView src={src}>
+      <PhotoView src={resolveMediaUrl(src)}>
         <button
           aria-label={triggerLabel ?? `查看 ${alt}`}
           className={["mobile-image-viewer__trigger", triggerClassName]
@@ -54,7 +55,7 @@ export function MobileImageViewer({
             .join(" ")}
           type="button"
         >
-          <img alt={alt} src={src} />
+          <img alt={alt} src={resolveMediaUrl(src)} />
         </button>
       </PhotoView>
     </PhotoProvider>

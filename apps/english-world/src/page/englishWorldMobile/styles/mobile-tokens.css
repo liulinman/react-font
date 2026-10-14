@@ -2,7 +2,8 @@
   --mobile-on-accent: #ffffff;
   --mobile-on-destructive: #ffffff;
   --mobile-scrim: #00000066;
-  --mobile-font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+  --mobile-font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --mobile-reading-font: Arial, Helvetica, "PingFang SC", "Microsoft YaHei", sans-serif;
   --mobile-page-gutter: 16px;
   --mobile-page-gutter-compact: 12px;
   --mobile-space-1: 4px;
@@ -23,32 +24,35 @@
 
 html[data-theme="light"] {
   color-scheme: light;
-  --mobile-surface-base: #f2f2f7;
+  --mobile-surface-base: #f5f6f8;
   --mobile-surface-raised: #ffffff;
-  --mobile-surface-sunken: #e5e5ea;
-  --mobile-ink-primary: #000000;
-  --mobile-ink-secondary: #3c3c43;
-  --mobile-ink-tertiary: #8e8e93;
-  --mobile-separator: #c6c6c8;
-  --mobile-accent: #007aff;
+  --mobile-surface-sunken: #eef1f5;
+  --mobile-ink-primary: #20242a;
+  --mobile-ink-secondary: #52606d;
+  --mobile-ink-tertiary: #687786;
+  --mobile-separator: #dce1e7;
+  --mobile-accent: #2457a7;
   --mobile-success: #248a3d;
   --mobile-warning: #b25000;
   --mobile-destructive: #d70015;
-  --mobile-focus-ring: #005fcc;
+  --mobile-focus-ring: #2457a7;
+  --mobile-accent-soft: #edf3fc;
 }
 
 html[data-theme="dark"] {
+  --mobile-on-accent: #17212f;
   color-scheme: dark;
-  --mobile-surface-base: #000000;
-  --mobile-surface-raised: #1c1c1e;
-  --mobile-surface-sunken: #2c2c2e;
+  --mobile-surface-base: #15181d;
+  --mobile-surface-raised: #20252c;
+  --mobile-surface-sunken: #2a313a;
   --mobile-ink-primary: #ffffff;
-  --mobile-ink-secondary: #ebebf5;
-  --mobile-ink-tertiary: #8e8e93;
+  --mobile-ink-secondary: #c2cad4;
+  --mobile-ink-tertiary: #687786;
   --mobile-separator: #38383a;
-  --mobile-accent: #0a84ff;
+  --mobile-accent: #91b8ff;
   --mobile-success: #30d158;
   --mobile-warning: #ffd60a;
   --mobile-destructive: #ff453a;
-  --mobile-focus-ring: #64d2ff;
+  --mobile-focus-ring: #91b8ff;
+  --mobile-accent-soft: #253852;
 }

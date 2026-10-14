@@ -132,6 +132,7 @@ const EnglishWorld: React.FC = () => {
   const [form] = Form.useForm();
   const [type, setType] = useState<"edit" | "add">("add");
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [focusWordNote, setFocusWordNote] = useState(false);
   const [wordRecord, setWordRecord] = useState<WordList>();
   const [libraryView, setLibraryView] = useState<WordLibraryView>(
     wordLibraryViewPreference.read,
@@ -317,7 +318,8 @@ const EnglishWorld: React.FC = () => {
   };
 
   // 编辑操作
-  const handleEdit = (record: WordList) => {
+  const handleEdit = (record: WordList, noteOnly = false) => {
+    setFocusWordNote(noteOnly);
     setWordRecord(record);
     handleType("edit");
     setIsModalVisible(true);
@@ -462,6 +464,7 @@ const EnglishWorld: React.FC = () => {
   };
 
   const handleAdd = () => {
+    setFocusWordNote(false);
     handleType("add");
     setIsModalVisible(true);
   };
@@ -897,6 +900,7 @@ const EnglishWorld: React.FC = () => {
               items: [
                 { key: "edit", label: "编辑" },
                 { key: "query", label: "百度查询" },
+                { key: "knowledge", label: "关联知识笔记" },
                 { type: "divider" },
                 { key: "delete", label: "删除", danger: true },
               ],
@@ -904,6 +908,8 @@ const EnglishWorld: React.FC = () => {
                 domEvent.stopPropagation();
                 if (key === "edit") {
                   handleEdit(record);
+                } else if (key === "knowledge") {
+                  navigate(`/englishWorld/knowledge-notes?wordId=${record.id}`);
                 } else if (key === "query") {
                   window.open(
                     `https://www.baidu.com/s?wd=${encodeURIComponent(
@@ -961,6 +967,7 @@ const EnglishWorld: React.FC = () => {
 
         <WordCardNote
           note={record.englishNote}
+          wordId={record.id}
           word={record.englishWord}
         />
 
@@ -1179,7 +1186,7 @@ const EnglishWorld: React.FC = () => {
                       expandedRowRender: (record) => (
                         <WordExpandedNote
                           record={record}
-                          onEdit={handleEdit}
+                          onEdit={(record) => handleEdit(record, true)}
                         />
                       ),
                       expandIcon: ({ expanded, onExpand, record }) =>
@@ -1327,6 +1334,7 @@ const EnglishWorld: React.FC = () => {
             ) : null}
             <EditAddModal
               isModalVisible={isModalVisible}
+              focusNote={focusWordNote}
               currentRecord={wordRecord}
               type={type}
               onOk={handleModalOk}

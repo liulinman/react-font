@@ -1,3 +1,8 @@
+import { UNSAFE_DataRouterContext } from "react-router-dom";
+import { UnsavedNoteGuard } from "../knowledgeNotes/UnsavedNoteGuard";
+import "../knowledgeNotes/knowledgeNotes.css";
+import { AutoGrowTextarea } from "../knowledgeNotes/AutoGrowTextarea";
+import "./wordNoteEditor.css";
 import {
   Modal,
   Form,
@@ -15,7 +20,7 @@ import TextArea from "antd/es/input/TextArea";
 import { WordList } from "@/server/word/word.type";
 import request from "@font/api";
 import { uploadFile } from "@/server";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { enumToOptions } from "@font/utils";
 import { EnglishAbsorb, EnglishType } from "../enum";
 import {
@@ -37,6 +42,7 @@ export type AddInitialValues = Partial<Omit<WordList, "id">>;
 
 interface Props {
   isModalVisible: boolean;
+  focusNote?: boolean;
   currentRecord?: WordList | null;
   /** 新增模式下预填的表单值（如从 AI 单词卡片带入） */
   addInitialValues?: AddInitialValues | null;
@@ -70,6 +76,36 @@ export const EditAddModal = (props: Props) => {
 
   // 初始化表单数据
   const [form] = Form.useForm();
+  const dataRouter = useContext(UNSAFE_DataRouterContext);
+  const allowNavigation = useRef(false);
+  const [noteFocused, setNoteFocused] = useState(false);
+  const [dirty, setDirty] = useState(false);
+  const noteValue = Form.useWatch("englishNote", form);
+  const [saving, setSaving] = useState(false);
+  const savingRef = useRef(false);
+  const bodyScrollRef = useRef(0);
+  const noteSelectionRef = useRef<[number, number]>([0,0]);
+  const noteEditorRef = useRef<HTMLDivElement>(null);
+  const focusNote = (expanded: boolean) => {
+    const editor = document.querySelector<HTMLTextAreaElement>(expanded ? '#englishNote' : '#full-word-note');
+    if (editor) noteSelectionRef.current = [editor.selectionStart, editor.selectionEnd];
+    const body = editor?.closest('.ant-modal-body');
+    if(expanded) bodyScrollRef.current = body?.scrollTop ?? 0;
+    setNoteFocused(expanded);
+    requestAnimationFrame(() => {
+      const target = document.querySelector<HTMLTextAreaElement>(expanded ? '#full-word-note' : '#englishNote');
+      target?.focus({preventScroll:true});
+      target?.setSelectionRange(...noteSelectionRef.current);
+      const container = target?.closest('.ant-modal-body');
+      if(container) container.scrollTop = expanded ? 0 : bodyScrollRef.current;
+    });
+  };
+  useEffect(() => {
+    if (!isModalVisible || !dirty) return;
+    const protect = (event: BeforeUnloadEvent) => { event.preventDefault(); event.returnValue = ''; };
+    window.addEventListener('beforeunload', protect);
+    return () => window.removeEventListener('beforeunload', protect);
+  }, [isModalVisible, dirty]);
   const [selectedPartSpeech, setSelectedPartSpeech] = useState<number[]>([]);
   const [aiLookupWord, setAiLookupWord] = useState("");
   const [aiCompleting, setAiCompleting] = useState(false);
@@ -100,6 +136,8 @@ export const EditAddModal = (props: Props) => {
     /* eslint-disable react-hooks/set-state-in-effect -- Reset stale loading and pending suggestions atomically before paint. */
     setAiCompleting(false);
     setPendingWordSuggestion(null);
+    setNoteFocused(Boolean(props.focusNote));
+    setDirty(false);
     /* eslint-enable react-hooks/set-state-in-effect */
 
     const timer = window.setTimeout(() => {
@@ -117,7 +155,7 @@ export const EditAddModal = (props: Props) => {
     }, 0);
 
     return () => window.clearTimeout(timer);
-  }, [type, currentRecord, addInitialValues, form, isModalVisible]);
+  }, [type, currentRecord, addInitialValues, form, isModalVisible, props.focusNote]);
 
   useEffect(() => {
     const lookupWord = normalizeWordInput(aiLookupWord);
@@ -191,6 +229,9 @@ export const EditAddModal = (props: Props) => {
   }, [aiLookupWord, form, isModalVisible, type]);
 
   const handleModalOk = async () => {
+    if (savingRef.current) return;
+    savingRef.current = true;
+    setSaving(true);
     try {
       const value = await form.validateFields();
       const values =
@@ -210,12 +251,17 @@ export const EditAddModal = (props: Props) => {
       }
     } catch (info) {
       console.log("Validate Failed:", info);
+    } finally {
+      savingRef.current = false;
+      setSaving(false);
     }
   };
 
   const handleModalCancel = () => {
-    // 关闭模态框时清空表单数据
-    onCancel();
+    if(savingRef.current) return;
+    if (dirty) {
+      Modal.confirm({ title: "放弃尚未保存的修改？", content: "本次修改将丢失。", okText: "放弃修改", cancelText: "继续编辑", onOk: onCancel });
+    } else onCancel();
   };
 
   const handleUseWordSuggestion = () => {
@@ -243,6 +289,7 @@ export const EditAddModal = (props: Props) => {
   };
 
   const onValuesChange = (changedValues: Partial<FormValues>) => {
+    setDirty(true);
     if (Object.prototype.hasOwnProperty.call(changedValues, "englishType")) {
       englishTypeManuallyChangedRef.current = true;
     }
@@ -326,24 +373,35 @@ export const EditAddModal = (props: Props) => {
 
   return (
     <Modal
-      title={type === "edit" ? "编辑单词" : "添加单词"}
+      title={noteFocused ? `${currentRecord?.englishWord ?? "单词"} · 编辑笔记` : type === "edit" ? "编辑单词" : "添加单词"}
+      className={noteFocused ? "word-note-focus-modal" : undefined}
+      confirmLoading={saving}
+      closable={!saving}
+      maskClosable={false}
+      footer={noteFocused ? <Button onClick={() => focusNote(false)}>返回表单</Button> : undefined}
       open={isModalVisible}
       onOk={handleModalOk}
       onCancel={handleModalCancel}
       okText="确认"
       cancelText="取消"
       destroyOnHidden
-      width={800} // 增加宽度
+      width={noteFocused ? "min(1100px, calc(100vw - 24px))" : 800}
       styles={{
         body: {
-          maxHeight: "calc(100vh - 360px)",
+          maxHeight: noteFocused ? "calc(100dvh - 160px)" : "calc(100dvh - 240px)",
           overflowY: "auto",
           padding: "20px",
         },
       }}
     >
-      {/* 编辑/添加表单 */}
-      <Form form={form} onValuesChange={onValuesChange} layout="vertical">
+      {dataRouter && isModalVisible && <div className="knowledge-notes" style={{padding:0,minHeight:0}}><UnsavedNoteGuard dirty={dirty || saving} busy={saving} allowLeave={allowNavigation}/></div>}
+      {noteFocused && <div className="word-note-focus-content" ref={noteEditorRef}>
+        <p>修改尚未保存，返回表单后点击“确认”保存单词。</p>
+        <label htmlFor="full-word-note">完整笔记</label>
+        <AutoGrowTextarea id="full-word-note" aria-label="完整笔记" rows={18} value={noteValue ?? ""} onChange={(event) => { form.setFieldValue("englishNote",event.target.value); setDirty(true); }} />
+      </div>}
+      {/* Keep the form mounted so all fields and validation survive focus editing. */}
+      <Form form={form} onValuesChange={onValuesChange} layout="vertical" style={noteFocused ? {display:"none"} : undefined}>
         {/* 第一行：单词名 + 掌握程度 */}
         <div style={{ display: "flex", gap: "16px" }}>
           <div style={{ flex: 1 }}>
@@ -457,8 +515,9 @@ export const EditAddModal = (props: Props) => {
         </Form.Item>
 
         {/* 笔记 - 独立一行 */}
+        <Button type="link" onClick={() => focusNote(true)}>展开编辑</Button>
         <Form.Item label="笔记" name="englishNote">
-          <TextArea rows={4} allowClear />
+          <TextArea autoSize={{minRows:6}} allowClear />
         </Form.Item>
 
         {/* 引用 - 独立一行 */}
