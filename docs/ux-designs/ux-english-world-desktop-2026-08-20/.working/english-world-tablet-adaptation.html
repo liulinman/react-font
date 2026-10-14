@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>English World — 平板适配</title>
+  <style>
+    :root {
+      --bg:#eef2f7; --surface:#fff; --soft:#f7f9fc; --nav:#111a2d; --text:#192238;
+      --muted:#7b879d; --line:#e2e7ef; --blue:#356ae6; --blue-soft:#eaf0ff;
+      --green:#1d9870; --green-soft:#e7f6f0; --shadow:0 20px 55px rgba(22,31,51,.12);
+    }
+    * { box-sizing:border-box; }
+    body { margin:0; background:radial-gradient(circle at 50% -10%,#f9fbff 0,#e9eef6 70%); color:var(--text); font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif; }
+    button { font:inherit; cursor:pointer; }
+    .header { max-width:1500px; margin:auto; padding:24px 28px 18px; display:flex; align-items:flex-end; justify-content:space-between; gap:20px; }
+    .eyebrow { display:inline-flex; padding:5px 8px; border-radius:6px; background:#18233b; color:#fff; font-size:10px; font-weight:800; letter-spacing:.06em; }
+    h1 { margin:10px 0 5px; font-size:24px; letter-spacing:-.025em; }
+    .header p { margin:0; color:var(--muted); font-size:12px; }
+    .legend { display:flex; align-items:center; gap:14px; color:#718097; font-size:10px; }
+    .legend span { display:flex; align-items:center; gap:5px; }
+    .legend i { width:7px; height:7px; border-radius:50%; background:var(--blue); }
+    .legend span:last-child i { background:var(--green); }
+    .canvas { max-width:1500px; margin:0 auto 90px; padding:0 28px; display:grid; grid-template-columns:minmax(740px,1.35fr) minmax(420px,.65fr); gap:30px; align-items:start; }
+    .device-label { display:flex; align-items:center; justify-content:space-between; margin:0 2px 10px; color:#536079; font-size:11px; font-weight:750; }
+    .device-label span { color:#929cad; font-size:9px; font-weight:600; }
+    .device { overflow:hidden; border:7px solid #202738; border-radius:22px; background:#202738; box-shadow:var(--shadow); }
+    .device-inner { overflow:hidden; display:grid; background:var(--soft); border-radius:15px; }
+    .landscape .device-inner { aspect-ratio:4/3; grid-template-columns:66px 1fr; }
+    .portrait .device-inner { aspect-ratio:3/4; grid-template-columns:62px 1fr; }
+    .rail { display:flex; flex-direction:column; align-items:center; padding:15px 9px 12px; background:linear-gradient(180deg,#131e34,#10182a); color:#91a0ba; }
+    .logo { width:34px; height:34px; display:grid; place-items:center; margin-bottom:18px; border-radius:10px; background:linear-gradient(135deg,#638eff,#315dcb); color:#fff; font-size:11px; font-weight:850; }
+    .rail-btn { width:44px; height:44px; display:grid; place-items:center; margin:2px 0; border:0; border-radius:10px; background:transparent; color:#8797b2; }
+    .rail-btn svg { width:17px; height:17px; stroke-width:1.8; }
+    .rail-btn.active { background:rgba(91,132,235,.19); color:#fff; }
+    .rail .spacer { flex:1; }
+    .tiny-avatar { width:30px; height:30px; display:grid; place-items:center; border-radius:50%; background:#e5edff; color:#315fca; font-size:9px; font-weight:800; }
+    .workspace { min-width:0; overflow:hidden; }
+    .topbar { height:55px; display:flex; align-items:center; justify-content:space-between; padding:0 22px; border-bottom:1px solid var(--line); background:rgba(255,255,255,.93); }
+    .crumb { color:#7f8b9f; font-size:9px; }
+    .crumb b { color:#344057; }
+    .actions { display:flex; align-items:center; gap:7px; }
+    .icon { position:relative; width:44px; height:44px; display:grid; place-items:center; border:0; background:transparent; color:#69758a; }
+    .icon svg { width:16px; height:16px; }
+    .icon i { position:absolute; right:10px; top:9px; width:6px; height:6px; border:2px solid #fff; border-radius:50%; background:#df5966; }
+    .page { padding:22px; }
+    .heading { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:17px; }
+    .heading h2 { margin:0; font-size:19px; letter-spacing:-.025em; }
+    .heading p { margin:5px 0 0; color:var(--muted); font-size:9px; }
+    .primary { min-height:44px; display:flex; align-items:center; gap:6px; padding:0 13px; border:0; border-radius:9px; background:var(--blue); color:#fff; font-size:10px; font-weight:760; box-shadow:0 7px 15px rgba(53,106,230,.21); }
+    .primary svg { width:14px; height:14px; }
+    .today-grid { display:grid; grid-template-columns:minmax(0,1.45fr) minmax(205px,.65fr); gap:13px; }
+    .panel { border:1px solid var(--line); border-radius:11px; background:#fff; box-shadow:0 6px 18px rgba(23,34,57,.05); }
+    .plan { padding:17px; }
+    .panel-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:13px; }
+    .panel-head strong { font-size:11px; }
+    .panel-head span { color:#8b96a8; font-size:8px; }
+    .summary { display:grid; grid-template-columns:78px 1fr; gap:16px; align-items:center; padding-bottom:15px; border-bottom:1px solid #edf0f4; }
+    .ring-wrap { position:relative; width:76px; height:76px; display:grid; place-items:center; }
+    .ring { width:76px; height:76px; border-radius:50%; background:conic-gradient(var(--blue) 0 68%,#e9edf3 68%); }
+    .ring::before { content:""; position:absolute; inset:8px; border-radius:50%; background:#fff; }
+    .ring-text { position:absolute; text-align:center; }
+    .ring-text b { display:block; font-size:17px; }
+    .ring-text span { color:#8d98aa; font-size:7px; }
+    .summary h3 { margin:0 0 5px; font-size:13px; }
+    .summary p { margin:0 0 9px; color:#778399; font-size:8px; line-height:1.5; }
+    .meta { display:flex; gap:10px; color:#7c879b; font-size:7px; }
+    .meta b { color:#354057; font-size:9px; }
+    .task { min-height:47px; display:grid; grid-template-columns:27px 1fr auto; gap:8px; align-items:center; padding:6px 7px; }
+    .task + .task { border-top:1px solid #eef1f5; }
+    .task.current { margin:3px 0; border:1px solid #dce6ff; border-radius:8px; background:#f1f5ff; }
+    .task-icon { width:26px; height:26px; display:grid; place-items:center; border-radius:7px; background:#edf1f6; color:#77849a; }
+    .task.done .task-icon { background:var(--green-soft); color:var(--green); }
+    .task.current .task-icon { background:#dfe8ff; color:var(--blue); }
+    .task-icon svg { width:12px; height:12px; }
+    .task-copy b { display:block; font-size:9px; }
+    .task-copy span { display:block; margin-top:2px; color:#8b96a8; font-size:7px; }
+    .chip { padding:3px 5px; border-radius:5px; background:#edf2ff; color:#416bca; font-size:7px; font-weight:750; }
+    .side { display:grid; gap:12px; align-content:start; }
+    .streak { padding:15px; border-color:#26395e; background:linear-gradient(145deg,#172542,#21355c); color:#fff; }
+    .streak small { color:#93a3bd; font-size:8px; }
+    .streak strong { display:block; margin-top:5px; font-size:21px; }
+    .week { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; margin-top:13px; }
+    .week span { height:21px; display:grid; place-items:center; border-radius:6px; background:rgba(255,255,255,.06); color:#8496b3; font-size:7px; }
+    .week span.done { background:rgba(87,135,247,.22); color:#bad0ff; }
+    .week span.today { background:#5784ee; color:#fff; }
+    .metrics { padding:15px; }
+    .metric { display:flex; align-items:center; justify-content:space-between; min-height:32px; color:#778398; font-size:8px; }
+    .metric + .metric { border-top:1px solid #eef1f5; }
+    .metric b { color:#303b52; font-size:10px; }
+
+    .portrait .topbar { padding:0 15px; }
+    .portrait .page { padding:17px 15px 22px; }
+    .portrait .heading { margin-bottom:13px; }
+    .portrait .heading h2 { font-size:17px; }
+    .library-summary { display:flex; align-items:center; gap:14px; padding:10px 12px; margin-bottom:10px; border:1px solid var(--line); border-radius:9px; background:#fff; }
+    .lib-stat { display:flex; align-items:baseline; gap:4px; }
+    .lib-stat + .lib-stat { padding-left:12px; border-left:1px solid var(--line); }
+    .lib-stat b { font-size:12px; }
+    .lib-stat span { color:#8d98aa; font-size:7px; }
+    .tools { display:grid; grid-template-columns:1fr 44px; gap:7px; margin-bottom:10px; }
+    .search { height:44px; display:flex; align-items:center; gap:8px; padding:0 11px; border:1px solid var(--line); border-radius:9px; background:#fff; color:#8c97a9; font-size:8px; }
+    .search svg { width:13px; height:13px; }
+    .filter { width:44px; height:44px; display:grid; place-items:center; border:1px solid var(--line); border-radius:9px; background:#fff; color:#657289; }
+    .filter svg { width:15px; height:15px; }
+    .word-list { overflow:hidden; border:1px solid var(--line); border-radius:10px; background:#fff; box-shadow:0 6px 18px rgba(23,34,57,.05); }
+    .list-head { display:flex; align-items:center; justify-content:space-between; height:31px; padding:0 11px; background:#f6f8fb; color:#8994a7; font-size:7px; font-weight:750; }
+    .word-row { min-height:61px; display:grid; grid-template-columns:1fr auto 30px; align-items:center; gap:8px; padding:9px 11px; }
+    .word-row + .word-row { border-top:1px solid #edf0f4; }
+    .word b { display:block; color:#273249; font-size:10px; }
+    .word small { display:block; margin-top:2px; color:#9aa4b4; font-size:7px; }
+    .meaning { display:block; margin-top:4px; color:#667289; font-size:8px; }
+    .level { display:flex; align-items:center; gap:5px; color:#657188; font-size:7px; }
+    .level i { width:38px; height:4px; overflow:hidden; border-radius:3px; background:#e8ecf2; }
+    .level i::after { content:""; display:block; width:var(--value); height:100%; border-radius:3px; background:#5d84e7; }
+    .more { width:30px; height:44px; display:grid; place-items:center; color:#8c96a8; font-size:12px; }
+    .touch-note { display:flex; align-items:center; gap:6px; margin-top:10px; color:#7d899d; font-size:7px; }
+    .touch-note i { width:6px; height:6px; border-radius:50%; background:var(--green); }
+    .callouts { margin-top:16px; display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+    .callout { padding:9px 10px; border:1px solid #dfe5ed; border-radius:8px; background:rgba(255,255,255,.74); }
+    .callout b { display:block; color:#3e4a62; font-size:8px; }
+    .callout span { display:block; margin-top:3px; color:#8490a4; font-size:7px; line-height:1.4; }
+    .portrait .callouts { grid-template-columns:1fr; }
+    .approval { position:fixed; right:22px; bottom:20px; z-index:20; display:flex; align-items:center; gap:10px; padding:10px 12px 10px 15px; border-radius:12px; background:#18233b; color:#dbe4f6; box-shadow:0 15px 35px rgba(18,26,44,.26); font-size:11px; }
+    .approval button { border:0; border-radius:8px; padding:9px 12px; background:#5b86ee; color:#fff; font-size:10px; font-weight:760; }
+    .approval button.selected { background:#268568; }
+    @media (max-width:1150px) { .canvas { grid-template-columns:1fr; } .portrait-wrap { max-width:620px; margin:auto; } }
+    @media (max-width:760px) { .header { align-items:flex-start; flex-direction:column; padding:18px; } .canvas { padding:0 12px; } .landscape-wrap { overflow-x:auto; } .landscape { min-width:730px; } }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div><span class="eyebrow">平板适配</span><h1>不是缩小桌面，而是重排工作空间</h1><p>横屏保留效率，竖屏优先触控与阅读；两者共享同一套导航和视觉语言。</p></div>
+    <div class="legend"><span><i></i>核心学习动作</span><span><i></i>触控友好区域 ≥ 44px</span></div>
+  </header>
+
+  <main class="canvas">
+    <section class="landscape-wrap">
+      <div class="device-label">横屏 · 今日工作台 <span>1024 × 768</span></div>
+      <div class="device landscape">
+        <div class="device-inner">
+          <aside class="rail">
+            <div class="logo">EW</div>
+            <button class="rail-btn active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 11.5 12 4l9 7.5M5.5 10v9h13v-9"/></svg></button>
+            <button class="rail-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 19.5V6a2 2 0 0 1 2-2h12v15.5H6a2 2 0 0 0 0 4h13"/></svg></button>
+            <button class="rail-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 4h12a2 2 0 0 1 2 2v14H7a2 2 0 0 1-2-2z"/></svg></button>
+            <button class="rail-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="6"/><path d="m16 16 4 4"/></svg></button>
+            <button class="rail-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 20V10M12 20V4M19 20v-7"/></svg></button>
+            <div class="spacer"></div><button class="rail-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="9"/></svg></button><div class="tiny-avatar">AL</div>
+          </aside>
+          <div class="workspace">
+            <div class="topbar"><div class="crumb">English World / <b>今天</b></div><div class="actions"><button class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/></svg><i></i></button><div class="tiny-avatar">AL</div></div></div>
+            <div class="page">
+              <div class="heading"><div><h2>晚上好，alin</h2><p>今天还有一个重点任务，完成后就可以收工。</p></div><button class="primary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m8 5 11 7-11 7z"/></svg>继续学习</button></div>
+              <div class="today-grid">
+                <div class="panel plan">
+                  <div class="panel-head"><strong>今日学习计划</strong><span>约剩 8 分钟</span></div>
+                  <div class="summary"><div class="ring-wrap"><div class="ring"></div><div class="ring-text"><b>68%</b><span>今日进度</span></div></div><div><h3>状态很好，再完成一组复习</h3><p>优先处理今天到期的核心词，完成后自动更新掌握度。</p><div class="meta"><span><b>32</b> 分钟</span><span><b>46</b> 已学习</span><span><b>91%</b> 正确率</span></div></div></div>
+                  <div class="task done"><div class="task-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m5 12 4 4L19 6"/></svg></div><div class="task-copy"><b>新词学习</b><span>完成 12 个 IELTS 核心词</span></div><span class="chip">已完成</span></div>
+                  <div class="task current"><div class="task-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 19.5V6a2 2 0 0 1 2-2h12v15.5H6a2 2 0 0 0 0 4h13"/></svg></div><div class="task-copy"><b>核心词复习</b><span>18 个单词 · 预计 8 分钟</span></div><span class="chip">继续</span></div>
+                  <div class="task"><div class="task-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 20V10M12 20V4M19 20v-7"/></svg></div><div class="task-copy"><b>学习小结</b><span>查看今天的掌握变化</span></div><span class="chip" style="background:#f1f3f6;color:#7f899a">待开始</span></div>
+                </div>
+                <div class="side">
+                  <div class="panel streak"><small>连续学习</small><strong>12 天</strong><div class="week"><span class="done">一</span><span class="done">二</span><span class="done">三</span><span class="done">四</span><span class="done">五</span><span class="today">今</span><span>日</span></div></div>
+                  <div class="panel metrics"><div class="panel-head"><strong>今日数据</strong><span>实时</span></div><div class="metric">学习时长 <b>32 分钟</b></div><div class="metric">新增掌握 <b>9 个</b></div><div class="metric">需要巩固 <b>6 个</b></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="callouts"><div class="callout"><b>图标导航栏</b><span>保留桌面信息架构，释放约 150px 内容宽度。</span></div><div class="callout"><b>双栏仍可用</b><span>横屏继续展示学习计划和辅助数据。</span></div><div class="callout"><b>触控优先</b><span>按钮和导航均使用至少 44px 的命中区域。</span></div></div>
+    </section>
+
+    <section class="portrait-wrap">
+      <div class="device-label">竖屏 · 词库管理 <span>834 × 1112</span></div>
+      <div class="device portrait">
+        <div class="device-inner">
+          <aside class="rail">
+            <div class="logo">EW</div>
+            <button class="rail-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 11.5 12 4l9 7.5M5.5 10v9h13v-9"/></svg></button>
+            <button class="rail-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 19.5V6a2 2 0 0 1 2-2h12v15.5H6a2 2 0 0 0 0 4h13"/></svg></button>
+            <button class="rail-btn active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 4h12a2 2 0 0 1 2 2v14H7a2 2 0 0 1-2-2z"/></svg></button>
+            <button class="rail-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="6"/><path d="m16 16 4 4"/></svg></button>
+            <button class="rail-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 20V10M12 20V4M19 20v-7"/></svg></button>
+            <div class="spacer"></div><button class="rail-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="9"/></svg></button><div class="tiny-avatar">AL</div>
+          </aside>
+          <div class="workspace">
+            <div class="topbar"><div class="crumb">English World / <b>词库</b></div><div class="actions"><button class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/></svg><i></i></button><div class="tiny-avatar">AL</div></div></div>
+            <div class="page">
+              <div class="heading"><div><h2>词库</h2><p>管理学习材料与复习安排</p></div><button class="primary">＋ 添加单词</button></div>
+              <div class="library-summary"><div class="lib-stat"><b>1,286</b><span>全部</span></div><div class="lib-stat"><b>742</b><span>已掌握</span></div><div class="lib-stat"><b>18</b><span>今日到期</span></div></div>
+              <div class="tools"><div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="6"/><path d="m16 16 4 4"/></svg>搜索单词、释义或标签</div><button class="filter"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 6h16M7 12h10M10 18h4"/></svg></button></div>
+              <div class="word-list">
+                <div class="list-head"><span>单词与释义</span><span>掌握度</span></div>
+                <div class="word-row"><div class="word"><b>resilient</b><small>/rɪˈzɪliənt/ · adj.</small><span class="meaning">有韧性的；能迅速恢复的</span></div><div class="level"><i style="--value:72%"></i>72%</div><span class="more">···</span></div>
+                <div class="word-row"><div class="word"><b>meticulous</b><small>/məˈtɪkjələs/ · adj.</small><span class="meaning">一丝不苟的；非常仔细的</span></div><div class="level"><i style="--value:48%"></i>48%</div><span class="more">···</span></div>
+                <div class="word-row"><div class="word"><b>ubiquitous</b><small>/juːˈbɪkwɪtəs/ · adj.</small><span class="meaning">无处不在的；普遍存在的</span></div><div class="level"><i style="--value:35%"></i>35%</div><span class="more">···</span></div>
+                <div class="word-row"><div class="word"><b>pragmatic</b><small>/præɡˈmætɪk/ · adj.</small><span class="meaning">务实的；注重实际的</span></div><div class="level"><i style="--value:86%"></i>86%</div><span class="more">···</span></div>
+                <div class="word-row"><div class="word"><b>contemplate</b><small>/ˈkɒntəmpleɪt/ · v.</small><span class="meaning">深思；考虑；凝视</span></div><div class="level"><i style="--value:64%"></i>64%</div><span class="more">···</span></div>
+              </div>
+              <div class="touch-note"><i></i>点按任意单词展开详情；批量选择后显示底部操作栏。</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="callouts"><div class="callout"><b>表格转可展开列表</b><span>保留关键信息，避免横向滚动和误触。</span></div><div class="callout"><b>筛选收进面板</b><span>搜索常驻，复杂筛选点按后从右侧展开。</span></div><div class="callout"><b>状态保持</b><span>旋转屏幕或进入详情后仍保留筛选与滚动位置。</span></div></div>
+    </section>
+  </main>
+
+  <div class="approval"><span>桌面方案加入这套平板适配？</span><button class="option" data-choice="tablet-adaptation-approved" onclick="toggleSelect(this)">认可平板适配</button></div>
+</body>
+</html>

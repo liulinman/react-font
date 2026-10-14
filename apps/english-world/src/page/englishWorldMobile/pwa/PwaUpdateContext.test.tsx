@@ -16,6 +16,9 @@ import {
   type PwaRegistrationCallbacks,
 } from "./PwaUpdateContext";
 
+const native = vi.hoisted(() => ({ enabled: false }));
+vi.mock("@/native/runtime", () => ({ isNativeApp: () => native.enabled }));
+
 function createRegistration() {
   let callbacks: PwaRegistrationCallbacks | undefined;
   const activate = vi.fn();
@@ -69,7 +72,16 @@ function Harness({
 }
 
 describe("PwaUpdateProvider", () => {
-  afterEach(cleanup);
+  afterEach(() => { cleanup(); native.enabled = false; });
+
+  it("does not register a service worker inside the native app", () => {
+    native.enabled = true;
+    const register = vi.fn();
+    render(<Harness activityLocked={false} registration={{ register }} showStatus />);
+    expect(register).not.toHaveBeenCalled();
+    expect(screen.getByText("通过 Xcode 安装新版本")).toBeVisible();
+    expect(screen.queryByText("当前已是最新版本")).not.toBeInTheDocument();
+  });
 
   it("defers a ready update while activity is locked and still waits for a click after unlock", async () => {
     const user = userEvent.setup();

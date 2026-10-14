@@ -186,9 +186,9 @@ const Login: React.FC = () => {
             </span>
           </div>
           <div className="login-kicker">PERSONAL LEARNING SPACE</div>
-          <h1>把每个单词点亮成星图</h1>
+          <h1>继续你的英语学习</h1>
           <p>
-            登录后进入你的学习空间，用更轻松的节奏积累词汇，把每一次复习都变成看得见的进步。
+            登录后查看词库、完成练习，或继续上次的复习。
           </p>
           <div className="login-copy-points">
             {LOGIN_POINTS.map((item) => (
@@ -262,7 +262,7 @@ const Login: React.FC = () => {
                     block
                     loading={loading}
                   >
-                    进入词汇星域
+                    登录
                   </Button>
                 </Form.Item>
               </Form>
@@ -343,7 +343,7 @@ const Login: React.FC = () => {
                     block
                     loading={loading}
                   >
-                    创建星域账号
+                    注册账号
                   </Button>
                 </Form.Item>
               </Form>

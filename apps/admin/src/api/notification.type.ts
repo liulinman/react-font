@@ -1,3 +1,4 @@
+import type { PracticeConfig, AdminPractice } from './readingPractice.type';
 export type NotificationCategory =
   | "announcement"
   | "ielts_daily"
@@ -75,6 +76,8 @@ export interface AiPreviewParams {
 }
 
 export interface NotificationScheduleParams {
+  contentKind?: "notification" | "reading_practice";
+  practiceConfig?: PracticeConfig;
   name: string;
   enabled?: boolean;
   category: NotificationCategory;
@@ -92,6 +95,7 @@ export interface NotificationScheduleParams {
 
 export interface NotificationScheduleItem extends NotificationScheduleParams {
   id: number;
+  lastRun?: { practiceId: number; status: AdminPractice["status"]; failureSummary?: string };
   lastRunAt?: string | null;
   nextRunAt?: string | null;
   createTime?: string | null;

@@ -52,7 +52,7 @@ describe("Login", () => {
     expect(container.querySelector(".login-container")).toHaveClass(
       "login-workspace",
     );
-    expect(screen.getByText("把每个单词点亮成星图")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "继续你的英语学习" })).toBeInTheDocument();
     expect(screen.getByText("每日复习")).toBeInTheDocument();
     expect(screen.getByText("AI 语境实验室")).toBeInTheDocument();
     expect(container.querySelector(".login-copy-points")).toBeInTheDocument();

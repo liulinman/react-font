@@ -56,3 +56,14 @@
 
 - 前端发布快照：86 个文件 / 519 项测试通过；管理后台 4 个文件 / 15 项测试通过；两个应用生产构建通过。数量与开发工作区不同是因为排除了未交付的 iOS/移动学习改造。
 - 后端已由 Actions run 38040049116 部署成功，提交 `0359ac3`；公网新 API 未登录访问返回预期 401。
+
+## 生产发布完成（2026-10-10）
+
+用户已授权 push 和部署。两个仓库使用隔离发布工作树，未携带原开发目录的 iOS 等其他修改：
+
+- 前端：`/Users/liulin/Desktop/font/english/.codex-worktrees/knowledge-notes-frontend`，提交 `f23f9a0da5c9360a6409ccde583f409a86082b2a`，已推送 `yifeng/docker-compose`。CI https://github.com/liulinman/react-font/actions/runs/38040432752 成功。
+- 后端：`/Users/liulin/Desktop/font/english/.codex-worktrees/knowledge-notes-backend`，提交 `0359ac3bcbb53a4f24d817e49db2f72479e4ceef`，已推送 `context-lab-learning-loop-mvp`。CI https://github.com/liulinman/nestjs/actions/runs/38040049116 成功。
+- 发布版本补齐用户删除时知识笔记级联清理，保留后端已有学习功能；CI 自动执行建表。前端部署同一次 CI 的构建产物，解决服务器重复安装 sharp 失败。
+- 发布快照本地验证：前端 519 项，管理后台 15 项，后端 610 项测试；4 个浏览器流程；MySQL 真实读写/账号删除级联/重复迁移；生产构建与静态容器路由检查均通过。
+- 线上验收：桌面列表、新建表单、手机工具入口及笔记列表加载成功，当前登录账号得到真实空列表；未写入测试笔记。API 未登录返回 401。
+- 原开发目录仍保留既有混合改动，后续发布修改应基于上述最新发布分支/工作树，勿直接用旧开发目录覆盖线上。此前“未部署”说明属于实施阶段历史。

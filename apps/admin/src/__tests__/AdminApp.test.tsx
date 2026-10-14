@@ -99,7 +99,7 @@ describe("AdminApp", () => {
     await user.type(await screen.findByLabelText("账号"), "admin");
     await user.type(screen.getByLabelText("密码"), "password");
     await user.click(screen.getByRole("button", { name: "登录后台" }));
-    await screen.findByRole("tab", { name: /用户管理/ });
+    await screen.findByRole("button", { name: /用户管理/ });
     await screen.findByText("alice");
   };
 
@@ -125,16 +125,14 @@ describe("AdminApp", () => {
 
     await login(user);
 
-    expect(screen.getByRole("tab", { name: /公告发布/ })).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: /定时任务/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /公告发布/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /定时任务/ })).toBeInTheDocument();
 
-    await user.click(screen.getByRole("tab", { name: /定时任务/ }));
-    expect(screen.getByText("雅思每日文案")).toBeInTheDocument();
-    expect(screen.getByText("近期事件英语表达")).toBeInTheDocument();
-    expect(screen.getByText("近考高频词汇")).toBeInTheDocument();
-    expect(screen.getByText("手写自定义公告")).toBeInTheDocument();
-    expect(screen.getByText("生成草稿待发布")).toBeInTheDocument();
-    expect(screen.getByText("自动生成并发布")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /定时任务/ }));
+    await user.click(screen.getByRole("button", { name: /新建任务/ }));
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    expect(screen.getByLabelText("任务名称")).toBeInTheDocument();
+    expect(screen.getByLabelText("执行频率")).toBeInTheDocument();
   });
 
   it("waits for an exact second confirmation before banning a user", async () => {
@@ -238,12 +236,15 @@ describe("AdminApp", () => {
 
     await login(user);
 
-    await user.click(await screen.findByRole("tab", { name: /历史记录/ }));
+    await user.click(await screen.findByRole("button", { name: /历史记录/ }));
     expect(await screen.findByText("可撤回公告")).toBeInTheDocument();
     expect(screen.getByText("已撤回公告")).toBeInTheDocument();
     expect(screen.getByText("已撤回")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "撤回公告" }));
+    expect(requestMock.mock.calls.some(([request]) => request.url === "/admin/notifications/12/withdraw")).toBe(false);
+    expect(screen.getByRole("dialog")).toHaveTextContent("可撤回公告");
+    await user.click(screen.getByRole("button", { name: "确认撤回" }));
 
     await waitFor(() =>
       expect(requestMock).toHaveBeenCalledWith(

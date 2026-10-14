@@ -39,7 +39,7 @@ export function MobileWordFiltersSheet({
     if (!open || !dialog) return;
     const returnFocusTarget = returnFocusRef?.current;
     const getFocusable = () => Array.from(dialog.querySelectorAll<HTMLElement>(
-      'button:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      'button:not([disabled]), summary, input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
     ));
     const focusFirst = () => {
       const focusable = getFocusable();
@@ -92,31 +92,7 @@ export function MobileWordFiltersSheet({
         <h2>筛选词库</h2>
         <button onClick={onClose} type="button">关闭</button>
       </div>
-      <label>
-        英文单词
-        <input aria-label="英文单词" onChange={(event) => setText("word")(event.target.value)} value={draft.word ?? ""} />
-      </label>
-      <label>
-        中文释义
-        <input aria-label="中文释义" onChange={(event) => setText("meaning")(event.target.value)} value={draft.meaning ?? ""} />
-      </label>
-      <label>
-        音标
-        <input aria-label="音标" onChange={(event) => setText("phonetic")(event.target.value)} value={draft.phonetic ?? ""} />
-      </label>
-      <label>
-        词条类型
-        <select
-          aria-label="词条类型"
-          onChange={(event) => setDraft((current) => ({ ...current, type: event.target.value === "" ? undefined : Number(event.target.value) }))}
-          value={valueOrEmpty(draft.type)}
-        >
-          <option value="">全部</option>
-          <option value="0">单词</option>
-          <option value="1">短语</option>
-          <option value="2">句子</option>
-        </select>
-      </label>
+      <div className="mobile-word-filters__fields">
       <label>
         掌握程度
         <select
@@ -132,12 +108,17 @@ export function MobileWordFiltersSheet({
         </select>
       </label>
       <label>
-        开始日期
-        <input aria-label="开始日期" onChange={(event) => setText("start")(event.target.value)} type="date" value={draft.start ?? ""} />
-      </label>
-      <label>
-        结束日期
-        <input aria-label="结束日期" onChange={(event) => setText("end")(event.target.value)} type="date" value={draft.end ?? ""} />
+        词条类型
+        <select
+          aria-label="词条类型"
+          onChange={(event) => setDraft((current) => ({ ...current, type: event.target.value === "" ? undefined : Number(event.target.value) }))}
+          value={valueOrEmpty(draft.type)}
+        >
+          <option value="">全部</option>
+          <option value="0">单词</option>
+          <option value="1">短语</option>
+          <option value="2">句子</option>
+        </select>
       </label>
       <label>
         排序
@@ -152,6 +133,30 @@ export function MobileWordFiltersSheet({
           <option value="alphabetical">字母顺序</option>
         </select>
       </label>
+        <details>
+          <summary>更多筛选条件</summary>
+      <label>
+        英文单词
+        <input aria-label="英文单词" onChange={(event) => setText("word")(event.target.value)} value={draft.word ?? ""} />
+      </label>
+      <label>
+        中文释义
+        <input aria-label="中文释义" onChange={(event) => setText("meaning")(event.target.value)} value={draft.meaning ?? ""} />
+      </label>
+      <label>
+        音标
+        <input aria-label="音标" onChange={(event) => setText("phonetic")(event.target.value)} value={draft.phonetic ?? ""} />
+      </label>
+      <label>
+        开始日期
+        <input aria-label="开始日期" onChange={(event) => setText("start")(event.target.value)} type="date" value={draft.start ?? ""} />
+      </label>
+      <label>
+        结束日期
+        <input aria-label="结束日期" onChange={(event) => setText("end")(event.target.value)} type="date" value={draft.end ?? ""} />
+      </label>
+        </details>
+      </div>
       <div className="mobile-word-filters__actions">
         <button onClick={() => setDraft({})} type="button">清除筛选</button>
         <button onClick={() => onApply(draft)} type="button">应用筛选</button>

@@ -355,22 +355,26 @@ describe("EnglishWorld ToC routing", () => {
     ).toBeInTheDocument();
   });
 
-  it("uses virtual table rendering for large page sizes", () => {
+  it("uses page scrolling for small pages and virtual rendering for large pages", () => {
     render(
       <MemoryRouter initialEntries={["/englishWorld/words"]}>
         <EnglishWorld />
       </MemoryRouter>,
     );
 
-    const tableProps = tablePropsMock.mock.calls.at(-1)?.[0] as {
+    let tableProps = tablePropsMock.mock.calls.at(-1)?.[0] as {
       virtual?: boolean;
       scroll?: { x?: number; y?: number | string };
-      pagination?: { pageSizeOptions?: string[] };
+      pagination?: { pageSizeOptions?: string[]; onChange?: (page: number, size: number) => void };
     };
 
+    expect(tableProps.virtual).toBe(false);
+    expect(tableProps.scroll?.y).toBeUndefined();
+    act(() => tableProps.pagination?.onChange?.(1, 50));
+    tableProps = tablePropsMock.mock.calls.at(-1)?.[0];
     expect(tableProps.virtual).toBe(true);
     expect(tableProps.scroll).toEqual(
-      expect.objectContaining({ x: 1360, y: expect.any(Number) }),
+      expect.objectContaining({ x: 1910, y: expect.any(Number) }),
     );
     expect(tableProps.pagination?.pageSizeOptions).toContain("500");
   });
@@ -424,13 +428,6 @@ describe("EnglishWorld ToC routing", () => {
     render(<>{tableProps.expandable?.expandedRowRender?.(record)}</>);
     expect(screen.getByText("first line second line")).toBeInTheDocument();
 
-    await user.click(
-      screen.getByRole("button", { name: "编辑 preserve 的笔记" }),
-    );
-    expect(
-      await screen.findByRole("dialog", { name: "preserve · 编辑笔记" }),
-    ).toBeInTheDocument();
-
     const onExpand = vi.fn();
     render(
       <>{
@@ -445,6 +442,13 @@ describe("EnglishWorld ToC routing", () => {
       screen.getByRole("button", { name: "展开 preserve 的笔记" }),
     );
     expect(onExpand).toHaveBeenCalledWith(record, expect.anything());
+
+    await user.click(
+      screen.getByRole("button", { name: "编辑 preserve 的笔记" }),
+    );
+    expect(
+      await screen.findByRole("dialog", { name: "preserve · 编辑笔记" }),
+    ).toBeInTheDocument();
   });
 
   it("marks note-bearing words next to the word instead of in a remote column", () => {

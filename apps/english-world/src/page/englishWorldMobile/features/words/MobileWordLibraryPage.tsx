@@ -118,9 +118,6 @@ async function fetchCompleteMobileWords(filters: MobileWordFilters) {
   return { list: sortWords(dedupeWords(pages.flatMap((item) => item.list)), filters.sort), total, totalPages: 1 };
 }
 
-function isInfinitePageData(data: unknown): data is InfiniteData<MobileWordPage> {
-  return Boolean(data) && typeof data === "object" && Array.isArray((data as InfiniteData<MobileWordPage>).pages);
-}
 
 export function MobileWordLibraryPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -156,7 +153,7 @@ export function MobileWordLibraryPage() {
   const words = filters.sort ? flattenPages(query.data) : sortWords(flattenPages(query.data), filters.sort);
   const total = query.data?.pages[0]?.total ?? 0;
   const selectedIds = selection.mode === "ids" ? selection.wordIds : words.map((word) => word.id);
-  const selectedCount = selection.mode === "current-filter" ? selection.expectedTotal : selectedIds.length;
+  const selectedCount = selection.mode === "current-filter" ? selection.expectedTotal - selection.excludedIds.length : selectedIds.length;
 
   const closeFilters = useCallback(() => setFilterOpen(false), []);
   const applyFilters = useCallback((next: MobileWordUrlFilters) => {
@@ -173,7 +170,10 @@ export function MobileWordLibraryPage() {
 
   const toggleWord = (wordId: number, checked: boolean) => {
     setSelection((current) => {
-      const ids = current.mode === "ids" ? current.wordIds : [];
+      if (current.mode === "current-filter") {
+        return { ...current, excludedIds: checked ? current.excludedIds.filter(id => id !== wordId) : [...new Set([...current.excludedIds, wordId])] };
+      }
+      const ids = current.wordIds;
       return { mode: "ids", wordIds: checked ? [...new Set([...ids, wordId])] : ids.filter((id) => id !== wordId) };
     });
   };
@@ -184,7 +184,7 @@ export function MobileWordLibraryPage() {
 
   const selectCurrentFilter = () => {
     if (!total) return;
-    setSelection({ mode: "current-filter", filters: rootFilters, expectedTotal: total });
+    setSelection({ mode: "current-filter", filters: rootFilters, expectedTotal: total, excludedIds: [] });
   };
 
   const resolveSelection = async () => {
@@ -201,7 +201,8 @@ export function MobileWordLibraryPage() {
     if (result.total !== selection.expectedTotal || uniqueWords.length !== selection.expectedTotal) {
       throw new Error("筛选结果已变化，请重新选择。");
     }
-    return { ids: uniqueWords.map((word) => word.id), words: uniqueWords };
+    const includedWords = uniqueWords.filter(word => !selection.excludedIds.includes(word.id));
+    return { ids: includedWords.map((word) => word.id), words: includedWords };
   };
 
   const handleSelectionAction = async (
@@ -210,7 +211,7 @@ export function MobileWordLibraryPage() {
   ) => {
     if (actionPendingRef.current) return;
     setAlert(null);
-    const knownCount = selection.mode === "current-filter" ? selection.expectedTotal : selection.wordIds.length;
+    const knownCount = selection.mode === "current-filter" ? selection.expectedTotal - selection.excludedIds.length : selection.wordIds.length;
     if (!online) {
       setAlert(options.onlineMessage);
       return;
@@ -220,7 +221,7 @@ export function MobileWordLibraryPage() {
       return;
     }
     if (options.max !== undefined && knownCount > options.max) {
-      setAlert(options.max === 20 && options.min === 3 ? "语境题需要选择 3 到 20 个词。" : "混合记忆一次最多选择 20 个词。");
+      setAlert(options.max === 20 && options.min === 3 ? "语境题需要选择 3 到 20 个词。" : "词卡学习一次最多选择 20 个词。");
       return;
     }
     actionPendingRef.current = true;
@@ -239,59 +240,60 @@ export function MobileWordLibraryPage() {
   const batchSetLevel = (englishLevel: number) => {
     void handleSelectionAction({ min: 1, onlineMessage: "批量修改需要联网。" }, async ({ ids }) => {
       if (!ids.length) throw new Error("请先选择至少一个词。");
-      await queryClient.cancelQueries({ queryKey: wordKeys.lists });
-      const snapshots = queryClient.getQueriesData<InfiniteData<MobileWordPage>>({ queryKey: wordKeys.lists });
-      queryClient.setQueriesData<InfiniteData<MobileWordPage>>({ queryKey: wordKeys.lists }, (data) => {
-        if (!isInfinitePageData(data)) return data;
-        return {
-          ...data,
-          pages: data.pages.map((page) => ({
-            ...page,
-            list: page.list.map((word) => ids.includes(word.id) ? { ...word, englishLevel } : word),
-          })),
-        };
-      });
-      try {
-        await Promise.all(ids.map((id) => request(wordUpdateLevel({ id, englishLevel }))));
-      } catch {
-        snapshots.forEach(([key, data]) => queryClient.setQueryData(key, data));
-        throw new Error("批量设置失败，已恢复原来的掌握程度。");
+      const uncertain: number[] = [];
+      // Bound concurrency; wait for every response before re-reading server state.
+      for (let offset = 0; offset < ids.length; offset += 5) {
+        const chunk = ids.slice(offset, offset + 5);
+        const results = await Promise.allSettled(chunk.map(id => request(wordUpdateLevel({ id, englishLevel }))));
+        results.forEach((result, index) => { if (result.status === "rejected") uncertain.push(chunk[index]); });
       }
       await queryClient.invalidateQueries({ queryKey: wordKeys.all });
-      setAlert("已更新所选词条的掌握程度。");
+      if (uncertain.length) {
+        setSelection({ mode: "ids", wordIds: uncertain });
+        setAlert(`已确认更新 ${ids.length - uncertain.length} 个词，另有 ${uncertain.length} 个词未确认结果，已保留选择。请核对词库后再重试；已成功的修改不会撤销。`);
+      } else {
+        setSelection({ mode: "ids", wordIds: [] });
+        setAlert("已更新所选词条的掌握程度。");
+      }
     });
   };
 
   const startLearning = () => {
     void handleSelectionAction({ max: 20, min: 1, onlineMessage: "创建学习任务需要联网。" }, ({ ids }) => {
       if (!ids.length) throw new Error("请先选择至少一个词。");
-      if (ids.length > 20) throw new Error("混合记忆一次最多选择 20 个词。");
+      if (ids.length > 20) throw new Error("词卡学习一次最多选择 20 个词。");
       navigate(`/mobile/learn?scope=selection&wordIds=${ids.join(",")}`);
     });
   };
 
-  const createContextLab = () => {
-    void handleSelectionAction({ max: 20, min: 3, onlineMessage: "生成语境题需要联网。" }, ({ ids, words: selectedWords }) => {
-      if (ids.length < 3 || ids.length > 20) throw new Error("语境题需要选择 3 到 20 个词。");
-      navigate(`/mobile/tools/context-lab/new?source=word-library&words=${encodeURIComponent(selectedWords.map((word) => word.englishWord).join(","))}`);
+  const createArticle = () => {
+    void handleSelectionAction({max:20,min:3,onlineMessage:"生成文章练习需要联网。"}, ({ids,words:selectedWords})=>{
+      if(ids.length<3||ids.length>20)throw new Error("请选择 3 到 20 个词。");
+      navigate(`/mobile/tools/context-lab/new?words=${encodeURIComponent(selectedWords.map(w=>w.englishWord).join(","))}`);
     });
   };
-
+  const stopSelecting = () => { setSelectionMode(false); setSelection({ mode: "ids", wordIds: [] }); };
   const cachedContent = words.length > 0;
   const refreshWords = async () => {
     const result = await query.refetch({ cancelRefetch: true });
     if (!result.isError) setAlert(null);
   };
   return (
-    <MobilePage className="mobile-word-library-page" data-selection-mode={selectionMode ? "true" : "false"} title="词库">
+    <MobilePage className="mobile-word-library-page" data-selection-mode={selectionMode ? "true" : "false"} title="词库" actions={<Link className="word-add-button" to="/mobile/words/new"><span aria-hidden="true">＋</span>添加单词</Link>}>
       <form aria-label="搜索词库" onSubmit={submitSearch} role="search">
-        <label htmlFor="mobile-library-search">搜索英语单词、中文释义或类型/掌握标签</label>
-        <input id="mobile-library-search" onChange={(event) => setSearchDraft(event.target.value)} type="search" value={searchDraft} />
-        <button type="submit">搜索</button>
-        <button onClick={() => setFilterOpen(true)} ref={filterTriggerRef} type="button">筛选</button>
-        <button onClick={() => setSelectionMode((current) => !current)} type="button">{selectionMode ? "取消选择" : "选择"}</button>
+        <label className="word-search-label" htmlFor="mobile-library-search">搜索英语单词、中文释义或类型/掌握标签</label>
+        <input placeholder="搜索单词或中文释义" id="mobile-library-search" disabled={actionPending} onChange={(event) => setSearchDraft(event.target.value)} type="search" value={searchDraft} />
+        <button disabled={actionPending} type="submit">搜索</button>
       </form>
+      <div className="word-library-toolbar"><span>{query.data?.pages[0]?.total ?? words.length} 个词条</span>
+        <button disabled={actionPending} onClick={() => setFilterOpen(true)} ref={filterTriggerRef} type="button">筛选</button>
+        <button disabled={actionPending} onClick={() => selectionMode ? stopSelecting() : setSelectionMode(true)} type="button">{selectionMode ? "取消选择" : "选择"}</button>
+      </div>
 
+      {selectionMode && <div className="word-selection-scope">
+        <button disabled={actionPending} onClick={selectPage} type="button">全选当前页</button>
+        <button disabled={actionPending || !total} onClick={selectCurrentFilter} type="button">使用当前筛选结果</button>
+      </div>}
       {filterOpen && <MobileWordFiltersSheet filters={filters} onApply={applyFilters} onClose={closeFilters} open returnFocusRef={filterTriggerRef} />}
       {alert && <p role="alert">{alert}</p>}
       {query.isError && cachedContent && <MobileStateView action={<button onClick={() => void refreshWords()} type="button">重试刷新</button>} message="刷新失败，正在显示缓存内容，内容可能不是最新。" state="error" />}
@@ -300,7 +302,7 @@ export function MobileWordLibraryPage() {
       {query.isError && !cachedContent && <MobileStateView action={<button onClick={() => void refreshWords()} type="button">重试加载</button>} message="词库暂时无法加载，请检查网络后重试。" state={online ? "error" : "offline"} />}
       {!query.isPending && !query.isError && !words.length && <MobileStateView message="还没有符合条件的单词。" state="empty" />}
       <PullToRefresh onRefresh={refreshWords}>
-        {words.map((word) => (
+        <div className="word-library-list">{words.map((word) => (
           <MobileWordRow
             href={`/mobile/words/${word.id}`}
             key={word.id}
@@ -309,27 +311,25 @@ export function MobileWordLibraryPage() {
               { key: "delete", label: "删除", danger: true, onClick: () => navigate(`/mobile/words/${word.id}`) },
             ]}
             onSelect={(checked) => toggleWord(word.id, checked)}
-            selected={selection.mode === "ids" && selection.wordIds.includes(word.id)}
+            selected={selection.mode === "ids" ? selection.wordIds.includes(word.id) : !selection.excludedIds.includes(word.id)}
+            disabled={actionPending}
             selectionMode={selectionMode}
             word={word}
           />
-        ))}
+        ))}</div>
       </PullToRefresh>
       {query.hasNextPage && <button disabled={query.isFetchingNextPage} onClick={() => void query.fetchNextPage()} type="button">{query.isFetchingNextPage ? "正在加载" : "加载更多"}</button>}
       {selectionMode && (
         <MobileWordSelectionBar
           disabled={!online || actionPending}
           onBatchLevel={batchSetLevel}
-          onContextLab={createContextLab}
-          onSelectCurrentFilter={selectCurrentFilter}
-          onSelectPage={selectPage}
+
           onStartLearning={startLearning}
-          onStopSelecting={() => { setSelectionMode(false); setSelection({ mode: "ids", wordIds: [] }); }}
+          onContextLab={createArticle}
           selectedCount={selectedCount}
-          selection={selection}
         />
       )}
-      <Link to="/mobile/words/new">添加单词</Link>
+
     </MobilePage>
   );
 }

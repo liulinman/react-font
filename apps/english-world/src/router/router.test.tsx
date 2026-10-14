@@ -1,5 +1,6 @@
 import "@testing-library/jest-dom/vitest";
 import "antd-mobile/es/global";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { RouterProvider, useLocation, useParams } from "react-router-dom";
@@ -11,17 +12,20 @@ import {
 } from "@/page/englishWorldMobile/pwa/PwaUpdateContext";
 import { router } from "./router";
 
+const native = vi.hoisted(() => ({ enabled: false }));
+vi.mock("@/native/runtime", () => ({ isNativeApp: () => native.enabled }));
+
 const registration: PwaRegistrationAdapter = {
   register: () => () => undefined,
 };
 
 function renderRouter() {
   return render(
-    <MobileActivityLockProvider>
+    <QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><MobileActivityLockProvider>
       <PwaUpdateProvider registration={registration}>
         <RouterProvider router={router} />
       </PwaUpdateProvider>
-    </MobileActivityLockProvider>,
+    </MobileActivityLockProvider></QueryClientProvider>,
   );
 }
 
@@ -37,6 +41,10 @@ vi.mock("@/contexts/AuthContext", () => ({
 
 vi.mock("@/page/englishWorldMobile/EnglishWorldMobile", () => ({
   default: () => <div>legacy mobile page</div>,
+}));
+
+vi.mock("@/page/englishWorldMobile/features/home/MobileHomePage", () => ({
+  MobileHomePage: () => <div>mobile-home-page</div>,
 }));
 
 vi.mock("@/page/login/Login", () => ({
@@ -111,8 +119,27 @@ vi.mock("@/page/englishWorld/memoryMap/MemoryMapPage", () => ({
 describe("application router mobile branch", () => {
   afterEach(() => {
     cleanup();
+    native.enabled = false;
     authState.isAuthenticated = true;
     authState.loading = false;
+  });
+
+  it("opens mobile login on a native cold start", async () => {
+    native.enabled = true;
+    authState.isAuthenticated = false;
+    await router.navigate("/");
+    renderRouter();
+    await waitFor(() => expect(screen.getByTestId("login-location"))
+      .toHaveTextContent("/login|/mobile"));
+  });
+
+  it("recovers an unknown native route to the mobile entry", async () => {
+    native.enabled = true;
+    authState.isAuthenticated = false;
+    renderRouter();
+    await router.navigate("/old-app-path");
+    await waitFor(() => expect(screen.getByTestId("login-location"))
+      .toHaveTextContent("/login|/mobile"));
   });
 
   it("replaces the legacy mobile entry with the lazy four-tab application", async () => {
@@ -120,8 +147,12 @@ describe("application router mobile branch", () => {
 
     await router.navigate("/englishWorldMobile");
 
-    expect(await screen.findByRole("tab", { name: "学习" })).toBeInTheDocument();
-    expect(screen.getAllByRole("tab")).toHaveLength(4);
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe("/mobile");
+      expect(router.state.navigation.state).toBe("idle");
+      expect(screen.getByRole("tab", { name: "学习" })).toBeInTheDocument();
+      expect(screen.getAllByRole("tab")).toHaveLength(4);
+    });
     expect(screen.queryByText("legacy mobile page")).not.toBeInTheDocument();
   });
 

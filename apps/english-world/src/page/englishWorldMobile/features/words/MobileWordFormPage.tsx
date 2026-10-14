@@ -5,6 +5,7 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Dialog, Toast } from "antd-mobile";
 import { useQueryClient } from "@tanstack/react-query";
 import request from "@font/api";
+import { resolveMediaUrl } from "@/native/mediaUrl";
 import { uploadFile, wordAdd, wordExist, wordFilter, wordUpdate } from "@/server/word/word";
 import type { WordList } from "@/server/word/word.type";
 import { useAuth } from "@/contexts/AuthContext";
@@ -286,7 +287,7 @@ export function MobileWordFormPage() {
 
   if (!loaded) {
     return (
-      <MobilePage title={isEdit ? "编辑单词" : "添加单词"}>
+      <MobilePage className="word-editor" title={isEdit ? "编辑单词" : "添加单词"}>
         <MobileStateView state="loading" />
       </MobilePage>
     );
@@ -300,9 +301,8 @@ export function MobileWordFormPage() {
     </MobilePage>
   );
 
-
   return (
-    <MobilePage title={isEdit ? "编辑单词" : "添加单词"}>
+    <MobilePage className="word-editor" title={isEdit ? "编辑单词" : "添加单词"}>
       <a
         href={isEdit && editingId ? `/mobile/words/${editingId}` : "/mobile/words"}
         onClick={(event) => {
@@ -313,10 +313,11 @@ export function MobileWordFormPage() {
         返回
       </a>
 
+      <p className="word-editor-intro">记下一个新词，让下次遇见更熟悉。</p>
       <label>
         单词或短语
         <input
-          aria-label="单词或短语"
+          aria-label="单词或短语" placeholder="例如 serendipity" autoCapitalize="none" autoCorrect="off"
           onChange={(event) => setField("englishWord", event.target.value)}
           value={values.englishWord}
         />
@@ -334,13 +335,14 @@ export function MobileWordFormPage() {
       <label>
         中文释义
         <textarea
-          aria-label="中文释义"
+          aria-label="中文释义" placeholder="写下它的含义"
           onChange={(event) => setField("englishChinese", event.target.value)}
           rows={2}
           value={values.englishChinese ?? ""}
         />
       </label>
 
+      <details className="word-editor-extras" open={isEdit}><summary>更多信息 <span>词性、掌握程度、笔记与图片</span></summary>
       <fieldset>
         <legend>类型</legend>
         {TYPE_OPTIONS.map((option) => (
@@ -416,19 +418,21 @@ export function MobileWordFormPage() {
           }}
           type="file"
         />
-        {values.englishImg && <img alt="单词图片" src={values.englishImg} />}
+        {values.englishImg && <img alt="单词图片" src={resolveMediaUrl(values.englishImg)} />}
       </label>
 
       {values.englishImg && (
         <button onClick={() => setField("englishImg", undefined)} type="button">移除图片</button>
       )}
 
+      </details>
       {!online && (
         <p>当前离线，保存需要联网。你的输入已保留为草稿。</p>
       )}
 
       <SafeAreaActions>
         <button
+          className="study-primary"
           disabled={submitting || wordInvalid}
           onClick={() => void handleSubmit()}
           type="button"

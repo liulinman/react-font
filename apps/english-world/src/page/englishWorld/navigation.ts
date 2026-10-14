@@ -88,6 +88,8 @@ export function getLegacyPathFromHash(hash: string): string | undefined {
 export function getPathForNav(key: string): string {
   const normalizedKey = normalizeActiveKey(key);
 
+  if (normalizedKey === "readingPractices") return "/englishWorld/reading-practices";
+
   if (normalizedKey === "knowledgeNotes") return "/englishWorld/knowledge-notes";
 
   if (normalizedKey === "recite") {

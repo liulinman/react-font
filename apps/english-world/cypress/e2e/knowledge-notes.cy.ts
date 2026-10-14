@@ -95,4 +95,21 @@ describe('Knowledge notes and long word notes', () => {
     cy.get('[aria-label="笔记"]').should('have.value',longBody+'\n补充理解');
   });
 
+  it('keeps mobile note cards stacked and readable at phone widths',()=>{
+    notes.push({id:1,title:'形式宾语与真实宾语的区别',body:longBody,category:'句型',source:'阅读课程 · 第1课',words:[],version:1,updatedAt:new Date().toISOString()});
+    for (const width of [390,320]) {
+      cy.viewport(width,844);visit('/mobile/tools/knowledge-notes');
+      cy.get('.knowledge-list > li > a').should('be.visible');
+      cy.screenshot(`knowledge-mobile-list-${width}`,{capture:'viewport'});
+      cy.get('.knowledge-list > li > a').then($card=>{
+        const card=$card[0]; const heading=card.querySelector('.knowledge-list-heading')!.getBoundingClientRect();
+        const summary=card.querySelector('.knowledge-summary')!.getBoundingClientRect();
+        const meta=card.querySelector('.knowledge-meta')!.getBoundingClientRect();
+        expect(summary.top,'summary below title').to.be.at.least(heading.bottom);
+        expect(meta.top,'metadata below summary').to.be.at.least(summary.bottom);
+        expect(card.getBoundingClientRect().right,'card fits screen').to.be.at.most(width);
+      });
+    }
+  });
+
 });

@@ -303,7 +303,7 @@ export const useColumns = (props: Props) => {
       },
     },
     {
-      width: 198,
+      width: 256,
       title: "操作",
       key: "action",
       fixed: "right",

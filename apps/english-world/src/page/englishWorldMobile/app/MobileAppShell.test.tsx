@@ -72,6 +72,18 @@ describe("MobileAppShell", () => {
     );
   });
 
+  it("returns to a tab root when tapping the already active tab from a nested page", async () => {
+    const user = userEvent.setup();
+    render(<MemoryRouter initialEntries={["/mobile/me/app"]}>
+      <Routes><Route path="/mobile" element={<TestMobileAppShell />}>
+        <Route path="me" element={<LocationProbe />} />
+        <Route path="me/app" element={<LocationProbe />} />
+      </Route></Routes>
+    </MemoryRouter>);
+    await user.click(screen.getByRole("tab", { name: "我的" }));
+    expect(screen.getByTestId("location")).toHaveTextContent("/mobile/me|/mobile/me/app");
+  });
+
   it("records the current route when changing tabs", async () => {
     const user = userEvent.setup();
 
@@ -161,4 +173,8 @@ describe("MobileAppShell", () => {
       }
     }
   });
+});
+it('opens a different page at the top so its primary actions stay discoverable',async()=>{
+ const user=userEvent.setup();render(<MemoryRouter initialEntries={['/mobile']}><Routes><Route path='/mobile' element={<TestMobileAppShell/>}><Route index element={<LocationProbe/>}/><Route path='words' element={<LocationProbe/>}/></Route></Routes></MemoryRouter>);
+ const content=screen.getByRole('main');content.scrollTop=480;await user.click(screen.getByRole('tab',{name:'词库'}));expect(content.scrollTop).toBe(0);cleanup();
 });

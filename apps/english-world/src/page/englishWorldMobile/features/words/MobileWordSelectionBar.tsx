@@ -1,54 +1,49 @@
 import { useState } from "react";
-import { SafeAreaActions } from "../../components/SafeAreaActions";
 
 export type MobileWordSelection =
   | { mode: "ids"; wordIds: number[] }
-  | { expectedTotal: number; filters: Record<string, unknown>; mode: "current-filter" };
+  | { expectedTotal: number; filters: Record<string, unknown>; mode: "current-filter"; excludedIds: number[] };
 
 type MobileWordSelectionBarProps = {
   disabled?: boolean;
   onBatchLevel(level: number): void;
-  onContextLab(): void;
-  onSelectCurrentFilter(): void;
-  onSelectPage(): void;
   onStartLearning(): void;
-  onStopSelecting(): void;
+  onContextLab?(): void;
   selectedCount: number;
-  selection: MobileWordSelection;
 };
 
 export function MobileWordSelectionBar({
-  disabled = false,
-  onBatchLevel,
-  onContextLab,
-  onSelectCurrentFilter,
-  onSelectPage,
-  onStartLearning,
-  onStopSelecting,
-  selectedCount,
-  selection,
+  disabled = false, onBatchLevel, onStartLearning, onContextLab, selectedCount,
 }: MobileWordSelectionBarProps) {
   const [level, setLevel] = useState(0);
+  const canLearn = selectedCount >= 1 && selectedCount <= 20;
+  const canGenerate = selectedCount >= 3 && selectedCount <= 20;
   return (
     <section aria-label={`已选择 ${selectedCount} 个词`} className="mobile-word-selection-bar" role="toolbar">
-      <p>{selection.mode === "current-filter" ? `已选择当前筛选结果（${selection.expectedTotal} 个词）` : `已选择 ${selectedCount} 个词`}</p>
-      <SafeAreaActions>
-        <button disabled={disabled} onClick={onSelectPage} type="button">全选当前页</button>
-        <button disabled={disabled} onClick={onSelectCurrentFilter} type="button">使用当前筛选结果</button>
-        <button disabled={disabled} onClick={onStartLearning} type="button">开始混合记忆</button>
-        <button disabled={disabled} onClick={onContextLab} type="button">生成语境题</button>
-        <label>
-          批量掌握程度
-          <select aria-label="批量掌握程度" disabled={disabled} onChange={(event) => setLevel(Number(event.target.value))} value={level}>
-            <option value="0">不会</option>
-            <option value="1">一般</option>
-            <option value="2">熟练</option>
-            <option value="3">精通</option>
-          </select>
-        </label>
-        <button disabled={disabled} onClick={() => onBatchLevel(level)} type="button">确认批量设置</button>
-        <button onClick={onStopSelecting} type="button">完成选择</button>
-      </SafeAreaActions>
+      <div className="word-selection-main">
+        <strong>已选 {selectedCount}</strong>
+        <button className="word-selection-start" disabled={disabled || !canLearn} onClick={onStartLearning} type="button">开始学习</button>
+        <details className="word-selection-more" onKeyDown={event => {
+          if (event.key === "Escape") {
+            event.currentTarget.open = false;
+            event.currentTarget.querySelector("summary")?.focus();
+          }
+        }}>
+          <summary>更多</summary>
+          <div className="word-selection-options">
+            <p>已选 {selectedCount} 个词</p>
+            {onContextLab && <button disabled={disabled || !canGenerate} onClick={onContextLab} type="button">生成文章练习</button>}
+            <p className="word-selection-hint">文章练习需要 3～20 个词</p>
+            <label>批量掌握程度
+              <select aria-label="批量掌握程度" disabled={disabled || !selectedCount} onChange={event => setLevel(Number(event.target.value))} value={level}>
+                <option value="0">不会</option><option value="1">一般</option><option value="2">熟练</option><option value="3">精通</option>
+              </select>
+            </label>
+            <button disabled={disabled || !selectedCount} onClick={() => onBatchLevel(level)} type="button">确认批量设置</button>
+          </div>
+        </details>
+      </div>
+      {!canLearn && <p className="word-selection-hint">{selectedCount ? "学习最多 20 个，请减少选择" : "点击词条选择，学习可选 1～20 个"}</p>}
     </section>
   );
 }

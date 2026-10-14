@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>English World — 学习优先双模式</title>
+  <style>
+    :root {
+      --bg: #edf1f7;
+      --surface: #ffffff;
+      --surface-soft: #f7f9fc;
+      --nav: #111a2d;
+      --nav-soft: #1a2540;
+      --text: #182135;
+      --muted: #748098;
+      --line: #e3e8f0;
+      --primary: #356ae6;
+      --primary-soft: #eaf0ff;
+      --success: #1d9b72;
+      --success-soft: #e7f7f1;
+      --warning: #d78b22;
+      --warning-soft: #fff5df;
+      --danger: #dc5664;
+      --shadow: 0 18px 48px rgba(24, 33, 53, .08);
+      --shadow-soft: 0 8px 24px rgba(24, 33, 53, .06);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 12% 4%, rgba(53,106,230,.10), transparent 28%),
+        var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    .preview-bar {
+      min-height: 76px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 14px max(18px, calc((100vw - 1460px) / 2));
+      color: #33405a;
+    }
+    .preview-title { display: flex; align-items: center; gap: 12px; }
+    .preview-title strong { font-size: 15px; }
+    .preview-title span { font-size: 13px; color: #7c879d; }
+    .direction-tag {
+      padding: 5px 8px;
+      border-radius: 6px;
+      background: #18233b;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 750;
+      letter-spacing: .05em;
+    }
+    .screen-switch {
+      display: flex;
+      align-items: center;
+      padding: 4px;
+      border-radius: 10px;
+      border: 1px solid #dfe5ee;
+      background: rgba(255,255,255,.72);
+      box-shadow: 0 6px 18px rgba(24,33,53,.05);
+    }
+    .screen-switch button {
+      border: 0;
+      background: transparent;
+      color: #647089;
+      border-radius: 7px;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 680;
+    }
+    .screen-switch button.active { background: #18233b; color: white; }
+
+    .app-shell {
+      width: min(1460px, calc(100vw - 36px));
+      height: calc(100vh - 116px);
+      min-height: 720px;
+      margin: 0 auto 40px;
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: 224px 1fr;
+      background: var(--surface-soft);
+      border: 1px solid rgba(207,215,228,.9);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .sidebar {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      padding: 22px 14px 16px;
+      color: #dbe4f6;
+      background:
+        radial-gradient(circle at 18% 0%, rgba(72,111,210,.23), transparent 34%),
+        linear-gradient(180deg, #121c31 0%, #10182a 100%);
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 0 9px 23px;
+    }
+    .brand-mark {
+      width: 34px; height: 34px;
+      display: grid; place-items: center;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #5f8bff, #315ccb);
+      box-shadow: 0 7px 18px rgba(32,88,221,.35);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 850;
+    }
+    .brand-copy strong { display: block; color: #fff; font-size: 14px; letter-spacing: .01em; }
+    .brand-copy span { display: block; margin-top: 2px; color: #7f90af; font-size: 10px; }
+    .nav-label {
+      padding: 12px 10px 6px;
+      color: #657695;
+      font-size: 10px;
+      font-weight: 760;
+      letter-spacing: .08em;
+    }
+    .nav-item {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      width: 100%;
+      height: 40px;
+      padding: 0 11px;
+      margin: 2px 0;
+      border: 0;
+      border-radius: 9px;
+      background: transparent;
+      color: #9dabc4;
+      text-align: left;
+      font-size: 13px;
+      font-weight: 620;
+    }
+    .nav-item svg { width: 17px; height: 17px; stroke-width: 1.8; }
+    .nav-item.active { color: #fff; background: rgba(86,127,230,.17); }
+    .nav-item.active::before {
+      content: "";
+      position: absolute;
+      left: -14px;
+      width: 3px;
+      height: 20px;
+      border-radius: 0 3px 3px 0;
+      background: #6590ff;
+    }
+    .nav-item .count {
+      margin-left: auto;
+      min-width: 20px;
+      padding: 2px 5px;
+      border-radius: 6px;
+      background: rgba(255,255,255,.08);
+      color: #94a4c0;
+      font-size: 10px;
+      text-align: center;
+    }
+    .sidebar-spacer { flex: 1; }
+    .user-card {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 12px 9px 3px;
+      margin-top: 8px;
+      border-top: 1px solid rgba(255,255,255,.07);
+    }
+    .avatar {
+      width: 30px; height: 30px;
+      display: grid; place-items: center;
+      border-radius: 50%;
+      background: #e6edff;
+      color: #315ec8;
+      font-size: 11px;
+      font-weight: 800;
+    }
+    .user-card strong { display:block; font-size: 11px; color:#f3f6fc; }
+    .user-card span { display:block; margin-top:2px; color:#7686a3; font-size:9px; }
+
+    .workspace { position: relative; min-width: 0; overflow: auto; background: #f7f9fc; }
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      height: 62px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 30px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255,255,255,.91);
+      backdrop-filter: blur(14px);
+    }
+    .breadcrumb { display:flex; align-items:center; gap:7px; color:#8993a7; font-size:12px; }
+    .breadcrumb strong { color:#34405a; font-weight:700; }
+    .top-actions { display:flex; align-items:center; gap:10px; }
+    .icon-button {
+      position: relative;
+      width: 34px; height: 34px;
+      display:grid; place-items:center;
+      border:1px solid var(--line);
+      border-radius:9px;
+      background:#fff;
+      color:#667289;
+    }
+    .icon-button svg { width:16px; height:16px; }
+    .notice-dot {
+      position:absolute; right:6px; top:6px;
+      width:6px; height:6px;
+      border-radius:50%;
+      background:#e65e69;
+      box-shadow:0 0 0 2px #fff;
+    }
+    .global-search {
+      width: 198px;
+      height: 34px;
+      display:flex; align-items:center; gap:8px;
+      padding:0 10px;
+      border:1px solid var(--line);
+      border-radius:9px;
+      background:#f8fafc;
+      color:#9aa4b6;
+      font-size:11px;
+    }
+    .global-search svg { width:14px; height:14px; }
+    .shortcut { margin-left:auto; color:#9aa4b7; font-size:9px; border:1px solid #dfe4ec; border-radius:4px; padding:1px 4px; }
+
+    .page { display:none; padding: 30px 34px 42px; }
+    .page.active { display:block; }
+    .page-heading {
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:24px;
+      margin-bottom:24px;
+    }
+    .page-heading h1 { margin:0; font-size:25px; line-height:1.25; letter-spacing:-.025em; }
+    .page-heading p { margin:7px 0 0; color:var(--muted); font-size:12px; }
+    .button-row { display:flex; align-items:center; gap:8px; }
+    .btn {
+      height:36px;
+      display:inline-flex; align-items:center; justify-content:center; gap:7px;
+      padding:0 14px;
+      border:1px solid var(--line);
+      border-radius:9px;
+      background:#fff;
+      color:#4f5b72;
+      font-size:12px;
+      font-weight:700;
+      box-shadow:0 3px 8px rgba(27,39,67,.03);
+    }
+    .btn svg { width:15px; height:15px; }
+    .btn.primary { border-color:var(--primary); background:var(--primary); color:#fff; box-shadow:0 8px 18px rgba(53,106,230,.22); }
+
+    .today-grid { display:grid; grid-template-columns:minmax(0,1.6fr) minmax(260px,.72fr); gap:18px; }
+    .panel { border:1px solid var(--line); border-radius:12px; background:#fff; box-shadow:var(--shadow-soft); }
+    .panel-title { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px; }
+    .panel-title h2 { margin:0; font-size:15px; letter-spacing:-.01em; }
+    .panel-title span { color:#8a95a8; font-size:10px; }
+    .plan-panel { padding:23px; }
+    .plan-summary {
+      display:grid;
+      grid-template-columns:118px 1fr;
+      gap:24px;
+      align-items:center;
+      padding:3px 0 24px;
+      border-bottom:1px solid #edf0f5;
+    }
+    .progress-ring {
+      width:112px; height:112px;
+      display:grid; place-items:center;
+      border-radius:50%;
+      background:conic-gradient(var(--primary) 0 68%, #e9edf4 68% 100%);
+    }
+    .progress-ring::before { content:""; width:88px; height:88px; border-radius:50%; background:#fff; }
+    .progress-copy { position:absolute; text-align:center; }
+    .progress-copy strong { display:block; font-size:25px; letter-spacing:-.03em; }
+    .progress-copy span { display:block; color:#929caf; font-size:9px; margin-top:1px; }
+    .progress-wrap { position:relative; width:112px; height:112px; display:grid; place-items:center; }
+    .summary-copy h3 { margin:0 0 7px; font-size:18px; }
+    .summary-copy p { margin:0 0 15px; color:#79849a; font-size:11px; line-height:1.55; }
+    .summary-meta { display:flex; gap:17px; }
+    .summary-meta div { color:#7b879c; font-size:10px; }
+    .summary-meta strong { color:#2e3850; font-size:12px; margin-right:3px; }
+    .task-list { margin-top:17px; }
+    .task {
+      display:grid;
+      grid-template-columns:30px minmax(0,1fr) auto;
+      gap:11px;
+      align-items:center;
+      min-height:56px;
+      padding:8px 10px;
+      border-radius:9px;
+    }
+    .task + .task { border-top:1px solid #f0f2f6; }
+    .task.current { margin:4px 0; background:#f2f6ff; border:1px solid #dfe8ff; }
+    .task-icon { width:28px; height:28px; display:grid; place-items:center; border-radius:8px; background:#f0f3f8; color:#7e899d; }
+    .task.done .task-icon { background:var(--success-soft); color:var(--success); }
+    .task.current .task-icon { background:#dfe8ff; color:var(--primary); }
+    .task-icon svg { width:14px; height:14px; }
+    .task-copy strong { display:block; font-size:12px; }
+    .task-copy span { display:block; margin-top:3px; color:#8b96aa; font-size:10px; }
+    .status-chip { padding:4px 7px; border-radius:6px; color:#8893a7; background:#f3f5f8; font-size:9px; font-weight:700; }
+    .status-chip.blue { color:#3766cf; background:#e8efff; }
+    .status-chip.green { color:#197e60; background:#e6f6f0; }
+    .side-stack { display:grid; gap:18px; align-content:start; }
+    .streak-panel { padding:20px; background:linear-gradient(140deg,#162440,#21345a); color:#fff; border-color:#213557; }
+    .streak-head { display:flex; align-items:flex-start; justify-content:space-between; }
+    .streak-head span { color:#9eacc5; font-size:10px; }
+    .streak-value { margin-top:7px; font-size:27px; font-weight:780; letter-spacing:-.03em; }
+    .streak-value small { font-size:11px; font-weight:600; color:#aebbd0; }
+    .flame { width:34px; height:34px; display:grid; place-items:center; border-radius:10px; background:rgba(255,174,73,.13); color:#ffb85c; }
+    .week { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin-top:19px; }
+    .day { text-align:center; color:#7184a5; font-size:8px; }
+    .day i { width:22px; height:22px; display:grid; place-items:center; margin:5px auto 0; border-radius:7px; background:rgba(255,255,255,.055); color:#8fa0bc; font-style:normal; font-size:8px; }
+    .day.done i { background:rgba(85,142,255,.22); color:#a9c1ff; }
+    .day.today i { background:#5683ed; color:#fff; box-shadow:0 6px 14px rgba(37,92,218,.35); }
+    .metric-panel { padding:20px; }
+    .metric-row { display:grid; grid-template-columns:1fr auto; align-items:center; padding:12px 0; }
+    .metric-row + .metric-row { border-top:1px solid #eef1f5; }
+    .metric-label { display:flex; align-items:center; gap:9px; color:#69758b; font-size:10px; }
+    .metric-dot { width:7px; height:7px; border-radius:50%; background:var(--primary); }
+    .metric-dot.green { background:var(--success); }
+    .metric-dot.orange { background:var(--warning); }
+    .metric-row strong { font-size:13px; }
+
+    .library-stats { display:flex; align-items:center; gap:20px; padding:12px 16px; margin-bottom:14px; border:1px solid var(--line); border-radius:10px; background:#fff; }
+    .library-stat { display:flex; align-items:baseline; gap:6px; }
+    .library-stat strong { font-size:16px; }
+    .library-stat span { color:#8b95a8; font-size:9px; }
+    .library-stat + .library-stat { padding-left:20px; border-left:1px solid var(--line); }
+    .filterbar { display:grid; grid-template-columns:minmax(240px,1fr) auto auto auto; gap:8px; padding:12px; border:1px solid var(--line); border-bottom:0; border-radius:11px 11px 0 0; background:#fff; }
+    .filter-input, .filter-btn { height:34px; border:1px solid #e1e6ef; border-radius:8px; background:#f9fafc; color:#778399; font-size:10px; }
+    .filter-input { display:flex; align-items:center; gap:8px; padding:0 11px; }
+    .filter-input svg { width:14px; height:14px; }
+    .filter-btn { padding:0 11px; display:flex; align-items:center; gap:16px; }
+    .table-wrap { overflow:hidden; border:1px solid var(--line); border-radius:0 0 11px 11px; background:#fff; box-shadow:var(--shadow-soft); }
+    table { width:100%; border-collapse:collapse; table-layout:fixed; }
+    th { height:36px; padding:0 13px; background:#f7f8fb; color:#8994a7; font-size:9px; text-align:left; font-weight:750; }
+    td { height:51px; padding:0 13px; border-top:1px solid #edf0f4; color:#566177; font-size:10px; }
+    th:first-child, td:first-child { width:35px; }
+    th:nth-child(2) { width:24%; }
+    th:nth-child(3) { width:28%; }
+    th:nth-child(4) { width:14%; }
+    th:nth-child(5) { width:13%; }
+    th:last-child { width:86px; text-align:right; }
+    td:last-child { text-align:right; }
+    .checkbox { width:13px; height:13px; display:inline-block; border:1px solid #ccd4e0; border-radius:4px; background:#fff; }
+    .word-cell strong { display:block; color:#253047; font-size:12px; }
+    .word-cell span { display:block; color:#9aa4b4; font-size:9px; margin-top:2px; }
+    .meaning { color:#59657a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .tag { display:inline-flex; padding:4px 7px; border-radius:6px; background:#edf2ff; color:#4c6db9; font-size:8px; font-weight:700; }
+    .tag.green { background:#e8f6f1; color:#258066; }
+    .tag.amber { background:#fff3dc; color:#a76f21; }
+    .mastery { display:flex; align-items:center; gap:7px; }
+    .mastery-track { width:48px; height:4px; overflow:hidden; border-radius:3px; background:#e9edf3; }
+    .mastery-fill { height:100%; border-radius:3px; background:#5e86e8; }
+    .row-action { color:#8792a6; font-weight:700; }
+    .pagination { display:flex; align-items:center; justify-content:space-between; padding:12px 14px; color:#929caf; font-size:9px; border-top:1px solid #edf0f4; }
+    .pages { display:flex; gap:4px; }
+    .pages span { width:24px; height:24px; display:grid; place-items:center; border:1px solid #e2e7ef; border-radius:6px; background:#fff; }
+    .pages span.active { background:#eaf0ff; border-color:#cfdcff; color:#3969d3; }
+
+    .review-page { padding:24px 34px 38px; }
+    .review-shell { max-width:920px; margin:0 auto; }
+    .review-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+    .review-top .back { display:flex; align-items:center; gap:7px; color:#69758b; font-size:11px; }
+    .review-progress { display:flex; align-items:center; gap:9px; color:#7d889d; font-size:10px; }
+    .review-progress-track { width:120px; height:5px; border-radius:4px; background:#e2e7ef; overflow:hidden; }
+    .review-progress-track i { display:block; width:44%; height:100%; background:var(--primary); }
+    .review-card { overflow:hidden; border:1px solid #dfe5ef; border-radius:15px; background:#fff; box-shadow:0 20px 45px rgba(25,36,60,.10); }
+    .review-card-head { display:flex; align-items:center; justify-content:space-between; padding:15px 20px; border-bottom:1px solid #edf0f4; }
+    .review-card-head span { color:#8792a6; font-size:10px; }
+    .audio-button { width:31px; height:31px; display:grid; place-items:center; border:1px solid #e0e6ef; border-radius:8px; background:#f8fafc; color:#63728a; }
+    .review-main { min-height:330px; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:42px; text-align:center; }
+    .phonetic { color:#8290a8; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; }
+    .review-word { margin:10px 0 13px; color:#1c2940; font-family:Georgia,"Times New Roman",serif; font-size:47px; letter-spacing:-.025em; }
+    .review-sentence { max-width:590px; margin:0; color:#67748b; font-family:Georgia,"Times New Roman",serif; font-size:15px; line-height:1.7; }
+    .review-sentence b { color:#315fc8; font-weight:650; }
+    .reveal { margin-top:30px; min-width:156px; }
+    .review-hint { margin-top:10px; color:#a0a9b8; font-size:9px; }
+    .review-footer { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; padding:15px; border-top:1px solid #edf0f4; background:#fafbfc; }
+    .grade { height:48px; border:1px solid #e1e6ee; border-radius:9px; background:#fff; color:#637087; }
+    .grade strong { display:block; font-size:11px; }
+    .grade span { display:block; margin-top:3px; color:#a0a8b7; font-size:8px; }
+    .grade.primary-grade { border-color:#cad9ff; background:#eef3ff; color:#315ec7; }
+
+    .notification-drawer {
+      position:absolute;
+      z-index:30;
+      top:54px;
+      right:26px;
+      width:350px;
+      display:none;
+      overflow:hidden;
+      border:1px solid #dfe5ee;
+      border-radius:13px;
+      background:#fff;
+      box-shadow:0 24px 55px rgba(20,29,49,.18);
+    }
+    .notification-drawer.open { display:block; animation:drawerIn .16s ease-out; }
+    @keyframes drawerIn { from { opacity:0; transform:translateY(-5px); } to { opacity:1; transform:none; } }
+    .notice-head { display:flex; align-items:center; justify-content:space-between; padding:16px 17px; border-bottom:1px solid #edf0f4; }
+    .notice-head strong { font-size:14px; }
+    .notice-head button { border:0; background:transparent; color:#5672ae; font-size:9px; }
+    .notice-tabs { display:flex; gap:18px; padding:0 17px; border-bottom:1px solid #edf0f4; }
+    .notice-tabs span { position:relative; padding:11px 0; color:#8b96aa; font-size:10px; }
+    .notice-tabs span.active { color:#315fc8; font-weight:750; }
+    .notice-tabs span.active::after { content:""; position:absolute; left:0; right:0; bottom:-1px; height:2px; background:#4673de; }
+    .notice-item { display:grid; grid-template-columns:30px 1fr auto; gap:10px; padding:13px 17px; }
+    .notice-item + .notice-item { border-top:1px solid #f0f2f6; }
+    .notice-item.unread { background:#f7f9ff; }
+    .notice-icon { width:30px; height:30px; display:grid; place-items:center; border-radius:8px; background:#eaf0ff; color:#3d69cf; }
+    .notice-icon.green { background:#e7f6f1; color:#218267; }
+    .notice-icon.amber { background:#fff3dc; color:#b47725; }
+    .notice-copy strong { display:block; color:#303b52; font-size:10px; }
+    .notice-copy p { margin:3px 0 0; color:#8490a5; font-size:9px; line-height:1.45; }
+    .notice-time { color:#a4adbb; font-size:8px; }
+    .notice-foot { padding:11px 17px; border-top:1px solid #edf0f4; background:#fafbfc; color:#4269bd; font-size:9px; font-weight:700; text-align:center; }
+
+    .approval {
+      position:fixed;
+      right:22px;
+      bottom:20px;
+      z-index:50;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding:10px 12px 10px 15px;
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:12px;
+      background:#18233b;
+      box-shadow:0 15px 35px rgba(18,26,44,.26);
+      color:#dbe4f6;
+      font-size:11px;
+    }
+    .approval button {
+      border:0;
+      border-radius:8px;
+      padding:8px 12px;
+      background:#5b86ee;
+      color:#fff;
+      font-size:10px;
+      font-weight:760;
+    }
+    .approval button.selected { background:#268568; }
+
+    @media (max-width: 1040px) {
+      .app-shell { grid-template-columns:74px 1fr; }
+      .brand-copy, .nav-label, .nav-item span, .nav-item .count, .user-card div:last-child { display:none; }
+      .brand { justify-content:center; padding-left:0; padding-right:0; }
+      .nav-item { justify-content:center; padding:0; }
+      .nav-item.active::before { left:-14px; }
+      .today-grid { grid-template-columns:1fr; }
+      .side-stack { grid-template-columns:1fr 1fr; }
+    }
+    @media (max-width: 760px) {
+      .preview-bar { align-items:flex-start; flex-direction:column; }
+      .app-shell { width:100%; height:auto; min-height:820px; margin:0; border-radius:0; grid-template-columns:1fr; }
+      .sidebar { display:none; }
+      .page { padding:22px 18px; }
+      .topbar { padding:0 18px; }
+      .global-search { display:none; }
+      .side-stack { grid-template-columns:1fr; }
+      .filterbar { grid-template-columns:1fr 1fr; }
+      .plan-summary { grid-template-columns:1fr; }
+      .progress-wrap { margin:auto; }
+    }
+  </style>
+</head>
+<body>
+  <div class="preview-bar">
+    <div class="preview-title">
+      <span class="direction-tag">方向 A</span>
+      <div><strong>学习优先双模式</strong><br><span>学习更专注，管理更高效，但始终像同一个产品</span></div>
+    </div>
+    <div class="screen-switch" role="tablist" aria-label="页面预览">
+      <button class="active" data-screen="today" onclick="showScreen('today', this)">今天</button>
+      <button data-screen="library" onclick="showScreen('library', this)">词库</button>
+      <button data-screen="review" onclick="showScreen('review', this)">复习</button>
+    </div>
+  </div>
+
+  <main class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">EW</div>
+        <div class="brand-copy"><strong>English World</strong><span>让每次学习都有进展</span></div>
+      </div>
+
+      <div class="nav-label">学习</div>
+      <button class="nav-item active" data-route="today" onclick="showScreen('today')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9h13v-9"/><path d="M9 19v-5h6v5"/></svg><span>今天</span>
+      </button>
+      <button class="nav-item" data-route="review" onclick="showScreen('review')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 19.5V6a2 2 0 0 1 2-2h12v15.5H6a2 2 0 0 0 0 4h13"/><path d="M8 8h7M8 12h5"/></svg><span>学习</span><span class="count">18</span>
+      </button>
+      <button class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v6h-6"/></svg><span>复习记录</span>
+      </button>
+
+      <div class="nav-label">词汇资产</div>
+      <button class="nav-item" data-route="library" onclick="showScreen('library')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 4h12a2 2 0 0 1 2 2v14H7a2 2 0 0 1-2-2z"/><path d="M8 8h8M8 12h6"/></svg><span>词库</span>
+      </button>
+      <button class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="6"/><path d="m16 16 4 4M11 8v6M8 11h6"/></svg><span>AI 查询</span>
+      </button>
+      <button class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="5" cy="17" r="2"/><circle cx="19" cy="17" r="2"/><path d="M12 7v4M6.5 15.5 10.5 12M17.5 15.5 13.5 12"/></svg><span>记忆地图</span>
+      </button>
+
+      <div class="nav-label">洞察</div>
+      <button class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 20V10M12 20V4M19 20v-7"/></svg><span>数据</span>
+      </button>
+
+      <div class="sidebar-spacer"></div>
+      <button class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6l-.08.1h-4l-.08-.1a1.7 1.7 0 0 0-1-.6 1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1l-.1-.08v-4L4 9.84a1.7 1.7 0 0 0 .6-1 1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6l.08-.1h4l.08.1a1.7 1.7 0 0 0 1 .6 1.7 1.7 0 0 0 1.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.4 9c.08.37.3.72.6 1l.1.08v4l-.1.08c-.3.28-.52.63-.6 1z"/></svg><span>设置</span>
+      </button>
+      <div class="user-card"><div class="avatar">AL</div><div><strong>alin</strong><span>今日已学习 32 分钟</span></div></div>
+    </aside>
+
+    <section class="workspace">
+      <header class="topbar">
+        <div class="breadcrumb"><span>English World</span><span>/</span><strong id="crumb">今天</strong></div>
+        <div class="top-actions">
+          <div class="global-search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="6"/><path d="m16 16 4 4"/></svg>
+            搜索单词或页面<span class="shortcut">⌘ K</span>
+          </div>
+          <button class="icon-button" onclick="toggleNotifications()" aria-label="通知">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg><i class="notice-dot"></i>
+          </button>
+          <button class="icon-button" aria-label="帮助"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><path d="M9.8 9a2.4 2.4 0 1 1 3.2 2.26c-.7.3-1 1-1 1.74M12 17h.01"/></svg></button>
+        </div>
+      </header>
+
+      <div class="notification-drawer" id="notifications">
+        <div class="notice-head"><strong>通知</strong><button>全部标为已读</button></div>
+        <div class="notice-tabs"><span class="active">收件箱 3</span><span>学习提醒</span><span>系统</span></div>
+        <div class="notice-item unread">
+          <div class="notice-icon"><svg width="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 19.5V6a2 2 0 0 1 2-2h12v15.5H6a2 2 0 0 0 0 4h13"/></svg></div>
+          <div class="notice-copy"><strong>今日复习已准备好</strong><p>18 个单词将在今天到期，约需 8 分钟。</p></div><span class="notice-time">5分钟前</span>
+        </div>
+        <div class="notice-item unread">
+          <div class="notice-icon green"><svg width="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m5 12 4 4L19 6"/></svg></div>
+          <div class="notice-copy"><strong>导入已完成</strong><p>从 IELTS 高频词表成功加入 36 个单词。</p></div><span class="notice-time">1小时前</span>
+        </div>
+        <div class="notice-item">
+          <div class="notice-icon amber"><svg width="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 9v4M12 17h.01"/><path d="M10.3 4.7 2.8 18a2 2 0 0 0 1.7 3h15a2 2 0 0 0 1.7-3L13.7 4.7a2 2 0 0 0-3.4 0z"/></svg></div>
+          <div class="notice-copy"><strong>连续学习提醒</strong><p>再完成一次短复习，即可保持 12 天连续记录。</p></div><span class="notice-time">昨天</span>
+        </div>
+        <div class="notice-foot">查看全部通知</div>
+      </div>
+
+      <section class="page active" id="page-today">
+        <div class="page-heading">
+          <div><h1>晚上好，alin</h1><p>8 月 20 日 · 今天还有一个重点任务，完成后就可以收工。</p></div>
+          <button class="btn primary" onclick="showScreen('review')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m8 5 11 7-11 7z"/></svg>继续学习
+          </button>
+        </div>
+        <div class="today-grid">
+          <div class="panel plan-panel">
+            <div class="panel-title"><h2>今日学习计划</h2><span>约剩 8 分钟</span></div>
+            <div class="plan-summary">
+              <div class="progress-wrap"><div class="progress-ring"></div><div class="progress-copy"><strong>68%</strong><span>今日进度</span></div></div>
+              <div class="summary-copy">
+                <h3>状态很好，再完成一组复习</h3>
+                <p>优先处理今天到期的核心词，完成后系统会自动更新掌握度和下一次复习时间。</p>
+                <div class="summary-meta"><div><strong>32</strong>分钟</div><div><strong>46</strong>已学习</div><div><strong>91%</strong>正确率</div></div>
+              </div>
+            </div>
+            <div class="task-list">
+              <div class="task done"><div class="task-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m5 12 4 4L19 6"/></svg></div><div class="task-copy"><strong>新词学习</strong><span>完成 12 个 IELTS 核心词</span></div><span class="status-chip green">已完成</span></div>
+              <div class="task current"><div class="task-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 19.5V6a2 2 0 0 1 2-2h12v15.5H6a2 2 0 0 0 0 4h13"/></svg></div><div class="task-copy"><strong>核心词复习</strong><span>18 个单词 · 预计 8 分钟</span></div><span class="status-chip blue">继续</span></div>
+              <div class="task"><div class="task-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 20V10M12 20V4M19 20v-7"/></svg></div><div class="task-copy"><strong>学习小结</strong><span>查看今天的掌握变化</span></div><span class="status-chip">未开始</span></div>
+            </div>
+          </div>
+          <div class="side-stack">
+            <div class="panel streak-panel">
+              <div class="streak-head"><div><span>连续学习</span><div class="streak-value">12 <small>天</small></div></div><div class="flame">◆</div></div>
+              <div class="week"><div class="day done">一<i>✓</i></div><div class="day done">二<i>✓</i></div><div class="day done">三<i>✓</i></div><div class="day done">四<i>✓</i></div><div class="day done">五<i>✓</i></div><div class="day today">六<i>今</i></div><div class="day">日<i>·</i></div></div>
+            </div>
+            <div class="panel metric-panel">
+              <div class="panel-title"><h2>今日数据</h2><span>实时更新</span></div>
+              <div class="metric-row"><div class="metric-label"><i class="metric-dot"></i>学习时长</div><strong>32 分钟</strong></div>
+              <div class="metric-row"><div class="metric-label"><i class="metric-dot green"></i>新增掌握</div><strong>9 个</strong></div>
+              <div class="metric-row"><div class="metric-label"><i class="metric-dot orange"></i>需要巩固</div><strong>6 个</strong></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" id="page-library">
+        <div class="page-heading">
+          <div><h1>词库</h1><p>管理学习材料、掌握状态和复习安排。</p></div>
+          <div class="button-row"><button class="btn">批量导入</button><button class="btn primary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14"/></svg>添加单词</button></div>
+        </div>
+        <div class="library-stats"><div class="library-stat"><strong>1,286</strong><span>全部单词</span></div><div class="library-stat"><strong>742</strong><span>已掌握</span></div><div class="library-stat"><strong>18</strong><span>今日到期</span></div><div class="library-stat"><strong>36</strong><span>本周新增</span></div></div>
+        <div class="filterbar">
+          <div class="filter-input"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="6"/><path d="m16 16 4 4"/></svg>搜索单词、释义或标签</div>
+          <button class="filter-btn">词表 <span>全部⌄</span></button>
+          <button class="filter-btn">掌握度 <span>全部⌄</span></button>
+          <button class="filter-btn">复习时间 <span>任意⌄</span></button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th><i class="checkbox"></i></th><th>单词</th><th>释义</th><th>词表</th><th>掌握度</th><th>操作</th></tr></thead>
+            <tbody>
+              <tr><td><i class="checkbox"></i></td><td class="word-cell"><strong>resilient</strong><span>/rɪˈzɪliənt/ · adj.</span></td><td class="meaning">有韧性的；能迅速恢复的</td><td><span class="tag">IELTS 核心</span></td><td><div class="mastery"><div class="mastery-track"><div class="mastery-fill" style="width:72%"></div></div>72%</div></td><td><span class="row-action">查看 · · ·</span></td></tr>
+              <tr><td><i class="checkbox"></i></td><td class="word-cell"><strong>meticulous</strong><span>/məˈtɪkjələs/ · adj.</span></td><td class="meaning">一丝不苟的；非常仔细的</td><td><span class="tag">IELTS 核心</span></td><td><div class="mastery"><div class="mastery-track"><div class="mastery-fill" style="width:48%"></div></div>48%</div></td><td><span class="row-action">查看 · · ·</span></td></tr>
+              <tr><td><i class="checkbox"></i></td><td class="word-cell"><strong>ubiquitous</strong><span>/juːˈbɪkwɪtəs/ · adj.</span></td><td class="meaning">无处不在的；普遍存在的</td><td><span class="tag amber">学术写作</span></td><td><div class="mastery"><div class="mastery-track"><div class="mastery-fill" style="width:35%"></div></div>35%</div></td><td><span class="row-action">查看 · · ·</span></td></tr>
+              <tr><td><i class="checkbox"></i></td><td class="word-cell"><strong>pragmatic</strong><span>/præɡˈmætɪk/ · adj.</span></td><td class="meaning">务实的；注重实际的</td><td><span class="tag green">日常积累</span></td><td><div class="mastery"><div class="mastery-track"><div class="mastery-fill" style="width:86%"></div></div>86%</div></td><td><span class="row-action">查看 · · ·</span></td></tr>
+              <tr><td><i class="checkbox"></i></td><td class="word-cell"><strong>contemplate</strong><span>/ˈkɒntəmpleɪt/ · v.</span></td><td class="meaning">深思；考虑；凝视</td><td><span class="tag green">日常积累</span></td><td><div class="mastery"><div class="mastery-track"><div class="mastery-fill" style="width:64%"></div></div>64%</div></td><td><span class="row-action">查看 · · ·</span></td></tr>
+              <tr><td><i class="checkbox"></i></td><td class="word-cell"><strong>ambiguous</strong><span>/æmˈbɪɡjuəs/ · adj.</span></td><td class="meaning">模棱两可的；含糊不清的</td><td><span class="tag amber">学术写作</span></td><td><div class="mastery"><div class="mastery-track"><div class="mastery-fill" style="width:53%"></div></div>53%</div></td><td><span class="row-action">查看 · · ·</span></td></tr>
+            </tbody>
+          </table>
+          <div class="pagination"><span>已显示 1–6，共 1,286 个单词</span><div class="pages"><span>‹</span><span class="active">1</span><span>2</span><span>3</span><span>›</span></div></div>
+        </div>
+      </section>
+
+      <section class="page review-page" id="page-review">
+        <div class="review-shell">
+          <div class="review-top"><div class="back" onclick="showScreen('today')">← 返回今日计划</div><div class="review-progress"><span>8 / 18</span><div class="review-progress-track"><i></i></div><span>44%</span></div></div>
+          <div class="review-card">
+            <div class="review-card-head"><span>核心词复习 · 释义回忆</span><button class="audio-button">⌕</button></div>
+            <div class="review-main">
+              <div class="phonetic">/rɪˈzɪliənt/</div>
+              <div class="review-word">resilient</div>
+              <p class="review-sentence">Communities must become more <b>resilient</b> in the face of rapid environmental change.</p>
+              <button class="btn primary reveal">显示答案</button>
+              <div class="review-hint">按空格键显示 · 先在心里回忆它的含义</div>
+            </div>
+            <div class="review-footer">
+              <button class="grade"><strong>忘记了</strong><span>1 · 1 分钟后</span></button>
+              <button class="grade"><strong>有点难</strong><span>2 · 6 小时后</span></button>
+              <button class="grade primary-grade"><strong>记得</strong><span>3 · 3 天后</span></button>
+              <button class="grade"><strong>很熟悉</strong><span>4 · 8 天后</span></button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <div class="approval">
+    <span>这套整体方向是否对味？</span>
+    <button class="option" data-choice="direction-a-learning-first" onclick="toggleSelect(this)">采用这套方向</button>
+  </div>
+
+  <script>
+    const names = { today: '今天', library: '词库', review: '学习 / 复习' };
+    function showScreen(name, source) {
+      document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+      document.getElementById('page-' + name).classList.add('active');
+      document.getElementById('crumb').textContent = names[name];
+      document.querySelectorAll('.screen-switch button').forEach(el => el.classList.toggle('active', el.dataset.screen === name));
+      document.querySelectorAll('.nav-item[data-route]').forEach(el => el.classList.toggle('active', el.dataset.route === name));
+      document.getElementById('notifications').classList.remove('open');
+    }
+    function toggleNotifications() {
+      document.getElementById('notifications').classList.toggle('open');
+    }
+  </script>
+</body>
+</html>

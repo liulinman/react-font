@@ -133,8 +133,9 @@ export const adminDeleteSchedule = ({ id }: { id: number }) => ({
   __responseType: undefined as unknown as { id: number; deleted: boolean },
 });
 
-export const adminRunScheduleNow = ({ id }: { id: number }) => ({
+export const adminRunScheduleNow = ({ id, requestUid }: { id: number; requestUid?: string }) => ({
   url: `/admin/notification-schedules/${id}/run-now`,
   method: "POST",
+  ...(requestUid ? { data: { requestUid } } : {}),
   __responseType: undefined as unknown as { id: number; status: string },
 });

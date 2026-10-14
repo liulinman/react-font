@@ -1,9 +1,13 @@
+import "../styles/mobile-articles.css";
+import { AppOutline, UnorderedListOutline, AppstoreOutline, UserOutline } from "antd-mobile-icons";
 import { TabBar } from "antd-mobile";
-import { useRef, type KeyboardEvent } from "react";
+import { useEffect, useRef, type KeyboardEvent } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { PwaUpdatePrompt } from "../pwa/PwaUpdateContext";
 import "../styles/mobile-tokens.css";
 import "../styles/mobile-shell.css";
+import "../styles/mobile-study.css";
+import "../styles/mobile-usability.css";
 
 export const MOBILE_TABS = [
   { key: "learn", label: "学习", path: "/mobile" },
@@ -25,6 +29,8 @@ export function MobileAppShell() {
   const location = useLocation();
   const navigate = useNavigate();
   const activeKey = resolveMobileTab(location.pathname);
+  const contentRef = useRef<HTMLElement>(null);
+  useEffect(()=>{if(contentRef.current)contentRef.current.scrollTop=0;},[location.pathname]);
   const tabRefs = useRef<Array<HTMLSpanElement | null>>([]);
 
   const navigateToTab = (
@@ -67,7 +73,7 @@ export function MobileAppShell() {
 
   return (
     <div className="mobile-app-shell">
-      <main className="mobile-app-shell__content">
+      <main className="mobile-app-shell__content" ref={contentRef}>
         <PwaUpdatePrompt />
         <Outlet />
       </main>
@@ -86,7 +92,15 @@ export function MobileAppShell() {
             {MOBILE_TABS.map((item, index) => (
               <TabBar.Item
                 key={item.key}
+                icon={[<AppOutline />, <UnorderedListOutline />, <AppstoreOutline />, <UserOutline />][index]}
                 aria-label={item.label}
+                onClick={() => {
+                  // TabBar.onChange only fires when the active key changes.
+                  // A tap on the active tab should also leave its detail page.
+                  if (activeKey === item.key && location.pathname !== item.path) {
+                    navigateToTab(index, false, true);
+                  }
+                }}
                 title={
                   <span
                     aria-selected={activeKey === item.key}

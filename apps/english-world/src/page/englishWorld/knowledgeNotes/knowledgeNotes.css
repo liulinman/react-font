@@ -354,3 +354,81 @@ html[data-theme="dark"] .knowledge-notes .knowledge-primary {
     font-size: 16px;
   }
 }
+
+/* Match the mobile page spacing and keep global link styles out of note cards. */
+.mobile-app-shell .knowledge-notes-mobile {
+  min-height: 100%;
+  padding: 22px 18px 32px;
+  border-radius: 0;
+  background: var(--mobile-surface-base);
+}
+.mobile-app-shell .knowledge-notes-mobile .knowledge-toolbar > div {
+  min-width: 0;
+}
+.mobile-app-shell .knowledge-notes-mobile .knowledge-toolbar p {
+  font-size: 14px;
+  line-height: 1.6;
+}
+.mobile-app-shell .knowledge-notes-mobile .knowledge-primary {
+  flex-shrink: 0;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 12px;
+}
+.mobile-app-shell .knowledge-notes-mobile .knowledge-list {
+  display: grid;
+  gap: 10px;
+}
+.mobile-app-shell .knowledge-notes-mobile .knowledge-list > li {
+  min-width: 0;
+  border: 0;
+}
+.mobile-app-shell .knowledge-notes-mobile .knowledge-list > li > a {
+  display: block;
+  width: 100%;
+  padding: 16px;
+  color: var(--mobile-ink-primary);
+  background: var(--mobile-surface-raised);
+  border: 1px solid var(--mobile-separator);
+  border-radius: 12px;
+}
+.mobile-app-shell .knowledge-notes-mobile .knowledge-list-heading {
+  align-items: flex-start;
+  gap: 8px;
+}
+.mobile-app-shell .knowledge-notes-mobile .knowledge-list-heading h2 {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.5;
+}
+.mobile-app-shell .knowledge-notes-mobile .knowledge-summary {
+  margin: 12px 0;
+  color: var(--mobile-ink-secondary);
+  font-size: 15px;
+  line-height: 1.6;
+}
+.mobile-app-shell .knowledge-notes-mobile .knowledge-meta {
+  min-width: 0;
+  gap: 8px;
+  font-size: 12px;
+}
+.mobile-app-shell .knowledge-notes-mobile .knowledge-editor .knowledge-toolbar {
+  background: var(--mobile-surface-base);
+}
+.mobile-app-shell .knowledge-notes-mobile .knowledge-article {
+  padding: 18px 16px;
+  background: var(--mobile-surface-raised);
+  border: 1px solid var(--mobile-separator);
+  border-radius: 12px;
+}
+.mobile-app-shell .knowledge-notes-mobile .knowledge-article .knowledge-body {
+  margin-top: 20px;
+}
+@media (max-width: 374px) {
+  .mobile-app-shell .knowledge-notes-mobile {
+    padding-inline: var(--mobile-page-gutter-compact);
+  }
+}

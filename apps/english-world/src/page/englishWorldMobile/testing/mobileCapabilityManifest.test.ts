@@ -4,6 +4,9 @@ import { MOBILE_CAPABILITIES, MOBILE_ROUTE_PATHS } from "./mobileCapabilityManif
 describe("mobile capability manifest", () => {
   it("freezes every exact desktop-to-mobile capability pair", () => {
     expect(MOBILE_CAPABILITIES).toEqual([
+      { id: "reading-practices", desktopPath: "/englishWorld/reading-practices", mobilePath: "/mobile/reading-practices" },
+      { id: "reading-practice", desktopPath: "/englishWorld/reading-practices/:id", mobilePath: "/mobile/reading-practices/:id" },
+      { id: "reading-practice-result", desktopPath: "/englishWorld/reading-practices/:id/result", mobilePath: "/mobile/reading-practices/:id/result" },
       { id: "knowledge-notes", desktopPath: "/englishWorld/knowledge-notes/*", mobilePath: "/mobile/tools/knowledge-notes/*" },
       { id: "home", desktopPath: "/englishWorld", mobilePath: "/mobile" },
       { id: "review", desktopPath: "/englishWorld/recite", mobilePath: "/mobile/review" },
@@ -37,7 +40,7 @@ describe("mobile capability manifest", () => {
 
   it("maps every desktop capability to a mobile-only route", () => {
     expect(MOBILE_CAPABILITIES.map((item) => item.id)).toEqual([
-      "knowledge-notes", "home", "review", "learning-setup", "learning-session", "cockpit",
+      "reading-practices", "reading-practice", "reading-practice-result", "knowledge-notes", "home", "review", "learning-setup", "learning-session", "cockpit",
       "words", "word-detail", "word-new", "word-edit", "tools", "ai-word",
       "context-tasks", "context-create", "context-read", "context-answer",
       "context-result", "context-attempts", "ielts-core", "memory-map", "stats",
