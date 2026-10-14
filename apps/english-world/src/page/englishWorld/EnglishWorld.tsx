@@ -1174,6 +1174,7 @@ const EnglishWorld: React.FC = () => {
                     columns={columns}
                     dataSource={wordList}
                     rowSelection={{
+                      columnWidth: 48,
                       selectedRowKeys: selectedCardIds,
                       onChange: (keys) =>
                         setSelectedCardIds(keys.map((key) => Number(key))),
@@ -1223,8 +1224,15 @@ const EnglishWorld: React.FC = () => {
                         </Empty>
                       ),
                     }}
-                    virtual
-                    scroll={{ x: 1360, y: WORD_TABLE_SCROLL_Y }}
+                    virtual={pageSize > 20}
+                    scroll={{
+                      // Include the expand and selection columns in the scroll width.
+                      x: columns.reduce(
+                        (width, column) => width + Number(column.width || 0),
+                        96,
+                      ),
+                      ...(pageSize > 20 ? { y: WORD_TABLE_SCROLL_Y } : {}),
+                    }}
                     pagination={{
                       current: page,
                       total: totalNum,

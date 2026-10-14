@@ -1754,16 +1754,19 @@ html[data-theme="dark"] .overwrite-stats-table .ant-table-thead > tr > th {
   font-weight: 700;
 }
 
-.english-world-table-wrap .ant-table-tbody > tr > td {
+.english-world-table-wrap .ant-table-tbody > tr > td,
+.english-world-table-wrap .ant-table-tbody-virtual .ant-table-row > .ant-table-cell {
   border-bottom: 1px solid #edf0f3;
   font-size: 13px;
 }
 
-.english-world-table-wrap .ant-table-tbody > tr:nth-child(even) > td {
+.english-world-table-wrap .ant-table-tbody > tr:nth-child(even) > td,
+.english-world-table-wrap .ant-table-tbody-virtual .ant-table-row:nth-child(even) > .ant-table-cell {
   background: #fcfdff;
 }
 
-.english-world-table-wrap .ant-table-tbody > tr:hover > td {
+.english-world-table-wrap .ant-table-tbody > tr:hover > td,
+.english-world-table-wrap .ant-table-tbody-virtual .ant-table-row:hover > .ant-table-cell {
   background: #f8fbff;
 }
 
