@@ -1,4 +1,4 @@
-import { RecipientSelect } from "./RecipientSelect";
+import { ReadingPracticeRecipients } from "./ReadingPracticeRecipients";
 import { useEffect, useRef, useState } from "react";
 import {
   Alert,
@@ -76,7 +76,7 @@ export function ReadingPracticeWorkbench({
     [handling, setHandling] = useState<
       Record<string, { status: string; reason: string }>
     >({});
-  const [assignIds, setAssignIds] = useState<number[]>([]);
+  const [recipientsOpen, setRecipientsOpen] = useState(false);
   const publishUid = useRef(""),
     correctionUid = useRef("");
   useEffect(() => {
@@ -1157,26 +1157,7 @@ export function ReadingPracticeWorkbench({
                   {paper &&
                     ["published", "withdrawn"].includes(paper.status) && (
                       <>
-                        <h3>明确补发给新增接收人</h3>
-                        <RecipientSelect
-                          value={assignIds}
-                          onChange={setAssignIds}
-                        />
-                        <Button
-                          disabled={
-                            !assignIds.length ||
-                            busy ||
-                            paper.status !== "published"
-                          }
-                          onClick={() =>
-                            void run("assign", {
-                              requestUid: newRequestId(),
-                              userIds: assignIds,
-                            })
-                          }
-                        >
-                          确认补发（已有分配不重复）
-                        </Button>
+                        {paper.status === "published" && <Button disabled={busy} onClick={() => setRecipientsOpen(true)}>追加接收人</Button>}
                         <h3>老师主动纠错 / 重评全部作答</h3>
                         <Select
                           style={{ width: "100%" }}
@@ -1340,6 +1321,7 @@ export function ReadingPracticeWorkbench({
           </>
         )}
       </Modal>
+      {paper && recipientsOpen && <ReadingPracticeRecipients key={paper.id} paper={paper} onClose={() => setRecipientsOpen(false)} onAssigned={onChange} />}
     </Drawer>
   );
 }
