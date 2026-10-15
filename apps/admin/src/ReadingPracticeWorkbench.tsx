@@ -367,7 +367,7 @@ export function ReadingPracticeWorkbench({
                     <span>
                       {editingContent
                         ? "修改后请保存，再重新核对题目。"
-                        : "先通读文章，接着核对每道题的答案和解析。"}
+                        : editable ? "先通读文章，接着核对每道题的答案和解析。" : "已发布的文章与题目可直接查看。"}
                     </span>
                     {editable && (
                       <Button
@@ -816,18 +816,18 @@ export function ReadingPracticeWorkbench({
               label: `2 核对题目${unresolvedCount ? ` · ${unresolvedCount} 项提示` : ""}`,
               children: (
                 <>
-                  <p>
-                    查看每题的选项、答案和解析，确认无误后勾选。检查发现的问题会列在下方，修改后需要重新检查。
+                  <p className="admin-muted">
+                    {editable ? "核对选项、答案和解析后勾选确认；修改题目后需要重新检查。" : "查看已发布的题目与答案。更正答案请打开“反馈与纠错”。"}
                   </p>
-                  <Button
-                    disabled={!editable || dirty || busy}
+                  {editable && <Button
+                    disabled={dirty || busy}
                     loading={busy}
                     onClick={() => void run("check", { revision })}
                   >
                     {w.qualityRevision === revision
                       ? "重新检查题目"
                       : "开始检查"}
-                  </Button>
+                  </Button>}
                   {(w.issues || []).map((i: any) => (
                     <Card
                       key={i.id}
@@ -955,6 +955,7 @@ export function ReadingPracticeWorkbench({
                       <pre
                         style={{
                           whiteSpace: "pre-wrap",
+                          fontFamily: "inherit",
                           maxHeight: 400,
                           overflow: "auto",
                         }}
@@ -1080,7 +1081,7 @@ export function ReadingPracticeWorkbench({
               key: "chat",
               label: "AI 帮助",
               children: (
-                <>
+                <div className="reading-workbench-form">
                   <Select
                     style={{ width: "100%" }}
                     value={selected}
@@ -1249,15 +1250,16 @@ export function ReadingPracticeWorkbench({
                   >
                     发送并保留对话
                   </Button>
-                </>
+                </div>
               ),
             },
             {
               key: "feedback",
               label: `反馈与纠错 (${feedback.length})`,
               children: (
-                <>
-                  <h3>学生反馈（按题目聚合）</h3>
+                <div className="reading-workbench-form">
+                  <h3>学生反馈</h3>
+                  {!feedback.length && <p className="admin-muted">暂无学生反馈</p>}
                   {content.questions.map((x) => {
                     const group = feedback.filter((f) => f.questionId === x.id);
                     return group.length ? (
@@ -1447,6 +1449,7 @@ export function ReadingPracticeWorkbench({
                           />
                         )}
                         <h4>重评执行记录</h4>
+                        {!paper.regradeJobs?.length && <p className="admin-muted">暂无重评记录</p>}
                         {(paper.regradeJobs || []).map((j) => (
                           <p key={j.id}>
                             {j.status} · 已完成 {j.completed}/{j.total} · 失败{" "}
@@ -1462,6 +1465,7 @@ export function ReadingPracticeWorkbench({
                           </p>
                         ))}
                         <h4>评分调整历史</h4>
+                        {!w.corrections?.length && <p className="admin-muted">暂无评分调整</p>}
                         {(w.corrections || []).map((c: any) => (
                           <p key={c.id}>
                             修订 {c.revision} · {c.questionId} · {c.reason}
@@ -1469,7 +1473,7 @@ export function ReadingPracticeWorkbench({
                         ))}
                       </>
                     )}
-                </>
+                </div>
               ),
             },
           ].filter(

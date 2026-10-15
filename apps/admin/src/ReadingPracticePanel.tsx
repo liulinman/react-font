@@ -1,6 +1,7 @@
 import { ReadingPracticeAnalytics } from "./ReadingPracticeAnalytics";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Alert, Button, Modal, Space, Table, Tag } from "antd";
+import { Alert, Button, Dropdown, Modal, Space, Table, Tag } from "antd";
+import { MoreOutlined, PlusOutlined, ReloadOutlined } from "@ant-design/icons";
 import request from "@font/api";
 import {
   getPractice,
@@ -102,15 +103,15 @@ export function ReadingPracticePanel({ initialId }: { initialId?: number }) {
       <div className="admin-list-toolbar">
         <div>
           <h2>
-            阅读练习 <span className="admin-count">{total}</span>
+            全部练习 <span className="admin-count">{total}</span>
           </h2>
-          <p>AI 生成文章与配套题，审核后发给用户独立完成。</p>
         </div>
         <Space>
-          <Button onClick={() => void refresh()} loading={loading}>
+          <Button icon={<ReloadOutlined />} onClick={() => void refresh()} loading={loading}>
             刷新练习
           </Button>
           <Button
+            icon={<PlusOutlined />}
             type="primary"
             onClick={() => {
               setInitial(undefined);
@@ -126,7 +127,7 @@ export function ReadingPracticePanel({ initialId }: { initialId?: number }) {
         rowKey="id"
         dataSource={rows}
         loading={loading}
-        scroll={{ x: 950 }}
+        scroll={{ x: 860 }}
         locale={{ emptyText: "还没有练习，点击“新建练习”开始" }}
         pagination={{ current: page, pageSize: 20, total, onChange: setPage }}
         columns={[
@@ -143,12 +144,8 @@ export function ReadingPracticePanel({ initialId }: { initialId?: number }) {
                 <small>
                   v{r.workflow?.version || 1} ·{" "}
                   {r.workflow?.sourceType ? "材料导入" : "AI原创"} ·{" "}
-                  {r.config.questionCount} 题 ·{" "}
-                  {
-                    (r.workflow?.issues || []).filter((i: any) => !i.resolved)
-                      .length
-                  }{" "}
-                  项待确认
+                  {r.config.questionCount} 题
+                  {(r.workflow?.issues || []).some((i: any) => !i.resolved) && ` · ${(r.workflow?.issues || []).filter((i: any) => !i.resolved).length} 项待确认`}
                 </small>
                 {r.failureSummary && (
                   <small role="status">{r.failureSummary}</small>
@@ -158,7 +155,7 @@ export function ReadingPracticePanel({ initialId }: { initialId?: number }) {
           },
           {
             title: "状态",
-            width: 115,
+            width: 90,
             render: (_, r: AdminPractice) => (
               <Tag
                 color={
@@ -178,9 +175,9 @@ export function ReadingPracticePanel({ initialId }: { initialId?: number }) {
             width: 120,
             render: (_, r: AdminPractice) =>
               ["published", "withdrawn"].includes(r.status) ? (
-                <Button type="link" onClick={() => setAnalyticsId(r.id)}>
+                <div><Button type="link" onClick={() => setAnalyticsId(r.id)}>
                   {r.submittedCount} / {r.assignedCount}
-                </Button>
+                </Button><div className="admin-progress" aria-hidden="true"><span style={{ width: `${r.assignedCount ? Math.min(100, r.submittedCount / r.assignedCount * 100) : 0}%` }} /></div></div>
               ) : (
                 `${r.submittedCount} / ${r.assignedCount}`
               ),
@@ -188,12 +185,12 @@ export function ReadingPracticePanel({ initialId }: { initialId?: number }) {
           {
             title: "创建时间",
             dataIndex: "createdAt",
-            width: 165,
+            width: 145,
             render: formatDate,
           },
           {
             title: "操作",
-            width: 380,
+            width: 260,
             render: (_, r: AdminPractice) => (
               <Space wrap size={0}>
                 {["published", "withdrawn"].includes(r.status) && (
@@ -201,50 +198,19 @@ export function ReadingPracticePanel({ initialId }: { initialId?: number }) {
                     完成情况
                   </Button>
                 )}
-                <Button type="link" onClick={() => void openPreview(r.id)}>
-                  {r.status === "draft" ? "审核练习" : "预览"}
-                </Button>
+                {r.status === "draft" && <Button type="link" onClick={() => void openPreview(r.id)}>审核练习</Button>}
                 {r.status === "published" && (
                   <Button type="link" onClick={() => setRecipientsPaper(r)}>
                     追加接收人
                   </Button>
                 )}
-                {r.status === "published" && (
-                  <Button
-                    type="text"
-                    onClick={() => setPending({ row: r, action: "withdraw" })}
-                  >
-                    撤回
-                  </Button>
-                )}
-                {r.status === "failed" && (
-                  <Button
-                    loading={busy}
-                    onClick={() => void act(r.id, "retry")}
-                  >
-                    重试生成
-                  </Button>
-                )}
-                {!["queued", "generating"].includes(r.status) && (
-                  <Button
-                    type="text"
-                    onClick={() => {
-                      setInitial(r.config);
-                      setEditor(true);
-                    }}
-                  >
-                    再生成
-                  </Button>
-                )}
-                {["draft", "failed", "queued"].includes(r.status) && (
-                  <Button
-                    type="text"
-                    danger
-                    onClick={() => setPending({ row: r, action: "delete" })}
-                  >
-                    删除
-                  </Button>
-                )}
+                {r.status === "failed" && <Button type="link" loading={busy} onClick={() => void act(r.id, "retry")}>重试生成</Button>}
+                <Dropdown trigger={["click"]} menu={{ items: [
+                  { key: "preview", label: "预览", onClick: () => void openPreview(r.id) },
+                  ...(!["queued", "generating"].includes(r.status) ? [{ key: "regenerate", label: "再生成", onClick: () => { setInitial(r.config); setEditor(true); } }] : []),
+                  ...(r.status === "published" ? [{ key: "withdraw", label: "撤回", danger: true, onClick: () => setPending({ row: r, action: "withdraw" }) }] : []),
+                  ...(["draft", "failed", "queued"].includes(r.status) ? [{ key: "delete", label: "删除", danger: true, onClick: () => setPending({ row: r, action: "delete" }) }] : []),
+                ] }}><Button type="text" icon={<MoreOutlined />} aria-label={`更多操作：${r.title}`}>更多</Button></Dropdown>
               </Space>
             ),
           },

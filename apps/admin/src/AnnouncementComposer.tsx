@@ -35,7 +35,7 @@ export function AnnouncementComposer({ onPublished }: { onPublished: () => void 
   };
   return <div className="admin-compose-layout">
     <section className="admin-panel">
-      <div className="admin-panel-heading"><h2>编辑公告</h2><p>编写内容，选择接收范围，预览后发送。</p></div>
+      <div className="admin-panel-heading"><h2>公告内容</h2></div>
       <Form form={form} layout="vertical" className="admin-form" disabled={busy !== null}
         initialValues={{ category: "announcement", priority: "normal", targetType: "all", sourceType: "manual" }}
         onFinish={values => { setError(""); setPreview({ ...values, targetUserIds: values.targetType === "selected" ? values.targetUserIds : undefined }); }}>
@@ -44,9 +44,10 @@ export function AnnouncementComposer({ onPublished }: { onPublished: () => void 
           <Input placeholder="用一句话说明这条公告" maxLength={160} showCount />
         </Form.Item>
         <Form.Item name="body" label="正文" rules={[{ required: true, whitespace: true, message: "请输入公告正文" }]}>
-          <Input.TextArea autoSize={{ minRows: 8, maxRows: 18 }} placeholder="输入公告内容，或填写主题后让 AI 帮你生成…" />
+          <Input.TextArea autoSize={{ minRows: 6, maxRows: 18 }} placeholder="输入公告内容，或填写主题后让 AI 帮你生成…" />
         </Form.Item>
         <Form.Item name="sourceType" hidden><Input /></Form.Item>
+        <h3 className="admin-section-title">发送设置</h3>
         <div className="admin-form-grid">
           <Form.Item name="category" label="类型"><Select options={categoryOptions} /></Form.Item>
           <Form.Item name="priority" label="优先级"><Select options={Object.entries(priorityLabels).map(([value, label]) => ({ value, label }))} /></Form.Item>
@@ -57,9 +58,10 @@ export function AnnouncementComposer({ onPublished }: { onPublished: () => void 
           <Button icon={<RobotOutlined />} loading={busy === "ai"} onClick={() => void generate()}>AI 帮我生成</Button>
           <Button type="primary" htmlType="submit" icon={<SendOutlined />}>预览并发送</Button>
         </div>
+        <p className="admin-inline-help">AI 生成的内容会填入草稿，请检查后再发送。</p>
       </Form>
     </section>
-    <aside className="admin-help-panel"><span className="admin-eyebrow">发布提示</span><h3>清楚传达，适度提醒</h3><p>标题概括重点，正文交代具体内容和行动建议。</p><p>普通通知适合日常学习内容；重要和紧急通知用于需要及时关注的事项。</p><p>AI 生成的内容会先填入草稿，检查后再发布。</p></aside>
+
     <Modal open={preview !== null} title="确认发布公告" okText="确认发送" cancelText="返回编辑" width={600}
       confirmLoading={busy === "publish"} onOk={() => void publish()} onCancel={() => { if (!busy) setPreview(null); }}
       closable={!busy} maskClosable={!busy} keyboard={!busy} cancelButtonProps={{ disabled: !!busy }}>

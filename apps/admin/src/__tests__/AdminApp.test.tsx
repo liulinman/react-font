@@ -183,7 +183,9 @@ describe("AdminApp", () => {
     render(<AdminApp />);
     await login(user);
 
-    await user.click(screen.getByRole("button", { name: "永久删除 alice" }));
+    expect(screen.queryByRole("button", { name: "永久删除 alice" })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "更多操作：alice" }));
+    await user.click(await screen.findByRole("menuitem", { name: "永久删除" }));
     expect(screen.getByText(/单词、背词、练习和通知记录/)).toBeInTheDocument();
     expect(requestMock.mock.calls.some(([request]) => request.url === "/admin/users/7")).toBe(false);
 
@@ -205,7 +207,9 @@ describe("AdminApp", () => {
     render(<AdminApp />);
     await login(user);
 
-    await user.click(screen.getByRole("button", { name: "永久删除 alice" }));
+    expect(screen.queryByRole("button", { name: "永久删除 alice" })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "更多操作：alice" }));
+    await user.click(await screen.findByRole("menuitem", { name: "永久删除" }));
     await user.click(screen.getByRole("button", { name: /取\s*消/ }));
 
     expect(requestMock.mock.calls.some(([request]) => request.url.startsWith("/admin/users/7"))).toBe(

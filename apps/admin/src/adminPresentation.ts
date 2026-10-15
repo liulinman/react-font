@@ -1,11 +1,11 @@
 import type { NotificationCategory, NotificationScheduleItem } from "./api/notification.type";
 
-export const categoryLabels: Record<NotificationCategory, string> = {
-  announcement: "普通公告", ielts_daily: "雅思每日文案", recent_event: "近期事件英语表达",
+export const categoryLabels: Record<NotificationCategory | "reading_practice", string> = {
+  reading_practice: "阅读练习", announcement: "普通公告", ielts_daily: "雅思每日文案", recent_event: "近期事件英语表达",
   exam_vocabulary: "近考高频词汇", custom: "手写自定义公告", system: "系统通知",
 };
 export const categoryOptions = Object.entries(categoryLabels)
-  .filter(([value]) => value !== "system")
+  .filter(([value]) => value !== "system" && value !== "reading_practice")
   .map(([value, label]) => ({ value, label }));
 export const priorityLabels = { normal: "普通", important: "重要", urgent: "紧急" };
 export const weekdayOptions = [1, 2, 3, 4, 5, 6, 0].map(value => ({

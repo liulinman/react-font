@@ -23,6 +23,7 @@ export function PracticeFields({ prefix = [] }: { prefix?: string[] }) {
   const target = Form.useWatch([...prefix, "targetType"], form);
   return (
     <>
+      <h3 className="admin-section-title">内容要求</h3>
       {prefix.length === 0 && (
         <Form.Item name={[...prefix, "title"]} label="独立练习标题（可选）">
           <Input
@@ -42,6 +43,7 @@ export function PracticeFields({ prefix = [] }: { prefix?: string[] }) {
           placeholder="例如：城市花园如何改变社区生活"
         />
       </Form.Item>
+      <h3 className="admin-section-title">题目设置</h3>
       <div className="admin-form-grid">
         <Form.Item
           name={[...prefix, "ieltsBand"]}
@@ -87,6 +89,7 @@ export function PracticeFields({ prefix = [] }: { prefix?: string[] }) {
           ]}
         />
       </Form.Item>
+      <h3 className="admin-section-title">接收学生</h3>
       <Form.Item name={[...prefix, "targetType"]} label="接收范围">
         <Radio.Group
           options={[
@@ -185,12 +188,7 @@ export function ReadingPracticeEditor({
             label: "AI原创生成",
             children: (
               <>
-                <Alert
-                  type="info"
-                  showIcon
-                  message="老师生成 → 审核 → 发布"
-                  description="生成后仅保存为待审核草稿。老师审核通过后手动发布，无需设置发布时间；学生提交后才能查看答案和解析。"
-                />
+                <p className="admin-muted">生成草稿 → 核对文章和题目 → 发布给学生</p>
                 {error && <Alert type="error" message={error} />}
                 <Form
                   form={form}

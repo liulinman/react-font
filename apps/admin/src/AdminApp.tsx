@@ -1,7 +1,7 @@
 import { ReadingPracticePanel, practiceLabels } from './ReadingPracticePanel';
 import { newRequestId } from './api/readingPractice';
 import { useCallback, useEffect, useRef, useState } from "react";
-import { HistoryOutlined, LogoutOutlined, PlusOutlined, ReloadOutlined, ScheduleOutlined, SendOutlined, TeamOutlined } from "@ant-design/icons";
+import { HistoryOutlined, MoreOutlined, LogoutOutlined, PlusOutlined, ReloadOutlined, ScheduleOutlined, SendOutlined, TeamOutlined } from "@ant-design/icons";
 import { Alert, Button, Drawer, Dropdown, Form, Input, Modal, Select, Space, Table, Tag, message } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import request from "@font/api";
@@ -18,7 +18,7 @@ import { categoryLabels, formatDate, formatSchedule, priorityLabels } from "./ad
 
 type Section = "practices" | "users" | "announcements" | "schedules" | "history";
 const sections = [
-  { key: "practices" as const, label: "阅读练习", icon: <ScheduleOutlined />, description: "生成一篇文章和配套题目，发布给用户独立作答。" },
+  { key: "practices" as const, label: "阅读练习", icon: <ScheduleOutlined />, description: "创建和发布练习，跟进学生完成情况。" },
   { key: "users" as const, label: "用户管理", icon: <TeamOutlined />, description: "查找用户，查看账号状态并管理访问权限。" },
   { key: "announcements" as const, label: "公告发布", icon: <SendOutlined />, description: "发布学习提醒和公告，将内容发送给合适的用户。" },
   { key: "schedules" as const, label: "定时任务", icon: <ScheduleOutlined />, description: "安排内容生成与发布，让学习提醒按时送达。" },
@@ -141,18 +141,18 @@ export function AdminApp() {
     { title: "注册时间", dataIndex: "createTime", width: 165, render: formatDate },
     { title: "操作", width: 190, render: (_, row) => <Space size={4}>
       <Button type="link" aria-label={`${row.status === "banned" ? "解封" : "封禁"} ${row.username}`} onClick={() => setPendingUserAction({ action: row.status === "banned" ? "unban" : "ban", user: row })}>{row.status === "banned" ? "解封" : "封禁"}</Button>
-      <Button type="text" danger aria-label={`永久删除 ${row.username}`} onClick={() => setPendingUserAction({ action: "delete", user: row })}>永久删除</Button>
+      <Dropdown trigger={["click"]} menu={{ items: [{ key: "delete", label: "永久删除", danger: true, onClick: () => setPendingUserAction({ action: "delete", user: row }) }] }}><Button type="text" icon={<MoreOutlined />} aria-label={`更多操作：${row.username}`}>更多</Button></Dropdown>
     </Space> },
   ];
   const scheduleColumns: ColumnsType<NotificationScheduleItem> = [
     { title: "任务名称", dataIndex: "name", render: (value, row) => <div className="admin-title-cell"><strong>{value}</strong><small>{row.contentKind === "reading_practice" ? "阅读练习" : categoryLabels[row.category] ?? row.category}</small></div> },
-    { title: "运行计划", width: 230, render: (_, row) => <div className="admin-title-cell"><span>{formatSchedule(row)}</span><small>{row.aiMode === "draft" ? "生成草稿待发布" : row.aiMode === "off" ? "不使用 AI" : "自动生成并发布"}</small></div> },
+    { title: "运行计划", width: 190, render: (_, row) => <div className="admin-title-cell"><span>{formatSchedule(row)}</span><small>{row.aiMode === "draft" ? "生成草稿待发布" : row.aiMode === "off" ? "不使用 AI" : "自动生成并发布"}</small></div> },
     { title: "状态", width: 95, render: (_, row) => <Tag color={row.enabled === false ? "default" : "green"}>{row.enabled === false ? "已停用" : "已启用"}</Tag> },
     { title: "最近生成", width: 140, render: (_, row) => row.lastRun ? <div><Button type="link" onClick={() => { setPracticeId(row.lastRun!.practiceId); setActive("practices"); }}>{practiceLabels[row.lastRun.status]}</Button>{row.lastRun.failureSummary && <small>{row.lastRun.failureSummary}</small>}</div> : "—" },
     { title: "下次运行", dataIndex: "nextRunAt", width: 165, render: formatDate },
-    { title: "操作", width: 200, render: (_, row) => <Space size={0}>
+    { title: "操作", width: 180, render: (_, row) => <Space size={0}>
       <Button type="link" onClick={() => ask({ kind: "run", id: row.id, title: row.name })}>立即执行</Button>
-      <Button type="text" danger onClick={() => ask({ kind: "deleteSchedule", id: row.id, title: row.name })}>删除任务</Button>
+      <Dropdown trigger={["click"]} menu={{ items: [{ key: "delete", label: "删除任务", danger: true, onClick: () => ask({ kind: "deleteSchedule", id: row.id, title: row.name }) }] }}><Button type="text" icon={<MoreOutlined />} aria-label={`更多操作：${row.name}`}>更多</Button></Dropdown>
     </Space> },
   ];
   const notificationColumns: ColumnsType<NotificationItem> = [
@@ -181,11 +181,11 @@ export function AdminApp() {
       <nav aria-label="后台导航" className="admin-nav">{sections.map(item => <button key={item.key} aria-current={active === item.key ? "page" : undefined} onClick={() => setActive(item.key)}>{item.icon}<span>{item.label}</span></button>)}</nav>
       <a className="admin-site-link" href="/englishWorld/knowledge-notes" target="_blank" rel="noreferrer">打开学习网站 ↗</a>
     </aside>
-    <section className="admin-workspace"><header className="admin-toolbar"><div><span className="admin-eyebrow">ENGLISH WORLD / 管理控制台</span><h1>{section.label}</h1><p>{section.description}</p></div><Space><Button icon={<ReloadOutlined />} loading={loading} onClick={() => void refresh()}>刷新</Button><Button type="text" icon={<LogoutOutlined />} loading={authBusy} onClick={() => void handleLogout()}>退出</Button></Space></header>
+    <section className="admin-workspace"><header className="admin-toolbar"><div><span className="admin-eyebrow">ENGLISH WORLD / 管理控制台</span><h1>{section.label}</h1><p>{section.description}</p></div><Space>{!["practices", "announcements"].includes(active) && <Button icon={<ReloadOutlined />} loading={loading} onClick={() => void refresh()}>刷新</Button>}<Button type="text" icon={<LogoutOutlined />} loading={authBusy} onClick={() => void handleLogout()}>退出</Button></Space></header>
       {error && <Alert className="admin-load-error" type="error" message={error} showIcon action={<Button onClick={() => void refresh()}>重试</Button>} />}
       {active === "practices" && <ReadingPracticePanel initialId={practiceId} />}
       {active === "users" && <div>
-        <section className="admin-panel"><div className="admin-list-toolbar"><div><h2>账号列表 <span className="admin-count">{userTotal}</span></h2><p>查看用户状态，按需管理访问权限。</p></div><div className="admin-filters">
+        <section className="admin-panel"><div className="admin-list-toolbar"><div><h2>账号列表 <span className="admin-count">{userTotal}</span></h2></div><div className="admin-filters">
           <Input.Search aria-label="搜索用户名" placeholder="搜索用户名" allowClear onSearch={search => setUserQuery(query => ({ ...query, search: search.trim(), page: 1 }))} />
           <Select aria-label="用户状态" placeholder="全部状态" allowClear value={userQuery.status} options={[{ value: "active", label: "正常" }, { value: "banned", label: "已封禁" }]} onChange={status => setUserQuery(query => ({ ...query, status, page: 1 }))} />
         </div></div>
@@ -193,10 +193,10 @@ export function AdminApp() {
         </section>
       </div>}
       <div hidden={active !== "announcements"}><AnnouncementComposer onPublished={() => { setHistoryQuery(query => ({ ...query, page: 1 })); setActive("history"); }} /></div>
-      {active === "schedules" && <div><section className="admin-panel"><div className="admin-list-toolbar"><div><h2>任务列表 <span className="admin-count">{schedules.length}</span></h2><p>查看运行计划，或立即执行一次任务。</p></div><Button type="primary" icon={<PlusOutlined />} onClick={() => setScheduleOpen(true)}>新建任务</Button></div>
+      {active === "schedules" && <div><section className="admin-panel"><div className="admin-list-toolbar"><div><h2>任务列表 <span className="admin-count">{schedules.length}</span></h2></div><Button type="primary" icon={<PlusOutlined />} onClick={() => setScheduleOpen(true)}>新建任务</Button></div>
         <Table rowKey="id" columns={scheduleColumns} dataSource={schedules} loading={loading} scroll={{ x: 900 }} locale={{ emptyText: "还没有定时任务，点击“新建任务”开始" }} pagination={schedules.length > 10 ? { pageSize: 10 } : false} />
       </section></div>}
-      {active === "history" && <div><section className="admin-panel"><div className="admin-list-toolbar"><div><h2>通知记录 <span className="admin-count">{notificationTotal}</span></h2><p>点击标题查看正文。列表按创建时间倒序排列。</p></div><Button icon={<PlusOutlined />} type="primary" onClick={() => setActive("announcements")}>发布公告</Button></div>
+      {active === "history" && <div><section className="admin-panel"><div className="admin-list-toolbar"><div><h2>通知记录 <span className="admin-count">{notificationTotal}</span></h2></div><Button icon={<PlusOutlined />} type="primary" onClick={() => setActive("announcements")}>发布公告</Button></div>
         <Table rowKey="id" columns={notificationColumns} dataSource={notifications} loading={loading} scroll={{ x: 900 }} locale={{ emptyText: "暂无通知记录" }} pagination={{ current: historyQuery.page, pageSize: historyQuery.pageSize, total: notificationTotal, showSizeChanger: true, showTotal: total => `共 ${total} 条记录`, onChange: (page, pageSize) => setHistoryQuery({ page, pageSize }) }} />
       </section></div>}
     </section>

@@ -38,15 +38,17 @@ export function ScheduleEditor({ open, onClose, onCreated }: {
   return <Drawer title="新建定时任务" open={open} width={560}
     onClose={() => { if (!busy) onClose(); }} closable={!busy} maskClosable={!busy} keyboard={!busy}
     extra={<Button type="primary" loading={busy} onClick={() => form.submit()}>保存定时任务</Button>}>
-    <p className="admin-muted">此处仅安排普通通知。阅读练习请在“阅读练习”中生成并审核发布。普通通知面向全部用户。重复任务按北京时间（UTC+08:00）运行。</p>
+    <p className="admin-muted">普通通知 · 面向全部用户 · 重复任务按北京时间运行。</p>
     {error && <Alert message={error} type="error" showIcon />}
     <Form form={form} layout="vertical" disabled={busy} onFinish={values => void create(values)}
       initialValues={{ contentKind: "notification", category: "ielts_daily", cadence: "daily", hour: 8, minute: 0, weekday: 1, aiMode: "auto_publish" }}>
+      <h3 className="admin-section-title">任务内容</h3>
       <Form.Item name="name" label="任务名称" rules={[{ required: true, whitespace: true, message: "请输入任务名称" }]}><Input maxLength={120} placeholder="例如：每日雅思表达" /></Form.Item>
       <Form.Item name="category" label="内容预设"><Select options={categoryOptions.filter(option => option.value !== "announcement")} /></Form.Item>
       <Form.Item name="aiMode" label="AI 模式"><Select options={[
         { label: "自动生成并发布", value: "auto_publish" }, { label: "生成草稿待发布", value: "draft" }, { label: "不使用 AI", value: "off" },
       ]} /></Form.Item>
+      <h3 className="admin-section-title">执行时间</h3>
       <Form.Item name="cadence" label="执行频率"><Select options={[{ label: "一次", value: "once" }, { label: "每天", value: "daily" }, { label: "每周", value: "weekly" }]} /></Form.Item>
       {cadence === "once" ? <Form.Item name="runAt" label="执行时间" extra="按当前浏览器时区选择，系统会转换为准确的执行时刻。" rules={[
         { required: true, message: "请选择执行时间" },

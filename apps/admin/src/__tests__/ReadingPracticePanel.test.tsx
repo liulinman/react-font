@@ -155,3 +155,18 @@ it("opens a readable article and explains the next action without exposing empty
   ).toBeVisible();
   expect(writes).toEqual([]);
 });
+
+it("keeps follow-up actions visible and requires confirmation for withdrawal in More", async () => {
+  paper.status = "published";
+  const user = userEvent.setup();
+  render(<ReadingPracticePanel />);
+  expect(await screen.findByRole("button", { name: "追加接收人" })).toBeVisible();
+  expect(screen.getByRole("button", { name: "完成情况" })).toBeVisible();
+  expect(screen.queryByRole("button", { name: "撤回" })).not.toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "更多操作：Garden paper" }));
+  await user.click(await screen.findByRole("menuitem", { name: "撤回" }));
+  expect(writes).toHaveLength(0);
+  expect(screen.getByRole("dialog", { name: "确认撤回练习" })).toHaveTextContent("已开始者仍可提交");
+  await user.click(screen.getByRole("button", { name: "确认撤回" }));
+  await waitFor(() => expect(writes.filter(w => w.url.endsWith("/withdraw"))).toHaveLength(1));
+});

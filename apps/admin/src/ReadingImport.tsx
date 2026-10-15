@@ -196,12 +196,8 @@ export function ReadingImport({ onCreated }: { onCreated: () => void }) {
       }}
       disabled={busy}
     >
-      <Alert
-        showIcon
-        type="info"
-        message="默认保留原文原题，只识别与整理"
-        description="缺少答案、模糊文字和不支持题型将保留为待确认问题。AI新增内容需审核后发布。"
-      />
+      <p className="admin-muted">导入材料 → 核对识别结果 → 发布给学生</p>
+      <h3 className="admin-section-title">导入材料</h3>
       <Form.Item name="title" label="练习标题">
         <Input maxLength={160} placeholder="可留空，由材料标题识别" />
       </Form.Item>
@@ -215,13 +211,15 @@ export function ReadingImport({ onCreated }: { onCreated: () => void }) {
         </Radio.Group>
       </Form.Item>
       <Form.Item name="text" label="文章与题目 / 混合材料">
-        <Input.TextArea rows={8} maxLength={100000} showCount />
+        <Input.TextArea autoSize={{ minRows: 5, maxRows: 12 }} maxLength={100000} showCount />
       </Form.Item>
+      <details className="admin-inline-help"><summary>添加原稿中的答案与解析（可选）</summary>
       <Form.Item name="answerText" label="答案与解析（可选）">
         <Input.TextArea rows={4} maxLength={100000} />
       </Form.Item>
+      </details>
       <SourceFiles value={sources} onChange={setSources} disabled={busy} />
-      <p>上传顺序即识别顺序。关联原稿随练习保留；未使用的上传7天后清理。</p>
+      <p className="admin-muted">按原稿顺序上传，文件将随练习保留。</p>
       <PracticeFields prefix={["config"]} />
       {error && <Alert type="error" message={error} />}
       <Button type="primary" htmlType="submit" loading={busy}>

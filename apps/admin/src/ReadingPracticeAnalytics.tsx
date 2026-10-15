@@ -200,7 +200,7 @@ export function ReadingPracticeAnalytics({
         >
           刷新统计
         </Button>
-        <span>筛选仅影响学生明细，概览为全篇统计</span>
+        <span className="admin-muted">筛选仅影响学生明细，概览为全篇统计</span>
       </Space>
       {notice && (
         <Alert
@@ -221,7 +221,7 @@ export function ReadingPracticeAnalytics({
       {data && (
         <>
           <h3>{data.title}</h3>
-          <p>
+          <p className="admin-muted">
             内容 v{data.version} · 评分修订 {data.gradingRevision} ·{" "}
             {data.status === "withdrawn" ? "已撤回" : "已发布"} · 更新于{" "}
             {time(data.generatedAt)}
@@ -247,7 +247,7 @@ export function ReadingPracticeAnalytics({
               </Card>
             ))}
           </div>
-          <p>
+          <p className="admin-muted">
             未开始 {data.summary.notStartedCount} 人 · 作答中{" "}
             {data.summary.inProgressCount} 人 · 有效错题{" "}
             {data.summary.wrongAttempts} / 有效作答 {data.summary.validAttempts}{" "}
@@ -398,7 +398,7 @@ export function ReadingPracticeAnalytics({
                           {q.voided && <Tag>已作废</Tag>}
                         </h4>
                         <p>{q.stem}</p>
-                        <p>
+                        <p className="admin-muted">
                           当前正确答案：
                           {String.fromCharCode(65 + q.correctIndex)} · 提交{" "}
                           {q.submittedCount} 人 · 答对 {q.correctCount ?? "—"}{" "}
@@ -407,10 +407,11 @@ export function ReadingPracticeAnalytics({
                         </p>
                         {q.voided && <p>已作废，不计入统计</p>}
                         {q.options.map((o, i) => (
-                          <p key={i}>
-                            {String.fromCharCode(65 + i)}. {o.text} — {o.count}{" "}
-                            人（{showNumber(o.percentage, true)}）
-                          </p>
+                          <div key={i} className="reading-option-distribution">
+                            <span>{String.fromCharCode(65 + i)}. {o.text} — {o.count}{" "}
+                            人（{showNumber(o.percentage, true)}）</span>
+                            <div className="reading-option-bar" aria-hidden="true"><span style={{ width: `${Math.max(0, Math.min(100, o.percentage ?? 0))}%`, background: i === q.correctIndex ? "#58a887" : "#89a9ec" }} /></div>
+                          </div>
                         ))}
                         <Button
                           disabled={!q.wrongUserIds.length}
@@ -479,7 +480,7 @@ export function ReadingPracticeAnalytics({
             <h3>
               {detail.learner.username} #{detail.learner.userId}
             </h3>
-            <p>
+            <p className="admin-muted">
               {labels[detail.learner.status]} · 分数 {scoreText(detail.learner)}{" "}
               · 评分修订 {detail.gradingRevision}
             </p>
@@ -532,7 +533,7 @@ export function ReadingPracticeAnalytics({
                         </p>
                       ))}
                       <p>解析：{q.explanation}</p>
-                      <p>
+                      <p className="admin-muted">
                         原文证据（第 {q.evidence.paragraph} 段）：
                         {q.evidence.quote || q.evidence.missingInformation}
                       </p>
