@@ -1,3 +1,4 @@
+import { ReadingPracticeAnalytics } from "./ReadingPracticeAnalytics";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Alert, Button, Modal, Space, Table, Tag } from "antd";
 import request from "@font/api";
@@ -25,7 +26,10 @@ export function ReadingPracticePanel({ initialId }: { initialId?: number }) {
     [page, setPage] = useState(1),
     [loading, setLoading] = useState(false),
     [error, setError] = useState("");
-  const [recipientsPaper, setRecipientsPaper] = useState<AdminPractice | null>(null);
+  const [analyticsId, setAnalyticsId] = useState<number | null>(null);
+  const [recipientsPaper, setRecipientsPaper] = useState<AdminPractice | null>(
+    null,
+  );
   const [editor, setEditor] = useState(false),
     [initial, setInitial] = useState<PracticeConfig>(),
     [preview, setPreview] = useState<AdminPractice | null>(null);
@@ -173,7 +177,13 @@ export function ReadingPracticePanel({ initialId }: { initialId?: number }) {
             title: "完成 / 接收",
             width: 120,
             render: (_, r: AdminPractice) =>
-              `${r.submittedCount} / ${r.assignedCount}`,
+              ["published", "withdrawn"].includes(r.status) ? (
+                <Button type="link" onClick={() => setAnalyticsId(r.id)}>
+                  {r.submittedCount} / {r.assignedCount}
+                </Button>
+              ) : (
+                `${r.submittedCount} / ${r.assignedCount}`
+              ),
           },
           {
             title: "创建时间",
@@ -186,10 +196,19 @@ export function ReadingPracticePanel({ initialId }: { initialId?: number }) {
             width: 380,
             render: (_, r: AdminPractice) => (
               <Space wrap size={0}>
+                {["published", "withdrawn"].includes(r.status) && (
+                  <Button type="link" onClick={() => setAnalyticsId(r.id)}>
+                    完成情况
+                  </Button>
+                )}
                 <Button type="link" onClick={() => void openPreview(r.id)}>
                   {r.status === "draft" ? "审核练习" : "预览"}
                 </Button>
-                {r.status === "published" && <Button type="link" onClick={() => setRecipientsPaper(r)}>追加接收人</Button>}
+                {r.status === "published" && (
+                  <Button type="link" onClick={() => setRecipientsPaper(r)}>
+                    追加接收人
+                  </Button>
+                )}
                 {r.status === "published" && (
                   <Button
                     type="text"
@@ -231,6 +250,13 @@ export function ReadingPracticePanel({ initialId }: { initialId?: number }) {
           },
         ]}
       />
+      {analyticsId !== null && (
+        <ReadingPracticeAnalytics
+          key={analyticsId}
+          id={analyticsId}
+          onClose={() => setAnalyticsId(null)}
+        />
+      )}
       {editor && (
         <ReadingPracticeEditor
           open
@@ -239,7 +265,14 @@ export function ReadingPracticePanel({ initialId }: { initialId?: number }) {
           onCreated={() => void refresh()}
         />
       )}
-      {recipientsPaper && <ReadingPracticeRecipients key={recipientsPaper.id} paper={recipientsPaper} onClose={() => setRecipientsPaper(null)} onAssigned={() => void refresh()} />}
+      {recipientsPaper && (
+        <ReadingPracticeRecipients
+          key={recipientsPaper.id}
+          paper={recipientsPaper}
+          onClose={() => setRecipientsPaper(null)}
+          onAssigned={() => void refresh()}
+        />
+      )}
       <ReadingPracticeWorkbench
         paper={preview}
         onClose={() => setPreview(null)}

@@ -1,0 +1,31 @@
+.reading-analytics .ant-modal-body {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.reading-analytics-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.reading-analytics-summary strong {
+  display: block;
+  font-size: 24px;
+}
+.reading-analytics .ant-table-wrapper,
+.reading-analytics .ant-tabs-content-holder {
+  min-width: 0;
+  max-width: 100%;
+}
+.reading-analytics blockquote {
+  margin: 12px 0;
+  padding-left: 12px;
+  border-left: 3px solid #ddd;
+}
+@media (max-width: 600px) {
+  .reading-analytics-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .reading-analytics .ant-modal-content {
+    padding: 16px;
+  }
+}
