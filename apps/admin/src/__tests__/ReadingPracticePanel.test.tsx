@@ -91,18 +91,27 @@ it("requires quality check and question confirmation, and publishes the reviewed
   const user = userEvent.setup();
   render(<ReadingPracticePanel />);
   await user.click(await screen.findByRole("button", { name: "审核练习" }));
-  expect(screen.getByRole("button", { name: "确认发布" })).toBeDisabled();
-  await user.click(screen.getByRole("tab", { name: /质量审核/ }));
-  await user.click(screen.getByRole("button", { name: "AI检查当前修订" }));
-  await user.click(await screen.findByRole("checkbox"));
-  await user.click(screen.getByRole("button", { name: "保存逐题审核确认" }));
+  expect(
+    screen.queryByRole("button", { name: "发布给学生" }),
+  ).not.toBeInTheDocument();
+  await user.click(screen.getByRole("tab", { name: /核对题目/ }));
+  await user.click(screen.getByRole("button", { name: "检查题目" }));
+  await waitFor(() => expect(screen.getByRole("checkbox")).toBeEnabled());
+  await user.click(screen.getByRole("checkbox"));
+  expect(screen.getByRole("checkbox")).toBeChecked();
   await waitFor(() =>
-    expect(screen.getByRole("button", { name: "确认发布" })).toBeEnabled(),
+    expect(screen.getByRole("button", { name: "完成核对" })).not.toHaveClass(
+      "ant-btn-loading",
+    ),
   );
-  await user.click(screen.getByRole("button", { name: "确认发布" }));
-  await user.click(
-    await screen.findByRole("button", { name: "确认发布此版本" }),
+  expect(screen.getByRole("button", { name: "完成核对" })).toBeEnabled();
+  await user.click(screen.getByRole("button", { name: "完成核对" }));
+  expect(writes.some((x) => x.url.endsWith("/review"))).toBe(true);
+  await waitFor(() =>
+    expect(screen.getByRole("button", { name: "发布给学生" })).toBeEnabled(),
   );
+  await user.click(screen.getByRole("button", { name: "发布给学生" }));
+  await user.click(await screen.findByRole("button", { name: "确认发布" }));
   await waitFor(() =>
     expect(writes.filter((x) => x.url.endsWith("/publish"))).toHaveLength(1),
   );
@@ -124,5 +133,25 @@ it("student preview omits answers and internal evidence", async () => {
     within(dialog).queryByText("secret explanation"),
   ).not.toBeInTheDocument();
   expect(within(dialog).getByText("1. Which place?")).toBeInTheDocument();
+  expect(writes).toEqual([]);
+});
+
+it("opens a readable article and explains the next action without exposing empty source tools", async () => {
+  const user = userEvent.setup();
+  render(<ReadingPracticePanel />);
+  await user.click(await screen.findByRole("button", { name: "审核练习" }));
+  expect(screen.getByRole("article", { name: "阅读文章" })).toHaveTextContent(
+    "A garden.",
+  );
+  expect(
+    screen.queryByRole("textbox", { name: "练习标题" }),
+  ).not.toBeInTheDocument();
+  expect(screen.queryByText("上传原稿")).not.toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "下一步：核对题目" }));
+  expect(screen.getByText("secret explanation")).toBeVisible();
+  expect(screen.getByText("正确答案：A. Garden")).toBeVisible();
+  expect(
+    screen.getByText("先检查题目，再逐题确认答案和解析。全部完成后即可发布。"),
+  ).toBeVisible();
   expect(writes).toEqual([]);
 });

@@ -1,3 +1,5 @@
+import "./readingWorkbench.css";
+import { ReadingQuestionReadout } from "./ReadingQuestionReadout";
 import { ReadingPracticeRecipients } from "./ReadingPracticeRecipients";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -77,6 +79,14 @@ export function ReadingPracticeWorkbench({
       Record<string, { status: string; reason: string }>
     >({});
   const [recipientsOpen, setRecipientsOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("edit");
+  const [editingContent, setEditingContent] = useState(false);
+  useEffect(() => {
+    setActiveTab("edit");
+    setEditingContent(false);
+    setError("");
+    setPreview(false);
+  }, [paper?.id]);
   const publishUid = useRef(""),
     correctionUid = useRef("");
   useEffect(() => {
@@ -155,57 +165,138 @@ export function ReadingPracticeWorkbench({
       });
     else onClose();
   };
+  const unresolvedCount = (w.issues || []).filter(
+    (i: any) =>
+      !i.resolved &&
+      !(
+        i.type === "ai" &&
+        resolutions[i.id]?.reason.trim() &&
+        resolutions[i.id]?.evidence.trim()
+      ),
+  ).length;
+  const submitReview = () =>
+    void run("review", {
+      revision,
+      questionIds: checked,
+      resolutions: Object.entries(resolutions)
+        .filter(([, r]) => r.reason.trim() && r.evidence.trim())
+        .map(([issueId, r]) => ({ issueId, ...r })),
+    });
+  const publish = () =>
+    Modal.confirm({
+      title: "发布给学生",
+      okText: "确认发布",
+      cancelText: "再检查一下",
+      content: `${content?.questions.length || 0} 道题，发送给${paper?.config.targetType === "all" ? "全部正常用户" : `${paper?.config.targetUserIds?.length || 0} 位指定用户`}。每人可提交一次。`,
+      onOk: () =>
+        run("publish", {
+          revision,
+          reviewed: true,
+          requestUid: publishUid.current,
+        }),
+    });
+  const editQuestion = (id: string) => {
+    setSelected(id);
+    setEditingContent(true);
+    setActiveTab("edit");
+    setTimeout(
+      () =>
+        document
+          .querySelector('.reading-workbench [aria-label="题干"]')
+          ?.scrollIntoView({ block: "center", behavior: "smooth" }),
+      100,
+    );
+  };
   return (
     <Drawer
-      width="min(1440px, 98vw)"
+      width="min(1120px, 100vw)"
+      rootClassName="reading-workbench"
       open={!!paper}
-      title={`${paper?.title || "阅读练习"} · v${w.version || 1} · 修订 ${revision}`}
+      title={editable ? "审核并发布练习" : paper?.title || "阅读练习"}
       onClose={close}
       footer={
-        <Space wrap>
-          <Button onClick={close}>关闭</Button>
-          <Button onClick={() => setPreview(true)} disabled={!content}>
-            学生视角预览
-          </Button>
-          {editable ? (
-            <>
-              <Button
-                type="primary"
-                onClick={save}
-                loading={busy}
-                disabled={!dirty}
-              >
-                保存修改
-              </Button>
-              <Button
-                disabled={dirty || busy || w.reviewedRevision !== revision}
-                onClick={() =>
-                  Modal.confirm({
-                    title: "发布已审核版本",
-                    okText: "确认发布此版本",
-                    cancelText: "取消",
-                    content: `版本 ${w.version || 1} · ${content?.questions.length || 0} 题 · ${paper?.config.targetType === "all" ? "发布时全部正常用户" : `${paper?.config.targetUserIds?.length || 0} 位指定用户`}。每人可提交一次。`,
-                    onOk: () =>
-                      run("publish", {
-                        revision,
-                        reviewed: true,
-                        requestUid: publishUid.current,
-                      }),
-                  })
-                }
-              >
-                确认发布
-              </Button>
-            </>
-          ) : paper && ["published", "withdrawn"].includes(paper.status) ? (
-            <Button
-              loading={busy}
-              onClick={() => void run("revise", { requestUid: newRequestId() })}
-            >
-              创建内容修订版
+        <div className="reading-workbench-footer">
+          <span role="status">
+            {editable
+              ? dirty
+                ? "修改尚未保存，保存后需要重新核对。"
+                : w.reviewedRevision === revision
+                  ? "核对完成，可以发布给学生。"
+                  : w.qualityRevision !== revision
+                    ? "先检查题目，再逐题确认答案和解析。全部完成后即可发布。"
+                    : `已确认 ${checked.length} / ${content?.questions.length || 0} 题${unresolvedCount ? `，还有 ${unresolvedCount} 项检查提示待处理` : ""}。`
+              : "已发布内容仅供查看；更正答案请打开“反馈与纠错”。"}
+          </span>
+          <Space wrap>
+            <Button onClick={close}>关闭</Button>
+            <Button onClick={() => setPreview(true)} disabled={!content}>
+              学生视角预览
             </Button>
-          ) : null}
-        </Space>
+            {editable &&
+              content &&
+              (dirty ? (
+                <Button key="save" type="primary" onClick={save} loading={busy}>
+                  保存修改
+                </Button>
+              ) : w.reviewedRevision === revision ? (
+                <Button
+                  key="publish"
+                  aria-label="发布给学生"
+                  type="primary"
+                  disabled={busy}
+                  onClick={publish}
+                >
+                  发布给学生
+                </Button>
+              ) : activeTab !== "review" ? (
+                <Button
+                  key="next"
+                  type="primary"
+                  onClick={() => {
+                    setEditingContent(false);
+                    setActiveTab("review");
+                  }}
+                >
+                  下一步：核对题目
+                </Button>
+              ) : w.qualityRevision !== revision ? (
+                <Button
+                  key="check"
+                  type="primary"
+                  loading={busy}
+                  onClick={() => void run("check", { revision })}
+                >
+                  检查题目
+                </Button>
+              ) : (
+                <Button
+                  key="review"
+                  type="primary"
+                  loading={busy}
+                  disabled={
+                    checked.length !== content.questions.length ||
+                    unresolvedCount > 0
+                  }
+                  aria-label="完成核对"
+                  onClick={submitReview}
+                >
+                  完成核对
+                </Button>
+              ))}
+            {!editable &&
+              paper &&
+              ["published", "withdrawn"].includes(paper.status) && (
+                <Button
+                  loading={busy}
+                  onClick={() =>
+                    void run("revise", { requestUid: newRequestId() })
+                  }
+                >
+                  创建内容修订版
+                </Button>
+              )}
+          </Space>
+        </div>
       }
     >
       {error && <Alert type="error" showIcon message={error} />}
@@ -222,9 +313,18 @@ export function ReadingPracticeWorkbench({
             }[paper?.status || "draft"]
           }
         </Tag>
-        <Tag>评分修订 {w.gradingRevision || 0}</Tag>
+        <span>
+          {content?.questions.length || 0} 道题 ·{" "}
+          {paper?.config.targetType === "all"
+            ? "全部正常用户"
+            : `${paper?.config.targetUserIds?.length || 0} 位指定用户`}
+        </span>
         {dirty && <Tag color="orange">有未保存修改；保存后重新审核</Tag>}
-        <span>生成配置难度 {paper?.config.ieltsBand}，未经正式校准</span>
+        <details className="reading-workbench-meta">
+          <summary>版本与难度</summary>内容版本 {w.version || 1} · 修改记录{" "}
+          {revision} · 评分修订 {w.gradingRevision || 0} · 参考雅思难度{" "}
+          {paper?.config.ieltsBand}（AI 生成，供参考）
+        </details>
       </Space>
       {!content ? (
         <>
@@ -254,552 +354,486 @@ export function ReadingPracticeWorkbench({
         </>
       ) : (
         <Tabs
+          activeKey={activeTab}
+          onChange={setActiveTab}
+          destroyOnHidden
           items={[
             {
               key: "edit",
-              label: "原稿对照与编辑",
+              label: "1 阅读文章",
               children: (
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns:
-                      "minmax(250px, 1fr) minmax(350px, 1.4fr)",
-                    gap: 24,
-                  }}
-                >
-                  <section>
-                    <h3>原始材料</h3>
-                    {w.importInput?.text && (
-                      <pre
-                        style={{
-                          whiteSpace: "pre-wrap",
-                          maxHeight: 400,
-                          overflow: "auto",
-                        }}
-                      >
-                        {w.importInput.text}
-                      </pre>
-                    )}
-                    {w.importInput?.answerText && (
-                      <details>
-                        <summary>原始答案与解析</summary>
-                        <pre style={{ whiteSpace: "pre-wrap" }}>
-                          {w.importInput.answerText}
-                        </pre>
-                      </details>
-                    )}
-                    <SourceFiles
-                      value={sources}
-                      onChange={setSources}
-                      disabled={!editable || busy || dirty}
-                    />
+                <>
+                  <div className="reading-workbench-toolbar">
+                    <span>
+                      {editingContent
+                        ? "修改后请保存，再重新核对题目。"
+                        : "先通读文章，接着核对每道题的答案和解析。"}
+                    </span>
                     {editable && (
                       <Button
-                        disabled={
-                          busy ||
-                          dirty ||
-                          JSON.stringify(sources) ===
-                            JSON.stringify(w.sources || [])
-                        }
-                        onClick={() =>
-                          void run("sources", {
-                            revision,
-                            sourceIds: sources.map((s) => s.id),
-                          })
-                        }
+                        onClick={() => setEditingContent(!editingContent)}
                       >
-                        保存原稿顺序 / 替换
+                        {editingContent ? "返回阅读" : "修改文章与题目"}
                       </Button>
                     )}
-                    {editable && (
-                      <Button
-                        disabled={dirty || busy}
-                        onClick={() =>
-                          void run("recognize-sources", { revision })
-                        }
-                      >
-                        重新识别为候选
-                      </Button>
-                    )}
-                    {w.sourceCandidate && (
-                      <details>
-                        <summary>
-                          重新识别候选与当前内容对照（不自动覆盖）
-                        </summary>
-                        <div
-                          style={{
-                            display: "grid",
-                            gridTemplateColumns: "1fr 1fr",
-                            gap: 16,
-                          }}
-                        >
-                          <pre style={{ whiteSpace: "pre-wrap" }}>
-                            {JSON.stringify(content, null, 2)}
-                          </pre>
-                          <pre style={{ whiteSpace: "pre-wrap" }}>
-                            {JSON.stringify(w.sourceCandidate.content, null, 2)}
-                          </pre>
-                        </div>
-                        <Button
-                          disabled={
-                            dirty ||
-                            busy ||
-                            w.sourceCandidate.revision !== revision
-                          }
-                          onClick={() =>
-                            void run("accept-source", {
-                              revision,
-                              candidateId: w.sourceCandidate.id,
-                            })
-                          }
-                        >
-                          确认采用候选并重新审核
-                        </Button>
-                      </details>
-                    )}
-                    {sources[0] && (
-                      <iframe
-                        title="原稿对照"
-                        src={sourceUrl(sources[0])}
-                        style={{
-                          width: "100%",
-                          height: 600,
-                          border: "1px solid #ddd",
-                          marginTop: 16,
-                        }}
-                      />
-                    )}
-                    <details>
-                      <summary>修订历史（保留旧原稿与内容）</summary>
-                      {(w.history || []).map((h: any, i: number) => (
-                        <details key={h.id || i}>
-                          <summary>
-                            {h.at} · {h.kind} · {h.actor}
-                          </summary>
-                          <pre style={{ whiteSpace: "pre-wrap" }}>
-                            {JSON.stringify(h.before, null, 2)}
-                          </pre>
-                          {h.before?.sources?.map((s: Source) => (
-                            <a
-                              key={s.id}
-                              href={sourceUrl(s)}
-                              target="_blank"
-                              rel="noreferrer"
-                            >
-                              {s.name}{" "}
-                            </a>
-                          ))}
-                        </details>
-                      ))}
-                    </details>
-                  </section>
-                  <section>
-                    <label>
-                      标题
-                      <Input
-                        aria-label="练习标题"
-                        value={content.title}
-                        disabled={!editable}
-                        maxLength={160}
-                        onChange={(e) =>
-                          change({ ...content, title: e.target.value })
-                        }
-                      />
-                    </label>
-                    <label>
-                      作答要求
-                      <Input.TextArea
-                        value={content.instructions || ""}
-                        disabled={!editable}
-                        onChange={(e) =>
-                          change({ ...content, instructions: e.target.value })
-                        }
-                      />
-                    </label>
-                    <h3>正文段落</h3>
-                    {content.paragraphs.map((p, i) => (
-                      <div key={i} style={{ marginBottom: 12 }}>
-                        <Space>
-                          <span>段落 {i + 1}</span>
-                          <Input
-                            aria-label={`原始段落标记${i + 1}`}
-                            placeholder="原始段落标记"
-                            value={content.paragraphLabels?.[i] || ""}
-                            disabled={!editable}
-                            onChange={(e) => {
-                              const labels = [
-                                ...(content.paragraphLabels || []),
-                              ];
-                              labels[i] = e.target.value;
-                              change({ ...content, paragraphLabels: labels });
-                            }}
-                          />
-                          <Button
-                            disabled={!editable}
-                            onClick={() =>
-                              change({
-                                ...content,
-                                paragraphs: content.paragraphs.filter(
-                                  (_, n) => n !== i,
-                                ),
-                                paragraphLabels: (
-                                  content.paragraphLabels || []
-                                ).filter((_, n) => n !== i),
-                                questions: content.questions.map((x) => ({
-                                  ...x,
-                                  evidence: {
-                                    ...x.evidence,
-                                    paragraph:
-                                      x.evidence.paragraph === i + 1
-                                        ? 0
-                                        : x.evidence.paragraph > i + 1
-                                          ? x.evidence.paragraph - 1
-                                          : x.evidence.paragraph,
-                                  },
-                                })),
-                              })
-                            }
-                          >
-                            移除段落
-                          </Button>
-                        </Space>
-                        <Input.TextArea
-                          value={p}
-                          autoSize={{ minRows: 3, maxRows: 12 }}
-                          disabled={!editable}
-                          onChange={(e) =>
-                            change({
-                              ...content,
-                              paragraphs: content.paragraphs.map((v, n) =>
-                                n === i ? e.target.value : v,
-                              ),
-                            })
-                          }
-                        />
-                      </div>
-                    ))}
-                    <Button
-                      disabled={!editable}
-                      onClick={() =>
-                        change({
-                          ...content,
-                          paragraphs: [...content.paragraphs, ""],
-                        })
-                      }
+                  </div>
+                  {!editingContent ? (
+                    <article
+                      aria-label="阅读文章"
+                      className="reading-workbench-article"
                     >
-                      添加段落
-                    </Button>
-                    <h3>题目</h3>
-                    <Space wrap>
-                      <Select
-                        aria-label="选择题目"
-                        style={{ minWidth: 230 }}
-                        value={selected}
-                        options={content.questions.map((x, i) => ({
-                          value: x.id,
-                          label: `${i + 1}. ${x.stem.slice(0, 40)}`,
-                        }))}
-                        onChange={setSelected}
-                      />
-                      <Button
-                        disabled={!editable}
-                        onClick={() => {
-                          const id = `q-${Date.now()}`;
-                          change({
-                            ...content,
-                            questions: [
-                              ...content.questions,
-                              {
-                                id,
-                                kind: "choice",
-                                stem: "",
-                                options: ["", "", "", ""],
-                                correctIndex: null,
-                                explanation: "",
-                                evidence: { paragraph: 1 },
-                              },
-                            ],
-                          });
-                          setSelected(id);
-                        }}
-                      >
-                        添加题目
-                      </Button>
-                      {q && (
-                        <Button
-                          danger
-                          disabled={!editable}
-                          onClick={() => {
-                            change({
-                              ...content,
-                              questions: content.questions.filter(
-                                (x) => x.id !== q.id,
-                              ),
-                            });
-                            setSelected(
-                              content.questions.find((x) => x.id !== q.id)
-                                ?.id || "",
-                            );
-                          }}
-                        >
-                          移除本题
-                        </Button>
+                      <h1>{content.title}</h1>
+                      {content.instructions && (
+                        <p className="reading-workbench-instructions">
+                          {content.instructions}
+                        </p>
                       )}
-                    </Space>
-                    {q && (
-                      <>
-                        <Space style={{ margin: "12px 0" }}>
-                          <span>稳定身份 {q.id}</span>
-                          <Select
-                            value={q.kind}
-                            disabled={!editable}
-                            options={[
-                              { value: "choice", label: "单项选择" },
-                              {
-                                value: "true_false_not_given",
-                                label: "True / False / Not Given",
-                              },
-                              { value: "unsupported", label: "不支持题型" },
-                            ]}
-                            onChange={(kind) =>
-                              update({
-                                kind,
-                                ...(kind === "true_false_not_given"
-                                  ? {
-                                      options: ["True", "False", "Not Given"],
-                                      correctIndex: null,
-                                    }
-                                  : {}),
-                              })
-                            }
-                          />
-                          <InputNumber
-                            aria-label="题序"
-                            min={1}
-                            max={content.questions.length}
-                            value={
-                              content.questions.findIndex(
-                                (x) => x.id === q.id,
-                              ) + 1
-                            }
-                            disabled={!editable}
-                            onChange={(n) => {
-                              if (n) {
-                                const qs = content.questions.filter(
-                                  (x) => x.id !== q.id,
-                                );
-                                qs.splice(n - 1, 0, q);
-                                change({ ...content, questions: qs });
-                              }
-                            }}
-                          />
-                        </Space>
-                        {q.originalText && (
-                          <details>
-                            <summary>原始题目内容</summary>
-                            <pre style={{ whiteSpace: "pre-wrap" }}>
-                              {q.originalText}
-                            </pre>
-                          </details>
-                        )}
+                      {content.paragraphs.map((text, i) => (
+                        <section key={i}>
+                          <span className="reading-workbench-paragraph">
+                            {content.paragraphLabels?.[i] || `第 ${i + 1} 段`}
+                          </span>
+                          <p>{text}</p>
+                        </section>
+                      ))}
+                    </article>
+                  ) : (
+                    <div className="reading-workbench-editor">
+                      <section>
                         <label>
-                          题干
-                          <Input.TextArea
-                            aria-label="题干"
-                            value={q.stem}
+                          标题
+                          <Input
+                            aria-label="练习标题"
+                            value={content.title}
                             disabled={!editable}
-                            onChange={(e) => update({ stem: e.target.value })}
+                            maxLength={160}
+                            onChange={(e) =>
+                              change({ ...content, title: e.target.value })
+                            }
                           />
                         </label>
                         <label>
-                          本题要求
+                          作答要求
                           <Input.TextArea
-                            value={q.instructions || ""}
+                            value={content.instructions || ""}
                             disabled={!editable}
                             onChange={(e) =>
-                              update({ instructions: e.target.value })
+                              change({
+                                ...content,
+                                instructions: e.target.value,
+                              })
                             }
                           />
                         </label>
-                        {q.kind !== "true_false_not_given" && (
-                          <Button
-                            disabled={!editable || q.options.length >= 4}
-                            onClick={() =>
-                              update({ options: [...q.options, ""] })
-                            }
-                          >
-                            添加选项
-                          </Button>
-                        )}
-                        {q.options.map((o, i) => (
-                          <div
-                            key={i}
-                            style={{ display: "flex", gap: 8, marginTop: 8 }}
-                          >
-                            <span>{String.fromCharCode(65 + i)}</span>
+                        <h3>正文段落</h3>
+                        {content.paragraphs.map((p, i) => (
+                          <div key={i} style={{ marginBottom: 12 }}>
+                            <Space>
+                              <span>段落 {i + 1}</span>
+                              <Input
+                                aria-label={`原始段落标记${i + 1}`}
+                                placeholder="原始段落标记"
+                                value={content.paragraphLabels?.[i] || ""}
+                                disabled={!editable}
+                                onChange={(e) => {
+                                  const labels = [
+                                    ...(content.paragraphLabels || []),
+                                  ];
+                                  labels[i] = e.target.value;
+                                  change({
+                                    ...content,
+                                    paragraphLabels: labels,
+                                  });
+                                }}
+                              />
+                              <Button
+                                disabled={!editable}
+                                onClick={() =>
+                                  change({
+                                    ...content,
+                                    paragraphs: content.paragraphs.filter(
+                                      (_, n) => n !== i,
+                                    ),
+                                    paragraphLabels: (
+                                      content.paragraphLabels || []
+                                    ).filter((_, n) => n !== i),
+                                    questions: content.questions.map((x) => ({
+                                      ...x,
+                                      evidence: {
+                                        ...x.evidence,
+                                        paragraph:
+                                          x.evidence.paragraph === i + 1
+                                            ? 0
+                                            : x.evidence.paragraph > i + 1
+                                              ? x.evidence.paragraph - 1
+                                              : x.evidence.paragraph,
+                                      },
+                                    })),
+                                  })
+                                }
+                              >
+                                移除段落
+                              </Button>
+                            </Space>
                             <Input.TextArea
-                              aria-label={`选项${String.fromCharCode(65 + i)}`}
-                              value={o}
-                              disabled={
-                                !editable || q.kind === "true_false_not_given"
-                              }
+                              value={p}
+                              autoSize={{ minRows: 3, maxRows: 12 }}
+                              disabled={!editable}
                               onChange={(e) =>
-                                update({
-                                  options: q.options.map((x, n) =>
-                                    n === i ? e.target.value : x,
+                                change({
+                                  ...content,
+                                  paragraphs: content.paragraphs.map((v, n) =>
+                                    n === i ? e.target.value : v,
                                   ),
                                 })
                               }
                             />
-                            <Button
-                              disabled={
-                                !editable ||
-                                i === 0 ||
-                                q.kind === "true_false_not_given"
-                              }
-                              onClick={() => moveOption(i, -1)}
-                            >
-                              ↑
-                            </Button>
-                            <Button
-                              disabled={
-                                !editable ||
-                                i === q.options.length - 1 ||
-                                q.kind === "true_false_not_given"
-                              }
-                              onClick={() => moveOption(i, 1)}
-                            >
-                              ↓
-                            </Button>
-                            <Button
-                              disabled={
-                                !editable || q.kind === "true_false_not_given"
-                              }
-                              onClick={() =>
-                                update({
-                                  options: q.options.filter((_, n) => n !== i),
-                                  correctIndex:
-                                    q.correctIndex === i
-                                      ? null
-                                      : q.correctIndex !== null &&
-                                          q.correctIndex > i
-                                        ? q.correctIndex - 1
-                                        : q.correctIndex,
-                                })
-                              }
-                            >
-                              删除选项
-                            </Button>
                           </div>
                         ))}
-                        <label>
-                          正确答案{" "}
+                        <Button
+                          disabled={!editable}
+                          onClick={() =>
+                            change({
+                              ...content,
+                              paragraphs: [...content.paragraphs, ""],
+                            })
+                          }
+                        >
+                          添加段落
+                        </Button>
+                        <h3>题目</h3>
+                        <Space wrap>
                           <Select
-                            aria-label="正确答案"
-                            allowClear
-                            value={q.correctIndex ?? undefined}
-                            disabled={!editable}
-                            style={{ width: 220, margin: 12 }}
-                            options={q.options.map((o, i) => ({
-                              value: i,
-                              label: `${String.fromCharCode(65 + i)}. ${o.slice(0, 30)}`,
+                            aria-label="选择题目"
+                            style={{ minWidth: 230 }}
+                            value={selected}
+                            options={content.questions.map((x, i) => ({
+                              value: x.id,
+                              label: `${i + 1}. ${x.stem.slice(0, 40)}`,
                             }))}
-                            onChange={(v) =>
-                              update({ correctIndex: v ?? null })
-                            }
+                            onChange={setSelected}
                           />
-                        </label>
-                        <Tag>
-                          {q.answerSource === "source"
-                            ? "原材料答案"
-                            : q.answerSource === "ai"
-                              ? "AI建议答案"
-                              : "老师修订答案"}
-                        </Tag>
-                        <label>
-                          解析
-                          <Input.TextArea
-                            value={q.explanation}
+                          <Button
                             disabled={!editable}
-                            onChange={(e) =>
-                              update({ explanation: e.target.value })
-                            }
-                          />
-                        </label>
-                        <label>
-                          证据段落{" "}
-                          <InputNumber
-                            min={1}
-                            max={content.paragraphs.length}
-                            value={q.evidence.paragraph}
-                            disabled={!editable}
-                            onChange={(n) =>
-                              update({
-                                evidence: { ...q.evidence, paragraph: n || 1 },
-                              })
-                            }
-                          />
-                        </label>
-                        <label>
-                          原文引用
-                          <Input.TextArea
-                            value={q.evidence.quote || ""}
-                            disabled={!editable}
-                            onChange={(e) =>
-                              update({
-                                evidence: {
-                                  ...q.evidence,
-                                  quote: e.target.value,
-                                },
-                              })
-                            }
-                          />
-                        </label>
-                        <label>
-                          NG缺失信息
-                          <Input.TextArea
-                            value={q.evidence.missingInformation || ""}
-                            disabled={!editable}
-                            onChange={(e) =>
-                              update({
-                                evidence: {
-                                  ...q.evidence,
-                                  missingInformation: e.target.value,
-                                },
-                              })
-                            }
-                          />
-                        </label>
-                        <small>
-                          来源定位：{q.sourceRef || "未提供，请对照原稿确认"}
-                        </small>
-                      </>
-                    )}
-                  </section>
-                </div>
+                            onClick={() => {
+                              const id = `q-${Date.now()}`;
+                              change({
+                                ...content,
+                                questions: [
+                                  ...content.questions,
+                                  {
+                                    id,
+                                    kind: "choice",
+                                    stem: "",
+                                    options: ["", "", "", ""],
+                                    correctIndex: null,
+                                    explanation: "",
+                                    evidence: { paragraph: 1 },
+                                  },
+                                ],
+                              });
+                              setSelected(id);
+                            }}
+                          >
+                            添加题目
+                          </Button>
+                          {q && (
+                            <Button
+                              danger
+                              disabled={!editable}
+                              onClick={() => {
+                                change({
+                                  ...content,
+                                  questions: content.questions.filter(
+                                    (x) => x.id !== q.id,
+                                  ),
+                                });
+                                setSelected(
+                                  content.questions.find((x) => x.id !== q.id)
+                                    ?.id || "",
+                                );
+                              }}
+                            >
+                              移除本题
+                            </Button>
+                          )}
+                        </Space>
+                        {q && (
+                          <>
+                            <Space style={{ margin: "12px 0" }}>
+                              <span>题型</span>
+                              <Select
+                                value={q.kind}
+                                disabled={!editable}
+                                options={[
+                                  { value: "choice", label: "单项选择" },
+                                  {
+                                    value: "true_false_not_given",
+                                    label: "True / False / Not Given",
+                                  },
+                                  { value: "unsupported", label: "不支持题型" },
+                                ]}
+                                onChange={(kind) =>
+                                  update({
+                                    kind,
+                                    ...(kind === "true_false_not_given"
+                                      ? {
+                                          options: [
+                                            "True",
+                                            "False",
+                                            "Not Given",
+                                          ],
+                                          correctIndex: null,
+                                        }
+                                      : {}),
+                                  })
+                                }
+                              />
+                              <InputNumber
+                                aria-label="题序"
+                                min={1}
+                                max={content.questions.length}
+                                value={
+                                  content.questions.findIndex(
+                                    (x) => x.id === q.id,
+                                  ) + 1
+                                }
+                                disabled={!editable}
+                                onChange={(n) => {
+                                  if (n) {
+                                    const qs = content.questions.filter(
+                                      (x) => x.id !== q.id,
+                                    );
+                                    qs.splice(n - 1, 0, q);
+                                    change({ ...content, questions: qs });
+                                  }
+                                }}
+                              />
+                            </Space>
+                            {q.originalText && (
+                              <details>
+                                <summary>原始题目内容</summary>
+                                <pre style={{ whiteSpace: "pre-wrap" }}>
+                                  {q.originalText}
+                                </pre>
+                              </details>
+                            )}
+                            <label>
+                              题干
+                              <Input.TextArea
+                                aria-label="题干"
+                                value={q.stem}
+                                disabled={!editable}
+                                onChange={(e) =>
+                                  update({ stem: e.target.value })
+                                }
+                              />
+                            </label>
+                            <label>
+                              本题要求
+                              <Input.TextArea
+                                value={q.instructions || ""}
+                                disabled={!editable}
+                                onChange={(e) =>
+                                  update({ instructions: e.target.value })
+                                }
+                              />
+                            </label>
+                            {q.kind !== "true_false_not_given" && (
+                              <Button
+                                disabled={!editable || q.options.length >= 4}
+                                onClick={() =>
+                                  update({ options: [...q.options, ""] })
+                                }
+                              >
+                                添加选项
+                              </Button>
+                            )}
+                            {q.options.map((o, i) => (
+                              <div
+                                key={i}
+                                style={{
+                                  display: "flex",
+                                  gap: 8,
+                                  marginTop: 8,
+                                }}
+                              >
+                                <span>{String.fromCharCode(65 + i)}</span>
+                                <Input.TextArea
+                                  aria-label={`选项${String.fromCharCode(65 + i)}`}
+                                  value={o}
+                                  disabled={
+                                    !editable ||
+                                    q.kind === "true_false_not_given"
+                                  }
+                                  onChange={(e) =>
+                                    update({
+                                      options: q.options.map((x, n) =>
+                                        n === i ? e.target.value : x,
+                                      ),
+                                    })
+                                  }
+                                />
+                                <Button
+                                  disabled={
+                                    !editable ||
+                                    i === 0 ||
+                                    q.kind === "true_false_not_given"
+                                  }
+                                  onClick={() => moveOption(i, -1)}
+                                >
+                                  ↑
+                                </Button>
+                                <Button
+                                  disabled={
+                                    !editable ||
+                                    i === q.options.length - 1 ||
+                                    q.kind === "true_false_not_given"
+                                  }
+                                  onClick={() => moveOption(i, 1)}
+                                >
+                                  ↓
+                                </Button>
+                                <Button
+                                  disabled={
+                                    !editable ||
+                                    q.kind === "true_false_not_given"
+                                  }
+                                  onClick={() =>
+                                    update({
+                                      options: q.options.filter(
+                                        (_, n) => n !== i,
+                                      ),
+                                      correctIndex:
+                                        q.correctIndex === i
+                                          ? null
+                                          : q.correctIndex !== null &&
+                                              q.correctIndex > i
+                                            ? q.correctIndex - 1
+                                            : q.correctIndex,
+                                    })
+                                  }
+                                >
+                                  删除选项
+                                </Button>
+                              </div>
+                            ))}
+                            <label>
+                              正确答案{" "}
+                              <Select
+                                aria-label="正确答案"
+                                allowClear
+                                value={q.correctIndex ?? undefined}
+                                disabled={!editable}
+                                style={{ width: 220, margin: 12 }}
+                                options={q.options.map((o, i) => ({
+                                  value: i,
+                                  label: `${String.fromCharCode(65 + i)}. ${o.slice(0, 30)}`,
+                                }))}
+                                onChange={(v) =>
+                                  update({ correctIndex: v ?? null })
+                                }
+                              />
+                            </label>
+                            <Tag>
+                              {q.answerSource === "source"
+                                ? "原材料答案"
+                                : q.answerSource === "ai"
+                                  ? "AI建议答案"
+                                  : "老师修订答案"}
+                            </Tag>
+                            <label>
+                              解析
+                              <Input.TextArea
+                                value={q.explanation}
+                                disabled={!editable}
+                                onChange={(e) =>
+                                  update({ explanation: e.target.value })
+                                }
+                              />
+                            </label>
+                            <label>
+                              证据段落{" "}
+                              <InputNumber
+                                min={1}
+                                max={content.paragraphs.length}
+                                value={q.evidence.paragraph}
+                                disabled={!editable}
+                                onChange={(n) =>
+                                  update({
+                                    evidence: {
+                                      ...q.evidence,
+                                      paragraph: n || 1,
+                                    },
+                                  })
+                                }
+                              />
+                            </label>
+                            <label>
+                              原文引用
+                              <Input.TextArea
+                                value={q.evidence.quote || ""}
+                                disabled={!editable}
+                                onChange={(e) =>
+                                  update({
+                                    evidence: {
+                                      ...q.evidence,
+                                      quote: e.target.value,
+                                    },
+                                  })
+                                }
+                              />
+                            </label>
+                            <label>
+                              NG缺失信息
+                              <Input.TextArea
+                                value={q.evidence.missingInformation || ""}
+                                disabled={!editable}
+                                onChange={(e) =>
+                                  update({
+                                    evidence: {
+                                      ...q.evidence,
+                                      missingInformation: e.target.value,
+                                    },
+                                  })
+                                }
+                              />
+                            </label>
+                            <small>
+                              来源定位：
+                              {q.sourceRef || "未提供，请对照原稿确认"}
+                            </small>
+                          </>
+                        )}
+                      </section>
+                    </div>
+                  )}
+                </>
               ),
             },
             {
               key: "review",
-              label: `质量审核 (${(w.issues || []).filter((i: any) => !i.resolved).length})`,
+              label: `2 核对题目${unresolvedCount ? ` · ${unresolvedCount} 项提示` : ""}`,
               children: (
                 <>
                   <p>
-                    先保存编辑，再检查当前修订。结构错误必须修正；语义误报需逐项提供理由和证据。
+                    查看每题的选项、答案和解析，确认无误后勾选。检查发现的问题会列在下方，修改后需要重新检查。
                   </p>
                   <Button
                     disabled={!editable || dirty || busy}
                     loading={busy}
                     onClick={() => void run("check", { revision })}
                   >
-                    AI检查当前修订
+                    {w.qualityRevision === revision
+                      ? "重新检查题目"
+                      : "开始检查"}
                   </Button>
                   {(w.issues || []).map((i: any) => (
                     <Card
                       key={i.id}
                       size="small"
                       style={{ marginTop: 12 }}
-                      title={`${i.questionId || "整篇"} · ${i.type === "structure" ? "结构阻断" : i.type === "source" ? "缺少关键原稿，请补齐后重新识别" : "质量问题"}`}
+                      title={`${i.questionId ? `第 ${content.questions.findIndex((q) => q.id === i.questionId) + 1} 题` : "整篇文章"} · ${i.type === "structure" ? "内容需要修改" : i.type === "source" ? "请补充原稿" : "请核实"}`}
                     >
                       <Alert
                         type={i.resolved ? "success" : "warning"}
@@ -849,57 +883,202 @@ export function ReadingPracticeWorkbench({
                       )}
                     </Card>
                   ))}
-                  <h3>逐题确认</h3>
+                  <h3>
+                    逐题核对{" "}
+                    <span className="reading-workbench-count">
+                      {checked.length} / {content.questions.length} 已确认
+                    </span>
+                  </h3>
                   {content.questions.map((x, i) => (
-                    <p key={x.id}>
-                      <Checkbox
-                        disabled={!editable || dirty}
-                        checked={checked.includes(x.id)}
-                        onChange={(e) =>
-                          setChecked(
-                            e.target.checked
-                              ? [...checked, x.id]
-                              : checked.filter((id) => id !== x.id),
-                          )
-                        }
-                      >
-                        {i + 1}. {x.stem} — 已核对唯一答案、原文依据与解析
-                      </Checkbox>
-                    </p>
+                    <Card
+                      key={x.id}
+                      className="reading-workbench-question"
+                      title={`第 ${i + 1} 题`}
+                      extra={
+                        <Space>
+                          {editable && (
+                            <Button
+                              size="small"
+                              disabled={busy}
+                              onClick={() => editQuestion(x.id)}
+                            >
+                              修改本题
+                            </Button>
+                          )}
+                          <Button
+                            size="small"
+                            disabled={dirty || busy}
+                            onClick={() => {
+                              setSelected(x.id);
+                              setActiveTab("chat");
+                            }}
+                          >
+                            问 AI
+                          </Button>
+                        </Space>
+                      }
+                    >
+                      <ReadingQuestionReadout question={x} />
+                      {editable && (
+                        <div className="reading-workbench-confirm">
+                          <Checkbox
+                            disabled={
+                              dirty || busy || w.qualityRevision !== revision
+                            }
+                            checked={checked.includes(x.id)}
+                            onChange={(e) =>
+                              setChecked(
+                                e.target.checked
+                                  ? [...checked, x.id]
+                                  : checked.filter((id) => id !== x.id),
+                              )
+                            }
+                          >
+                            我已核对这道题的答案和解析
+                          </Checkbox>
+                        </div>
+                      )}
+                    </Card>
                   ))}
-                  <Button
-                    type="primary"
-                    disabled={
-                      !editable ||
-                      dirty ||
-                      busy ||
-                      checked.length !== content.questions.length ||
-                      w.qualityRevision !== revision
-                    }
-                    onClick={() =>
-                      void run("review", {
-                        revision,
-                        questionIds: checked,
-                        resolutions: Object.entries(resolutions)
-                          .filter(([, r]) => r.reason && r.evidence)
-                          .map(([issueId, r]) => ({ issueId, ...r })),
-                      })
-                    }
-                  >
-                    保存逐题审核确认
-                  </Button>
-                  {editable && w.reviewedRevision === revision && (
-                    <Alert
-                      type="success"
-                      message="当前修订审核通过，可以发布。"
-                    />
-                  )}
                 </>
               ),
             },
             {
+              key: "materials",
+              label: "原稿与历史",
+              children: (
+                <div className="reading-workbench-materials">
+                  {" "}
+                  <section>
+                    <h3>原始材料</h3>
+                    {w.importInput?.text && (
+                      <pre
+                        style={{
+                          whiteSpace: "pre-wrap",
+                          maxHeight: 400,
+                          overflow: "auto",
+                        }}
+                      >
+                        {w.importInput.text}
+                      </pre>
+                    )}
+                    {w.importInput?.answerText && (
+                      <details>
+                        <summary>原始答案与解析</summary>
+                        <pre style={{ whiteSpace: "pre-wrap" }}>
+                          {w.importInput.answerText}
+                        </pre>
+                      </details>
+                    )}
+                    <SourceFiles
+                      value={sources}
+                      onChange={setSources}
+                      disabled={!editable || busy || dirty}
+                    />
+                    {editable && (
+                      <Button
+                        disabled={
+                          busy ||
+                          dirty ||
+                          JSON.stringify(sources) ===
+                            JSON.stringify(w.sources || [])
+                        }
+                        onClick={() =>
+                          void run("sources", {
+                            revision,
+                            sourceIds: sources.map((s) => s.id),
+                          })
+                        }
+                      >
+                        保存原稿
+                      </Button>
+                    )}
+                    {editable && (
+                      <Button
+                        disabled={dirty || busy || !sources.length}
+                        onClick={() =>
+                          void run("recognize-sources", { revision })
+                        }
+                      >
+                        重新识别原稿
+                      </Button>
+                    )}
+                    {w.sourceCandidate && (
+                      <details>
+                        <summary>查看重新识别的结果（确认后才替换）</summary>
+                        <div
+                          style={{
+                            display: "grid",
+                            gridTemplateColumns: "1fr 1fr",
+                            gap: 16,
+                          }}
+                        >
+                          <pre style={{ whiteSpace: "pre-wrap" }}>
+                            {JSON.stringify(content, null, 2)}
+                          </pre>
+                          <pre style={{ whiteSpace: "pre-wrap" }}>
+                            {JSON.stringify(w.sourceCandidate.content, null, 2)}
+                          </pre>
+                        </div>
+                        <Button
+                          disabled={
+                            dirty ||
+                            busy ||
+                            w.sourceCandidate.revision !== revision
+                          }
+                          onClick={() =>
+                            void run("accept-source", {
+                              revision,
+                              candidateId: w.sourceCandidate.id,
+                            })
+                          }
+                        >
+                          采用识别结果并重新核对
+                        </Button>
+                      </details>
+                    )}
+                    {sources[0] && (
+                      <iframe
+                        title="原稿对照"
+                        src={sourceUrl(sources[0])}
+                        style={{
+                          width: "100%",
+                          height: 600,
+                          border: "1px solid #ddd",
+                          marginTop: 16,
+                        }}
+                      />
+                    )}
+                    <details>
+                      <summary>修订历史（保留旧原稿与内容）</summary>
+                      {(w.history || []).map((h: any, i: number) => (
+                        <details key={h.id || i}>
+                          <summary>
+                            {h.at} · {h.kind} · {h.actor}
+                          </summary>
+                          <pre style={{ whiteSpace: "pre-wrap" }}>
+                            {JSON.stringify(h.before, null, 2)}
+                          </pre>
+                          {h.before?.sources?.map((s: Source) => (
+                            <a
+                              key={s.id}
+                              href={sourceUrl(s)}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              {s.name}{" "}
+                            </a>
+                          ))}
+                        </details>
+                      ))}
+                    </details>
+                  </section>
+                </div>
+              ),
+            },
+            {
               key: "chat",
-              label: "单题AI对话",
+              label: "AI 帮助",
               children: (
                 <>
                   <Select
@@ -1157,7 +1336,14 @@ export function ReadingPracticeWorkbench({
                   {paper &&
                     ["published", "withdrawn"].includes(paper.status) && (
                       <>
-                        {paper.status === "published" && <Button disabled={busy} onClick={() => setRecipientsOpen(true)}>追加接收人</Button>}
+                        {paper.status === "published" && (
+                          <Button
+                            disabled={busy}
+                            onClick={() => setRecipientsOpen(true)}
+                          >
+                            追加接收人
+                          </Button>
+                        )}
                         <h3>老师主动纠错 / 重评全部作答</h3>
                         <Select
                           style={{ width: "100%" }}
@@ -1286,7 +1472,11 @@ export function ReadingPracticeWorkbench({
                 </>
               ),
             },
-          ]}
+          ].filter(
+            (item) =>
+              item.key !== "feedback" ||
+              ["published", "withdrawn"].includes(paper?.status || ""),
+          )}
         />
       )}
       <Modal
@@ -1321,7 +1511,14 @@ export function ReadingPracticeWorkbench({
           </>
         )}
       </Modal>
-      {paper && recipientsOpen && <ReadingPracticeRecipients key={paper.id} paper={paper} onClose={() => setRecipientsOpen(false)} onAssigned={onChange} />}
+      {paper && recipientsOpen && (
+        <ReadingPracticeRecipients
+          key={paper.id}
+          paper={paper}
+          onClose={() => setRecipientsOpen(false)}
+          onAssigned={onChange}
+        />
+      )}
     </Drawer>
   );
 }
