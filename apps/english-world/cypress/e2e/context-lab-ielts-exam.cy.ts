@@ -14,7 +14,7 @@ describe("Context Lab IELTS exam", () => {
       headers: { "content-type": "text/event-stream" },
       body: "",
     });
-    cy.intercept("GET", "**/context-lab/events", {
+    cy.intercept("GET", "**/context-lab/task-events", {
       statusCode: 200,
       headers: { "content-type": "text/event-stream" },
       body: "",
@@ -33,7 +33,7 @@ describe("Context Lab IELTS exam", () => {
             articleExerciseId: 37,
             status: "succeeded",
             sourceType: "custom",
-            words: ["urban", "gardens"],
+            words: ["inside out", "opinion", "Is the alcohol content high or low?", "allergy", "routine"],
             article:
               "Urban gardens and the future of our cities\n\n" +
               Array.from(
@@ -84,6 +84,36 @@ describe("Context Lab IELTS exam", () => {
     }).as("submit");
     cy.visit("/englishWorld/context-lab");
     cy.wait("@history");
+    for (const width of [1920, 1440, 1280, 900, 390]) {
+      cy.viewport(width, 900);
+      cy.get('.context-lab-history-actions').first().should($actions => {
+        const actions = $actions[0];
+        const buttons = Array.from(actions.querySelectorAll('button'));
+        const practice = buttons.find(button => button.textContent?.includes('开始练习'))!;
+        const exam = buttons.find(button => button.textContent?.includes('雅思机考'))!;
+        const practiceRect = practice.getBoundingClientRect();
+        const examRect = exam.getBoundingClientRect();
+        expect(getComputedStyle(exam).fontSize, 'matching action typography').to.equal(getComputedStyle(practice).fontSize);
+        expect(examRect.height, 'matching action height').to.equal(practiceRect.height);
+        expect(examRect.left - practiceRect.right, 'space between actions').to.be.at.least(7);
+        for (const button of buttons) {
+          const rect = button.getBoundingClientRect();
+          const card = actions.closest('.context-lab-history-item')!.getBoundingClientRect();
+          expect(rect.right, 'button inside card').to.be.at.most(card.right);
+          expect(rect.bottom, 'button inside card').to.be.at.most(card.bottom);
+          expect(button.scrollWidth, 'button content fits').to.be.at.most(button.clientWidth);
+          const label = button.querySelector('span:last-child');
+          if (label) {
+            const labelRect = label.getBoundingClientRect();
+            expect(labelRect.left - rect.left, 'left label padding').to.be.at.least(6);
+            expect(rect.right - labelRect.right, 'right label padding').to.be.at.least(6);
+          }
+        }
+      });
+    }
+    cy.viewport(1280, 720);
+    cy.screenshot('ielts-practice-card-actions', { capture: 'viewport', scale: true });
+    cy.viewport(1440, 900);
     cy.contains("button", "雅思机考").click();
     cy.contains("button", "开始考试").click();
     cy.get(".ielts-exam-question")

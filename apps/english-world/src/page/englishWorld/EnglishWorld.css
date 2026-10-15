@@ -6053,17 +6053,21 @@ html[data-theme="dark"] .overwrite-stats-table .ant-table-thead > tr > th {
 
 .context-lab-history-actions {
   display: flex;
-  min-width: 0;
+  min-width: max-content;
   align-items: center;
-  gap: 3px;
+  gap: 8px;
 }
 
-.context-lab-history-actions .ant-btn {
+/* Override the older full-width secondary-button rule for the action row. */
+.context-lab-history-actions .ant-btn,
+.context-lab-history-actions .ant-btn:not(.ant-btn-primary) {
+  flex: 0 0 auto;
   width: auto;
   min-width: 30px;
   height: 30px;
-  padding-inline: 7px;
+  padding-inline: 10px;
   border-radius: 6px;
+  font-size: 12px;
   box-shadow: none;
 }
 
@@ -6269,6 +6273,17 @@ html[data-theme="dark"] .overwrite-stats-table .ant-table-thead > tr > th {
 }
 
 @media (max-width: 620px) {
+  .context-lab-history-item {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .context-lab-history-actions {
+    min-width: 0;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
   .context-lab-utility-header {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
