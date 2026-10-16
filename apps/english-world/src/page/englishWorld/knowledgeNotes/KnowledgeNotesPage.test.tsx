@@ -52,6 +52,7 @@ function setup(path = "/englishWorld/knowledge-notes") {
 }
 beforeEach(() => {
   requestMock.mockImplementation(async ({ url, method }) => {
+    if (url.endsWith("/folders")) return { list: [], total: 1, unfiled: 1 };
     if (url.endsWith("/words")) return [];
     if (method === "GET" && url.endsWith("/7")) return note;
     if (method === "GET")
@@ -83,9 +84,12 @@ describe("Knowledge notes", () => {
     expect(call.data.requestId).toMatch(/^[a-f0-9-]{36}$/i);
   });
   it("retains input and request identity after a failed save", async () => {
-    requestMock
-      .mockRejectedValueOnce(new Error("网络中断"))
-      .mockResolvedValue(note);
+    let attempts = 0;
+    requestMock.mockImplementation(async ({url, method}) => {
+      if (url.endsWith('/folders')) return {list:[],total:0,unfiled:0};
+      if (method === 'POST' && attempts++ === 0) throw new Error('网络中断');
+      return note;
+    });
     setup("/englishWorld/knowledge-notes/new");
     fireEvent.change(await screen.findByLabelText("标题"), {
       target: { value: "我的笔记" },

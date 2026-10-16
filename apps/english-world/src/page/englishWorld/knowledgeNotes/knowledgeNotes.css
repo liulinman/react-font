@@ -432,3 +432,36 @@ html[data-theme="dark"] .knowledge-notes .knowledge-primary {
     padding-inline: var(--mobile-page-gutter-compact);
   }
 }
+
+/* Desktop folder workspace. Existing mobile note layout remains intact. */
+.knowledge-folder-layout { display: grid; grid-template-columns: 224px minmax(0,1fr); gap: 28px; }
+.knowledge-folder-content { min-width: 0; }
+.note-folders { align-self: start; position: sticky; top: 20px; max-height: calc(100vh - 130px); overflow: auto; padding-right: 18px; border-right: 1px solid #e4e7eb; font-size: 14px; }
+.note-folders-heading { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.note-folders button { border: 0; background: transparent; color: #536174; border-radius: 6px; padding: 8px; cursor: pointer; font: inherit; }
+.note-folders button:hover { background: #f0f4fa; }
+.note-folder-view { display: flex; justify-content: space-between; width: 100%; text-align: left; margin: 4px 0; }
+.note-folder-tree { margin: 16px 0; }
+.note-folder-row { display: flex; align-items: center; min-height: 38px; border-radius: 6px; }
+.note-folder-row .note-folder-toggle { width: 20px; padding: 4px; flex-shrink: 0; }
+.note-folder-row .note-folder-link { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0; padding-inline: 2px; text-align: left; }
+.note-folder-link span:not(.anticon) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.note-folder-link small { margin-left: auto; }
+.note-folders .is-current { background: #eaf2ff; color: #2563eb; }
+.note-folders .is-current > button { color: #2563eb; }
+.note-folder-more { flex-shrink: 0; }
+.note-folders .note-move-selected { background: #2563eb; color: white; width: 100%; margin-top: 18px; }
+.note-folders .note-move-selected:hover { background: #1d4ed8; }
+.note-folder-form { display: grid; gap: 16px; padding-top: 10px; }
+.note-folder-form label { display: grid; gap: 8px; }
+.note-folder-form :is(input,select), .knowledge-folder-field select { width: 100%; border: 1px solid #d5dce5; border-radius: 7px; padding: 9px 12px; background: white; font: inherit; }
+.note-folder-form .note-folder-danger { color: #c53d42; border: 0; background: transparent; text-align: left; cursor: pointer; padding: 0; }
+.knowledge-folder-location { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 0 0 18px; overflow-wrap: anywhere; }
+.knowledge-folder-location span, .knowledge-selection span { color: #718096; font-size: 12px; }
+.knowledge-selection { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; margin: 16px 0 8px; font-size: 13px; }
+.knowledge-selection label { display: flex; align-items: center; gap: 8px; }
+.knowledge-selectable-row { display: flex; align-items: flex-start; gap: 12px; }
+.knowledge-selectable-row > input { margin-top: 27px; flex-shrink: 0; }
+.knowledge-selectable-row > a { flex: 1; min-width: 0; }
+.knowledge-folder-field { margin-bottom: 16px; }
+@media (max-width: 1100px) { .knowledge-folder-layout { grid-template-columns: 185px minmax(0,1fr); gap: 18px; } }

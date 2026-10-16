@@ -1,5 +1,5 @@
 import { useNoteListScroll } from "./useNoteListScroll";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Link,
   useLocation,
@@ -17,6 +17,7 @@ import {
   type NoteFilters,
 } from "./api";
 import "./knowledgeNotes.css";
+import { NoteFolders, folderPath, useFolders } from "./NoteFolders";
 export const DESKTOP_NOTES_PATH = "/englishWorld/knowledge-notes";
 export const MOBILE_NOTES_PATH = "/mobile/tools/knowledge-notes";
 function ErrorState({
@@ -44,6 +45,9 @@ function NoteList({
 }) {
   const { user } = useAuth();
   const [, setParams] = useSearchParams();
+  const desktop = base === DESKTOP_NOTES_PATH;
+  const folders = useFolders(desktop);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [q, setQ] = useState(filters.q ?? "");
   const [category, setCategory] = useState(filters.category ?? "");
   const query = useQuery({
@@ -60,17 +64,25 @@ function NoteList({
       if (value) params.set(key, String(value));
     setParams(params);
   };
+  useEffect(() => {
+    if (query.data && (filters.page ?? 1) > Math.max(1, Math.ceil(query.data.total / 20))) update({ ...filters, page: Math.max(1, Math.ceil(query.data.total / 20)) });
+  }, [query.data, filters.page]);
+  const selected = (query.data?.list ?? []).filter(n => selectedIds.includes(n.id));
+  const currentFolder = typeof filters.folderId === "number" ? folderPath(folders.data?.list ?? [], filters.folderId) : filters.folderId === "unfiled" ? "未归档" : "全部笔记";
   return (
-    <div ref={root}>
+    <div ref={root} className={desktop ? "knowledge-folder-layout" : undefined}>
+      {desktop && <NoteFolders current={filters.folderId} onChoose={folderId => update({ ...filters, folderId, page: 1 })} selected={selected} onMoved={() => setSelectedIds([])} />}
+      <div className="knowledge-folder-content">
       <header className="knowledge-toolbar">
         <div>
           <h1>知识笔记</h1>
-          <p>记录语法、句型、易错点和阅读方法</p>
+          <p>{desktop ? "用文件夹整理句子、词语辨析和课程笔记" : "记录语法、句型、易错点和阅读方法"}</p>
         </div>
         <Link className="knowledge-primary" to={`${base}/new${listSearch}`}>
           ＋ 新建笔记
         </Link>
       </header>
+      {desktop && <div className="knowledge-folder-location"><strong>{currentFolder || (folders.isPending ? "正在加载目录…" : folders.isError ? "目录暂不可用" : "文件夹已失效")}</strong>{typeof filters.folderId === "number" && <span>包含子文件夹</span>}</div>}
       <form
         className="knowledge-search"
         onSubmit={(e) => {
@@ -80,7 +92,7 @@ function NoteList({
       >
         <input
           aria-label="搜索知识笔记"
-          placeholder="搜索标题、正文、例句、来源"
+          placeholder={filters.folderId ? "在当前目录搜索标题、正文、例句、来源" : "搜索全部笔记：标题、正文、例句、来源"}
           value={q}
           maxLength={200}
           onChange={(e) => setQ(e.target.value)}
@@ -110,7 +122,7 @@ function NoteList({
       {query.isPending ? (
         <p role="status">正在加载笔记…</p>
       ) : query.isError ? (
-        <ErrorState message={noteError(query.error)} retry={query.refetch} />
+        <><ErrorState message={noteError(query.error)} retry={query.refetch} />{filters.folderId && <button onClick={() => update({ page: 1 })}>返回全部笔记</button>}</>
       ) : (
         <>
           {!query.data.list.length ? (
@@ -126,19 +138,22 @@ function NoteList({
                   onClick={() => {
                     setQ("");
                     setCategory("");
-                    update({ page: 1 });
+                    update({ folderId: filters.folderId, page: 1 });
                   }}
                 >
                   清空筛选
                 </button>
               ) : (
-                <Link to={`${base}/new`}>创建第一篇知识笔记</Link>
+                <Link to={`${base}/new${listSearch}`}>创建第一篇知识笔记</Link>
               )}
             </div>
           ) : (
+            <>
+            {desktop && <div className="knowledge-selection"><label><input type="checkbox" aria-label="本页全选" checked={!!query.data.list.length && selectedIds.length === query.data.list.length} onChange={e => setSelectedIds(e.target.checked ? query.data.list.map(n => n.id) : [])} />本页全选</label><span>{selectedIds.length ? `已选 ${selectedIds.length} 条 · 在左侧选择“移动已选”` : "勾选笔记，可批量移动到文件夹"}</span></div>}
             <ul className="knowledge-list">
               {query.data.list.map((note) => (
-                <li key={note.id}>
+                <li key={note.id} className={desktop ? "knowledge-selectable-row" : undefined}>
+                  {desktop && <input type="checkbox" aria-label={`选择笔记 ${note.title}`} checked={selectedIds.includes(note.id)} onChange={e => setSelectedIds(old => e.target.checked ? [...old, note.id] : old.filter(id => id !== note.id))} />}
                   <Link
                     onClick={remember}
                     to={`${base}/${note.id}${listSearch}`}
@@ -151,7 +166,7 @@ function NoteList({
                     </div>
                     <p className="knowledge-summary">{note.body}</p>
                     <div className="knowledge-meta">
-                      <span>{note.source || "未填写来源"}</span>
+                      <span>{desktop ? note.folderId ? folderPath(folders.data?.list ?? [], note.folderId) : "未归档" : note.source || "未填写来源"}</span>
                       <time>
                         {new Date(note.updatedAt).toLocaleDateString()}
                       </time>
@@ -159,7 +174,7 @@ function NoteList({
                   </Link>
                 </li>
               ))}
-            </ul>
+            </ul></>
           )}
           <div className="knowledge-pagination">
             <span>
@@ -184,6 +199,7 @@ function NoteList({
           </div>
         </>
       )}
+      </div>
     </div>
   );
 }
@@ -320,7 +336,9 @@ export function KnowledgeNotesPage() {
   const copyWord = Number(params.get("copyWord"));
   const page = Number(params.get("page") ?? 1);
   const wordId = Number(params.get("wordId"));
+  const folderParam = params.get("folderId");
   const filters: NoteFilters = {
+    folderId: folderParam === "unfiled" ? "unfiled" : folderParam && /^[1-9]\d*$/.test(folderParam) && Number.isSafeInteger(Number(folderParam)) ? Number(folderParam) : undefined,
     q: params.get("q") || undefined,
     category: params.get("category") || undefined,
     page: Number.isSafeInteger(page) && page > 0 ? page : 1,

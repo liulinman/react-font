@@ -13,7 +13,8 @@ describe('Knowledge notes and long word notes', () => {
       else if(path.endsWith('/notifications/unread-count')) data={count:0};
       else if(path.includes('/knowledge-notes')) {
         const suffix=path.split('/knowledge-notes')[1];const id=Number(suffix.slice(1));
-        if(suffix==='/copy-source/9') data=word;
+        if(suffix==='/folders') data={list:[],total:notes.length,unfiled:notes.length};
+        else if(suffix==='/copy-source/9') data=word;
         else if(suffix==='/words') data=[word];
         else if(req.method==='POST') {
           const existing=notes.find(n=>n.requestId===req.body.requestId);

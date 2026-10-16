@@ -14,6 +14,7 @@ import {
   type NoteFields,
   type NoteWord,
 } from "./api";
+import { FolderSelect, useFolders } from "./NoteFolders";
 const template = "知识点：\n\n我的原理解：\n\n正确理解：\n\n容易混淆的地方：\n";
 export function KnowledgeNoteEditor({
   note,
@@ -29,7 +30,11 @@ export function KnowledgeNoteEditor({
   const { user } = useAuth();
   const navigate = useNavigate();
   const client = useQueryClient();
+  const desktop = !base.startsWith("/mobile");
+  const folders = useFolders(desktop);
+  const folderParam = new URLSearchParams(listSearch).get("folderId");
   const [initial] = useState<NoteFields>(() => ({
+    folderId: note ? note.folderId ?? null : folderParam && /^[1-9]\d*$/.test(folderParam) ? Number(folderParam) : null,
     title: note?.title ?? "",
     body: note?.body ?? copy?.englishNote ?? "",
     category: note?.category ?? "其他",
@@ -179,6 +184,7 @@ export function KnowledgeNoteEditor({
             placeholder="例如：find it + 形容词 + to do"
           />
           {validation.title && <p role="alert">{validation.title}</p>}
+          {desktop && <div className="knowledge-folder-field"><label>所属文件夹</label>{folders.isError ? <p role="alert">文件夹加载失败 <button type="button" onClick={() => void folders.refetch()}>重试</button></p> : <FolderSelect folders={folders.data?.list ?? []} value={values.folderId ?? null} onChange={id => field("folderId", id)} disabled={!folders.data} />}</div>}
           <label htmlFor="knowledge-category">分类</label>
           <select
             id="knowledge-category"

@@ -7,8 +7,11 @@ export const NOTE_CATEGORIES = [
   "易错点",
   "其他",
 ] as const;
+export type NoteFolder = { id: number; name: string; parentId: number | null; noteCount: number };
+export type FolderList = { list: NoteFolder[]; total: number; unfiled: number };
 export type NoteWord = { id: number; englishWord: string };
 export type NoteFields = {
+  folderId?: number | null;
   title: string;
   body: string;
   category: string;
@@ -30,12 +33,17 @@ export type NotePage = {
   pageSize: number;
 };
 export type NoteFilters = {
+  folderId?: number | "unfiled";
   q?: string;
   category?: string;
   page?: number;
   wordId?: number;
 };
 export const notesApi = {
+  folders: () => request<FolderList>({ url: '/knowledge-notes/folders', method: 'GET' }),
+  saveFolder: (id: number | null, data: { name: string; parentId: number | null }) => request<NoteFolder>({ url: id === null ? '/knowledge-notes/folders' : `/knowledge-notes/folders/${id}`, method: id === null ? 'POST' : 'PUT', data, config: { suppressErrorMessage: true } }),
+  removeFolder: (id: number) => request({ url: `/knowledge-notes/folders/${id}`, method: 'DELETE', config: { suppressErrorMessage: true } }),
+  move: (notes: { id: number; version: number }[], folderId: number | null) => request({ url: '/knowledge-notes/move', method: 'POST', data: { notes, folderId }, config: { suppressErrorMessage: true } }),
   list: (data: NoteFilters) =>
     request<NotePage>({ url: "/knowledge-notes", method: "GET", data }),
   get: (id: number) =>
