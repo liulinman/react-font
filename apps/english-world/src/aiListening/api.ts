@@ -7,12 +7,20 @@ export const requestUid = () => {
   const h = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
   return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
 };
+async function transport(url: string, options: RequestInit) {
+  try {
+    return await fetch(url, options);
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") throw error;
+    throw new Error("网络连接中断，暂时无法连接服务。请检查网络后重试。");
+  }
+}
 export async function listeningFetch<T>(
   path: string,
   body?: unknown,
   signal?: AbortSignal,
 ): Promise<T> {
-  const response = await fetch(`${apiBase}${path}`, {
+  const response = await transport(`${apiBase}${path}`, {
     method: body === undefined ? "GET" : "POST",
     credentials: "include",
     headers:
@@ -37,7 +45,7 @@ export async function audioFetch(
   body?: unknown,
   signal?: AbortSignal,
 ) {
-  const response = await fetch(`${apiBase}${path}`, {
+  const response = await transport(`${apiBase}${path}`, {
     method: body === undefined ? "GET" : "POST",
     credentials: "include",
     headers:

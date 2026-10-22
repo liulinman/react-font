@@ -237,23 +237,53 @@ export default function AiListeningPage() {
   return (
     <div className="ai-listening">
       <header>
-        <span>看词 → 场景听力 → 反馈</span>
+        <span className="ai-listening-eyebrow">LISTEN & LEARN</span>
         <h1>场景听力</h1>
-        <p>
-          先看词复习，再听完整句子，填写空缺。发音可能使用词条例句帮助区分读音。
-        </p>
+        <p>把熟悉的单词，放进真实的对话里。</p>
         <Link to={`${base}/words`}>返回词库</Link>
       </header>
+      <ol className="ai-listening-steps" aria-label="学习步骤">
+        {["选择单词", "看词复习", "听力填空", "学习反馈"].map(
+          (label, index) => {
+            const current = !session
+              ? 0
+              : session.status === "review" || session.status === "failed"
+                ? 1
+                : session.status === "completed"
+                  ? 3
+                  : 2;
+            return (
+              <li
+                key={label}
+                className={
+                  index === current ? "current" : index < current ? "done" : ""
+                }
+              >
+                <span>{index < current ? "✓" : index + 1}</span>
+                {label}
+              </li>
+            );
+          },
+        )}
+      </ol>
       {error && (
         <div role="alert" className="ai-listening-error">
-          {error}
+          <strong>暂时未能完成</strong>
+          <p>{error}</p>
+          <span>当前内容已保留，请检查连接后重试刚才的操作。</span>
         </div>
       )}
       {busy && <p role="status">正在准备，请稍候…</p>}
       {preparingAudio && <p role="status">正在准备音频，请稍候…</p>}
       {!session ? (
-        <section>
-          <h2>选择已有单词（1～10 个）</h2>
+        <section className="ai-selection-panel">
+          <div className="ai-section-heading">
+            <div>
+              <h2>选择已有单词（1～10 个）</h2>
+              <p>从词库选一组今天想练的词，建议每次 4～6 个。</p>
+            </div>
+            <span className="ai-count-badge">已选 {selected.length} / 10</span>
+          </div>
           <input
             aria-label="搜索单词"
             placeholder="搜索单词"
@@ -263,13 +293,28 @@ export default function AiListeningPage() {
               setPage(1);
             }}
           />
-          <p>已选 {selected.length} 个</p>
-          <div className="ai-listening-words">
+          <div className="ai-selection-meta">
+            <span>共 {total} 个单词</span>
+            <span>已选 {selected.length} 个</span>
+            {selected.length > 0 && (
+              <button
+                className="ai-text-button"
+                onClick={() => setSelected([])}
+              >
+                清空选择
+              </button>
+            )}
+          </div>
+          <div className="ai-listening-words ai-word-options">
             {words.map((w) => (
-              <label key={w.id}>
+              <label
+                key={w.id}
+                className={selected.includes(w.id) ? "selected" : ""}
+              >
                 <input
                   type="checkbox"
                   checked={selected.includes(w.id)}
+                  disabled={!selected.includes(w.id) && selected.length >= 10}
                   onChange={(e) =>
                     setSelected((v) =>
                       e.target.checked
@@ -284,7 +329,7 @@ export default function AiListeningPage() {
             ))}
           </div>
           {!words.length && <p>没有匹配单词，请先添加到词库。</p>}
-          <div className="ai-listening-actions">
+          <div className="ai-listening-actions ai-selection-footer">
             <button disabled={page === 1} onClick={() => setPage((p) => p - 1)}>
               上一页
             </button>
@@ -296,6 +341,7 @@ export default function AiListeningPage() {
               下一页
             </button>
             <button
+              className="ai-primary-button"
               disabled={busy || selected.length < 1 || selected.length > 10}
               onClick={() => void run(() => create(selected))}
             >
@@ -305,7 +351,7 @@ export default function AiListeningPage() {
         </section>
       ) : (
         <section>
-          <div className="ai-listening-actions">
+          <div className="ai-listening-actions ai-section-heading">
             <h2>
               {session.status === "review"
                 ? "看词复习"
@@ -334,16 +380,32 @@ export default function AiListeningPage() {
           {(session.status === "review" ||
             (session.status === "failed" && session.words.length > 0)) && (
             <>
-              <div className="ai-listening-words">
+              <p className="ai-review-intro">
+                先熟悉词义与读音，准备好后进入听力。
+                <span>
+                  {
+                    session.words.filter(
+                      (w) => w.validation?.status === "valid",
+                    ).length
+                  }{" "}
+                  / {session.words.length} 个可用于练习
+                </span>
+              </p>
+              <div className="ai-listening-words ai-review-words">
                 {session.words.map((w) => (
-                  <article key={w.id}>
+                  <article key={w.id} className="ai-review-word">
                     <h3>
                       {w.word} <small>{w.phonetic}</small>
                     </h3>
-                    <p>
-                      {w.partSpeech} {w.meaning}
+                    <p className="ai-word-meaning">
+                      <span>
+                        {w.partSpeech !== "未分类" ? w.partSpeech : ""}
+                      </span>{" "}
+                      {w.meaning}
                     </p>
-                    <p>{w.example}</p>
+                    {w.example && (
+                      <p className="ai-word-example">{w.example}</p>
+                    )}
                     <button
                       onClick={() => {
                         const version = epoch.current;
@@ -385,20 +447,40 @@ export default function AiListeningPage() {
                     >
                       {wordAudioFailed[w.id] ? "重试发音" : "播放发音"}
                     </button>
-                    <p>
-                      {w.validation?.status === "valid" ? "校验通过" : "待确认"}
-                      ：{w.validation?.reason || "尚未校验，请重新校验后再出题"}
-                    </p>
-                    {w.validation?.suggestion && (
-                      <p>建议：{w.validation?.suggestion}</p>
-                    )}
-                    {w.validation?.status !== "valid" && (
-                      <Link to={`${base}/words`}>前往词库修改，再重新校验</Link>
-                    )}
+                    <details
+                      className={`ai-validation ${w.validation?.status === "valid" ? "valid" : "uncertain"}`}
+                    >
+                      <summary>
+                        {w.validation?.status === "valid"
+                          ? "✓ 词条校验通过"
+                          : "! 词条需要确认"}
+                        <span>查看详情</span>
+                      </summary>
+                      <p>
+                        {w.validation?.status === "valid"
+                          ? "校验通过"
+                          : "待确认"}
+                        ：
+                        {w.validation?.reason || "尚未校验，请重新校验后再出题"}
+                      </p>
+                      {w.validation?.suggestion && (
+                        <p>建议：{w.validation?.suggestion}</p>
+                      )}
+                      {w.validation?.status !== "valid" && (
+                        <Link to={`${base}/words`}>
+                          前往词库修改，再重新校验
+                        </Link>
+                      )}
+                    </details>
                   </article>
                 ))}
               </div>
-              <div className="ai-listening-actions">
+              <div className="ai-listening-actions ai-review-footer">
+                <span>
+                  {session.words.some((w) => w.validation?.status === "valid")
+                    ? "准备好了吗？听听这些词在场景中怎么用。"
+                    : "本组词条尚未通过校验，请展开详情或重新校验。"}
+                </span>
                 <button
                   disabled={busy}
                   onClick={() => void run(() => action("recheck"))}
@@ -406,6 +488,7 @@ export default function AiListeningPage() {
                   重新校验
                 </button>
                 <button
+                  className="ai-primary-button"
                   disabled={
                     busy ||
                     session.status !== "review" ||
@@ -435,7 +518,11 @@ export default function AiListeningPage() {
               <p>{q.scene}</p>
               <p className="ai-listening-gap">{q.gap}</p>
               <div className="ai-listening-actions">
-                <button disabled={busy} onClick={() => void play(q.id)}>
+                <button
+                  className="ai-primary-button ai-play-button"
+                  disabled={busy}
+                  onClick={() => void play(q.id)}
+                >
                   播放完整句子
                 </button>
                 <button disabled={busy} onClick={() => void play(q.id, true)}>
@@ -465,6 +552,7 @@ export default function AiListeningPage() {
                   </label>
                   <div className="ai-listening-actions">
                     <button
+                      className="ai-primary-button"
                       disabled={busy || !q.played || !answers[q.id]?.trim()}
                       onClick={() =>
                         void run(async () => {
@@ -561,8 +649,13 @@ export default function AiListeningPage() {
           ))}
         </section>
       )}
-      <section>
+      <section className="ai-history-panel">
         <h2>学习记录与复查</h2>
+        {history.sessions.length === 0 && (
+          <p className="ai-empty-history">
+            完成一次练习后，会在这里留下学习记录。
+          </p>
+        )}
         <button disabled={busy} onClick={() => void run(loadHistory)}>
           刷新记录
         </button>

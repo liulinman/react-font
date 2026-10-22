@@ -30,3 +30,12 @@ it("does not mistake JSON errors or empty payloads for playable sound", async ()
   );
   await expect(audioFetch("/audio")).rejects.toThrow("音频无效");
 });
+it("explains transport failure without discarding the caller state", async () => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockRejectedValue(new TypeError("Failed to fetch")),
+  );
+  await expect(listeningFetch("/ai-learning/history")).rejects.toThrow(
+    "网络连接中断",
+  );
+});
