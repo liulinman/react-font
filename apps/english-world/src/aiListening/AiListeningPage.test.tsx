@@ -261,3 +261,47 @@ it("hides Chinese context until requested and offers an icon play control", asyn
   await userEvent.click(screen.getByRole("button", { name: "隐藏中文提示" }));
   expect(screen.queryByText("水壶里有很多水垢")).toBeNull();
 });
+it("treats quota failure as unavailable validation, including legacy sessions, without suggesting word edits", async () => {
+  const reason = "今日AI用量已达上限，请明天再试";
+  vi.mocked(listeningFetch).mockImplementation(async (path) =>
+    path.endsWith("/history")
+      ? { sessions: [], reviewWordIds: [] }
+      : path.includes("filterWordList")
+        ? { list: [], total: 0 }
+        : {
+            id: "quota",
+            status: "review",
+            error: reason,
+            words: [
+              {
+                id: 1,
+                word: "hard",
+                meaning: "硬的",
+                validation: { status: "uncertain", reason },
+              },
+            ],
+            questions: [],
+            createdAt: "2026-10-22",
+          },
+  );
+  render(
+    <MemoryRouter
+      initialEntries={["/englishWorld/ai-listening?sessionId=quota"]}
+    >
+      <AiListeningPage />
+    </MemoryRouter>,
+  );
+  await screen.findByText("hard");
+  expect(screen.getByText("校验服务暂不可用")).toBeTruthy();
+  expect(screen.queryByText("! 词条需要确认")).toBeNull();
+  expect(
+    screen.queryByRole("link", { name: "前往词库修改，再重新校验" }),
+  ).toBeNull();
+  expect(
+    (
+      screen.getByRole("button", {
+        name: "看完了，生成场景",
+      }) as HTMLButtonElement
+    ).disabled,
+  ).toBe(true);
+});

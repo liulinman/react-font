@@ -23,7 +23,8 @@ export default function AiListeningPage() {
   const [words, setWords] = useState<Word[]>([]);
   const stageRef = useRef<HTMLElement>(null);
   useEffect(() => {
-    if (session) stageRef.current?.scrollIntoView?.({ block: "start", behavior: "auto" });
+    if (session)
+      stageRef.current?.scrollIntoView?.({ block: "start", behavior: "auto" });
   }, [session?.id, session?.status]);
   const [selected, setSelected] = useState<number[]>(() => [
     ...new Set(
@@ -87,6 +88,9 @@ export default function AiListeningPage() {
   const lock = useRef(false);
   const ids = useRef<Record<string, string>>({});
   const mobile = location.pathname.startsWith("/mobile");
+  const serviceFailure = (word: Session["words"][number]) =>
+    word.validation?.status === "failed" ||
+    (!!session?.error && word.validation?.reason === session.error);
   const base = mobile ? "/mobile" : "/englishWorld";
   const uid = (action: string) =>
     ids.current[action] || (ids.current[action] = requestUid());
@@ -453,29 +457,34 @@ export default function AiListeningPage() {
                       {wordAudioFailed[w.id] ? "重试发音" : "播放发音"}
                     </button>
                     <details
-                      className={`ai-validation ${w.validation?.status === "valid" ? "valid" : "uncertain"}`}
+                      className={`ai-validation ${w.validation?.status === "valid" ? "valid" : serviceFailure(w) ? "unavailable" : "uncertain"}`}
                     >
                       <summary>
                         {w.validation?.status === "valid"
                           ? "✓ 词条校验通过"
-                          : "! 词条需要确认"}
+                          : serviceFailure(w)
+                            ? "校验服务暂不可用"
+                            : "! 词条需要确认"}
                         <span>查看详情</span>
                       </summary>
                       <p>
                         {w.validation?.status === "valid"
                           ? "校验通过"
-                          : "待确认"}
+                          : serviceFailure(w)
+                            ? "系统提示"
+                            : "待确认"}
                         ：
                         {w.validation?.reason || "尚未校验，请重新校验后再出题"}
                       </p>
                       {w.validation?.suggestion && (
                         <p>建议：{w.validation?.suggestion}</p>
                       )}
-                      {w.validation?.status !== "valid" && (
-                        <Link to={`${base}/words`}>
-                          前往词库修改，再重新校验
-                        </Link>
-                      )}
+                      {w.validation?.status !== "valid" &&
+                        !serviceFailure(w) && (
+                          <Link to={`${base}/words`}>
+                            前往词库修改，再重新校验
+                          </Link>
+                        )}
                     </details>
                   </article>
                 ))}
@@ -484,7 +493,9 @@ export default function AiListeningPage() {
                 <span>
                   {session.words.some((w) => w.validation?.status === "valid")
                     ? "准备好了吗？听听这些词在场景中怎么用。"
-                    : "本组词条尚未通过校验，请展开详情或重新校验。"}
+                    : session.words.some(serviceFailure)
+                      ? "服务恢复后可重新校验；单词已保留，无需因此修改词条。"
+                      : "本组词条尚未通过校验，请展开详情或重新校验。"}
                 </span>
                 <button
                   disabled={busy}

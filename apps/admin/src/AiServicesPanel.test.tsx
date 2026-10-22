@@ -105,3 +105,16 @@ it("loads separate audio controls for both tested voices", async () => {
   expect(screen.getByLabelText("第二音色试听")).toBeTruthy();
   vi.unstubAllGlobals();
 });
+it('saves configurable limits including explicit zero and keeps them visible after reload', async () => {
+  const limits={requestsPerMinute:10,requestsPerDay:100,charactersPerDay:30000,globalConcurrency:4,providerConcurrency:4,userConcurrency:2,maxAudioAttempts:3,maxSceneAttempts:3};
+  let current={...data,limits,limitsSource:'default'};
+  vi.mocked(aiFetch).mockImplementation(async(path,method,body)=>{if(path==='/limits'&&method==='PUT')current={...current,limits:body as typeof limits,limitsSource:'saved'};return current;});
+  vi.mocked(secureKeyEntry).mockReturnValue(true);
+  render(<AiServicesPanel/>);
+  const field=await screen.findByRole('spinbutton',{name:'每用户每服务每日字符'});
+  await userEvent.clear(field);await userEvent.type(field,'0');
+  await userEvent.click(screen.getByRole('button',{name:'保存使用限制'}));
+  await waitFor(()=>expect(aiFetch).toHaveBeenCalledWith('/limits','PUT',expect.objectContaining({charactersPerDay:0})));
+  await screen.findByText('已保存的配置');
+  expect((screen.getByRole('spinbutton',{name:'每用户每服务每日字符'}) as HTMLInputElement).value).toBe('0');
+});

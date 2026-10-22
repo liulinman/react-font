@@ -620,4 +620,10 @@
   margin: 12px 12px 0 0;
 }
 
-.ai-listening>section { scroll-margin-top:96px; }
+.ai-listening > section {
+  scroll-margin-top: 96px;
+}
+
+.ai-validation.unavailable {
+  color: #71849f;
+}

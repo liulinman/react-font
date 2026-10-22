@@ -1,6 +1,15 @@
 import "./aiServices.css";
 import { useEffect, useState } from "react";
-import { Alert, Button, Input, Select, Switch, Space, Tag } from "antd";
+import {
+  Alert,
+  Button,
+  Input,
+  InputNumber,
+  Select,
+  Switch,
+  Space,
+  Tag,
+} from "antd";
 import {
   aiFetch,
   secureKeyEntry,
@@ -9,10 +18,69 @@ import {
   type AiUsage,
   type Provider,
 } from "./api/aiServices";
+const limitFields = [
+  {
+    key: "requestsPerMinute",
+    label: "每用户每分钟请求",
+    min: 0,
+    max: 10000,
+    hint: "0 为不限制",
+  },
+  {
+    key: "requestsPerDay",
+    label: "每用户每服务每日请求",
+    min: 0,
+    max: 1000000,
+    hint: "0 为不限制",
+  },
+  {
+    key: "charactersPerDay",
+    label: "每用户每服务每日字符",
+    min: 0,
+    max: 1000000000,
+    hint: "0 为不限制，含发给 AI 的规则和上下文",
+  },
+  {
+    key: "globalConcurrency",
+    label: "全局并发",
+    min: 1,
+    max: 64,
+    hint: "所有服务同时进行的请求数",
+  },
+  {
+    key: "providerConcurrency",
+    label: "单服务并发",
+    min: 1,
+    max: 64,
+    hint: "每家服务同时进行的请求数",
+  },
+  {
+    key: "userConcurrency",
+    label: "单用户并发",
+    min: 1,
+    max: 64,
+    hint: "每用户同时进行的请求数",
+  },
+  {
+    key: "maxAudioAttempts",
+    label: "单个音频最多尝试",
+    min: 1,
+    max: 20,
+    hint: "包含首次请求及手动重试",
+  },
+  {
+    key: "maxSceneAttempts",
+    label: "单轮场景最多尝试",
+    min: 1,
+    max: 20,
+    hint: "包含首次生成及手动重试",
+  },
+];
 export function AiServicesPanel() {
   const [configs, setConfigs] = useState<AiConfig[]>([]);
   const [usage, setUsage] = useState<AiUsage[]>([]);
   const [limits, setLimits] = useState<Record<string, number>>({});
+  const [limitsSource, setLimitsSource] = useState("default");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
@@ -32,10 +100,12 @@ export function AiServicesPanel() {
       doubao: AiConfig;
       usage: AiUsage[];
       limits?: Record<string, number>;
+      limitsSource?: string;
     }>("");
     setConfigs([data.deepseek, data.doubao]);
     setUsage(data.usage);
     setLimits(data.limits || {});
+    setLimitsSource(data.limitsSource || "default");
   };
   useEffect(() => {
     void load().catch((e) => setError(e.message));
@@ -319,6 +389,68 @@ export function AiServicesPanel() {
           </section>
         ))}
       </div>
+      {Object.keys(limits).length > 0 && (
+        <section className="ai-usage-card ai-limits-editor">
+          <div className="ai-usage-heading">
+            <h3>平台使用限制</h3>
+            <Tag color={limitsSource === "saved" ? "blue" : "default"}>
+              {limitsSource === "saved" ? "已保存的配置" : "当前使用默认值"}
+            </Tag>
+          </div>
+          <p className="ai-field-hint">
+            这些是本平台的保护规则，不是供应商余额。两家服务分别累计每日用量；前三项填
+            0 可关闭相应限制。保存后对新请求生效，不清空已有用量。
+          </p>
+          <div className="ai-limit-fields">
+            {limitFields.map((field) => (
+              <label key={field.key}>
+                <span>{field.label}</span>
+                <InputNumber
+                  aria-label={field.label}
+                  min={field.min}
+                  max={field.max}
+                  precision={0}
+                  value={limits[field.key]}
+                  disabled={busy}
+                  onChange={(value) =>
+                    setLimits((current) => ({
+                      ...current,
+                      [field.key]: value ?? 0,
+                    }))
+                  }
+                />
+                <small>{field.hint}</small>
+              </label>
+            ))}
+          </div>
+          <div className="ai-limit-save">
+            <Button
+              type="primary"
+              disabled={
+                busy ||
+                limitFields.some(
+                  (field) =>
+                    !Number.isInteger(limits[field.key]) ||
+                    limits[field.key] < field.min ||
+                    limits[field.key] > field.max,
+                )
+              }
+              onClick={() =>
+                void run(async () => {
+                  await aiFetch("/limits", "PUT", limits);
+                  await load();
+                  setNotice("使用限制已保存，新请求按新配置执行");
+                })
+              }
+            >
+              保存使用限制
+            </Button>
+            <span>
+              每日用量按服务端日期重置；供应商自身限制仍以其控制台为准。
+            </span>
+          </div>
+        </section>
+      )}
       <section className="ai-usage-card">
         <div className="ai-usage-heading">
           <h3>今日用量</h3>
@@ -348,14 +480,6 @@ export function AiServicesPanel() {
             );
           })}
         </div>
-        {limits.requestsPerDay && (
-          <p className="ai-limits">
-            服务限额：每用户每分钟 {limits.requestsPerMinute} 次；每服务每日{" "}
-            {limits.requestsPerDay} 次、{limits.charactersPerDay} 字符；全局并发{" "}
-            {limits.globalConcurrency}，每用户并发 {limits.userConcurrency}
-            。音频最多尝试 {limits.maxAudioAttempts} 次。
-          </p>
-        )}
       </section>
     </div>
   );
