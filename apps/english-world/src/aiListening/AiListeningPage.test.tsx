@@ -222,3 +222,42 @@ it("ignores session load that returns after page unmount", async () => {
   await Promise.resolve();
   expect(screen.queryByText("看词复习")).toBeNull();
 });
+it("hides Chinese context until requested and offers an icon play control", async () => {
+  vi.mocked(listeningFetch).mockImplementation(async (path) =>
+    path === "/ai-learning/history"
+      ? { sessions: [], reviewWordIds: [] }
+      : path === "/english/filterWordList"
+        ? { list: [], total: 0 }
+        : {
+            id: "hint",
+            status: "listening",
+            words: [],
+            createdAt: "2026-10-22",
+            questions: [
+              {
+                id: "q",
+                wordId: 1,
+                scene: "水壶里有很多水垢",
+                gap: "The ______ of the water.",
+                status: "ready",
+                played: 0,
+              },
+            ],
+          },
+  );
+  render(
+    <MemoryRouter
+      initialEntries={["/englishWorld/ai-listening?sessionId=hint"]}
+    >
+      <AiListeningPage />
+    </MemoryRouter>,
+  );
+  await screen.findByText("The ______ of the water.");
+  expect(screen.queryByText("水壶里有很多水垢")).toBeNull();
+  const play = screen.getByRole("button", { name: "播放完整句子" });
+  expect(play.textContent).toBe("");
+  await userEvent.click(screen.getByRole("button", { name: "查看中文提示" }));
+  expect(screen.getByText("水壶里有很多水垢")).toBeTruthy();
+  await userEvent.click(screen.getByRole("button", { name: "隐藏中文提示" }));
+  expect(screen.queryByText("水壶里有很多水垢")).toBeNull();
+});

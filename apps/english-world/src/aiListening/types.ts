@@ -32,6 +32,13 @@ export interface Question {
     revealed: boolean;
   }>;
   feedback?: {
+    wordForm?: {
+      base: string;
+      answer: string;
+      kind: "original" | "inflection" | "derivation";
+      partSpeech: string;
+      relation: string;
+    };
     answer: string;
     transcript: string;
     explanation: string;

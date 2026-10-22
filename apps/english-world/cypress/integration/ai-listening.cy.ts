@@ -75,10 +75,16 @@ describe('AI listening persisted journeys', () => {
     cy.get('.ai-listening-question').should('not.contain.text','resilient').and('contain.text','______');
     cy.get('input[aria-label="场景 1 答案"]').type(' RESILIENT ');
     cy.contains('button',/^提交$/).should('be.disabled');
-    cy.contains('button','播放完整句子').click();
+    cy.get('.ai-scene-context').should('not.exist');
+    cy.contains('button','查看中文提示').click();
+    cy.get('.ai-scene-context').should('be.visible');
+    cy.contains('button','隐藏中文提示').click();
+    cy.get('.ai-scene-context').should('not.exist');
+    cy.get('button[aria-label="播放完整句子"]').should('have.text','').click();
     cy.contains('button',/^提交$/).should('not.be.disabled').click();
     cy.contains('h2','本轮已完成').scrollIntoView().should('be.visible');
     cy.get('.ai-listening-feedback').should('contain.text','回答正确').and('contain.text','resilient');
+    cy.get('.ai-scene-context').should('be.visible');
     cy.contains('summary','近义词辨析').click();
     cy.get('.ai-listening-feedback').should('contain.text','strong');
     cy.reload();
@@ -88,7 +94,7 @@ describe('AI listening persisted journeys', () => {
   }));
   it('administrator reads masked configurations, tests both voices and sees persisted usage in the UI',()=>{
     configure();cy.viewport(1280,900);cy.visit('/admin/?section=ai-services');
-    cy.contains('h2','AI 服务管理').should('be.visible');
+    cy.contains('h1','AI 服务管理').should('be.visible');
     cy.get('input[aria-label="deepseek API Key"]').should('have.value','');
     cy.get('input[aria-label="doubao API Key"]').should('have.value','');
     cy.contains('section','豆包语音').within(()=>{

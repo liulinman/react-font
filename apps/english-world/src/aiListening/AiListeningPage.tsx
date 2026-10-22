@@ -21,6 +21,10 @@ export default function AiListeningPage() {
   const location = useLocation();
   const [session, setSession] = useState<Session>();
   const [words, setWords] = useState<Word[]>([]);
+  const stageRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (session) stageRef.current?.scrollIntoView?.({ block: "start", behavior: "auto" });
+  }, [session?.id, session?.status]);
   const [selected, setSelected] = useState<number[]>(() => [
     ...new Set(
       (params.get("wordIds") || "")
@@ -77,6 +81,7 @@ export default function AiListeningPage() {
     },
     [],
   );
+  const [sceneHints, setSceneHints] = useState<Record<string, boolean>>({});
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [audioFailed, setAudioFailed] = useState<Record<string, boolean>>({});
   const lock = useRef(false);
@@ -276,7 +281,7 @@ export default function AiListeningPage() {
       {busy && <p role="status">正在准备，请稍候…</p>}
       {preparingAudio && <p role="status">正在准备音频，请稍候…</p>}
       {!session ? (
-        <section className="ai-selection-panel">
+        <section className="ai-selection-panel" ref={stageRef}>
           <div className="ai-section-heading">
             <div>
               <h2>选择已有单词（1～10 个）</h2>
@@ -350,7 +355,7 @@ export default function AiListeningPage() {
           </div>
         </section>
       ) : (
-        <section>
+        <section ref={stageRef}>
           <div className="ai-listening-actions ai-section-heading">
             <h2>
               {session.status === "review"
@@ -515,18 +520,49 @@ export default function AiListeningPage() {
                 场景 {index + 1} ·{" "}
                 {q.audioMode === "dual" ? "双声对话" : "单声朗读"}
               </h3>
-              <p>{q.scene}</p>
+              {q.status !== "submitted" && (
+                <button
+                  className="ai-scene-toggle"
+                  aria-expanded={!!sceneHints[q.id]}
+                  onClick={() =>
+                    setSceneHints((current) => ({
+                      ...current,
+                      [q.id]: !current[q.id],
+                    }))
+                  }
+                >
+                  {sceneHints[q.id] ? "隐藏中文提示" : "查看中文提示"}
+                </button>
+              )}
+              {(q.status === "submitted" || sceneHints[q.id]) && (
+                <p className="ai-scene-context">{q.scene}</p>
+              )}
               <p className="ai-listening-gap">{q.gap}</p>
               <div className="ai-listening-actions">
                 <button
                   className="ai-primary-button ai-play-button"
+                  aria-label="播放完整句子"
+                  title="播放完整句子"
                   disabled={busy}
                   onClick={() => void play(q.id)}
                 >
-                  播放完整句子
+                  <svg
+                    aria-hidden="true"
+                    viewBox="0 0 24 24"
+                    width="22"
+                    height="22"
+                  >
+                    <path fill="currentColor" d="M8 5v14l11-7z" />
+                  </svg>
                 </button>
-                <button disabled={busy} onClick={() => void play(q.id, true)}>
-                  慢速播放
+                <button
+                  className="ai-slow-button"
+                  aria-label="慢速播放"
+                  title="慢速播放"
+                  disabled={busy}
+                  onClick={() => void play(q.id, true)}
+                >
+                  <span aria-hidden="true">0.8×</span>
                 </button>
                 {audioFailed[q.id] && (
                   <button
@@ -639,6 +675,17 @@ export default function AiListeningPage() {
                   </p>
                   <p>{q.feedback.transcript}</p>
                   <p>{q.feedback.explanation}</p>
+                  {q.feedback.wordForm && (
+                    <div className="ai-word-form">
+                      <span>相关词形</span>
+                      <p>
+                        <strong>{q.feedback.wordForm.base}</strong> →{" "}
+                        <strong>{q.feedback.wordForm.answer}</strong>
+                        <small>{q.feedback.wordForm.partSpeech}</small>
+                      </p>
+                      <p>{q.feedback.wordForm.relation}</p>
+                    </div>
+                  )}
                   <details>
                     <summary>近义词辨析</summary>
                     <p>{readableExplanation(q.feedback.synonyms)}</p>
