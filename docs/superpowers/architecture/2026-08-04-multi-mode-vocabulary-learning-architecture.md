@@ -1,8 +1,8 @@
 ---
 stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8]
 inputDocuments:
-  - 'docs/superpowers/prds/prd-english-world-2026-07-18/prd.md'
-  - 'docs/superpowers/prds/prd-english-world-2026-07-18/addendum.md'
+  - 'docs/prd/review/features/word-journey/prd.md'
+  - 'docs/prd/review/features/word-journey/addendum.md'
   - 'docs/superpowers/specs/2026-08-04-multi-mode-vocabulary-learning-design.md'
   - 'docs/superpowers/specs/2026-07-30-english-world-ui-design-system-skill-design.md'
   - 'docs/superpowers/specs/2026-06-03-english-world-ai-learning-mvp-design.md'

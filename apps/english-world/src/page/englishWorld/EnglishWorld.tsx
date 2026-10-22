@@ -1,3 +1,4 @@
+import { WordBookCreate } from "./wordBook/WordBookCreate";
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   Button,
@@ -33,7 +34,6 @@ import {
 } from "@/server/word/word";
 import { WordList } from "@/server/word/word.type";
 import { useColumns } from "./useColumns";
-import { FormFieldGroup } from "./component/FormFieldGroup";
 import { EnglishStats } from "./component/EnglishStats";
 import { EnglishWorldPageHeader } from "./component/EnglishWorldPageHeader";
 import { LearningCockpitPage } from "./cockpit/LearningCockpitPage";
@@ -130,6 +130,7 @@ function parseContextLabArticleContent(article: string) {
 
 const EnglishWorld: React.FC = () => {
   const [form] = Form.useForm();
+  const [bookCreateOpen, setBookCreateOpen] = useState(false);
   const [type, setType] = useState<"edit" | "add">("add");
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [focusWordNote, setFocusWordNote] = useState(false);
@@ -197,6 +198,7 @@ const EnglishWorld: React.FC = () => {
     pageSize,
     totalNum,
     getCurrentFilters,
+    getLastSuccessfulFilters,
     search,
     reset,
     refresh,
@@ -226,6 +228,7 @@ const EnglishWorld: React.FC = () => {
   }, [activeNav, form, libraryWordQuery, search]);
 
   const handleNavClick = () => {};
+  const [filtersExpanded, setFiltersExpanded] = useState(false);
 
   const filterFields = [
     {
@@ -408,7 +411,7 @@ const EnglishWorld: React.FC = () => {
   const handleSearch = async () => {
     setSelectedCardIds([]);
     setUseCurrentFilterScope(false);
-    await search(normalizeDesktopWordFilters(form.getFieldsValue()));
+    await search(normalizeDesktopWordFilters(form.getFieldsValue(true)));
   };
 
   // 重置表单
@@ -1073,49 +1076,24 @@ const EnglishWorld: React.FC = () => {
                 form={form}
                 className="english-world-filter-form english-world-filter-form-compact"
                 layout="vertical"
+                onFinish={() => void handleSearch()}
                 colon={false}
               >
-                <FormFieldGroup
-                  items={filterFields}
-                  columnsPerRow={4}
-                  collapsedRows={1}
-                  className="english-world-filter-grid"
-                  gridClassName="english-world-filter-grid-row"
-                  actionsClassName="english-world-filter-action-line"
-                  renderActions={({ toggle, expanded, shouldShowToggle }) => (
+                <div className="english-world-filter-grid">
+                  <div className="english-world-search-row">
+                    {filterFields.slice(0, 2).map(field => <div key={field.key}>{field.node}</div>)}
                     <div className="english-world-filter-actions">
-                      <Button
-                        type="primary"
-                        onClick={handleSearch}
-                        size="middle"
-                      >
-                        查询
+                      <Button type="primary" htmlType="submit" loading={loading}>查询</Button>
+                      <Button onClick={() => void handleReset()}>重置</Button>
+                      <Button type="link" aria-expanded={filtersExpanded} aria-controls="word-extra-filters" onClick={() => setFiltersExpanded(value => !value)}>
+                        {filtersExpanded ? "收起筛选" : "更多筛选"}{filtersExpanded ? <UpOutlined /> : <DownOutlined />}
                       </Button>
-                      <Button
-                        htmlType="reset"
-                        onClick={handleReset}
-                        size="middle"
-                      >
-                        重置
-                      </Button>
-                      {shouldShowToggle && (
-                        <Button type="link" onClick={toggle} size="small">
-                          {expanded ? (
-                            <span className="gap-2">
-                              <span>收起</span>
-                              <UpOutlined />
-                            </span>
-                          ) : (
-                            <span className="gap-2">
-                              <span>展开</span>
-                              <DownOutlined />
-                            </span>
-                          )}
-                        </Button>
-                      )}
                     </div>
-                  )}
-                />
+                  </div>
+                  {filtersExpanded && <div id="word-extra-filters" className="english-world-extra-filters">
+                    {filterFields.slice(2).map(field => <div key={field.key}>{field.node}</div>)}
+                  </div>}
+                </div>
               </Form>
             </section>
 
@@ -1126,6 +1104,7 @@ const EnglishWorld: React.FC = () => {
                   <span>查看和维护词汇内容与学习状态</span>
                 </div>
                 <div className="english-world-table-tools">
+                  <Button onClick={() => setBookCreateOpen(true)}>制作复习手册</Button>
                   <Checkbox
                     checked={useCurrentFilterScope}
                     disabled={totalNum === 0 || selectedCardIds.length > 0}
@@ -1513,7 +1492,8 @@ const EnglishWorld: React.FC = () => {
             </Modal>
           </div>
         )}
-    </EnglishWorldLayout>
+    {bookCreateOpen && <WordBookCreate ids={selectedCardIds} filters={getLastSuccessfulFilters()} onClose={() => setBookCreateOpen(false)} onCreated={id => {setBookCreateOpen(false); navigate(`/englishWorld/word-books/${id}`);}} />}
+      </EnglishWorldLayout>
   );
 };
 

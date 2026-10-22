@@ -1,3 +1,4 @@
+import { NoteContent } from "@/components/notes/NoteContent";
 import { WordKnowledgeLinks } from "@/page/englishWorld/component/WordNoteDisplay";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient, type InfiniteData } from "@tanstack/react-query";
@@ -188,7 +189,7 @@ export function MobileWordDetailPage() {
         </p>
       </section>
 
-      {word.englishNote && <section aria-label="释义与笔记"><h3>笔记</h3><p>{word.englishNote}</p></section>}
+      {word.englishNote && <section aria-label="释义与笔记"><h3>笔记</h3><NoteContent text={word.englishNote} /></section>}
 
       <WordKnowledgeLinks wordId={word.id} hasNote={Boolean(word.englishNote?.trim())} mobile />
       <section aria-label="来源">

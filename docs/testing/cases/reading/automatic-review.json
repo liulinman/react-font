@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "source": "docs/prd/reading/features/automatic-review/prd.md",
+  "sourceHash": "b63e52a5d918d70c4acd4fc1c1eed011e4a164b6e57ba89d2ccf7d35d500fd05",
+  "cases": [
+    {
+      "id": "reading/automatic-review/WEB-1",
+      "title": "edits in place and publishes with one final confirmation without per-question checkboxes",
+      "status": "ready",
+      "requirementIds": [
+        "reading/automatic-review/AC-04",
+        "reading/automatic-review/AC-05"
+      ],
+      "preconditions": [
+        "Web桌面1440x1000，管理员HTTP响应fixture；不将此证据当真实后台验收。"
+      ],
+      "steps": [
+        "打开审核→修改本题解析→保存并复查→先取消确认发布再确认。"
+      ],
+      "expectedResults": [
+        "无逐题勾选和完成核对；同页保存复查；取消不请求publish，最终确认发送confirmAll:true。"
+      ],
+      "cleanup": "Cypress测试隔离清理所有HTTP拦截与浏览器状态。",
+      "bindings": [
+        {
+          "suite": "reading-automatic-review",
+          "title": "Web automatic reading review > edits in place and publishes with one final confirmation without per-question checkboxes"
+        }
+      ],
+      "reviewNote": "仅认证fixture Web交互；后台阶段、故障、并发和真实AI使用本次release-sql-green.log及live-provider/live-pdf证据补充，不宣称整个阅读模块全覆盖。 2026-10-22新建界面调整后已复核并更新按钮/输入方式定位，原断言保留。"
+    },
+    {
+      "id": "reading/automatic-review/WEB-2",
+      "title": "polls processing until ready without requiring another check button",
+      "status": "ready",
+      "requirementIds": [
+        "reading/automatic-review/FR-04"
+      ],
+      "preconditions": [
+        "Web桌面1440x1000，管理员HTTP响应fixture；不将此证据当真实后台验收。"
+      ],
+      "steps": [
+        "打开处理中练习→等待后台状态轮询→返回ready状态。"
+      ],
+      "expectedResults": [
+        "处理中按钮不可发布；自动轮询变为ready后可发布，无手动检查步骤。"
+      ],
+      "cleanup": "Cypress测试隔离清理所有HTTP拦截与浏览器状态。",
+      "bindings": [
+        {
+          "suite": "reading-automatic-review",
+          "title": "Web automatic reading review > polls processing until ready without requiring another check button"
+        }
+      ],
+      "reviewNote": "仅认证fixture Web交互；后台阶段、故障、并发和真实AI使用本次release-sql-green.log及live-provider/live-pdf证据补充，不宣称整个阅读模块全覆盖。 2026-10-22新建界面调整后已复核并更新按钮/输入方式定位，原断言保留。"
+    },
+    {
+      "id": "reading/automatic-review/WEB-3",
+      "title": "starts automatic processing from pasted material and directly opens the processing drawer",
+      "status": "ready",
+      "requirementIds": [
+        "reading/automatic-review/AC-08"
+      ],
+      "preconditions": [
+        "Web桌面1440x1000，管理员HTTP响应fixture；不将此证据当真实后台验收。"
+      ],
+      "steps": [
+        "新建→默认导入材料→粘贴文本→开始自动整理。"
+      ],
+      "expectedResults": [
+        "默认complete_answers、autoProcess:true；创建后直接打开处理抽屉。"
+      ],
+      "cleanup": "Cypress测试隔离清理所有HTTP拦截与浏览器状态。",
+      "bindings": [
+        {
+          "suite": "reading-automatic-review",
+          "title": "Web automatic reading review > starts automatic processing from pasted material and directly opens the processing drawer"
+        }
+      ],
+      "reviewNote": "仅认证fixture Web交互；后台阶段、故障、并发和真实AI使用本次release-sql-green.log及live-provider/live-pdf证据补充，不宣称整个阅读模块全覆盖。 2026-10-22新建界面调整后已复核并更新按钮/输入方式定位，原断言保留。"
+    },
+    {
+      "id": "reading/automatic-review/WEB-04",
+      "title": "多个PDF/照片全部上传完成后才能开始自动任务",
+      "status": "ready",
+      "requirementIds": [
+        "reading/automatic-review/FR-01"
+      ],
+      "preconditions": [
+        "Web桌面，源上传接口延迟fixture，两个文件分开完成。"
+      ],
+      "steps": [
+        "选择PDF和照片两文件；等待第一个文件完成，再等第二个完成；开始自动整理。"
+      ],
+      "expectedResults": [
+        "两个文件均完成前按钮禁用；导入请求包含全部两个sourceIds且autoProcess:true。"
+      ],
+      "cleanup": "Cypress测试隔离清理拦截和文件输入。",
+      "bindings": [
+        {
+          "suite": "reading-automatic-review",
+          "title": "Web automatic reading review > waits for every PDF/photo upload before starting one automatic task"
+        }
+      ],
+      "reviewNote": "仅验证Web上传交互；文件解码/真实OCR另见真实PDF和图片服务证据。 2026-10-22新建界面调整后已复核并更新按钮/输入方式定位，原断言保留。"
+    }
+  ]
+}

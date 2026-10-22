@@ -21,6 +21,7 @@ apps/english-world/.env.ios
 **/cypress/screenshots/
 **/cypress/videos/
 **/cypress/reports/
+test-results/
 
 # Editor directories and files
 .vscode/*

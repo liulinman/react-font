@@ -6,8 +6,8 @@ status: 'done'
 baseline_commit_frontend: 'dcee2f821816bcb8974436247f2d27fc49d84fcd'
 baseline_commit_backend: '93342151b51d4323114b30104a2873bd9f20334d'
 context:
-  - 'docs/superpowers/prds/prd-english-world-2026-07-18/prd.md'
-  - 'docs/superpowers/prds/prd-english-world-2026-07-18/addendum.md'
+  - 'docs/prd/review/features/word-journey/prd.md'
+  - 'docs/prd/review/features/word-journey/addendum.md'
 ---
 
 <frozen-after-approval reason="用户已授权自主确定下一功能并完成实施；本区保持产品意图不漂移">

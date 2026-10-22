@@ -24,6 +24,9 @@ describe("removeEmptyValues", () => {
 });
 
 describe("normalizeDesktopWordFilters", () => {
+  it("trims search fields without removing zero-valued filters", () => {
+    expect(normalizeDesktopWordFilters({ englishWord: "  apple  ", englishChinese: "   ", englishType: 0 })).toEqual({ englishWord: "apple", englishType: 0 });
+  });
   it("把桌面端时间范围转换为后端筛选参数", () => {
     expect(
       normalizeDesktopWordFilters({

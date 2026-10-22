@@ -1,3 +1,5 @@
+import { NoteContent } from "@/components/notes/NoteContent";
+import { noteSummary } from "@/components/notes/noteSummary";
 import { useNoteListScroll } from "./useNoteListScroll";
 import { useEffect, useState } from "react";
 import {
@@ -164,7 +166,7 @@ function NoteList({
                         {note.category}
                       </span>
                     </div>
-                    <p className="knowledge-summary">{note.body}</p>
+                    <p className="knowledge-summary">{noteSummary(note.body)}</p>
                     <div className="knowledge-meta">
                       <span>{desktop ? note.folderId ? folderPath(folders.data?.list ?? [], note.folderId) : "未归档" : note.source || "未填写来源"}</span>
                       <time>
@@ -258,11 +260,11 @@ function NoteDetail({
         <p className="knowledge-muted">
           更新于 {new Date(note.updatedAt).toLocaleString()}
         </p>
-        <div className="knowledge-body">{note.body}</div>
+        <NoteContent className="knowledge-body" text={note.body} />
         {note.examples && (
           <section>
             <h2>例句与解释</h2>
-            <p>{note.examples}</p>
+            <NoteContent text={note.examples} />
           </section>
         )}
         {note.source && (

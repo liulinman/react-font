@@ -4,7 +4,7 @@ export interface PracticeConfig {
   wordCount: number;
   questionCount: number;
   ieltsBand: number;
-  questionTypes: ("choice" | "true_false_not_given")[];
+  questionTypes: ("choice" | "true_false_not_given" | "sentence_completion")[];
   targetType: "all" | "selected";
   targetUserIds?: number[];
 }
@@ -23,6 +23,8 @@ export interface PracticeContent {
     sourceRef?: string;
     originalText?: string;
     correctIndex: number | null;
+    acceptedAnswers?: string[];
+    maxWords?: number;
     explanation: string;
     evidence: {
       paragraph: number;
@@ -47,6 +49,7 @@ export interface AdminPractice {
   content?: PracticeContent;
   createdAt: string;
   publishedAt?: string;
+  recognizedQuestionCount?: number | null;
   failureSummary?: string;
   assignedCount: number;
   submittedCount: number;

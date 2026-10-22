@@ -589,7 +589,7 @@ cd /Users/liulin/Desktop/font/english
 {
   git -C react-font diff HEAD~2..HEAD --;
   git -C nestjs diff HEAD~3..HEAD --;
-  sed -n '1,260p' react-font/docs/superpowers/prds/prd-english-world-2026-07-17/prd.md;
+  sed -n '1,260p' react-font/docs/prd/review/features/weak-word-repair/prd.md;
 } | gemini --skip-trust -o text -p 'Review stdin only for correctness, backward compatibility, UX clarity, error recovery, test coverage, and scope. Return PASS if shippable; otherwise return FAIL followed by only concrete blocking issues.'
 ```
 

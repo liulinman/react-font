@@ -1,3 +1,5 @@
+import { NoteContent } from "@/components/notes/NoteContent";
+import { noteSummary } from "@/components/notes/noteSummary";
 import { Button } from "antd";
 import { useId, useLayoutEffect, useRef, useState } from "react";
 import type { WordList } from "@/server/word/word.type";
@@ -17,7 +19,7 @@ type WordExpandedNoteProps = {
 export function WordCardNote({ word, note, wordId }: WordCardNoteProps) {
   const [expanded, setExpanded] = useState(false);
   const [overflowing, setOverflowing] = useState(false);
-  const contentRef = useRef<HTMLParagraphElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   const noteId = useId();
 
   useLayoutEffect(() => {
@@ -44,13 +46,15 @@ export function WordCardNote({ word, note, wordId }: WordCardNoteProps) {
 
   if (!hasDisplayNote(note)) return null;
 
+  const summary = noteSummary(note || "");
+  const formatted = summary !== note?.trim();
   const toggleLabel = `${expanded ? "收起" : "展开"} ${word} 的笔记`;
 
   return (
     <div className="word-card-note">
       <div className="word-card-note-head">
         <span>我的笔记</span>
-        {(overflowing || expanded) && (
+        {(overflowing || expanded || formatted) && (
           <button
             aria-controls={noteId}
             aria-expanded={expanded}
@@ -66,15 +70,15 @@ export function WordCardNote({ word, note, wordId }: WordCardNoteProps) {
           </button>
         )}
       </div>
-      <p
+      <div
         className={`word-card-note-text${
           expanded ? " word-card-note-text-expanded" : ""
         }`}
         id={noteId}
         ref={contentRef}
       >
-        {note}
-      </p>
+        {expanded ? <NoteContent text={note || ""} /> : summary}
+      </div>
       {wordId && <WordKnowledgeLinks wordId={wordId} hasNote />}
     </div>
   );
@@ -102,7 +106,7 @@ export function WordExpandedNote({
           编辑笔记
         </Button>
       </div>
-      <p className="word-note-expanded-text">{record.englishNote}</p>
+      <NoteContent className="word-note-expanded-text" text={record.englishNote || ""} />
       <WordKnowledgeLinks wordId={record.id} hasNote />
     </div>
   );

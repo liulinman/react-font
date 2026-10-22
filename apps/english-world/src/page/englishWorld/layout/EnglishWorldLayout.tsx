@@ -5,8 +5,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { EnglishHeader } from "../component/EnglishHeader";
 import { EnglishWorldContextBar } from "./EnglishWorldContextBar";
 
-export const SIDEBAR_COLLAPSED_STORAGE_KEY =
-  "english-world-sidebar-collapsed";
+export const SIDEBAR_COLLAPSED_STORAGE_KEY = "english-world-sidebar-collapsed";
 
 function getInitialSidebarCollapsed() {
   try {
@@ -34,6 +33,13 @@ export function EnglishWorldLayout({
   const [sidebarCollapsed, setSidebarCollapsed] = useState(
     getInitialSidebarCollapsed,
   );
+  const [navigationPath, setNavigationPath] = useState<string>();
+  const readingDetail =
+    /^\/englishWorld\/reading-practices\/\d+(?:\/result)?\/?$/.test(
+      location.pathname,
+    );
+  const intensiveDetail = /^\/englishWorld\/intensive-reading\/[^/]+(?:\/review)?\/?$/.test(location.pathname);
+  const readingFocus = (readingDetail || intensiveDetail) && navigationPath !== location.pathname;
   const openedFromMobile =
     new URLSearchParams(location.search).get("source") === "mobile";
 
@@ -53,16 +59,28 @@ export function EnglishWorldLayout({
     <div
       className={`english-world-shell${
         sidebarCollapsed ? " english-world-shell-collapsed" : ""
-      }`}
+      }${readingFocus ? " english-world-reading-focus" : ""}${intensiveDetail ? " english-world-intensive" : ""}`}
     >
-      <EnglishHeader
-        activeKey={activeKey}
-        collapsed={sidebarCollapsed}
-        onCollapsedChange={handleCollapsedChange}
-        onNavClick={onNavClick}
-      />
+      {!readingFocus && (
+        <EnglishHeader
+          activeKey={activeKey}
+          collapsed={sidebarCollapsed}
+          onCollapsedChange={handleCollapsedChange}
+          onNavClick={onNavClick}
+        />
+      )}
       <div className="english-world-workspace">
-        <EnglishWorldContextBar activeKey={activeKey} />
+        {!readingFocus && <EnglishWorldContextBar activeKey={activeKey} />}
+        {(readingDetail || intensiveDetail) && (
+          <button
+            className="reading-navigation-toggle"
+            onClick={() =>
+              setNavigationPath(readingFocus ? location.pathname : undefined)
+            }
+          >
+            {readingFocus ? "显示导航" : "专注阅读"}
+          </button>
+        )}
         <main className="english-world-main">{children}</main>
       </div>
       {openedFromMobile ? (

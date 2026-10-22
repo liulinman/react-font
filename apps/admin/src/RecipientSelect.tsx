@@ -10,12 +10,16 @@ export function RecipientSelect({
   id,
   disabledIds = [],
   disabled = false,
+  placement = "bottomLeft",
+  placeholder = "搜索用户名，可选择多位用户",
 }: {
   value?: number[];
   onChange?: (value: number[]) => void;
   id?: string;
   disabledIds?: number[];
   disabled?: boolean;
+  placement?: "topLeft" | "bottomLeft";
+  placeholder?: string;
 }) {
   const [search, setSearch] = useState("");
   const [options, setOptions] = useState<Option[]>([]);
@@ -59,6 +63,7 @@ export function RecipientSelect({
       <Select
         id={id}
         aria-label="接收用户"
+        placement={placement}
         mode="multiple"
         showSearch
         allowClear
@@ -74,7 +79,7 @@ export function RecipientSelect({
         }))}
         filterOption={false}
         onSearch={setSearch}
-        placeholder="搜索用户名，可选择多位用户"
+        placeholder={placeholder}
         loading={loading}
         notFoundContent={
           loading ? <Spin size="small" /> : "没有匹配用户，请更换关键词"

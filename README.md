@@ -1,5 +1,7 @@
 # React + TypeScript + Vite
 
+项目产品需求统一入口：[PRD 模块索引](docs/prd/README.md)。开发与测试以该索引列出的正式 PRD 和决策补充为准；缺失的模块需求在索引中单独标注。
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:

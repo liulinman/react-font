@@ -88,7 +88,10 @@ export function getLegacyPathFromHash(hash: string): string | undefined {
 export function getPathForNav(key: string): string {
   const normalizedKey = normalizeActiveKey(key);
 
+  if (normalizedKey === "intensiveReading") return "/englishWorld/intensive-reading";
   if (normalizedKey === "readingPractices") return "/englishWorld/reading-practices";
+
+  if (normalizedKey === "wordBooks") return "/englishWorld/word-books";
 
   if (normalizedKey === "knowledgeNotes") return "/englishWorld/knowledge-notes";
 
@@ -121,7 +124,7 @@ export function getPathForNav(key: string): string {
   }
 
   if (normalizedKey === "ieltsCore") {
-    return "/englishWorld/ielts-core";
+    return "/englishWorld/recite";
   }
 
   if (normalizedKey === "memoryMap") {

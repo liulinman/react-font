@@ -1,0 +1,46 @@
+.reading-create .ant-drawer-header { padding: 22px 32px; }
+.reading-create .ant-drawer-title { font-size: 19px; }
+.reading-create .ant-drawer-body { padding: 16px 32px 28px; }
+.reading-create .ant-tabs-nav { margin-bottom: 26px; }
+.reading-create .ant-tabs-tab { padding: 12px 4px; font-size: 15px; }
+.reading-create-intro { margin-bottom: 24px; }
+.reading-create-intro h2 { margin: 0 0 8px; font-size: 23px; line-height: 1.4; font-weight: 650; color: #172b42; }
+.reading-create-intro p, .reading-create-hint { margin: 0; color: #66768b; font-size: 14px; line-height: 1.7; }
+.reading-create .ant-segmented { padding: 4px; background: #f0f3f8; }
+.reading-create .ant-segmented-item-label { min-width: 114px; padding: 3px 14px; }
+.reading-create-material { margin: 22px 0 26px; }
+.reading-create .ant-upload-drag { background: #f8faff; border: 1.5px dashed #bdcce3; border-radius: 14px; }
+.reading-create .ant-upload-drag:hover { border-color: #2563eb; background: #f2f6ff; }
+.reading-create-dropzone { display: grid; justify-items: center; gap: 10px; padding: 30px 12px; }
+.reading-create-dropzone .anticon { color: #3973d8; font-size: 42px; margin-bottom: 4px; }
+.reading-create-dropzone strong { color: #243c5d; font-size: 18px; font-weight: 600; }
+.reading-create-dropzone span { color: #677a94; font-size: 14px; }
+.reading-create-dropzone small { color: #8290a4; margin-top: 7px; font-size: 12px; }
+.reading-create-file { border-bottom: 1px solid #edf1f6; margin-top: 8px; }
+.reading-create-file .ant-btn { padding-inline: 8px; }
+.reading-create .reading-create-hint { margin-top: 12px; font-size: 13px; }
+.reading-create-more, .reading-create-settings { border-top: 1px solid #e9edf3; padding-top: 20px; }
+.reading-create-more summary, .reading-create-settings summary { cursor: pointer; color: #334760; font-weight: 500; font-size: 14px; }
+.reading-create-more summary span { margin-left: 10px; color: #8490a2; font-weight: 400; font-size: 13px; }
+.reading-create-more[open] summary, .reading-create-settings[open] summary { margin-bottom: 22px; }
+.reading-create-settings { border: 1px solid #e7ecf3; border-radius: 10px; background: #fafbfd; padding: 18px; }
+.reading-create-settings summary strong { margin-left: 16px; font-weight: 500; color: #50627a; }
+.reading-create-adjust { float: right; color: #2563eb; font-weight: 400; }
+.reading-create-numbers { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.reading-create .ant-input-number { width: 100%; }
+.reading-create .ant-form-item { margin-bottom: 22px; }
+.reading-create .ant-form-item-label label { color: #44556d; }
+.reading-create .ant-input, .reading-create .ant-input-number { border-radius: 8px; }
+.reading-create .ant-drawer-footer { padding: 18px 32px; border-color: #e7ecf3; background: white; }
+.reading-create-footer { display: flex; gap: 16px; align-items: center; justify-content: space-between; }
+.reading-create-footer > span { color: #7b8798; font-size: 12px; }
+.reading-create-footer .ant-btn { height: 40px; min-width: 84px; border-radius: 8px; }
+.reading-create-footer .ant-btn-primary { min-width: 132px; }
+.reading-create .ant-drawer-content, .reading-create .ant-drawer-body, .reading-create .ant-tabs, .reading-create .ant-tabs-content-holder, .reading-create .ant-tabs-tabpane, .reading-create form { min-width: 0; }
+.reading-create .ant-drawer-body { overflow-x: hidden; }
+.reading-create .ant-upload-wrapper { display: block; max-width: 100%; }
+.reading-create-dropzone > * { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+.reading-create-footer { min-width: 0; flex-wrap: wrap; }
+
+.reading-create-file .ant-space { display: flex; max-width: 100%; }
+.reading-create-file .ant-space-item { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }

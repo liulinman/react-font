@@ -4,7 +4,6 @@ import {
   UnorderedListOutlined,
   BarChartOutlined,
   DashboardOutlined,
-  ExperimentOutlined,
   FileTextOutlined,
   FireOutlined,
   LeftOutlined,
@@ -35,23 +34,14 @@ const navItems: MenuProps["items"] = [
     label: <span title="学习">学习</span>,
     title: "学习",
     children: [
+      { key: "intensiveReading", icon: <ReadOutlined />, label: "文章精读" },
       { key: "readingPractices", icon: <ReadOutlined />, label: "阅读练习" },
-      { key: "recite", icon: <ReadOutlined />, label: "今日复习" },
-      { key: "contextLab", icon: <FileTextOutlined />, label: "语境实验室" },
-      {
-        key: "ieltsCore",
-        icon: <ExperimentOutlined />,
-        label: (
-          <span className="english-world-nav-child-label">
-            <span>雅思核心复习</span>
-            <span className="english-world-nav-child-note">IELTS</span>
-          </span>
-        ),
-      },
+      { key: "recite", icon: <ReadOutlined />, label: "单词复习" },
+      { key: "wordBooks", icon: <BookFilled />, label: "复习手册" },
     ],
   },
   { key: "knowledgeNotes", icon: <FileTextOutlined />, label: "知识笔记", title: "知识笔记" },
-  { key: "stats", icon: <BarChartOutlined />, label: "数据", title: "数据" },
+  { key: "stats", icon: <BarChartOutlined />, label: "数据统计", title: "数据统计" },
 ];
 
 function getPrimaryActiveKey(activeKey: string) {
@@ -72,6 +62,7 @@ function getPrimaryActiveKey(activeKey: string) {
 
 function getSelectedNavKey(activeKey: string) {
   const normalizedKey = normalizeActiveKey(activeKey);
+  if (normalizedKey === "contextLab") return "readingPractices";
   if (normalizedKey === "aiWord" || normalizedKey === "memoryMap") {
     return "words";
   }

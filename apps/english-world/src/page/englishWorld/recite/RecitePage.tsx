@@ -24,9 +24,9 @@ import {
   PlayCircleOutlined,
   ReloadOutlined,
   HistoryOutlined,
+  ExperimentOutlined,
   BarChartOutlined,
   ThunderboltOutlined,
-  ExperimentOutlined,
 } from "@ant-design/icons";
 import { useLocation, useNavigate } from "react-router-dom";
 import { EnglishWorldLayout } from "../layout/EnglishWorldLayout";
@@ -246,7 +246,7 @@ export const RecitePage: React.FC = () => {
     } catch (error: unknown) {
       console.error("开始默写失败:", error);
       const errorMessage =
-        error instanceof Error ? error.message : "今日复习加载失败，请重试";
+        error instanceof Error ? error.message : "单词复习加载失败，请重试";
       message.error(errorMessage);
       setStatus("idle");
     } finally {
@@ -281,7 +281,7 @@ export const RecitePage: React.FC = () => {
       recoveredSessionRef.current = response.sessionId;
       setResults(response);
       setStatus("submitted");
-      message.success("今日复习完成");
+      message.success("单词复习完成");
       const repairWords = getContextRepairWords(response.results);
       void recordLearningEvent({
         eventUid: buildLearningEventUid("recite_completed", response.sessionId),
@@ -475,7 +475,7 @@ export const RecitePage: React.FC = () => {
         {/* 标题和操作按钮 */}
         <section className="recite-loop-topbar">
           <Title level={2} className="mb-0">
-            今日复习
+            单词复习
           </Title>
           <Space>
             {status !== "idle" && (
@@ -898,7 +898,7 @@ export const RecitePage: React.FC = () => {
                   loading={loading}
                   size="large"
                 >
-                  开始今日复习
+                  开始单词复习
                 </Button>
                 <Button
                   icon={<HistoryOutlined />}
@@ -918,12 +918,6 @@ export const RecitePage: React.FC = () => {
                 >
                   看统计
                 </Button>
-                <Button
-                  icon={<ExperimentOutlined />}
-                  onClick={() => navigate("/englishWorld/ielts-core")}
-                >
-                  雅思核心复习
-                </Button>
               </Space>
             </div>
           </Card>
@@ -935,7 +929,7 @@ export const RecitePage: React.FC = () => {
             <div className="text-center py-8">
               <Spin size="large" />
               <div className="mt-4">
-                <Text type="secondary">正在准备今日复习...</Text>
+                <Text type="secondary">正在准备单词复习...</Text>
               </div>
             </div>
           </Card>

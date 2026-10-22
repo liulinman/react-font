@@ -1,3 +1,4 @@
+import "../EnglishWorld.css";
 import {
   useCallback,
   useEffect,
@@ -389,14 +390,18 @@ function ContextLabPageContent({
   onBackToReciteResult,
   onMicroTaskReady,
   onBackToToday,
+  readingMode,
+  onExamTaskChange,
 }: {
+  readingMode?: "exam" | "practice";
+  onExamTaskChange?: (taskId: number | null) => void;
   initialSearch: string;
   onOpenWordLibrary?: () => void;
   onBackToReciteResult?: (sessionId: number) => void;
   onMicroTaskReady?: (taskId: number) => void;
   onBackToToday?: () => void;
 }) {
-  const [sourceMode, setSourceMode] = useState<ContextLabSourceMode>("weak");
+  const [sourceMode, setSourceMode] = useState<ContextLabSourceMode>(readingMode === "exam" ? "ielts-random" : "weak");
   const [count, setCount] = useState(20);
   const [proficiencyLevels, setProficiencyLevels] = useState<number[]>([]);
   const [customWords, setCustomWords] = useState("");
@@ -436,6 +441,21 @@ function ContextLabPageContent({
   const [sourcePreviewFullscreen, setSourcePreviewFullscreen] = useState(false);
   const [practiceModalOpen, setPracticeModalOpen] = useState(false);
   const [examTask, setExamTask] = useState<ContextLabTask | null>(null);
+  const examTaskId = readingMode === "exam" ? Number(new URLSearchParams(initialSearch).get("taskId")) : 0;
+  useEffect(() => {
+    if (!Number.isInteger(examTaskId) || examTaskId < 1) return;
+    let active = true;
+    void request(contextLabDetail({ taskId: examTaskId })).then(task => {
+      if (active && task.status === "succeeded" && task.mode !== "micro") setExamTask(task);
+    }).catch(() => { if (active) message.error("考试材料读取失败，请在下方重试打开。"); });
+    return () => { active = false; };
+  }, [examTaskId]);
+  const openExam = (task: ContextLabTask) => {
+    setPracticeModalOpen(false);
+    setSourcePreviewOpen(false);
+    setExamTask(task);
+    onExamTaskChange?.(task.taskId);
+  };
   const [practiceFullscreen, setPracticeFullscreen] = useState(false);
   const [attemptDrawerOpen, setAttemptDrawerOpen] = useState(false);
   const [attemptTask, setAttemptTask] = useState<ContextLabTask | null>(null);
@@ -957,7 +977,7 @@ function ContextLabPageContent({
   }, [microEntry, wordLibraryTaskId]);
 
   useEffect(() => {
-    if (microEntry || wordLibraryTaskId) return;
+    if (readingMode === "exam" || microEntry || wordLibraryTaskId) return;
     const reference = parseContextLabReference(
       `/englishWorld/context-lab${initialSearch}`,
     );
@@ -998,7 +1018,7 @@ function ContextLabPageContent({
     return () => {
       cancelled = true;
     };
-  }, [history, initialSearch, microEntry, wordLibraryTaskId]);
+  }, [history, initialSearch, microEntry, wordLibraryTaskId, readingMode]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => setMarkedVocabulary([]), 0);
@@ -1080,6 +1100,7 @@ function ContextLabPageContent({
   };
 
   const handleOpenTask = (task: ContextLabTask) => {
+    if (readingMode === "exam" && task.mode !== "micro") { openExam(task); return; }
     userTaskNavigationGenerationRef.current += 1;
     setCurrentTask(task);
     setAnswers({});
@@ -2137,7 +2158,7 @@ function ContextLabPageContent({
               <div className="context-lab-utility-title">
                 <ExperimentOutlined aria-hidden="true" />
                 <div>
-                  <Title level={2}>AI 语境实验室</Title>
+                  <Title level={2}>{readingMode === "exam" ? "单篇考试训练" : readingMode === "practice" ? "自己出题" : "AI 语境实验室"}</Title>
                 </div>
               </div>
               <Space size={8}>
@@ -2470,7 +2491,7 @@ function ContextLabPageContent({
           )}
 
           <div className="context-lab-history-list">
-            {history.map((task) => (
+            {history.filter(task => readingMode !== "exam" || task.mode !== "micro").map((task) => (
               <article
                 className={`context-lab-history-item context-lab-history-item-${task.status}${
                   currentTask?.taskId === task.taskId
@@ -2511,17 +2532,15 @@ function ContextLabPageContent({
                         handleOpenTask(task);
                       }}
                     >
-                      开始练习
+                      {readingMode === "exam" ? "进入考试" : "开始练习"}
                     </Button>
                   )}
-                  {task.status === "succeeded" && task.mode !== "micro" && (
+                  {!readingMode && task.status === "succeeded" && task.mode !== "micro" && (
                     <Button
                       size="small"
                       onClick={(event) => {
                         event.stopPropagation();
-                        setPracticeModalOpen(false);
-                        setSourcePreviewOpen(false);
-                        setExamTask(task);
+                        openExam(task);
                       }}
                     >
                       雅思机考
@@ -2616,7 +2635,7 @@ function ContextLabPageContent({
       {examTask && (
         <ContextLabExam
           task={examTask}
-          onExit={() => setExamTask(null)}
+          onExit={() => { setExamTask(null); onExamTaskChange?.(null); }}
           onCompleted={() => { void loadHistory(); }}
         />
       )}
@@ -2631,8 +2650,8 @@ function ContextLabPageContent({
         open={practiceModalOpen}
         title={
           <div className="context-lab-practice-modal-title">
-            <span>{isMicroMode ? "错词语境巩固" : "AI 语境练习"}</span>
-            {!isMicroMode && currentTask?.status === "succeeded" && (
+            <span>{isMicroMode ? "错词语境巩固" : readingMode ? "自主练习" : "AI 语境练习"}</span>
+            {!readingMode && !isMicroMode && currentTask?.status === "succeeded" && (
               <Button onClick={() => {
                 closeSelectionMenu();
                 setPracticeModalOpen(false);
@@ -3003,12 +3022,19 @@ function ContextLabPageContent({
   );
 }
 
-function ContextLabPageRouter() {
+function ContextLabPageRouter({ readingMode }: { readingMode?: "exam" | "practice" }) {
   const location = useLocation();
   const navigate = useNavigate();
   return (
     <ContextLabPageContent
       initialSearch={location.search}
+      readingMode={readingMode}
+      onExamTaskChange={(taskId) => {
+        const params = new URLSearchParams(location.search);
+        if (taskId === null) params.delete("taskId");
+        else params.set("taskId", String(taskId));
+        navigate(`${location.pathname}?${params.toString()}`, { replace: true });
+      }}
       onOpenWordLibrary={() => navigate("/englishWorld/words")}
       onBackToReciteResult={(sessionId) =>
         navigate(`/englishWorld/recite?view=result&sessionId=${sessionId}`)
@@ -3023,13 +3049,13 @@ function ContextLabPageRouter() {
   );
 }
 
-export function ContextLabPage() {
+export function ContextLabPage({ readingMode }: { readingMode?: "exam" | "practice" } = {}) {
   const inRouterContext = useInRouterContext();
 
   if (inRouterContext) {
     return (
       <ConfigProvider theme={CONTEXT_LAB_LIGHT_THEME}>
-        <ContextLabPageRouter />
+        <ContextLabPageRouter readingMode={readingMode} />
       </ConfigProvider>
     );
   }

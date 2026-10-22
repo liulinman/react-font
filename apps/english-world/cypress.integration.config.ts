@@ -1,10 +1,21 @@
 import { defineConfig } from 'cypress';
 import { execFileSync } from 'node:child_process';
-import { resolve } from 'node:path';
 import { createRequire } from 'node:module';
+import { fileURLToPath } from 'node:url';
 const require = createRequire(import.meta.url);
 
+export function resetTestDatabase() {
+  const backend = process.env.E2E_BACKEND_DIR || fileURLToPath(new URL('../../../nestjs/', import.meta.url));
+  const output = execFileSync('pnpm', ['exec', 'ts-node', '-r', 'tsconfig-paths/register', 'test/integration/seed.ts'],
+    { cwd: backend, encoding: 'utf8', timeout: 60000, env: { ...process.env, NODE_OPTIONS: '' } });
+  return JSON.parse(output.trim().split('\n').at(-1)!);
+}
+export function registerDatabaseTasks(on: Cypress.PluginEvents) {
+  on('task', { resetDatabase: resetTestDatabase });
+}
+
 export default defineConfig({
+  projectId: process.env.CYPRESS_PROJECT_ID || require('./cypress.cloud.json').projectId,
   allowCypressEnv: false,
   reporter: 'cypress-mochawesome-reporter',
   reporterOptions: { reportDir: 'cypress/reports/integration/html', reportFilename: 'index',
@@ -17,17 +28,12 @@ export default defineConfig({
     supportFile: 'cypress/support/e2e.ts',
     testIsolation: true,
     viewportWidth: 1280, viewportHeight: 900,
-    setupNodeEvents(on) {
-      require('cypress-mochawesome-reporter/plugin')(on);
-      on('task', {
-        resetDatabase() {
-          const backend = process.env.E2E_BACKEND_DIR || resolve(process.cwd(), '../../../..', 'nestjs');
-          const output = execFileSync('pnpm', ['exec', 'ts-node', '-r', 'tsconfig-paths/register', 'test/integration/seed.ts'],
-            // Cypress injects a tsx loader into NODE_OPTIONS; do not leak it into ts-node.
-            { cwd: backend, encoding: 'utf8', timeout: 60000, env: { ...process.env, NODE_OPTIONS: '' } });
-          return JSON.parse(output.trim().split('\n').at(-1)!);
-        },
-      });
+    setupNodeEvents(on, config) {
+      if (config.reporter === 'cypress-mochawesome-reporter') {
+        require('cypress-mochawesome-reporter/plugin')(on);
+      }
+      registerDatabaseTasks(on);
+      return config;
     },
   },
 });

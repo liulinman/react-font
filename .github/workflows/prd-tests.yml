@@ -1,0 +1,119 @@
+name: PRD module tests
+
+on:
+  workflow_dispatch:
+    inputs:
+      ai:
+        description: 后台 AI 生成 Case、执行并分析（需配置 API Key 的 self-hosted runner）
+        type: boolean
+        default: false
+      modules:
+        description: '模块 ID，逗号多选，例如 reading,notes；全量填 all'
+        required: true
+        default: notes
+        type: string
+      backend_ref:
+        description: 'nestjs 分支或提交（需包含最新隔离测试初始化）'
+        required: true
+        default: context-lab-learning-loop-mvp
+        type: string
+      cloud:
+        description: '记录 Cypress Cloud（需配置项目 ID 与 Record Key）'
+        required: true
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: prd-tests-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ${{ inputs.ai && 'self-hosted' || 'ubuntu-latest' }}
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: frontend
+      - uses: actions/checkout@v4
+        with:
+          repository: liulinman/nestjs
+          ref: ${{ inputs.backend_ref }}
+          path: nestjs
+          token: ${{ secrets.E2E_BACKEND_TOKEN || github.token }}
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.8.1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: |
+            frontend/pnpm-lock.yaml
+            nestjs/pnpm-lock.yaml
+      - name: Install frontend and backend dependencies
+        run: |
+          pnpm --dir frontend install --frozen-lockfile
+          pnpm --dir nestjs install --frozen-lockfile
+          pnpm --dir frontend --filter @font/english-world exec cypress install
+      - name: Test the runner
+        working-directory: frontend
+        run: pnpm test:prd:runner
+      - name: Execute selected PRD tests
+        working-directory: frontend
+        env:
+          PRD_MODULES: ${{ inputs.modules }}
+          PRD_AI: ${{ inputs.ai }}
+          PRD_CLOUD: ${{ inputs.cloud }}
+          CYPRESS_PROJECT_ID: ${{ vars.CYPRESS_PROJECT_ID }}
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+          PRD_AI_PROVIDER: ${{ vars.PRD_AI_PROVIDER || 'deepseek' }}
+          PRD_AI_MODEL: ${{ vars.PRD_AI_MODEL }}
+          PRD_AI_BASE_URL: ${{ vars.PRD_AI_BASE_URL }}
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          E2E_BACKEND_DIR: ${{ github.workspace }}/nestjs
+        shell: bash
+        run: |
+          args=()
+          if [ "$PRD_MODULES" = all ]; then
+            args+=(--all)
+          else
+            args+=(--module "$PRD_MODULES")
+          fi
+          if [ "$PRD_AI" = true ]; then
+            codex --version
+            if [ "$PRD_CLOUD" != true ]; then args+=(--local-only); fi
+            pnpm test:prd:ai "${args[@]}"
+          else
+            if [ "$PRD_CLOUD" = true ]; then args+=(--cloud); fi
+            pnpm test:prd "${args[@]}"
+          fi
+      - name: Preserve reports, screenshots and logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: prd-test-results-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            frontend/test-results/prd/
+            frontend/test-results/ai/**/job.json
+            frontend/test-results/ai/**/report.html
+            frontend/test-results/ai/**/result.json
+            frontend/test-results/ai/**/plan.json
+            frontend/test-results/ai/**/run.json
+            frontend/test-results/ai/**/execution.json
+            frontend/test-results/ai/**/execution/
+            frontend/test-results/ai/**/analysis*
+            frontend/test-results/ai/**/*.log
+            frontend/test-results/ai/**/generate-output.json
+            frontend/test-results/ai/**/screenshots/
+            frontend/test-results/ai/**/videos/
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Explain report status
+        if: always()
+        run: |
+          echo 'PRD 报告见 artifacts；测试通过与需求覆盖分别统计。AI 模式自动生成与分析；普通重放模式的 AI 分析需另行完成。自托管 runner 需 Codex CLI、API Key 和 Docker。' >> "$GITHUB_STEP_SUMMARY"

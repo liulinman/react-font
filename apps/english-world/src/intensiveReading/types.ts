@@ -1,0 +1,50 @@
+export type ParagraphRole = "body" | "heading" | "exercise" | "instruction" | "answer";
+export type Paragraph = { id: string; text: string; role?: ParagraphRole };
+export type Annotation = {
+  id: string;
+  bodyVersionId: string;
+  paragraphId: string;
+  start: number;
+  end: number;
+  quote: string;
+  color: "yellow" | "blue" | "pink";
+  category: string;
+  note: string;
+  isQuestion: boolean;
+  resolved: boolean;
+  anchorStatus: "active" | "needs_confirmation";
+  version: number;
+};
+export type Source = {
+  id: string;
+  uploadKey: string;
+  name: string;
+  mime: string;
+  pages: number;
+  size: number;
+};
+export type Material = {
+  id: string;
+  title: string;
+  sourceType: "text" | "file";
+  originalText: string;
+  status: "uploading" | "processing" | "failed" | "review" | "ready";
+  version: number;
+  activeBodyVersionId: string | null;
+  paragraphs: Paragraph[];
+  annotations: Annotation[];
+  sources: Source[];
+  uploadPlan?: { key: string; name: string; size: number }[];
+  progress: { paragraphId: string; ratio: number } | null;
+  uncertainties: string[];
+  job?: { pages: unknown[]; results: unknown[]; error: string };
+  updatedAt: string;
+};
+export type Selection = {
+  paragraphId: string;
+  start: number;
+  end: number;
+  quote: string;
+  left: number;
+  top: number;
+};

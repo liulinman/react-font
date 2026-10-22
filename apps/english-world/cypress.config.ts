@@ -4,6 +4,7 @@ import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
 
 export default defineConfig({
+  projectId: process.env.CYPRESS_PROJECT_ID || require('./cypress.cloud.json').projectId,
   allowCypressEnv: false,
   reporter: "cypress-mochawesome-reporter",
   reporterOptions: {

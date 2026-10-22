@@ -1,162 +1,9 @@
-import { ReadingFeedback } from "./ReadingFeedback";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import request from "@font/api";
-import { getPractice, getResult, submitPractice } from "./api";
+import { getPractice, getResult } from "./api";
 import type { PracticeResult, PublicPractice } from "./types";
-import { usePracticeDraft } from "./usePracticeDraft";
-import { ResultContent } from "./ReadingPracticeResult";
-function AnswerSheet({
-  paper,
-  userId,
-}: {
-  paper: PublicPractice;
-  userId: number;
-}) {
-  const { draft, choose, clear, notice } = usePracticeDraft(
-    userId,
-    paper.id,
-    paper.questions,
-  );
-  const [tab, setTab] = useState<"article" | "questions">("article"),
-    [error, setError] = useState(""),
-    [busy, setBusy] = useState(false),
-    [result, setResult] = useState<PracticeResult>();
-  const lock = useRef(false);
-  const submit = async () => {
-    if (lock.current) return;
-    const missing = paper.questions.findIndex(
-      (q) => draft.answers[q.id] === undefined,
-    );
-    if (missing >= 0) {
-      setError(`请完成第 ${missing + 1} 题后再提交。`);
-      setTab("questions");
-      setTimeout(
-        () => document.getElementById(`question-${missing}`)?.focus(),
-        0,
-      );
-      return;
-    }
-    lock.current = true;
-    setBusy(true);
-    setError("");
-    try {
-      const result = await request(
-        submitPractice(paper.id, {
-          requestUid: draft.requestUid,
-          answers: paper.questions.map((q) => ({
-            questionId: q.id,
-            selectedIndex: draft.answers[q.id],
-          })),
-        }),
-      );
-      clear();
-      setResult(result);
-    } catch {
-      try {
-        const result = await request(getResult(paper.id));
-        clear();
-        setResult(result);
-      } catch {
-        setError(
-          "提交未完成，答案已保留。请联网后重试；已开始的练习即使撤回也可提交。",
-        );
-      }
-    } finally {
-      lock.current = false;
-      setBusy(false);
-    }
-  };
-  if (result) return <ResultContent result={result} paper={paper} />;
-  const completed = paper.questions.filter(
-    (q) => draft.answers[q.id] !== undefined,
-  ).length;
-  return (
-    <>
-      <header className="rp-heading">
-        <h1>{paper.title}</h1>
-        <p>
-          难度为生成配置 {paper.ieltsBand.toFixed(1)}（未经正式校准） ·{" "}
-          {paper.questions.length} 题 · 每题一项答案，提交后查看解析
-        </p>
-      </header>
-      {notice && <p role="status">{notice}</p>}
-      <div className="rp-mobile-tabs" role="group" aria-label="阅读和答题">
-        <button
-          aria-pressed={tab === "article"}
-          onClick={() => setTab("article")}
-        >
-          阅读文章
-        </button>
-        <button
-          aria-pressed={tab === "questions"}
-          onClick={() => setTab("questions")}
-        >
-          答题 {completed}/{paper.questions.length}
-        </button>
-      </div>
-      <div className={`rp-columns rp-tab-${tab}`}>
-        <article className="rp-article">
-          <h2>阅读文章</h2>
-          <p>{paper.instructions}</p>
-          {paper.paragraphs.map((p, i) => (
-            <p key={i}>
-              <span className="rp-paragraph-number">
-                {paper.paragraphLabels?.[i] || i + 1}
-              </span>
-              {p}
-            </p>
-          ))}
-        </article>
-        <section className="rp-questions" aria-label="练习题目">
-          <h2>配套练习</h2>
-          {paper.questions.map((q, i) => (
-            <fieldset
-              disabled={busy}
-              tabIndex={-1}
-              id={`question-${i}`}
-              key={q.id}
-            >
-              <legend>
-                {i + 1}. {q.stem}
-              </legend>
-              <p>{q.instructions}</p>
-              {q.options.map((o, n) => (
-                <label
-                  className={draft.answers[q.id] === n ? "is-selected" : ""}
-                  key={n}
-                >
-                  <input
-                    type="radio"
-                    name={q.id}
-                    checked={draft.answers[q.id] === n}
-                    onChange={() => choose(q.id, n)}
-                  />
-                  <span>
-                    {String.fromCharCode(65 + n)}. {o}
-                  </span>
-                </label>
-              ))}
-              <ReadingFeedback practiceId={paper.id} questionId={q.id} />
-            </fieldset>
-          ))}
-        </section>
-      </div>
-      <footer className="rp-submit">
-        <div>
-          <strong>
-            已完成 {completed} / {paper.questions.length}
-          </strong>
-          <small>每套练习只能正式提交一次</small>
-          {error && <p role="alert">{error}</p>}
-        </div>
-        <button disabled={busy} onClick={() => void submit()}>
-          {busy ? "正在提交…" : "提交答案"}
-        </button>
-      </footer>
-    </>
-  );
-}
+import { SharedReadingExam } from "./SharedReadingExam";
 export function ReadingPracticeReader({
   practiceId,
   basePath,
@@ -172,6 +19,9 @@ export function ReadingPracticeReader({
     [retry, setRetry] = useState(0);
   useEffect(() => {
     let active = true;
+    setPaper(undefined);
+    setResult(undefined);
+    setError("");
     void request(getPractice(practiceId))
       .then(async (p) => {
         const r = p.submitted
@@ -203,41 +53,14 @@ export function ReadingPracticeReader({
       ) : !paper ? (
         <p role="status">正在加载练习…</p>
       ) : result ? (
-        <ResultContent result={result} paper={paper} />
+        <SharedReadingExam key={`${userId}:${practiceId}:result`} initialResult={result} paper={paper} userId={userId} basePath={basePath} />
       ) : paper.status === "withdrawn" && !paper.started ? (
         <div className="rp-empty">
           <h1>练习已撤回</h1>
           <p>这套练习已停止作答，请查看其他阅读练习。</p>
         </div>
-      ) : !paper.started ? (
-        <div className="rp-empty">
-          <h1>{paper.title}</h1>
-          <p>
-            {paper.questions.length} 道题。开始后作答绑定此版本，可保留草稿。
-          </p>
-          <button
-            onClick={async () => {
-              try {
-                await request({
-                  url: `/reading-practices/${paper.id}/start`,
-                  method: "POST",
-                  data: {},
-                });
-                setPaper({ ...paper, started: true });
-              } catch {
-                setError("未能开始练习，请刷新检查状态后重试。");
-              }
-            }}
-          >
-            开始作答
-          </button>
-        </div>
       ) : (
-        <AnswerSheet
-          key={`${userId}:${practiceId}`}
-          paper={paper}
-          userId={userId}
-        />
+        <SharedReadingExam key={`${userId}:${practiceId}`} paper={paper} userId={userId} basePath={basePath} />
       )}
     </main>
   );

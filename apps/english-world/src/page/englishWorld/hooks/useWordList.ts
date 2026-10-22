@@ -46,6 +46,7 @@ export function useWordList(initialPageSize = 10) {
     revision: 0,
   });
   const requestSequenceRef = useRef(0);
+  const successfulFiltersRef = useRef<Record<string, unknown>>({});
   const { page, pageSize, filters, revision } = queryState;
 
   useEffect(() => {
@@ -66,6 +67,7 @@ export function useWordList(initialPageSize = 10) {
         if (!active || requestSequence !== requestSequenceRef.current) return;
 
         const lastPage = Math.max(1, Math.ceil(res.total / pageSize));
+        successfulFiltersRef.current = filters;
         setTotalNum(res.total);
         if (page > lastPage) {
           setQueryState((current) =>
@@ -144,6 +146,7 @@ export function useWordList(initialPageSize = 10) {
     pageSize,
     totalNum,
     getCurrentFilters,
+    getLastSuccessfulFilters: () => successfulFiltersRef.current,
     search,
     reset,
     refresh,

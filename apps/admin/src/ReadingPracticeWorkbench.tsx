@@ -1,5 +1,7 @@
+import { ReadingImportProgress } from "./ReadingImportProgress";
+import { PracticePublishDialog } from "./PracticePublishDialog";
 import "./readingWorkbench.css";
-import { ReadingQuestionReadout } from "./ReadingQuestionReadout";
+import { ReadingQuestionReadout, readingOptionLabel } from "./ReadingQuestionReadout";
 import { ReadingPracticeRecipients } from "./ReadingPracticeRecipients";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -17,7 +19,7 @@ import {
   Tag,
 } from "antd";
 import request from "@font/api";
-import { newRequestId } from "./api/readingPractice";
+import { getPractice, newRequestId } from "./api/readingPractice";
 import type {
   AdminPractice,
   PracticeContent,
@@ -33,11 +35,30 @@ const fieldNames: Record<string, string> = {
   stem: "题干",
   kind: "题型",
   options: "全部选项",
-  correctIndex: "答案",
+  correctIndex: "选项答案",
+  acceptedAnswers: "填空参考答案",
+  maxWords: "最多词数",
   evidence: "证据",
   explanation: "解析",
   instructions: "作答要求",
 };
+export function needsAnswerCompletion(content: PracticeContent, q: Question) {
+  if (!["choice", "true_false_not_given", "matching_features", "sentence_completion"].includes(q.kind)) return false;
+  const e = q.evidence;
+  return (
+    (q.kind === "sentence_completion"
+      ? !q.acceptedAnswers?.length || q.acceptedAnswers.some((answer) => !answer.trim() || (q.maxWords != null && answer.trim().split(/\s+/).length > q.maxWords)) || (q.maxWords != null && (!Number.isInteger(q.maxWords) || q.maxWords < 1))
+      : !Number.isInteger(q.correctIndex) || q.correctIndex! < 0 || q.correctIndex! >= q.options.length) ||
+    !q.explanation?.trim() ||
+    !Number.isInteger(e?.paragraph) ||
+    e.paragraph < 1 ||
+    e.paragraph > content.paragraphs.length ||
+    (q.kind === "true_false_not_given" && q.correctIndex === 2
+      ? !e.missingInformation?.trim()
+      : !e.quote?.trim() ||
+        !content.paragraphs[e.paragraph - 1]?.includes(e.quote))
+  );
+}
 function errorMessage(e: any) {
   return (
     e?.response?.data?.message || e?.message || "操作失败，输入已保留，请重试。"
@@ -71,6 +92,7 @@ export function ReadingPracticeWorkbench({
     [correction, setCorrection] = useState({
       action: "answer",
       correctIndex: 0,
+      acceptedAnswers: [] as string[],
       reason: "",
       explanation: "",
     }),
@@ -79,10 +101,16 @@ export function ReadingPracticeWorkbench({
       Record<string, { status: string; reason: string }>
     >({});
   const [recipientsOpen, setRecipientsOpen] = useState(false);
+  const [publishOpen, setPublishOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("edit");
   const [editingContent, setEditingContent] = useState(false);
+  const [inlineQuestion, setInlineQuestion] = useState<string | null>(null);
+  const autoStarted = useRef<number | null>(null);
   useEffect(() => {
-    setActiveTab("edit");
+    setActiveTab("review");
+    setInlineQuestion(null);
+    setPublishOpen(false);
+    autoStarted.current = null;
     setEditingContent(false);
     setError("");
     setPreview(false);
@@ -93,7 +121,17 @@ export function ReadingPracticeWorkbench({
     if (paper) {
       setContent(paper.content ? structuredClone(paper.content) : undefined);
       setSources(paper.workflow?.sources || []);
-      setChecked(paper.workflow?.reviewedQuestions || []);
+      setChecked(
+        (paper.workflow?.reviewedQuestions || []).filter((id: string) => {
+          const x = paper.content?.questions.find((q) => q.id === id);
+          return (
+            x &&
+            paper.content &&
+            ["choice", "true_false_not_given", "matching_features", "sentence_completion"].includes(x.kind) &&
+            !needsAnswerCompletion(paper.content, x)
+          );
+        }),
+      );
       setSelected((s) =>
         paper.content?.questions.some((q) => q.id === s)
           ? s
@@ -115,7 +153,10 @@ export function ReadingPracticeWorkbench({
     setBusy(true);
     setError("");
     try {
-      const next = await request(workflowRequest(paper.id, action, data));
+      const next = await request({
+        ...workflowRequest(paper.id, action, data),
+        ...(["check", "complete-answers"].includes(action) ? { config: { timeout: 300000 } } : {}),
+      });
       if (next?.content || next?.status) onChange(next);
       return next;
     } catch (e) {
@@ -143,8 +184,29 @@ export function ReadingPracticeWorkbench({
     w = paper?.workflow || {},
     editable = paper?.status === "draft",
     revision = w.revision || 1;
+  useEffect(() => {
+    setCorrection((current) => ({ ...current, correctIndex: q?.correctIndex ?? 0, acceptedAnswers: q?.acceptedAnswers || [] }));
+  }, [selected, paper?.id]);
   const latestMessages: any[] = w.chats?.[selected] || [];
-  const save = () => void run("save", { revision, content });
+  const save = async () => {
+    const next = await run("save-check", { revision, content });
+    if (next) { setInlineQuestion(null); setEditingContent(false); setActiveTab("review"); }
+  };
+  const autoStatus = w.autoReview?.status;
+  const preparing = ["queued", "generating"].includes(paper?.status || "") || ["pending", "processing"].includes(autoStatus);
+  useEffect(() => {
+    if (!paper || !preparing || busy || dirty) return;
+    let alive = true;
+    const timer = setInterval(() => {
+      void request(getPractice(paper.id)).then((next) => { if (alive) onChange(next); }).catch(() => undefined);
+    }, 3000);
+    return () => { alive = false; clearInterval(timer); };
+  }, [paper?.id, preparing, busy, dirty, onChange]);
+  useEffect(() => {
+    if (!paper || !editable || !content || dirty || busy || preparing || w.qualityRevision === revision || autoStatus === "failed" || autoStarted.current === paper.id) return;
+    autoStarted.current = paper.id;
+    void run("check", { revision, repair: true });
+  }, [paper?.id, editable, !!content, dirty, busy, preparing, autoStatus, revision, w.qualityRevision]);
   const moveOption = (i: number, delta: number) => {
     if (!q) return;
     const options = [...q.options];
@@ -165,123 +227,77 @@ export function ReadingPracticeWorkbench({
       });
     else onClose();
   };
-  const unresolvedCount = (w.issues || []).filter(
-    (i: any) =>
-      !i.resolved &&
-      !(
-        i.type === "ai" &&
-        resolutions[i.id]?.reason.trim() &&
-        resolutions[i.id]?.evidence.trim()
-      ),
-  ).length;
-  const submitReview = () =>
-    void run("review", {
-      revision,
-      questionIds: checked,
-      resolutions: Object.entries(resolutions)
-        .filter(([, r]) => r.reason.trim() && r.evidence.trim())
-        .map(([issueId, r]) => ({ issueId, ...r })),
+  const issueOpen = (i: any) => !i.resolved && !(i.type === "ai" && resolutions[i.id]?.reason.trim() && resolutions[i.id]?.evidence.trim());
+  const unresolvedIssues = (w.issues || []).filter(issueOpen);
+  const unresolvedCount = unresolvedIssues.length;
+  const issuesFor = (id: string) => unresolvedIssues.filter((i: any) => i.questionId === id);
+  const problemQuestions = content?.questions.filter((x) => issuesFor(x.id).length || needsAnswerCompletion(content, x)) || [];
+  const checkAndRepair = () => void run("check", { revision, repair: true });
+  const jumpToQuestion = (id?: string) => {
+    if (id) setSelected(id);
+    setActiveTab("review");
+    setTimeout(() => {
+      const target = document.getElementById(id ? `review-question-${id}` : "review-global-issues");
+      target?.querySelectorAll("details").forEach((detail) => { detail.open = true; });
+      target?.scrollIntoView?.({ block: "start", behavior: "smooth" });
+    }, 100);
+  };
+  const humanMessage = (text?: string) => text?.replace(/evidence\.paragraph/g, "引用段落") || "请核实本题内容";
+  const publish = () => { setError(""); setPublishOpen(true); };
+  const confirmPublish = async (recipients: {targetType:"all"|"selected";targetUserIds?:number[]}) => {
+    const result = await run("publish", {
+      revision, reviewed: true, confirmAll: true, recipients,
+      resolutions: Object.entries(resolutions).filter(([, r]) => r.reason.trim() && r.evidence.trim()).map(([issueId, r]) => ({ issueId, ...r })),
+      requestUid: publishUid.current,
     });
-  const publish = () =>
-    Modal.confirm({
-      title: "发布给学生",
-      okText: "确认发布",
-      cancelText: "再检查一下",
-      content: `${content?.questions.length || 0} 道题，发送给${paper?.config.targetType === "all" ? "全部正常用户" : `${paper?.config.targetUserIds?.length || 0} 位指定用户`}。每人可提交一次。`,
-      onOk: () =>
-        run("publish", {
-          revision,
-          reviewed: true,
-          requestUid: publishUid.current,
-        }),
-    });
+    if (result) setPublishOpen(false);
+  };
   const editQuestion = (id: string) => {
+    if (busy || preparing) return;
     setSelected(id);
-    setEditingContent(true);
-    setActiveTab("edit");
+    setInlineQuestion(id);
+    setActiveTab("review");
     setTimeout(
       () =>
         document
-          .querySelector('.reading-workbench [aria-label="题干"]')
-          ?.scrollIntoView({ block: "center", behavior: "smooth" }),
+          .getElementById(`review-question-${id}`)
+          ?.scrollIntoView?.({ block: "center", behavior: "smooth" }),
       100,
     );
   };
   return (
     <Drawer
       width="min(1120px, 100vw)"
-      rootClassName="reading-workbench"
+      rootClassName={"reading-workbench" + (!content ? " reading-workbench-processing" : "")}
       open={!!paper}
-      title={editable ? "审核并发布练习" : paper?.title || "阅读练习"}
+      title={!content ? "整理阅读练习" : editable ? "审核并发布练习" : paper?.title || "阅读练习"}
       onClose={close}
       footer={
         <div className="reading-workbench-footer">
           <span role="status">
-            {editable
+            {!content ? "原稿已保存，可关闭后从练习列表继续查看。" : editable
               ? dirty
                 ? "修改尚未保存，保存后需要重新核对。"
                 : w.reviewedRevision === revision
                   ? "核对完成，可以发布给学生。"
                   : w.qualityRevision !== revision
-                    ? "先检查题目，再逐题确认答案和解析。全部完成后即可发布。"
-                    : `已确认 ${checked.length} / ${content?.questions.length || 0} 题${unresolvedCount ? `，还有 ${unresolvedCount} 项检查提示待处理` : ""}。`
+                    ? preparing ? "AI 正在自动处理，请稍候。" : "检查尚未完成，请重试检查。"
+                    : `共 ${content?.questions.length || 0} 题${problemQuestions.length ? `，${problemQuestions.length} 题有提示，请核实` : "，自动检查已完成，可审核后发布"}。`
               : "已发布内容仅供查看；更正答案请打开“反馈与纠错”。"}
           </span>
           <Space wrap>
             <Button onClick={close}>关闭</Button>
-            <Button onClick={() => setPreview(true)} disabled={!content}>
-              学生视角预览
-            </Button>
+            {content && <Button onClick={() => setPreview(true)}>学生视角预览</Button>}
             {editable &&
               content &&
               (dirty ? (
                 <Button key="save" type="primary" onClick={save} loading={busy}>
-                  保存修改
-                </Button>
-              ) : w.reviewedRevision === revision ? (
-                <Button
-                  key="publish"
-                  aria-label="发布给学生"
-                  type="primary"
-                  disabled={busy}
-                  onClick={publish}
-                >
-                  发布给学生
-                </Button>
-              ) : activeTab !== "review" ? (
-                <Button
-                  key="next"
-                  type="primary"
-                  onClick={() => {
-                    setEditingContent(false);
-                    setActiveTab("review");
-                  }}
-                >
-                  下一步：核对题目
-                </Button>
-              ) : w.qualityRevision !== revision ? (
-                <Button
-                  key="check"
-                  type="primary"
-                  loading={busy}
-                  onClick={() => void run("check", { revision })}
-                >
-                  检查题目
+                  保存并复查
                 </Button>
               ) : (
-                <Button
-                  key="review"
-                  type="primary"
-                  loading={busy}
-                  disabled={
-                    checked.length !== content.questions.length ||
-                    unresolvedCount > 0
-                  }
-                  aria-label="完成核对"
-                  onClick={submitReview}
-                >
-                  完成核对
-                </Button>
+                <Button key="publish" aria-label="确认并发布" type="primary"
+                  disabled={busy || preparing || w.qualityRevision !== revision || unresolvedIssues.some((i: any) => i.blocking) || content.questions.length === 0 || content.questions.some((x) => needsAnswerCompletion(content, x))}
+                  onClick={publish}>确认并发布</Button>
               ))}
             {!editable &&
               paper &&
@@ -300,7 +316,7 @@ export function ReadingPracticeWorkbench({
       }
     >
       {error && <Alert type="error" showIcon message={error} />}
-      <Space wrap>
+      {content && <Space wrap>
         <Tag>
           {
             {
@@ -322,36 +338,14 @@ export function ReadingPracticeWorkbench({
         {dirty && <Tag color="orange">有未保存修改；保存后重新审核</Tag>}
         <details className="reading-workbench-meta">
           <summary>版本与难度</summary>内容版本 {w.version || 1} · 修改记录{" "}
-          {revision} · 评分修订 {w.gradingRevision || 0} · 参考雅思难度{" "}
-          {paper?.config.ieltsBand}（AI 生成，供参考）
+          {revision} · 评分修订 {w.gradingRevision || 0} ·{" "}
+          {w.sourceType
+            ? "原稿材料，文章难度未标定"
+            : `参考雅思难度 ${paper?.config.ieltsBand}（AI 生成，供参考）`}
         </details>
-      </Space>
+      </Space>}
       {!content ? (
-        <>
-          <Alert
-            type={paper?.status === "failed" ? "error" : "info"}
-            message={
-              paper?.status === "failed"
-                ? paper.failureSummary || "处理失败，原稿已保留，可重试。"
-                : "任务处理中，关闭后可从列表查看状态，原稿会保留。"
-            }
-          />
-          {paper?.status === "failed" && (
-            <Button loading={busy} onClick={() => void run("retry", {})}>
-              重试此任务
-            </Button>
-          )}
-          <SourceFiles value={sources} onChange={() => undefined} disabled />
-          {w.importInput && (
-            <details>
-              <summary>已保存的输入材料</summary>
-              <pre style={{ whiteSpace: "pre-wrap" }}>{w.importInput.text}</pre>
-              <pre style={{ whiteSpace: "pre-wrap" }}>
-                {w.importInput.answerText}
-              </pre>
-            </details>
-          )}
-        </>
+        paper && <ReadingImportProgress key={paper.id} paper={paper} sources={sources} busy={busy} onRetry={() => void run("retry", {})} />
       ) : (
         <Tabs
           activeKey={activeTab}
@@ -367,7 +361,9 @@ export function ReadingPracticeWorkbench({
                     <span>
                       {editingContent
                         ? "修改后请保存，再重新核对题目。"
-                        : editable ? "先通读文章，接着核对每道题的答案和解析。" : "已发布的文章与题目可直接查看。"}
+                        : editable
+                          ? "先通读文章，接着核对每道题的答案和解析。"
+                          : "已发布的文章与题目可直接查看。"}
                     </span>
                     {editable && (
                       <Button
@@ -405,7 +401,7 @@ export function ReadingPracticeWorkbench({
                           <Input
                             aria-label="练习标题"
                             value={content.title}
-                            disabled={!editable}
+                            disabled={!editable || busy || preparing}
                             maxLength={160}
                             onChange={(e) =>
                               change({ ...content, title: e.target.value })
@@ -416,7 +412,7 @@ export function ReadingPracticeWorkbench({
                           作答要求
                           <Input.TextArea
                             value={content.instructions || ""}
-                            disabled={!editable}
+                            disabled={!editable || busy || preparing}
                             onChange={(e) =>
                               change({
                                 ...content,
@@ -434,7 +430,7 @@ export function ReadingPracticeWorkbench({
                                 aria-label={`原始段落标记${i + 1}`}
                                 placeholder="原始段落标记"
                                 value={content.paragraphLabels?.[i] || ""}
-                                disabled={!editable}
+                                disabled={!editable || busy || preparing}
                                 onChange={(e) => {
                                   const labels = [
                                     ...(content.paragraphLabels || []),
@@ -447,7 +443,7 @@ export function ReadingPracticeWorkbench({
                                 }}
                               />
                               <Button
-                                disabled={!editable}
+                                disabled={!editable || busy || preparing}
                                 onClick={() =>
                                   change({
                                     ...content,
@@ -478,7 +474,7 @@ export function ReadingPracticeWorkbench({
                             <Input.TextArea
                               value={p}
                               autoSize={{ minRows: 3, maxRows: 12 }}
-                              disabled={!editable}
+                              disabled={!editable || busy || preparing}
                               onChange={(e) =>
                                 change({
                                   ...content,
@@ -491,7 +487,7 @@ export function ReadingPracticeWorkbench({
                           </div>
                         ))}
                         <Button
-                          disabled={!editable}
+                          disabled={!editable || busy || preparing}
                           onClick={() =>
                             change({
                               ...content,
@@ -514,7 +510,7 @@ export function ReadingPracticeWorkbench({
                             onChange={setSelected}
                           />
                           <Button
-                            disabled={!editable}
+                            disabled={!editable || busy || preparing}
                             onClick={() => {
                               const id = `q-${Date.now()}`;
                               change({
@@ -540,7 +536,7 @@ export function ReadingPracticeWorkbench({
                           {q && (
                             <Button
                               danger
-                              disabled={!editable}
+                              disabled={!editable || busy || preparing}
                               onClick={() => {
                                 change({
                                   ...content,
@@ -564,9 +560,11 @@ export function ReadingPracticeWorkbench({
                               <span>题型</span>
                               <Select
                                 value={q.kind}
-                                disabled={!editable}
+                                disabled={!editable || busy || preparing}
                                 options={[
                                   { value: "choice", label: "单项选择" },
+                                  { value: "sentence_completion", label: "句子填空" },
+                                  { value: "matching_features", label: "人物 / 特征匹配" },
                                   {
                                     value: "true_false_not_given",
                                     label: "True / False / Not Given",
@@ -584,8 +582,12 @@ export function ReadingPracticeWorkbench({
                                             "Not Given",
                                           ],
                                           correctIndex: null,
+                                          acceptedAnswers: undefined,
+                                          maxWords: undefined,
                                         }
-                                      : {}),
+                                      : kind === "sentence_completion"
+                                        ? { options: [], correctIndex: null, acceptedAnswers: [], maxWords: undefined }
+                                        : { options: q.options.length ? q.options : ["", "", "", ""], correctIndex: null, acceptedAnswers: undefined, maxWords: undefined }),
                                   })
                                 }
                               />
@@ -598,7 +600,7 @@ export function ReadingPracticeWorkbench({
                                     (x) => x.id === q.id,
                                   ) + 1
                                 }
-                                disabled={!editable}
+                                disabled={!editable || busy || preparing}
                                 onChange={(n) => {
                                   if (n) {
                                     const qs = content.questions.filter(
@@ -623,7 +625,7 @@ export function ReadingPracticeWorkbench({
                               <Input.TextArea
                                 aria-label="题干"
                                 value={q.stem}
-                                disabled={!editable}
+                                disabled={!editable || busy || preparing}
                                 onChange={(e) =>
                                   update({ stem: e.target.value })
                                 }
@@ -633,15 +635,15 @@ export function ReadingPracticeWorkbench({
                               本题要求
                               <Input.TextArea
                                 value={q.instructions || ""}
-                                disabled={!editable}
+                                disabled={!editable || busy || preparing}
                                 onChange={(e) =>
                                   update({ instructions: e.target.value })
                                 }
                               />
                             </label>
-                            {q.kind !== "true_false_not_given" && (
+                            {q.kind !== "sentence_completion" && q.kind !== "true_false_not_given" && (
                               <Button
-                                disabled={!editable || q.options.length >= 4}
+                                disabled={!editable || q.options.length >= (q.kind === "matching_features" ? 20 : 4)}
                                 onClick={() =>
                                   update({ options: [...q.options, ""] })
                                 }
@@ -649,7 +651,7 @@ export function ReadingPracticeWorkbench({
                                 添加选项
                               </Button>
                             )}
-                            {q.options.map((o, i) => (
+                            {q.kind !== "sentence_completion" && q.options.map((o, i) => (
                               <div
                                 key={i}
                                 style={{
@@ -718,23 +720,34 @@ export function ReadingPracticeWorkbench({
                                 </Button>
                               </div>
                             ))}
-                            <label>
+                            {q.kind === "sentence_completion" ? (
+                              <>
+                                <label>
+                                  可接受答案（每行一个）
+                                  <Input.TextArea aria-label="可接受答案" value={(q.acceptedAnswers || []).join("\n")} disabled={!editable || busy || preparing} onChange={(e) => update({ acceptedAnswers: e.target.value.split("\n") })} />
+                                </label>
+                                <label>
+                                  最多词数（留空表示不限）
+                                  <InputNumber aria-label="最多词数" min={1} precision={0} value={q.maxWords} disabled={!editable || busy || preparing} onChange={(value) => update({ maxWords: value ?? undefined })} />
+                                </label>
+                              </>
+                            ) : <label>
                               正确答案{" "}
                               <Select
                                 aria-label="正确答案"
                                 allowClear
                                 value={q.correctIndex ?? undefined}
-                                disabled={!editable}
+                                disabled={!editable || busy || preparing}
                                 style={{ width: 220, margin: 12 }}
                                 options={q.options.map((o, i) => ({
                                   value: i,
-                                  label: `${String.fromCharCode(65 + i)}. ${o.slice(0, 30)}`,
+                                  label: readingOptionLabel(q.kind, o.slice(0, 30), i),
                                 }))}
                                 onChange={(v) =>
                                   update({ correctIndex: v ?? null })
                                 }
                               />
-                            </label>
+                            </label>}
                             <Tag>
                               {q.answerSource === "source"
                                 ? "原材料答案"
@@ -746,7 +759,7 @@ export function ReadingPracticeWorkbench({
                               解析
                               <Input.TextArea
                                 value={q.explanation}
-                                disabled={!editable}
+                                disabled={!editable || busy || preparing}
                                 onChange={(e) =>
                                   update({ explanation: e.target.value })
                                 }
@@ -758,7 +771,7 @@ export function ReadingPracticeWorkbench({
                                 min={1}
                                 max={content.paragraphs.length}
                                 value={q.evidence.paragraph}
-                                disabled={!editable}
+                                disabled={!editable || busy || preparing}
                                 onChange={(n) =>
                                   update({
                                     evidence: {
@@ -773,7 +786,7 @@ export function ReadingPracticeWorkbench({
                               原文引用
                               <Input.TextArea
                                 value={q.evidence.quote || ""}
-                                disabled={!editable}
+                                disabled={!editable || busy || preparing}
                                 onChange={(e) =>
                                   update({
                                     evidence: {
@@ -788,7 +801,7 @@ export function ReadingPracticeWorkbench({
                               NG缺失信息
                               <Input.TextArea
                                 value={q.evidence.missingInformation || ""}
-                                disabled={!editable}
+                                disabled={!editable || busy || preparing}
                                 onChange={(e) =>
                                   update({
                                     evidence: {
@@ -813,22 +826,29 @@ export function ReadingPracticeWorkbench({
             },
             {
               key: "review",
-              label: `2 核对题目${unresolvedCount ? ` · ${unresolvedCount} 项提示` : ""}`,
+              label: `2 核对题目${problemQuestions.length ? ` · ${problemQuestions.length} 题待处理` : unresolvedCount ? " · 文章待处理" : ""}`,
               children: (
                 <>
                   <p className="admin-muted">
-                    {editable ? "核对选项、答案和解析后勾选确认；修改题目后需要重新检查。" : "查看已发布的题目与答案。更正答案请打开“反馈与纠错”。"}
+                    {editable
+                      ? "审核文章、题目和答案；有问题可直接修改，确认无误后发布。"
+                      : "查看已发布的题目与答案。更正答案请打开“反馈与纠错”。"}
                   </p>
-                  {editable && <Button
-                    disabled={dirty || busy}
-                    loading={busy}
-                    onClick={() => void run("check", { revision })}
-                  >
-                    {w.qualityRevision === revision
-                      ? "重新检查题目"
-                      : "开始检查"}
-                  </Button>}
-                  {(w.issues || []).map((i: any) => (
+                  {editable && (
+                    <div className="reading-workbench-toolbar">
+                      <span>自动修正可确定的出处错误、补全缺失内容并重新检查；有争议的答案仍需老师确认。</span>
+                      <Button disabled={dirty || busy || preparing} loading={busy || preparing} onClick={checkAndRepair}>{autoStatus === "failed" ? "重试自动检查" : "重新检查"}</Button>
+                    </div>
+                  )}
+                  {preparing && <Alert type="info" showIcon message="AI 正在自动整理、补全并检查，完成后即可审核，无需重复点击。" />}
+                  {autoStatus === "failed" && <Alert type="error" showIcon message={w.autoReview.message || "自动检查未完成，内容已保留，请重试。"} />}
+                  {w.lastCheckSummary && !dirty && <Alert type={unresolvedCount || problemQuestions.length ? "warning" : "success"} showIcon message={unresolvedCount || problemQuestions.length ? `已检查，仍有 ${problemQuestions.length} 题待处理${unresolvedIssues.some((i: any) => !i.questionId) ? "，另有文章或原稿提示" : ""}；本次已修复 ${w.lastCheckSummary.repairedQuestionIds?.length || 0} 题` : `本次已修复 ${w.lastCheckSummary.repairedQuestionIds?.length || 0} 题，检查结果已更新`} description={w.lastCheckSummary.repairs?.map((r: any, i: number) => <p key={i}>{humanMessage(r.message)}</p>)} />}
+                  <p role="status">{w.qualityRevision !== revision || dirty ? "尚未完成当前内容检查" : `${content.questions.length - problemQuestions.length} 题正常、${problemQuestions.length} 题待处理`}{unresolvedIssues.some((i: any) => !i.questionId) ? "；另有文章或原稿提示待处理" : ""}</p>
+                  <Space wrap aria-label="题目导航">
+                    {content.questions.map((x, index) => <Button key={x.id} onClick={() => jumpToQuestion(x.id)} danger={issuesFor(x.id).length > 0 || needsAnswerCompletion(content, x)}>第 {index + 1} 题 · {issuesFor(x.id).length || needsAnswerCompletion(content, x) ? "待处理" : checked.includes(x.id) ? "已确认" : w.qualityRevision === revision && !dirty ? "可审核" : "待检查"}</Button>)}
+                  </Space>
+                  <div id="review-global-issues" />
+                  {(w.issues || []).filter((i: any) => !i.resolved).map((i: any) => (
                     <Card
                       key={i.id}
                       size="small"
@@ -837,16 +857,19 @@ export function ReadingPracticeWorkbench({
                     >
                       <Alert
                         type={i.resolved ? "success" : "warning"}
-                        message={i.message}
+                        message={humanMessage(i.message)}
                         description={
                           <>
-                            <p>依据：{i.evidence}</p>
-                            <p>建议：{i.suggestion}</p>
+                            {(i.actualParagraph != null || i.expectedParagraph != null || i.field === "evidence.paragraph") && <p>引用段落：当前第 {i.actualParagraph ?? content.questions.find((x) => x.id === i.questionId)?.evidence.paragraph ?? "未标注"} 段{i.expectedParagraph != null ? `，原文位于第 ${i.expectedParagraph} 段` : "，请对照原文核实"}</p>}
+                            {i.evidence && <p>依据：{humanMessage(i.evidence)}</p>}
+                            {i.quote && i.quote !== i.evidence && <blockquote><mark>{i.quote}</mark></blockquote>}
+                            {i.suggestion && <p>建议：{humanMessage(i.suggestion)}</p>}
+                            {i.questionId && content.questions.some((x) => x.id === i.questionId) ? <Space wrap><Button size="small" onClick={() => jumpToQuestion(i.questionId)}>定位题目与依据</Button>{editable && <Button size="small" onClick={() => editQuestion(i.questionId)}>修改此处</Button>}</Space> : <Button size="small" onClick={() => setActiveTab(i.type === "source" ? "materials" : "edit")}>{i.type === "source" ? "查看并补充原稿" : "查看文章"}</Button>}
                           </>
                         }
                       />
                       {i.type === "ai" && !i.resolved && (
-                        <>
+                        <details><summary>高级：认为这是误报</summary>
                           <Input.TextArea
                             aria-label="误报关闭理由"
                             placeholder="确认为误报的具体理由"
@@ -874,7 +897,7 @@ export function ReadingPracticeWorkbench({
                               })
                             }
                           />
-                        </>
+                        </details>
                       )}
                       {i.resolved && (
                         <p>
@@ -884,22 +907,21 @@ export function ReadingPracticeWorkbench({
                     </Card>
                   ))}
                   <h3>
-                    逐题核对{" "}
-                    <span className="reading-workbench-count">
-                      {checked.length} / {content.questions.length} 已确认
-                    </span>
+                    审核题目 <span className="reading-workbench-count">共 {content.questions.length} 题</span>
                   </h3>
                   {content.questions.map((x, i) => (
                     <Card
                       key={x.id}
+                      id={`review-question-${x.id}`}
                       className="reading-workbench-question"
-                      title={`第 ${i + 1} 题`}
+                      style={issuesFor(x.id).length || needsAnswerCompletion(content, x) ? { borderColor: "#faad14", scrollMarginTop: 24 } : { scrollMarginTop: 24 }}
+                      title={<Space>第 {i + 1} 题{(issuesFor(x.id).length > 0 || needsAnswerCompletion(content, x)) && <Tag color="warning">待处理</Tag>}</Space>}
                       extra={
                         <Space>
                           {editable && (
                             <Button
                               size="small"
-                              disabled={busy}
+                              disabled={busy || preparing}
                               onClick={() => editQuestion(x.id)}
                             >
                               修改本题
@@ -918,26 +940,21 @@ export function ReadingPracticeWorkbench({
                         </Space>
                       }
                     >
+                      {issuesFor(x.id).map((issue: any) => <Alert key={issue.id} type="warning" showIcon message={humanMessage(issue.message)} />)}
+                      {needsAnswerCompletion(content, x) && !issuesFor(x.id).length && <Alert type="warning" showIcon message="答案、解析或引用依据不完整，请先使用 AI 检查并修复，或修改本题。" />}
                       <ReadingQuestionReadout question={x} />
-                      {editable && (
-                        <div className="reading-workbench-confirm">
-                          <Checkbox
-                            disabled={
-                              dirty || busy || w.qualityRevision !== revision
-                            }
-                            checked={checked.includes(x.id)}
-                            onChange={(e) =>
-                              setChecked(
-                                e.target.checked
-                                  ? [...checked, x.id]
-                                  : checked.filter((id) => id !== x.id),
-                              )
-                            }
-                          >
-                            我已核对这道题的答案和解析
-                          </Checkbox>
+                      {editable && inlineQuestion === x.id && (
+                        <div className="reading-workbench-inline-editor" style={{ display: "grid", gap: 12, marginTop: 12 }}>
+                          <label>题干<Input.TextArea aria-label="就地修改题干" value={x.stem} onChange={(e) => update({ stem: e.target.value })} /></label>
+                          {x.kind === "sentence_completion" ? <label>可接受答案（每行一个）<Input.TextArea aria-label="就地修改答案" value={(x.acceptedAnswers || []).join("\n")} onChange={(e) => update({ acceptedAnswers: e.target.value.split("\n") })} /></label> : <label>正确答案<Select aria-label="就地修改正确答案" value={x.correctIndex ?? undefined} options={x.options.map((option, index) => ({ value: index, label: readingOptionLabel(x.kind, option, index) }))} onChange={(value) => update({ correctIndex: value })} /></label>}
+                          <label>解析<Input.TextArea aria-label="就地修改解析" autoSize={{ minRows: 3 }} value={x.explanation} onChange={(e) => update({ explanation: e.target.value })} /></label>
+                          <label>引用段落<InputNumber aria-label="就地修改引用段落" min={1} max={content.paragraphs.length} value={x.evidence.paragraph} onChange={(n) => update({ evidence: { ...x.evidence, paragraph: n || 1 } })} /></label>
+                          <label>原文引用<Input.TextArea aria-label="就地修改原文引用" value={x.evidence.quote} onChange={(e) => update({ evidence: { ...x.evidence, quote: e.target.value } })} /></label>
+                          {x.kind === "true_false_not_given" && x.correctIndex === 2 && <label>缺失信息<Input.TextArea aria-label="就地修改缺失信息" value={x.evidence.missingInformation} onChange={(e) => update({ evidence: { ...x.evidence, missingInformation: e.target.value } })} /></label>}
+                          <Button type="primary" disabled={!dirty || busy} loading={busy} onClick={() => void save()}>保存并复查本题</Button>
                         </div>
                       )}
+
                     </Card>
                   ))}
                 </>
@@ -1259,7 +1276,9 @@ export function ReadingPracticeWorkbench({
               children: (
                 <div className="reading-workbench-form">
                   <h3>学生反馈</h3>
-                  {!feedback.length && <p className="admin-muted">暂无学生反馈</p>}
+                  {!feedback.length && (
+                    <p className="admin-muted">暂无学生反馈</p>
+                  )}
                   {content.questions.map((x) => {
                     const group = feedback.filter((f) => f.questionId === x.id);
                     return group.length ? (
@@ -1375,13 +1394,14 @@ export function ReadingPracticeWorkbench({
                             setImpact(undefined);
                           }}
                         />
-                        {correction.action === "answer" && (
-                          <Select
+                        {correction.action === "answer" && (q?.kind === "sentence_completion" ? (
+                          <Input.TextArea aria-label="更正填空答案" placeholder="可接受答案（每行一个）" value={correction.acceptedAnswers.join("\n")} onChange={(e) => { setCorrection({ ...correction, acceptedAnswers: e.target.value.split("\n") }); setImpact(undefined); }} />
+                        ) : <Select
                             style={{ width: 250 }}
                             value={correction.correctIndex}
                             options={q?.options.map((o, i) => ({
                               value: i,
-                              label: `${String.fromCharCode(65 + i)}. ${o}`,
+                              label: readingOptionLabel(q.kind, o, i),
                             }))}
                             onChange={(correctIndex) => {
                               setCorrection({ ...correction, correctIndex });
@@ -1412,10 +1432,11 @@ export function ReadingPracticeWorkbench({
                           }}
                         />
                         <Button
-                          disabled={!correction.reason.trim() || busy}
+                          disabled={!correction.reason.trim() || busy || (correction.action === "answer" && q?.kind === "sentence_completion" && !correction.acceptedAnswers.some((answer) => answer.trim()))}
                           onClick={async () => {
                             const r = await run("correct/preview", {
                               ...correction,
+                              ...(q?.kind === "sentence_completion" ? { correctIndex: null, acceptedAnswers: correction.acceptedAnswers.map((answer) => answer.trim()).filter(Boolean) } : { acceptedAnswers: undefined }),
                               questionId: selected,
                             });
                             if (r) {
@@ -1436,6 +1457,7 @@ export function ReadingPracticeWorkbench({
                                 onClick={async () => {
                                   const r = await run("correct", {
                                     ...correction,
+                                    ...(q?.kind === "sentence_completion" ? { correctIndex: null, acceptedAnswers: correction.acceptedAnswers.map((answer) => answer.trim()).filter(Boolean) } : { acceptedAnswers: undefined }),
                                     questionId: selected,
                                     requestUid: correctionUid.current,
                                     gradingRevision: impact.gradingRevision,
@@ -1449,7 +1471,9 @@ export function ReadingPracticeWorkbench({
                           />
                         )}
                         <h4>重评执行记录</h4>
-                        {!paper.regradeJobs?.length && <p className="admin-muted">暂无重评记录</p>}
+                        {!paper.regradeJobs?.length && (
+                          <p className="admin-muted">暂无重评记录</p>
+                        )}
                         {(paper.regradeJobs || []).map((j) => (
                           <p key={j.id}>
                             {j.status} · 已完成 {j.completed}/{j.total} · 失败{" "}
@@ -1465,7 +1489,9 @@ export function ReadingPracticeWorkbench({
                           </p>
                         ))}
                         <h4>评分调整历史</h4>
-                        {!w.corrections?.length && <p className="admin-muted">暂无评分调整</p>}
+                        {!w.corrections?.length && (
+                          <p className="admin-muted">暂无评分调整</p>
+                        )}
                         {(w.corrections || []).map((c: any) => (
                           <p key={c.id}>
                             修订 {c.revision} · {c.questionId} · {c.reason}
@@ -1505,9 +1531,13 @@ export function ReadingPracticeWorkbench({
                   {i + 1}. {x.stem}
                 </h3>
                 <p>{x.instructions}</p>
-                {x.options.map((o, n) => (
+                {x.kind === "sentence_completion" && <>
+                  {x.maxWords && <p>最多填写 {x.maxWords} 个词</p>}
+                  <Input aria-label={`第 ${i + 1} 题答案`} placeholder="填写答案" />
+                </>}
+                {x.kind !== "sentence_completion" && x.options.map((o, n) => (
                   <p key={n}>
-                    ○ {String.fromCharCode(65 + n)}. {o}
+                    ○ {readingOptionLabel(x.kind, o, n)}
                   </p>
                 ))}
               </section>
@@ -1515,6 +1545,7 @@ export function ReadingPracticeWorkbench({
           </>
         )}
       </Modal>
+      {paper && <PracticePublishDialog open={publishOpen} paper={paper} busy={busy} error={error} onClose={() => { if (!busy) setPublishOpen(false); }} onConfirm={confirmPublish} />}
       {paper && recipientsOpen && (
         <ReadingPracticeRecipients
           key={paper.id}

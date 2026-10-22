@@ -1,3 +1,4 @@
+import { ReadingPracticeDeletionModal } from "./ReadingPracticeDeletionModal";
 import { ReadingPracticeAnalytics } from "./ReadingPracticeAnalytics";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Alert, Button, Dropdown, Modal, Space, Table, Tag } from "antd";
@@ -27,6 +28,9 @@ export function ReadingPracticePanel({ initialId }: { initialId?: number }) {
     [page, setPage] = useState(1),
     [loading, setLoading] = useState(false),
     [error, setError] = useState("");
+  const [deletionId, setDeletionId] = useState<number | null>(null);
+  const [cleanupNotice, setCleanupNotice] = useState("");
+  const [deletionComplete, setDeletionComplete] = useState(false);
   const [analyticsId, setAnalyticsId] = useState<number | null>(null);
   const [recipientsPaper, setRecipientsPaper] = useState<AdminPractice | null>(
     null,
@@ -36,7 +40,7 @@ export function ReadingPracticePanel({ initialId }: { initialId?: number }) {
     [preview, setPreview] = useState<AdminPractice | null>(null);
   const [pending, setPending] = useState<{
       row: AdminPractice;
-      action: "publish" | "withdraw" | "delete";
+      action: "publish" | "withdraw";
     } | null>(null),
     [busy, setBusy] = useState(false);
   const lock = useRef(false),
@@ -65,7 +69,7 @@ export function ReadingPracticePanel({ initialId }: { initialId?: number }) {
     };
   }, [refresh]);
   useEffect(() => {
-    if (!rows.some((r) => ["queued", "generating"].includes(r.status))) return;
+    if (!rows.some((r) => ["queued", "generating"].includes(r.status) || ["pending", "processing"].includes(r.workflow?.autoReview?.status))) return;
     const timer = setInterval(() => void refresh(), 5000);
     return () => clearInterval(timer);
   }, [rows, refresh]);
@@ -81,7 +85,7 @@ export function ReadingPracticePanel({ initialId }: { initialId?: number }) {
   }, [initialId, openPreview]);
   const act = async (
     id: number,
-    action: "publish" | "withdraw" | "retry" | "delete",
+    action: "publish" | "withdraw" | "retry",
   ) => {
     if (lock.current) return;
     lock.current = true;
@@ -123,6 +127,8 @@ export function ReadingPracticePanel({ initialId }: { initialId?: number }) {
         </Space>
       </div>
       {error && <Alert message={error} type="error" showIcon />}
+      {cleanupNotice && <Alert message={cleanupNotice} type="warning" showIcon />}
+      {deletionComplete && !cleanupNotice && <Alert message="所选练习及专属关联数据已永久删除。" type="success" showIcon />}
       <Table
         rowKey="id"
         dataSource={rows}
@@ -144,7 +150,7 @@ export function ReadingPracticePanel({ initialId }: { initialId?: number }) {
                 <small>
                   v{r.workflow?.version || 1} ·{" "}
                   {r.workflow?.sourceType ? "材料导入" : "AI原创"} ·{" "}
-                  {r.config.questionCount} 题
+                  {r.workflow?.sourceType && r.recognizedQuestionCount == null && !r.content && ["queued", "generating", "failed"].includes(r.status) ? "题数待识别" : `${r.recognizedQuestionCount ?? r.content?.questions.length ?? r.config.questionCount} 题`}
                   {(r.workflow?.issues || []).some((i: any) => !i.resolved) && ` · ${(r.workflow?.issues || []).filter((i: any) => !i.resolved).length} 项待确认`}
                 </small>
                 {r.failureSummary && (
@@ -166,7 +172,7 @@ export function ReadingPracticePanel({ initialId }: { initialId?: number }) {
                       : "blue"
                 }
               >
-                {practiceLabels[r.status]}
+                {["pending", "processing"].includes(r.workflow?.autoReview?.status) ? "AI处理中" : r.workflow?.autoReview?.status === "failed" ? "检查未完成" : r.workflow?.sourceType ? ({ queued: "等待识别", generating: "识别中", failed: "识别失败" } as Record<string, string>)[r.status] || practiceLabels[r.status] : practiceLabels[r.status]}
               </Tag>
             ),
           },
@@ -204,18 +210,27 @@ export function ReadingPracticePanel({ initialId }: { initialId?: number }) {
                     追加接收人
                   </Button>
                 )}
-                {r.status === "failed" && <Button type="link" loading={busy} onClick={() => void act(r.id, "retry")}>重试生成</Button>}
+                {r.status === "failed" && <Button type="link" loading={busy} onClick={() => void act(r.id, "retry")}>{r.workflow?.sourceType ? "重试识别" : "重试生成"}</Button>}
                 <Dropdown trigger={["click"]} menu={{ items: [
                   { key: "preview", label: "预览", onClick: () => void openPreview(r.id) },
-                  ...(!["queued", "generating"].includes(r.status) ? [{ key: "regenerate", label: "再生成", onClick: () => { setInitial(r.config); setEditor(true); } }] : []),
+                  ...(!r.workflow?.sourceType && !["queued", "generating"].includes(r.status) ? [{ key: "regenerate", label: "再生成", onClick: () => { setInitial(r.config); setEditor(true); } }] : []),
                   ...(r.status === "published" ? [{ key: "withdraw", label: "撤回", danger: true, onClick: () => setPending({ row: r, action: "withdraw" }) }] : []),
-                  ...(["draft", "failed", "queued"].includes(r.status) ? [{ key: "delete", label: "删除", danger: true, onClick: () => setPending({ row: r, action: "delete" }) }] : []),
+                  { key: "delete", label: "永久删除", danger: true, onClick: () => setDeletionId(r.id) },
                 ] }}><Button type="text" icon={<MoreOutlined />} aria-label={`更多操作：${r.title}`}>更多</Button></Dropdown>
               </Space>
             ),
           },
         ]}
       />
+      {deletionId !== null && <ReadingPracticeDeletionModal key={deletionId} id={deletionId} onClose={() => setDeletionId(null)} onDeleted={result => {
+        setDeletionId(null);
+        setDeletionComplete(true);
+        if (preview && result.practiceIds.includes(preview.id)) setPreview(null);
+        if (analyticsId !== null && result.practiceIds.includes(analyticsId)) setAnalyticsId(null);
+        if (recipientsPaper && result.practiceIds.includes(recipientsPaper.id)) setRecipientsPaper(null);
+        if (result.sourceCleanup.pending) setCleanupNotice("练习及关联记录已删除；部分专属附件仍在后台清理中，将自动重试。");
+        void refresh();
+      }} />}
       {analyticsId !== null && (
         <ReadingPracticeAnalytics
           key={analyticsId}
@@ -228,7 +243,7 @@ export function ReadingPracticePanel({ initialId }: { initialId?: number }) {
           open
           onClose={() => setEditor(false)}
           initial={initial}
-          onCreated={() => void refresh()}
+          onCreated={(id) => { void refresh(); if (id) void openPreview(id); }}
         />
       )}
       {recipientsPaper && (
@@ -252,16 +267,12 @@ export function ReadingPracticePanel({ initialId }: { initialId?: number }) {
         title={
           pending?.action === "publish"
             ? "审核通过并发布练习"
-            : pending?.action === "withdraw"
-              ? "确认撤回练习"
-              : "确认删除草稿"
+            : "确认撤回练习"
         }
         okText={
           pending?.action === "publish"
             ? "确认发布"
-            : pending?.action === "withdraw"
-              ? "确认撤回"
-              : "确认删除"
+            : "确认撤回"
         }
         cancelText="取消"
         confirmLoading={busy}
@@ -280,9 +291,7 @@ export function ReadingPracticePanel({ initialId }: { initialId?: number }) {
         <p>
           {pending?.action === "publish"
             ? `将发布给${pending.row.config.targetType === "all" ? "当前全部正常用户" : `${pending.row.config.targetUserIds?.length ?? 0} 位指定用户`}。发布后内容固定，每人可提交一次。`
-            : pending?.action === "withdraw"
-              ? "停止尚未开始的新作答；已开始者仍可提交，已提交者可查看成绩与解析。"
-              : "将删除这份未发布练习。"}
+            : "停止尚未开始的新作答；已开始者仍可提交，已提交者可查看成绩与解析。"}
         </p>
         {error && <Alert type="error" message={error} />}
       </Modal>

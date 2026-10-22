@@ -41,7 +41,7 @@ describe("WordNoteDisplay", () => {
       name: "收起 preserve 的笔记",
     });
     expect(collapse).toHaveAttribute("aria-expanded", "true");
-    expect(screen.getByText(/long note/)).toHaveClass(
+    expect(screen.getByText(/long note/).closest(".word-card-note-text")).toHaveClass(
       "word-card-note-text-expanded",
     );
 
@@ -50,6 +50,12 @@ describe("WordNoteDisplay", () => {
     expect(
       screen.getByRole("button", { name: "展开 preserve 的笔记" }),
     ).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("opens short formatted notes so links remain usable", () => {
+    render(<WordCardNote word="course" note="[课程](https://example.com)" />);
+    fireEvent.click(screen.getByRole("button", { name: "展开 course 的笔记" }));
+    expect(screen.getByRole("link", { name: "课程" })).toHaveAttribute("href", "https://example.com");
   });
 
   it("renders the full expanded-row note and delegates editing", () => {

@@ -87,39 +87,18 @@ afterEach(() => {
   cleanup();
   vi.clearAllMocks();
 });
-it("requires quality check and question confirmation, and publishes the reviewed revision", async () => {
-  const user = userEvent.setup();
-  render(<ReadingPracticePanel />);
+it("automatically checks and publishes with one human confirmation", async () => {
+  const user = userEvent.setup(); render(<ReadingPracticePanel />);
   await user.click(await screen.findByRole("button", { name: "审核练习" }));
-  expect(
-    screen.queryByRole("button", { name: "发布给学生" }),
-  ).not.toBeInTheDocument();
-  await user.click(screen.getByRole("tab", { name: /核对题目/ }));
-  await user.click(screen.getByRole("button", { name: "检查题目" }));
-  await waitFor(() => expect(screen.getByRole("checkbox")).toBeEnabled());
-  await user.click(screen.getByRole("checkbox"));
-  expect(screen.getByRole("checkbox")).toBeChecked();
-  await waitFor(() =>
-    expect(screen.getByRole("button", { name: "完成核对" })).not.toHaveClass(
-      "ant-btn-loading",
-    ),
-  );
-  expect(screen.getByRole("button", { name: "完成核对" })).toBeEnabled();
-  await user.click(screen.getByRole("button", { name: "完成核对" }));
-  expect(writes.some((x) => x.url.endsWith("/review"))).toBe(true);
-  await waitFor(() =>
-    expect(screen.getByRole("button", { name: "发布给学生" })).toBeEnabled(),
-  );
-  await user.click(screen.getByRole("button", { name: "发布给学生" }));
+  await waitFor(() => expect(writes.some((x) => x.url.endsWith("/check"))).toBe(true));
+  expect(screen.queryByRole("checkbox", { name: "我已核对这道题的答案和解析" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "完成核对" })).not.toBeInTheDocument();
+  await waitFor(() => expect(screen.getByRole("button", { name: "确认并发布" })).toBeEnabled());
+  await user.click(screen.getByRole("button", { name: "确认并发布" }));
+  expect(writes.some((x) => x.url.endsWith("/publish"))).toBe(false);
   await user.click(await screen.findByRole("button", { name: "确认发布" }));
-  await waitFor(() =>
-    expect(writes.filter((x) => x.url.endsWith("/publish"))).toHaveLength(1),
-  );
-  expect(writes.find((x) => x.url.endsWith("/publish"))?.data).toMatchObject({
-    revision: 1,
-    reviewed: true,
-    requestUid: expect.any(String),
-  });
+  await waitFor(() => expect(writes.filter((x) => x.url.endsWith("/publish"))).toHaveLength(1));
+  expect(writes.find((x) => x.url.endsWith("/publish"))?.data).toMatchObject({revision:1,reviewed:true,confirmAll:true,requestUid:expect.any(String)});
 });
 it("student preview omits answers and internal evidence", async () => {
   const user = userEvent.setup();
@@ -133,40 +112,148 @@ it("student preview omits answers and internal evidence", async () => {
     within(dialog).queryByText("secret explanation"),
   ).not.toBeInTheDocument();
   expect(within(dialog).getByText("1. Which place?")).toBeInTheDocument();
-  expect(writes).toEqual([]);
+  expect(writes.filter((x) => !x.url.endsWith("/check"))).toEqual([]);
 });
 
-it("opens a readable article and explains the next action without exposing empty source tools", async () => {
-  const user = userEvent.setup();
-  render(<ReadingPracticePanel />);
-  await user.click(await screen.findByRole("button", { name: "审核练习" }));
-  expect(screen.getByRole("article", { name: "阅读文章" })).toHaveTextContent(
-    "A garden.",
-  );
-  expect(
-    screen.queryByRole("textbox", { name: "练习标题" }),
-  ).not.toBeInTheDocument();
-  expect(screen.queryByText("上传原稿")).not.toBeInTheDocument();
-  await user.click(screen.getByRole("button", { name: "下一步：核对题目" }));
-  expect(screen.getByText("secret explanation")).toBeVisible();
-  expect(screen.getByText("正确答案：A. Garden")).toBeVisible();
-  expect(
-    screen.getByText("先检查题目，再逐题确认答案和解析。全部完成后即可发布。"),
-  ).toBeVisible();
-  expect(writes).toEqual([]);
+it("edits explanation in place and saves with a single recheck action", async () => {
+  paper.workflow.qualityRevision = 1;
+  const base = send.getMockImplementation()!;
+  send.mockImplementation(async (r) => {
+    if (r.url.endsWith("/save-check")) { writes.push({url:r.url,data:r.data}); paper={...paper,content:r.data.content,workflow:{...paper.workflow,revision:2,qualityRevision:2,autoReview:{status:"ready"}}}; return structuredClone(paper); }
+    return base(r);
+  });
+  const user=userEvent.setup();render(<ReadingPracticePanel />);
+  await user.click(await screen.findByRole("button",{name:"审核练习"}));
+  await user.click(screen.getByRole("button",{name:"修改本题"}));
+  const explanation=screen.getByRole("textbox",{name:"就地修改解析"}); await user.clear(explanation);await user.type(explanation,"修改后的解析");
+  await user.click(screen.getByRole("button",{name:"保存并复查本题"}));
+  await waitFor(()=>expect(writes.find((x)=>x.url.endsWith("/save-check"))?.data.content.questions[0].explanation).toBe("修改后的解析"));
+  await waitFor(()=>expect(screen.getByRole("button",{name:"确认并发布"})).toBeEnabled());
 });
-
 it("keeps follow-up actions visible and requires confirmation for withdrawal in More", async () => {
   paper.status = "published";
   const user = userEvent.setup();
   render(<ReadingPracticePanel />);
-  expect(await screen.findByRole("button", { name: "追加接收人" })).toBeVisible();
+  expect(
+    await screen.findByRole("button", { name: "追加接收人" }),
+  ).toBeVisible();
   expect(screen.getByRole("button", { name: "完成情况" })).toBeVisible();
-  expect(screen.queryByRole("button", { name: "撤回" })).not.toBeInTheDocument();
-  await user.click(screen.getByRole("button", { name: "更多操作：Garden paper" }));
+  expect(
+    screen.queryByRole("button", { name: "撤回" }),
+  ).not.toBeInTheDocument();
+  await user.click(
+    screen.getByRole("button", { name: "更多操作：Garden paper" }),
+  );
   await user.click(await screen.findByRole("menuitem", { name: "撤回" }));
   expect(writes).toHaveLength(0);
-  expect(screen.getByRole("dialog", { name: "确认撤回练习" })).toHaveTextContent("已开始者仍可提交");
+  expect(
+    screen.getByRole("dialog", { name: "确认撤回练习" }),
+  ).toHaveTextContent("已开始者仍可提交");
   await user.click(screen.getByRole("button", { name: "确认撤回" }));
-  await waitFor(() => expect(writes.filter(w => w.url.endsWith("/withdraw"))).toHaveLength(1));
+  await waitFor(() =>
+    expect(writes.filter((w) => w.url.endsWith("/withdraw"))).toHaveLength(1),
+  );
+});
+it("shows imported question counts only after recognition and retries recognition", async () => {
+  paper = {
+    ...paper,
+    status: "failed",
+    content: undefined,
+    recognizedQuestionCount: null,
+    workflow: { ...paper.workflow, sourceType: "files" },
+    config: { ...paper.config, questionCount: 5 },
+  };
+  render(<ReadingPracticePanel />);
+  expect(await screen.findByText(/题数待识别/)).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "重试识别" })).toBeInTheDocument();
+  expect(screen.queryByText(/5 题/)).not.toBeInTheDocument();
+});
+it("shows actual imported count from list metadata without requiring full content", async () => {
+  paper = {
+    ...paper,
+    content: undefined,
+    recognizedQuestionCount: 1,
+    workflow: { ...paper.workflow, sourceType: "files" },
+    config: { ...paper.config, questionCount: 5 },
+  };
+  render(<ReadingPracticePanel />);
+  expect(await screen.findByText(/材料导入 · 1 题/)).toBeInTheDocument();
+  expect(screen.queryByText(/题数待识别/)).not.toBeInTheDocument();
+});
+
+it("blocks publishing for incomplete answers without individual checkboxes", async () => {
+  paper.content.questions[0].correctIndex=null;paper.content.questions[0].explanation="";paper.workflow.qualityRevision=1;
+  const user=userEvent.setup();render(<ReadingPracticePanel />);await user.click(await screen.findByRole("button",{name:"审核练习"}));
+  expect(screen.getByRole("button",{name:"确认并发布"})).toBeDisabled();expect(screen.getByRole("button",{name:"重新检查"})).toBeEnabled();
+});
+it("shows all six matching options and allows reviewing a complete matching question", async () => {
+  paper.content.questions[0] = {...paper.content.questions[0],kind:"matching_features",options:["A Alice","B Ben","C Carol","D Dan","E Eve","F Frank"],correctIndex:5};
+  paper.workflow.qualityRevision=1;
+  const user=userEvent.setup();render(<ReadingPracticePanel/>);
+  await user.click(await screen.findByRole("button",{name:"审核练习"}));
+  await user.click(screen.getByRole("tab",{name:/核对题目/}));
+  expect(screen.getByText("F Frank")).toBeInTheDocument();
+  expect(screen.queryByText("F. F Frank")).not.toBeInTheDocument();
+  expect(screen.getByRole("button",{name:"确认并发布"})).toBeEnabled();
+});
+
+it("marks two findings on one question once and provides a reliable jump and repair request", async () => {
+  paper.workflow.qualityRevision = 1;
+  paper.workflow.lastCheckSummary = { repairedQuestionIds: [], repairs: [], remainingIssueCount: 2 };
+  paper.workflow.issues = [
+    { id: "s1", blocking: true, questionId: "q1", type: "structure", field: "evidence", actualParagraph: 1, expectedParagraph: 2, quote: "A garden.", message: "evidence.paragraph 不匹配" },
+    { id: "a1", blocking: true, questionId: "q1", type: "ai", message: "请核实引用段落" },
+  ];
+  const scroll = vi.fn();
+  const oldScroll = HTMLElement.prototype.scrollIntoView;
+  HTMLElement.prototype.scrollIntoView = scroll;
+  try {
+    const user = userEvent.setup();
+    render(<ReadingPracticePanel />);
+    await user.click(await screen.findByRole("button", { name: "审核练习" }));
+    await user.click(screen.getByRole("tab", { name: /核对题目/ }));
+    expect(screen.getByText("0 题正常、1 题待处理")).toBeVisible();
+    expect(screen.getByText(/共 1 题，1 题有提示/)).toBeVisible();
+    expect(screen.getByText("引用段落：当前第 1 段，原文位于第 2 段")).toBeVisible();
+    expect(screen.queryByText(/evidence\.paragraph/)).not.toBeInTheDocument();
+    expect(screen.getAllByText("引用段落 不匹配")).toHaveLength(2);
+    expect(screen.getByText("已检查，仍有 1 题待处理；本次已修复 0 题").closest(".ant-alert")).toHaveClass("ant-alert-warning");
+    expect(screen.queryByText(/^依据：$/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^建议：$/)).not.toBeInTheDocument();
+    const card = document.getElementById("review-question-q1")!;
+    expect(within(card).getByText("待处理")).toBeVisible();
+    await user.click(screen.getAllByRole("button", { name: "定位题目与依据" })[0]);
+    await waitFor(() => expect(scroll).toHaveBeenCalled());
+    expect(screen.getByRole("button", { name: "确认并发布" })).toBeDisabled();
+    await user.click(screen.getByRole("button", { name: "重新检查" }));
+    await waitFor(() => expect(writes.find((x) => x.url.endsWith("/check"))?.data).toEqual({ revision: 1, repair: true }));
+    expect(send.mock.calls.find(([r]) => r.url.endsWith("/check"))?.[0].config.timeout).toBe(300000);
+    expect(writes.some((x) => x.url.endsWith("/review") || x.url.endsWith("/publish"))).toBe(false);
+  } finally {
+    HTMLElement.prototype.scrollIntoView = oldScroll;
+  }
+});
+
+it("replaces stale findings with repaired content and requires teacher confirmation", async () => {
+  paper.workflow.qualityRevision = 1;
+  paper.workflow.issues = [{ id: "old", questionId: "q1", type: "structure", message: "旧的出处错误" }];
+  const baseSend = send.getMockImplementation()!;
+  send.mockImplementation(async (r) => {
+    if (r.url.endsWith("/check")) {
+      paper.workflow.issues = [];
+      paper.workflow.lastCheckSummary = { repairedQuestionIds: ["q1"], repairs: [{ questionId: "q1", message: "引用段落已修正" }], remainingIssueCount: 0 };
+    }
+    return baseSend(r);
+  });
+  const user = userEvent.setup();
+  render(<ReadingPracticePanel />);
+  await user.click(await screen.findByRole("button", { name: "审核练习" }));
+  await user.click(screen.getByRole("tab", { name: /核对题目/ }));
+  expect(screen.getAllByText("旧的出处错误").length).toBeGreaterThan(0);
+  await user.click(screen.getByRole("button", { name: "重新检查" }));
+  await waitFor(() => expect(screen.queryByText("旧的出处错误")).not.toBeInTheDocument());
+  expect(screen.getByText("本次已修复 1 题，检查结果已更新")).toBeVisible();
+  expect(screen.getByText("1 题正常、0 题待处理")).toBeVisible();
+  expect(screen.queryByRole("checkbox", { name: "我已核对这道题的答案和解析" })).not.toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "确认并发布" })).toBeEnabled();
 });

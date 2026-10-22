@@ -1,7 +1,7 @@
+import { NoteEditor } from "@/components/notes/NoteEditor";
 import { UNSAFE_DataRouterContext } from "react-router-dom";
 import { UnsavedNoteGuard } from "../knowledgeNotes/UnsavedNoteGuard";
 import "../knowledgeNotes/knowledgeNotes.css";
-import { AutoGrowTextarea } from "../knowledgeNotes/AutoGrowTextarea";
 import "./wordNoteEditor.css";
 import {
   Modal,
@@ -398,7 +398,7 @@ export const EditAddModal = (props: Props) => {
       {noteFocused && <div className="word-note-focus-content" ref={noteEditorRef}>
         <p>修改尚未保存，返回表单后点击“确认”保存单词。</p>
         <label htmlFor="full-word-note">完整笔记</label>
-        <AutoGrowTextarea id="full-word-note" aria-label="完整笔记" rows={18} value={noteValue ?? ""} onChange={(event) => { form.setFieldValue("englishNote",event.target.value); setDirty(true); }} />
+        <NoteEditor id="full-word-note" aria-label="完整笔记" rows={18} value={noteValue ?? ""} onChange={(event) => { form.setFieldValue("englishNote",event.target.value); setDirty(true); }} />
       </div>}
       {/* Keep the form mounted so all fields and validation survive focus editing. */}
       <Form form={form} onValuesChange={onValuesChange} layout="vertical" style={noteFocused ? {display:"none"} : undefined}>

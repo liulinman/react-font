@@ -22,7 +22,9 @@ export function removeEmptyValues<T extends WordFilterRecord>(values: T) {
 
 export function normalizeDesktopWordFilters(values: DesktopWordFilterValues) {
   const { time, ...rest } = values;
-  const normalized: WordFilterRecord = { ...rest };
+  const normalized: WordFilterRecord = Object.fromEntries(
+    Object.entries(rest).map(([key, value]) => [key, typeof value === "string" ? value.trim() : value]),
+  );
 
   if (Array.isArray(time) && time[0] && time[1]) {
     normalized.startTime = convertToFormat(time[0] as string, "start");

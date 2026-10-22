@@ -4,6 +4,8 @@
   "version": "1.0.1",
   "type": "module",
   "scripts": {
+    "test:prd": "node scripts/test-prd.mjs",
+    "test:prd:runner": "node --test scripts/prd-testing/*.test.mjs",
     "dev": "turbo run dev",
     "build": "turbo run build",
     "lint": "turbo run lint",
@@ -14,7 +16,9 @@
     "e2e:english-world:report": "pnpm --filter @font/english-world e2e:report",
     "e2e:english-world:report:html": "pnpm --filter @font/english-world e2e:report:html",
     "preview:english-world": "pnpm --filter @font/english-world preview",
-    "preview:web-utils": "pnpm --filter @font/web-utils preview"
+    "preview:web-utils": "pnpm --filter @font/web-utils preview",
+    "test:prd:ai": "node scripts/test-prd-ai.mjs",
+    "test:prd:dashboard": "node scripts/prd-testing/dashboard.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

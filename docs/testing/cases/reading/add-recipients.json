@@ -1,0 +1,403 @@
+{
+  "schemaVersion": 1,
+  "source": "docs/prd/reading/features/add-recipients/prd.md",
+  "sourceHash": "efa6d835b39918da9eebde0deae474f384da499ebd9c225f6ba1d9325ead2dc8",
+  "cases": [
+    {
+      "id": "reading/add-recipients/FR-01/CASE-01",
+      "title": "FR-01：直接入口仅对已发布练习出现；草稿、生成中、失败、已撤回不可追加。",
+      "status": "draft",
+      "requirementIds": [
+        "reading/add-recipients/FR-01"
+      ],
+      "preconditions": [
+        "一次性 MySQL/NestJS 测试环境；仅使用本次创建的数据，禁止连接生产。"
+      ],
+      "steps": [
+        "管理员准备已发布练习，A 已完成作答；另备未接收用户 B/C、停用用户与第二管理员。",
+        "从列表或原补发入口打开追加接收人，执行本条选择、搜索、确认、重试或并发操作。",
+        "核实新增/跳过人数、名单、分配 ID、原成绩和通知投递记录；用新旧学生分别读取练习。"
+      ],
+      "expectedResults": [
+        "FR-01：直接入口仅对已发布练习出现；草稿、生成中、失败、已撤回不可追加。"
+      ],
+      "cleanup": "由隔离环境 runner 清理；同一 spec 内记录并清理创建的数据。",
+      "bindings": [],
+      "reviewNote": "初始需求候选；Codex 必须核对整份 PRD、字段表和决策补充，细化数据与操作，补充边界场景后标为 ready。"
+    },
+    {
+      "id": "reading/add-recipients/FR-02/CASE-01",
+      "title": "FR-02：读取当前接收人及完成状态，不将最初发布配置误当成当前接收名单。无接收人显示空态，名单加载失败显示重试。",
+      "status": "draft",
+      "requirementIds": [
+        "reading/add-recipients/FR-02"
+      ],
+      "preconditions": [
+        "一次性 MySQL/NestJS 测试环境；仅使用本次创建的数据，禁止连接生产。"
+      ],
+      "steps": [
+        "管理员准备已发布练习，A 已完成作答；另备未接收用户 B/C、停用用户与第二管理员。",
+        "从列表或原补发入口打开追加接收人，执行本条选择、搜索、确认、重试或并发操作。",
+        "核实新增/跳过人数、名单、分配 ID、原成绩和通知投递记录；用新旧学生分别读取练习。"
+      ],
+      "expectedResults": [
+        "FR-02：读取当前接收人及完成状态，不将最初发布配置误当成当前接收名单。无接收人显示空态，名单加载失败显示重试。"
+      ],
+      "cleanup": "由隔离环境 runner 清理；同一 spec 内记录并清理创建的数据。",
+      "bindings": [],
+      "reviewNote": "初始需求候选；Codex 必须核对整份 PRD、字段表和决策补充，细化数据与操作，补充边界场景后标为 ready。"
+    },
+    {
+      "id": "reading/add-recipients/FR-03/CASE-01",
+      "title": "FR-03：支持用户名搜索、多选和取消选择；保留跨搜索已选项；已有用户明确标识且不可选。最多每次1000人，延续现有接口限制。",
+      "status": "draft",
+      "requirementIds": [
+        "reading/add-recipients/FR-03"
+      ],
+      "preconditions": [
+        "一次性 MySQL/NestJS 测试环境；仅使用本次创建的数据，禁止连接生产。"
+      ],
+      "steps": [
+        "管理员准备已发布练习，A 已完成作答；另备未接收用户 B/C、停用用户与第二管理员。",
+        "从列表或原补发入口打开追加接收人，执行本条选择、搜索、确认、重试或并发操作。",
+        "核实新增/跳过人数、名单、分配 ID、原成绩和通知投递记录；用新旧学生分别读取练习。"
+      ],
+      "expectedResults": [
+        "FR-03：支持用户名搜索、多选和取消选择；保留跨搜索已选项；已有用户明确标识且不可选。最多每次1000人，延续现有接口限制。"
+      ],
+      "cleanup": "由隔离环境 runner 清理；同一 spec 内记录并清理创建的数据。",
+      "bindings": [],
+      "reviewNote": "初始需求候选；Codex 必须核对整份 PRD、字段表和决策补充，细化数据与操作，补充边界场景后标为 ready。"
+    },
+    {
+      "id": "reading/add-recipients/FR-04/CASE-01",
+      "title": "FR-04：重复用户、重复点击、响应丢失后重试不得重复创建分配或发送同一通知。相同请求重试返回同一追加统计，即使成功后练习被撤回或用户停用，也只返回原结果、不重新追加；选择变化使用新请求标识。提交期间禁止关闭和更换选择。",
+      "status": "draft",
+      "requirementIds": [
+        "reading/add-recipients/FR-04"
+      ],
+      "preconditions": [
+        "一次性 MySQL/NestJS 测试环境；仅使用本次创建的数据，禁止连接生产。"
+      ],
+      "steps": [
+        "管理员准备已发布练习，A 已完成作答；另备未接收用户 B/C、停用用户与第二管理员。",
+        "从列表或原补发入口打开追加接收人，执行本条选择、搜索、确认、重试或并发操作。",
+        "核实新增/跳过人数、名单、分配 ID、原成绩和通知投递记录；用新旧学生分别读取练习。"
+      ],
+      "expectedResults": [
+        "FR-04：重复用户、重复点击、响应丢失后重试不得重复创建分配或发送同一通知。相同请求重试返回同一追加统计，即使成功后练习被撤回或用户停用，也只返回原结果、不重新追加；选择变化使用新请求标识。提交期间禁止关闭和更换选择。"
+      ],
+      "cleanup": "由隔离环境 runner 清理；同一 spec 内记录并清理创建的数据。",
+      "bindings": [],
+      "reviewNote": "初始需求候选；Codex 必须核对整份 PRD、字段表和决策补充，细化数据与操作，补充边界场景后标为 ready。"
+    },
+    {
+      "id": "reading/add-recipients/FR-05/CASE-01",
+      "title": "FR-05：服务端对首次执行的请求再次核实练习状态和用户有效性；已成功请求重放先返回原结果。已停用/不存在用户使本次请求整体失败，保留选择并提示刷新；被并发追加的用户自动跳过并显示实际结果。",
+      "status": "draft",
+      "requirementIds": [
+        "reading/add-recipients/FR-05"
+      ],
+      "preconditions": [
+        "一次性 MySQL/NestJS 测试环境；仅使用本次创建的数据，禁止连接生产。"
+      ],
+      "steps": [
+        "管理员准备已发布练习，A 已完成作答；另备未接收用户 B/C、停用用户与第二管理员。",
+        "从列表或原补发入口打开追加接收人，执行本条选择、搜索、确认、重试或并发操作。",
+        "核实新增/跳过人数、名单、分配 ID、原成绩和通知投递记录；用新旧学生分别读取练习。"
+      ],
+      "expectedResults": [
+        "FR-05：服务端对首次执行的请求再次核实练习状态和用户有效性；已成功请求重放先返回原结果。已停用/不存在用户使本次请求整体失败，保留选择并提示刷新；被并发追加的用户自动跳过并显示实际结果。"
+      ],
+      "cleanup": "由隔离环境 runner 清理；同一 spec 内记录并清理创建的数据。",
+      "bindings": [],
+      "reviewNote": "初始需求候选；Codex 必须核对整份 PRD、字段表和决策补充，细化数据与操作，补充边界场景后标为 ready。"
+    },
+    {
+      "id": "reading/add-recipients/FR-06/CASE-01",
+      "title": "FR-06：只追加同一已发布版本的分配，不修改文章、题目、评分修订、原有学生进度、原始成绩、批注或完成状态；新用户作答采用当前有效评分规则。",
+      "status": "draft",
+      "requirementIds": [
+        "reading/add-recipients/FR-06"
+      ],
+      "preconditions": [
+        "一次性 MySQL/NestJS 测试环境；仅使用本次创建的数据，禁止连接生产。"
+      ],
+      "steps": [
+        "管理员准备已发布练习，A 已完成作答；另备未接收用户 B/C、停用用户与第二管理员。",
+        "从列表或原补发入口打开追加接收人，执行本条选择、搜索、确认、重试或并发操作。",
+        "核实新增/跳过人数、名单、分配 ID、原成绩和通知投递记录；用新旧学生分别读取练习。"
+      ],
+      "expectedResults": [
+        "FR-06：只追加同一已发布版本的分配，不修改文章、题目、评分修订、原有学生进度、原始成绩、批注或完成状态；新用户作答采用当前有效评分规则。"
+      ],
+      "cleanup": "由隔离环境 runner 清理；同一 spec 内记录并清理创建的数据。",
+      "bindings": [],
+      "reviewNote": "初始需求候选；Codex 必须核对整份 PRD、字段表和决策补充，细化数据与操作，补充边界场景后标为 ready。"
+    },
+    {
+      "id": "reading/add-recipients/FR-07/CASE-01",
+      "title": "FR-07：分配成功后进入现有通知投递机制；提示“已追加”，不将投递排队误称为通知已经送达。原有用户不重复通知。",
+      "status": "draft",
+      "requirementIds": [
+        "reading/add-recipients/FR-07"
+      ],
+      "preconditions": [
+        "一次性 MySQL/NestJS 测试环境；仅使用本次创建的数据，禁止连接生产。"
+      ],
+      "steps": [
+        "管理员准备已发布练习，A 已完成作答；另备未接收用户 B/C、停用用户与第二管理员。",
+        "从列表或原补发入口打开追加接收人，执行本条选择、搜索、确认、重试或并发操作。",
+        "核实新增/跳过人数、名单、分配 ID、原成绩和通知投递记录；用新旧学生分别读取练习。"
+      ],
+      "expectedResults": [
+        "FR-07：分配成功后进入现有通知投递机制；提示“已追加”，不将投递排队误称为通知已经送达。原有用户不重复通知。"
+      ],
+      "cleanup": "由隔离环境 runner 清理；同一 spec 内记录并清理创建的数据。",
+      "bindings": [],
+      "reviewNote": "初始需求候选；Codex 必须核对整份 PRD、字段表和决策补充，细化数据与操作，补充边界场景后标为 ready。"
+    },
+    {
+      "id": "reading/add-recipients/FR-08/CASE-01",
+      "title": "FR-08：原“反馈与纠错”里的补发控件替换为打开同一弹窗的入口，避免两种补发规则。",
+      "status": "draft",
+      "requirementIds": [
+        "reading/add-recipients/FR-08"
+      ],
+      "preconditions": [
+        "一次性 MySQL/NestJS 测试环境；仅使用本次创建的数据，禁止连接生产。"
+      ],
+      "steps": [
+        "管理员准备已发布练习，A 已完成作答；另备未接收用户 B/C、停用用户与第二管理员。",
+        "从列表或原补发入口打开追加接收人，执行本条选择、搜索、确认、重试或并发操作。",
+        "核实新增/跳过人数、名单、分配 ID、原成绩和通知投递记录；用新旧学生分别读取练习。"
+      ],
+      "expectedResults": [
+        "FR-08：原“反馈与纠错”里的补发控件替换为打开同一弹窗的入口，避免两种补发规则。"
+      ],
+      "cleanup": "由隔离环境 runner 清理；同一 spec 内记录并清理创建的数据。",
+      "bindings": [],
+      "reviewNote": "初始需求候选；Codex 必须核对整份 PRD、字段表和决策补充，细化数据与操作，补充边界场景后标为 ready。"
+    },
+    {
+      "id": "reading/add-recipients/REQ-ffd2dc322c/CASE-01",
+      "title": "“已接收”指分配已创建，学生具备访问资格；不等同于通知已经送达。",
+      "status": "draft",
+      "requirementIds": [
+        "reading/add-recipients/REQ-ffd2dc322c"
+      ],
+      "preconditions": [
+        "一次性 MySQL/NestJS 测试环境；仅使用本次创建的数据，禁止连接生产。"
+      ],
+      "steps": [
+        "管理员准备已发布练习，A 已完成作答；另备未接收用户 B/C、停用用户与第二管理员。",
+        "从列表或原补发入口打开追加接收人，执行本条选择、搜索、确认、重试或并发操作。",
+        "核实新增/跳过人数、名单、分配 ID、原成绩和通知投递记录；用新旧学生分别读取练习。"
+      ],
+      "expectedResults": [
+        "“已接收”指分配已创建，学生具备访问资格；不等同于通知已经送达。"
+      ],
+      "cleanup": "由隔离环境 runner 清理；同一 spec 内记录并清理创建的数据。",
+      "bindings": [],
+      "reviewNote": "初始需求候选；Codex 必须核对整份 PRD、字段表和决策补充，细化数据与操作，补充边界场景后标为 ready。"
+    },
+    {
+      "id": "reading/add-recipients/REQ-c998f4c46a/CASE-01",
+      "title": "只有管理员可读取接收名单和执行追加；学生和匿名请求均拒绝。不提供移除接收人、重置作答、再次通知已接收人、自动分配未来新用户或批量多练习追加。",
+      "status": "draft",
+      "requirementIds": [
+        "reading/add-recipients/REQ-c998f4c46a"
+      ],
+      "preconditions": [
+        "一次性 MySQL/NestJS 测试环境；仅使用本次创建的数据，禁止连接生产。"
+      ],
+      "steps": [
+        "管理员准备已发布练习，A 已完成作答；另备未接收用户 B/C、停用用户与第二管理员。",
+        "从列表或原补发入口打开追加接收人，执行本条选择、搜索、确认、重试或并发操作。",
+        "核实新增/跳过人数、名单、分配 ID、原成绩和通知投递记录；用新旧学生分别读取练习。"
+      ],
+      "expectedResults": [
+        "只有管理员可读取接收名单和执行追加；学生和匿名请求均拒绝。不提供移除接收人、重置作答、再次通知已接收人、自动分配未来新用户或批量多练习追加。"
+      ],
+      "cleanup": "由隔离环境 runner 清理；同一 spec 内记录并清理创建的数据。",
+      "bindings": [],
+      "reviewNote": "初始需求候选；Codex 必须核对整份 PRD、字段表和决策补充，细化数据与操作，补充边界场景后标为 ready。"
+    },
+    {
+      "id": "reading/add-recipients/AC-01/CASE-01",
+      "title": "AC-01：已发布练习列表一跳打开追加弹窗；已撤回行没有此入口。",
+      "status": "draft",
+      "requirementIds": [
+        "reading/add-recipients/AC-01"
+      ],
+      "preconditions": [
+        "一次性 MySQL/NestJS 测试环境；仅使用本次创建的数据，禁止连接生产。"
+      ],
+      "steps": [
+        "管理员准备已发布练习，A 已完成作答；另备未接收用户 B/C、停用用户与第二管理员。",
+        "从列表或原补发入口打开追加接收人，执行本条选择、搜索、确认、重试或并发操作。",
+        "核实新增/跳过人数、名单、分配 ID、原成绩和通知投递记录；用新旧学生分别读取练习。"
+      ],
+      "expectedResults": [
+        "AC-01：已发布练习列表一跳打开追加弹窗；已撤回行没有此入口。"
+      ],
+      "cleanup": "由隔离环境 runner 清理；同一 spec 内记录并清理创建的数据。",
+      "bindings": [],
+      "reviewNote": "初始需求候选；Codex 必须核对整份 PRD、字段表和决策补充，细化数据与操作，补充边界场景后标为 ready。"
+    },
+    {
+      "id": "reading/add-recipients/AC-02/CASE-01",
+      "title": "AC-02：原接收人A已提交，给B追加后接收人数+1；A的提交、成绩和分配ID不变，B可见同版本。",
+      "status": "draft",
+      "requirementIds": [
+        "reading/add-recipients/AC-02"
+      ],
+      "preconditions": [
+        "一次性 MySQL/NestJS 测试环境；仅使用本次创建的数据，禁止连接生产。"
+      ],
+      "steps": [
+        "管理员准备已发布练习，A 已完成作答；另备未接收用户 B/C、停用用户与第二管理员。",
+        "从列表或原补发入口打开追加接收人，执行本条选择、搜索、确认、重试或并发操作。",
+        "核实新增/跳过人数、名单、分配 ID、原成绩和通知投递记录；用新旧学生分别读取练习。"
+      ],
+      "expectedResults": [
+        "AC-02：原接收人A已提交，给B追加后接收人数+1；A的提交、成绩和分配ID不变，B可见同版本。"
+      ],
+      "cleanup": "由隔离环境 runner 清理；同一 spec 内记录并清理创建的数据。",
+      "bindings": [],
+      "reviewNote": "初始需求候选；Codex 必须核对整份 PRD、字段表和决策补充，细化数据与操作，补充边界场景后标为 ready。"
+    },
+    {
+      "id": "reading/add-recipients/AC-03/CASE-01",
+      "title": "AC-03：名单中显示A已提交且候选禁选A；搜索选择B和C后更换关键词仍保留选择。",
+      "status": "draft",
+      "requirementIds": [
+        "reading/add-recipients/AC-03"
+      ],
+      "preconditions": [
+        "一次性 MySQL/NestJS 测试环境；仅使用本次创建的数据，禁止连接生产。"
+      ],
+      "steps": [
+        "管理员准备已发布练习，A 已完成作答；另备未接收用户 B/C、停用用户与第二管理员。",
+        "从列表或原补发入口打开追加接收人，执行本条选择、搜索、确认、重试或并发操作。",
+        "核实新增/跳过人数、名单、分配 ID、原成绩和通知投递记录；用新旧学生分别读取练习。"
+      ],
+      "expectedResults": [
+        "AC-03：名单中显示A已提交且候选禁选A；搜索选择B和C后更换关键词仍保留选择。"
+      ],
+      "cleanup": "由隔离环境 runner 清理；同一 spec 内记录并清理创建的数据。",
+      "bindings": [],
+      "reviewNote": "初始需求候选；Codex 必须核对整份 PRD、字段表和决策补充，细化数据与操作，补充边界场景后标为 ready。"
+    },
+    {
+      "id": "reading/add-recipients/AC-04/CASE-01",
+      "title": "AC-04：未选择/加载失败不能提交；重复点击只发一个请求，网络失败保留选择，重试复用标识。",
+      "status": "draft",
+      "requirementIds": [
+        "reading/add-recipients/AC-04"
+      ],
+      "preconditions": [
+        "一次性 MySQL/NestJS 测试环境；仅使用本次创建的数据，禁止连接生产。"
+      ],
+      "steps": [
+        "管理员准备已发布练习，A 已完成作答；另备未接收用户 B/C、停用用户与第二管理员。",
+        "从列表或原补发入口打开追加接收人，执行本条选择、搜索、确认、重试或并发操作。",
+        "核实新增/跳过人数、名单、分配 ID、原成绩和通知投递记录；用新旧学生分别读取练习。"
+      ],
+      "expectedResults": [
+        "AC-04：未选择/加载失败不能提交；重复点击只发一个请求，网络失败保留选择，重试复用标识。"
+      ],
+      "cleanup": "由隔离环境 runner 清理；同一 spec 内记录并清理创建的数据。",
+      "bindings": [],
+      "reviewNote": "初始需求候选；Codex 必须核对整份 PRD、字段表和决策补充，细化数据与操作，补充边界场景后标为 ready。"
+    },
+    {
+      "id": "reading/add-recipients/AC-05/CASE-01",
+      "title": "AC-05：两名管理员同时追加B，B只有一份分配；各自提示的实际新增/跳过人数正确，同请求重放统计不变。",
+      "status": "draft",
+      "requirementIds": [
+        "reading/add-recipients/AC-05"
+      ],
+      "preconditions": [
+        "一次性 MySQL/NestJS 测试环境；仅使用本次创建的数据，禁止连接生产。"
+      ],
+      "steps": [
+        "管理员准备已发布练习，A 已完成作答；另备未接收用户 B/C、停用用户与第二管理员。",
+        "从列表或原补发入口打开追加接收人，执行本条选择、搜索、确认、重试或并发操作。",
+        "核实新增/跳过人数、名单、分配 ID、原成绩和通知投递记录；用新旧学生分别读取练习。"
+      ],
+      "expectedResults": [
+        "AC-05：两名管理员同时追加B，B只有一份分配；各自提示的实际新增/跳过人数正确，同请求重放统计不变。"
+      ],
+      "cleanup": "由隔离环境 runner 清理；同一 spec 内记录并清理创建的数据。",
+      "bindings": [],
+      "reviewNote": "初始需求候选；Codex 必须核对整份 PRD、字段表和决策补充，细化数据与操作，补充边界场景后标为 ready。"
+    },
+    {
+      "id": "reading/add-recipients/AC-06/CASE-01",
+      "title": "AC-06：打开弹窗后练习被撤回，确认返回明确失败，不新增任何人；停用用户也整体拒绝。",
+      "status": "draft",
+      "requirementIds": [
+        "reading/add-recipients/AC-06"
+      ],
+      "preconditions": [
+        "一次性 MySQL/NestJS 测试环境；仅使用本次创建的数据，禁止连接生产。"
+      ],
+      "steps": [
+        "管理员准备已发布练习，A 已完成作答；另备未接收用户 B/C、停用用户与第二管理员。",
+        "从列表或原补发入口打开追加接收人，执行本条选择、搜索、确认、重试或并发操作。",
+        "核实新增/跳过人数、名单、分配 ID、原成绩和通知投递记录；用新旧学生分别读取练习。"
+      ],
+      "expectedResults": [
+        "AC-06：打开弹窗后练习被撤回，确认返回明确失败，不新增任何人；停用用户也整体拒绝。"
+      ],
+      "cleanup": "由隔离环境 runner 清理；同一 spec 内记录并清理创建的数据。",
+      "bindings": [],
+      "reviewNote": "初始需求候选；Codex 必须核对整份 PRD、字段表和决策补充，细化数据与操作，补充边界场景后标为 ready。"
+    },
+    {
+      "id": "reading/add-recipients/AC-07/CASE-01",
+      "title": "AC-07：成功后名单和列表刷新；后端或刷新失败有可恢复提示，不把成功追加当作未提交重新发送。",
+      "status": "draft",
+      "requirementIds": [
+        "reading/add-recipients/AC-07"
+      ],
+      "preconditions": [
+        "一次性 MySQL/NestJS 测试环境；仅使用本次创建的数据，禁止连接生产。"
+      ],
+      "steps": [
+        "管理员准备已发布练习，A 已完成作答；另备未接收用户 B/C、停用用户与第二管理员。",
+        "从列表或原补发入口打开追加接收人，执行本条选择、搜索、确认、重试或并发操作。",
+        "核实新增/跳过人数、名单、分配 ID、原成绩和通知投递记录；用新旧学生分别读取练习。"
+      ],
+      "expectedResults": [
+        "AC-07：成功后名单和列表刷新；后端或刷新失败有可恢复提示，不把成功追加当作未提交重新发送。"
+      ],
+      "cleanup": "由隔离环境 runner 清理；同一 spec 内记录并清理创建的数据。",
+      "bindings": [],
+      "reviewNote": "初始需求候选；Codex 必须核对整份 PRD、字段表和决策补充，细化数据与操作，补充边界场景后标为 ready。"
+    },
+    {
+      "id": "reading/add-recipients/AC-08/CASE-01",
+      "title": "AC-08：旧补发入口使用相同弹窗；桌面布局清晰，窄屏不横向溢出。",
+      "status": "draft",
+      "requirementIds": [
+        "reading/add-recipients/AC-08"
+      ],
+      "preconditions": [
+        "一次性 MySQL/NestJS 测试环境；仅使用本次创建的数据，禁止连接生产。"
+      ],
+      "steps": [
+        "管理员准备已发布练习，A 已完成作答；另备未接收用户 B/C、停用用户与第二管理员。",
+        "从列表或原补发入口打开追加接收人，执行本条选择、搜索、确认、重试或并发操作。",
+        "核实新增/跳过人数、名单、分配 ID、原成绩和通知投递记录；用新旧学生分别读取练习。"
+      ],
+      "expectedResults": [
+        "AC-08：旧补发入口使用相同弹窗；桌面布局清晰，窄屏不横向溢出。"
+      ],
+      "cleanup": "由隔离环境 runner 清理；同一 spec 内记录并清理创建的数据。",
+      "bindings": [],
+      "reviewNote": "初始需求候选；Codex 必须核对整份 PRD、字段表和决策补充，细化数据与操作，补充边界场景后标为 ready。"
+    }
+  ]
+}

@@ -1,5 +1,6 @@
-import { useRef, useState } from "react";
-import { Alert, Button, Form, Input, Radio, Space, Upload } from "antd";
+import { InboxOutlined } from "@ant-design/icons";
+import { useEffect, useRef, useState } from "react";
+import { Alert, Button, Form, Input, Radio, Segmented, Space, Upload } from "antd";
 import request, { getApiBaseUrl } from "@font/api";
 import { newRequestId } from "./api/readingPractice";
 import {
@@ -35,22 +36,25 @@ export function SourceFiles({
   value,
   onChange,
   disabled = false,
+  onUploadingChange,
+  prominent = false,
 }: {
   value: Source[];
   onChange: (s: Source[]) => void;
+  prominent?: boolean;
   disabled?: boolean;
+  onUploadingChange?: (uploading: boolean) => void;
 }) {
   const [error, setError] = useState(""),
     [uploading, setUploading] = useState(false);
+  const inFlight = useRef(0);
   const current = useRef(value);
   current.current = value;
+  const UploadControl = prominent ? Upload.Dragger : Upload;
   return (
     <>
-      <p>
-        PDF / PNG / JPEG /
-        WebP；每文件20MiB，合计40MiB、最多20页/图。原稿仅管理员可见。
-      </p>
-      <Upload
+      {!prominent && <p>PDF / PNG / JPEG / WebP；单文件 20MB，合计 40MB，最多 20 页或图片。</p>}
+      <UploadControl
         multiple
         accept=".pdf,.png,.jpg,.jpeg,.webp"
         showUploadList={false}
@@ -60,7 +64,9 @@ export function SourceFiles({
             setError("单文件不能超过20MiB");
             return false;
           }
+          inFlight.current++;
           setUploading(true);
+          onUploadingChange?.(true);
           setError("");
           try {
             const data = new FormData();
@@ -93,16 +99,18 @@ export function SourceFiles({
           } catch {
             setError("上传失败或总量超限，请检查文件格式、大小及页数后重试。");
           } finally {
-            setUploading(false);
+            inFlight.current--;
+            setUploading(inFlight.current > 0);
+            onUploadingChange?.(inFlight.current > 0);
           }
           return false;
         }}
       >
-        <Button loading={uploading}>上传原稿</Button>
-      </Upload>
+        {prominent ? <div className="reading-create-dropzone"><InboxOutlined /><strong>{uploading ? "正在上传材料…" : "拖拽 PDF 或照片到这里"}</strong><span>也可以点击选择文件，支持一次上传多个文件</span><small>PDF、PNG、JPG、WebP · 单文件 20MB · 合计 40MB / 20 页</small></div> : <Button loading={uploading}>上传原稿</Button>}
+      </UploadControl>
       {error && <Alert type="error" message={error} />}
       {value.map((s, i) => (
-        <div key={s.id} style={{ padding: "8px 0" }}>
+        <div key={s.id} className={prominent ? "reading-create-file" : undefined} style={{ padding: "8px 0" }}>
           <Space wrap>
             <span>
               {i + 1}. {s.name} · {s.pages} 页
@@ -151,43 +159,80 @@ export function SourceFiles({
     </>
   );
 }
-export function ReadingImport({ onCreated }: { onCreated: () => void }) {
+function ImportFields() {
+  const mode = Form.useWatch("mode");
+  return (
+    <PracticeFields
+      prefix={["config"]}
+      showRecipients={false}
+      mode={mode === "generate_questions" ? "generate_questions" : "import"}
+    />
+  );
+}
+export function ReadingImport({ onCreated, onBusyChange }: { onCreated: (id?: number) => void; onBusyChange?: (busy: boolean) => void }) {
+  const [inputMode, setInputMode] = useState("files");
+  const [form] = Form.useForm();
+  const text = Form.useWatch("text", form) || "";
+  const [uploading, setUploading] = useState(false);
   const [sources, setSources] = useState<Source[]>([]),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
   const attempt = useRef<{ signature: string; uid: string } | undefined>(
     undefined,
   );
+  useEffect(() => { onBusyChange?.(busy || uploading); }, [busy, uploading, onBusyChange]);
   return (
     <Form
+      id="reading-import-form" form={form} requiredMark={false}
       layout="vertical"
       initialValues={{
-        mode: "format",
+        mode: "complete_answers",
         title: "",
         text: "",
         answerText: "",
-        config: { ...practiceDefaults, topic: "导入已有材料" },
+        config: {
+          targetType: "all",
+          questionCount: practiceDefaults.questionCount,
+          questionTypes: practiceDefaults.questionTypes,
+        },
       }}
       onFinish={async (v: {
         title: string;
         mode: string;
         text: string;
         answerText: string;
-        config: PracticeConfig;
+        config: Partial<PracticeConfig>;
       }) => {
-        const data = { ...v, sourceIds: sources.map((s) => s.id) };
+        if (uploading) { setError("请等待所有文件上传完成后开始整理。"); return; }
+        if (!v.text?.trim() && !sources.length) {
+          setError("请先上传文件或粘贴文章和题目。");
+          return;
+        }
+        const config = {
+          targetType: "all",
+          ...(v.mode === "generate_questions"
+            ? {
+                questionCount: v.config.questionCount,
+                questionTypes: v.config.questionTypes,
+                ...(v.config.ieltsBand != null
+                  ? { ieltsBand: v.config.ieltsBand }
+                  : {}),
+              }
+            : {}),
+        };
+        const data = { ...v, autoProcess: v.mode !== "format", config, sourceIds: sources.map((s) => s.id) };
         const signature = JSON.stringify(data);
         if (attempt.current?.signature !== signature)
           attempt.current = { signature, uid: newRequestId() };
         setBusy(true);
         setError("");
         try {
-          await request({
+          const created: any = await request({
             url: "/admin/reading-practices/imports",
             method: "POST",
             data: { ...data, requestUid: attempt.current.uid },
           });
-          onCreated();
+          onCreated(created?.id);
         } catch {
           setError("导入任务未创建，材料已保留，请检查输入和网络后重试。");
         } finally {
@@ -196,35 +241,24 @@ export function ReadingImport({ onCreated }: { onCreated: () => void }) {
       }}
       disabled={busy}
     >
-      <p className="admin-muted">导入材料 → 核对识别结果 → 发布给学生</p>
-      <h3 className="admin-section-title">导入材料</h3>
-      <Form.Item name="title" label="练习标题">
-        <Input maxLength={160} placeholder="可留空，由材料标题识别" />
-      </Form.Item>
-      <Form.Item name="mode" label="处理模式">
-        <Radio.Group>
-          <Space direction="vertical">
-            <Radio value="format">仅识别并整理格式（默认）</Radio>
-            <Radio value="generate_questions">保留文章并生成题目</Radio>
-            <Radio value="complete_answers">整理并补充缺失答案解析</Radio>
-          </Space>
-        </Radio.Group>
-      </Form.Item>
-      <Form.Item name="text" label="文章与题目 / 混合材料">
-        <Input.TextArea autoSize={{ minRows: 5, maxRows: 12 }} maxLength={100000} showCount />
-      </Form.Item>
-      <details className="admin-inline-help"><summary>添加原稿中的答案与解析（可选）</summary>
-      <Form.Item name="answerText" label="答案与解析（可选）">
-        <Input.TextArea rows={4} maxLength={100000} />
-      </Form.Item>
+      <div className="reading-create-intro"><h2>把材料交给 AI</h2><p>自动识别文章和题目，补全并检查，完成后由你审核。</p></div>
+      {error && <Alert type="error" message={error} showIcon style={{marginBottom:16}} />}
+      <Segmented aria-label="材料输入方式" value={inputMode} onChange={setInputMode} options={[{ value: "files", label: "上传文件" }, { value: "text", label: "粘贴文本" }]} />
+      <div className="reading-create-material" style={{ display: inputMode === "files" ? undefined : "none" }}>
+        <SourceFiles value={sources} onChange={setSources} disabled={busy} onUploadingChange={setUploading} prominent />
+        {sources.length > 0 && <p className="reading-create-hint">已上传 {sources.length} 页 / 张，可调整顺序后开始整理。</p>}
+        {text.trim() && <p className="reading-create-hint">同时附带已粘贴的文本，切换查看不会丢失材料。</p>}
+      </div>
+      <div className="reading-create-material" style={{ display: inputMode === "text" ? undefined : "none" }}>
+        <Form.Item name="text" label="文章和题目"><Input.TextArea autoSize={{ minRows: 9, maxRows: 16 }} maxLength={100000} showCount={text.length > 90000} placeholder="粘贴文章和题目，已有答案也可以一起粘贴。AI 会自动整理。" /></Form.Item>
+        {sources.length > 0 && <p className="reading-create-hint">同时附带 {sources.length} 页 / 张已上传材料。</p>}
+      </div>
+      <details className="reading-create-more"><summary>更多选项 <span>标题、已有答案、特殊处理</span></summary>
+        <Form.Item name="title" label="练习标题（可选）"><Input maxLength={160} placeholder="留空，AI 会根据材料命名" /></Form.Item>
+        <Form.Item name="answerText" label="补充已有答案或解析（可选）"><Input.TextArea rows={3} maxLength={100000} placeholder="如果答案在另一份材料中，可以补充在这里" /></Form.Item>
+        <Form.Item name="mode" label="处理方式"><Radio.Group><Space direction="vertical"><Radio value="complete_answers">自动整理、补全并检查</Radio><Radio value="format">仅转录，不补答案</Radio><Radio value="generate_questions">根据文章重新出题</Radio></Space></Radio.Group></Form.Item>
+        <ImportFields />
       </details>
-      <SourceFiles value={sources} onChange={setSources} disabled={busy} />
-      <p className="admin-muted">按原稿顺序上传，文件将随练习保留。</p>
-      <PracticeFields prefix={["config"]} />
-      {error && <Alert type="error" message={error} />}
-      <Button type="primary" htmlType="submit" loading={busy}>
-        识别并创建草稿
-      </Button>
     </Form>
   );
 }

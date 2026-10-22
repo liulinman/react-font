@@ -1,3 +1,4 @@
+import { SharedReadingExam } from "./SharedReadingExam";
 import { ReadingFeedback } from "./ReadingFeedback";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
@@ -91,10 +92,10 @@ export function ResultContent({
                 {i + 1}. {q.stem}
               </h3>
               <p>
-                你的答案：<strong>{q.options[q.selectedIndex]}</strong>
+                你的答案：<strong>{q.kind === "sentence_completion" ? q.answerText || "未作答" : q.options[q.selectedIndex ?? -1]}</strong>
               </p>
               <p>
-                正确答案：<strong>{q.options[q.correctIndex]}</strong>
+                正确答案：<strong>{q.kind === "sentence_completion" ? q.acceptedAnswers?.join(" / ") : q.options[q.correctIndex ?? -1]}</strong>
               </p>
               <p className="rp-explanation">{q.explanation}</p>
               <blockquote>
@@ -124,9 +125,11 @@ export function ResultContent({
   );
 }
 export function ReadingPracticeResult({
+  userId,
   practiceId,
   basePath,
 }: {
+  userId: number;
   practiceId: number;
   basePath: string;
 }) {
@@ -138,6 +141,8 @@ export function ReadingPracticeResult({
     [retry, setRetry] = useState(0);
   useEffect(() => {
     let active = true;
+    setData(undefined);
+    setError("");
     void Promise.all([
       request(getPractice(practiceId)),
       request(getResult(practiceId)),
@@ -154,7 +159,7 @@ export function ReadingPracticeResult({
     return () => {
       active = false;
     };
-  }, [practiceId, retry]);
+  }, [practiceId, userId, retry]);
   return (
     <main className="reading-practice">
       <Link to={basePath}>← 返回练习列表</Link>
@@ -164,7 +169,7 @@ export function ReadingPracticeResult({
           <button onClick={() => setRetry((n) => n + 1)}>重试</button>
         </div>
       ) : data ? (
-        <ResultContent {...data} />
+        <SharedReadingExam key={`${userId}:${practiceId}:result`} paper={data.paper} initialResult={data.result} userId={userId} basePath={basePath} />
       ) : (
         <p role="status">正在读取结果…</p>
       )}

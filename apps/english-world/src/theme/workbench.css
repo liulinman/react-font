@@ -139,12 +139,12 @@ body { font-family: -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","M
 
 /* Desktop surface hierarchy: workspace, task, and reading paper. */
 .english-world-shell {
-  --ew-page-bg: #f3f2ee;
+  --ew-page-bg: #f5f7fb;
   --ew-text: #243446;
   --ew-text-secondary: #646d76;
-  --ew-border: #dedfdc;
-  --workbench-paper: #fffdf8;
-  --workbench-rail: #eaece9;
+  --ew-border: #dfe7f2;
+  --workbench-paper: #ffffff;
+  --workbench-rail: #ffffff;
   --workbench-task: #edf2f7;
   --workbench-success: #27654b;
   --workbench-error: #a34732;
@@ -155,7 +155,7 @@ body { font-family: -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","M
   --ew-text: #e3e8ed;
   --ew-text-secondary: #a8b1ba;
   --ew-border: #384149;
-  --workbench-paper: #242724;
+  --workbench-paper: #1e2633;
   --workbench-rail: #20272d;
   --workbench-task: #263544;
   --workbench-success: #8ccbaa;
@@ -187,7 +187,7 @@ body { font-family: -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","M
 .english-world-main .reading-practice .rp-card:hover { background: color-mix(in srgb,var(--workbench-paper) 94%,var(--ew-accent)); }
 .english-world-main .reading-practice .rp-card a { padding: 7px 10px; border: 1px solid var(--ew-border); border-radius: 4px; background: var(--ew-surface); }
 .english-world-main .reading-practice .rp-card a:hover { border-color: var(--ew-accent); }
-.english-world-main .reading-practice .rp-article { background: var(--workbench-paper); border-top: 3px solid #b6a27e; padding-inline: clamp(24px,3vw,44px); }
+.english-world-main .reading-practice .rp-article { background: var(--workbench-paper); border-top: 3px solid var(--ew-border); padding-inline: clamp(24px,3vw,44px); }
 .english-world-main .reading-practice .rp-article h2 { font-family: Georgia,"Times New Roman",serif; font-size: 24px; line-height: 1.4; padding-bottom: 18px; border-bottom: 1px solid var(--ew-border); }
 .english-world-main .reading-practice .rp-article p { max-width: 68ch; margin-inline: auto; }
 .english-world-main .reading-practice .rp-paragraph-number { color: var(--ew-text-secondary); font-family: inherit; }
@@ -197,12 +197,28 @@ body { font-family: -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","M
 .english-world-main .reading-practice .rp-score strong { font-family: Georgia,serif; font-size: 36px; }
 .english-world-main .reading-practice .rp-result.is-correct > .rp-status { color: var(--workbench-success); background: color-mix(in srgb,var(--workbench-success) 10%,var(--ew-surface)); }
 .english-world-main .reading-practice .rp-result.is-incorrect > .rp-status { color: var(--workbench-error); background: color-mix(in srgb,var(--workbench-error) 10%,var(--ew-surface)); }
-.english-world-main .reading-practice .rp-result blockquote { background: var(--workbench-paper); border-left: 2px solid #b6a27e; }
+.english-world-main .reading-practice .rp-result blockquote { background: var(--workbench-paper); border-left: 2px solid var(--ew-border); }
 /* Notes retain a useful writing measure instead of spanning the entire window. */
-.english-world-shell .knowledge-notes { --kn-ink: var(--ew-text); --kn-muted: var(--ew-text-secondary); --kn-line: var(--ew-border); --kn-bg: var(--workbench-paper); background: var(--workbench-paper); border-top: 3px solid #b6a27e; }
+.english-world-shell .knowledge-notes { --kn-ink: var(--ew-text); --kn-muted: var(--ew-text-secondary); --kn-line: var(--ew-border); --kn-bg: var(--workbench-paper); background: var(--workbench-paper); border-top: 3px solid var(--ew-border); }
 .english-world-shell .knowledge-article { max-width: 76ch; margin-inline: auto; padding-block: 24px; }
 .english-world-shell .knowledge-body { font-family: Georgia,"Songti SC","SimSun",serif; font-size: 18px; line-height: 1.95; }
 .english-world-shell .knowledge-list-heading h2 { font-size: 18px; }
 .english-world-shell .knowledge-list > li > a:hover { background: var(--workbench-task); }
 .english-world-shell .english-world-table-panel { border-top: 2px solid var(--ew-text-secondary); }
 .english-world-shell .english-world-filter-panel { background: var(--workbench-rail); }
+
+/* Search controls: one border around clearable inputs, consistent focus and size. */
+.english-world-search-row { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) auto; gap: 16px; align-items: end; }
+.english-world-extra-filters { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--ew-border); }
+.english-world-filter-form-compact .ant-input-affix-wrapper { min-height: 40px; border-radius: 7px; background: var(--ew-surface); border-color: var(--ew-border); box-shadow: none; }
+.english-world-filter-form-compact .ant-input-affix-wrapper .ant-input { min-height: 0; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.english-world-filter-form-compact .ant-input-affix-wrapper:focus-within { border-color: var(--ew-accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--ew-accent) 12%, transparent); }
+.english-world-filter-form-compact .ant-input-affix-wrapper .ant-input:focus { box-shadow: none; }
+.english-world-search-row .english-world-filter-actions { min-height: 40px; flex-wrap: wrap; }
+@media (max-width: 1100px) {
+  .english-world-search-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .english-world-search-row .english-world-filter-actions { grid-column: 1 / -1; justify-content: flex-end; }
+}
+@media (max-width: 600px) {
+  .english-world-search-row, .english-world-extra-filters { grid-template-columns: minmax(0, 1fr); }
+}

@@ -161,3 +161,13 @@ describe("useWordList", () => {
     );
   });
 });
+
+it('keeps the last successful filters when a new query fails', async () => {
+  requestMock.mockResolvedValueOnce({list:[{id:1,englishWord:'first'}],total:1,totalPages:1});
+  const {result}=renderHook(()=>useWordList());
+  await waitFor(()=>expect(result.current.wordList).toHaveLength(1));
+  requestMock.mockRejectedValueOnce(new Error('network failure'));
+  await act(async()=>{await result.current.search({englishWord:'unseen'});});
+  await waitFor(()=>expect(result.current.loading).toBe(false));
+  expect(result.current.getLastSuccessfulFilters()).toEqual({});
+});

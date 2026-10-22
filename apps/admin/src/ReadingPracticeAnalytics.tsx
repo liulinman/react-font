@@ -56,6 +56,8 @@ const scoreText = (l: AnalyticsLearner) =>
         ? "不可评分"
         : showNumber(l.score);
 const kindLabels: Record<string, string> = {
+  sentence_completion: "句子填空",
+  matching_features: "人物 / 特征匹配",
   choice: "单选题",
   single_choice: "单选题",
   multiple_choice: "单选题",
@@ -400,7 +402,7 @@ export function ReadingPracticeAnalytics({
                         <p>{q.stem}</p>
                         <p className="admin-muted">
                           当前正确答案：
-                          {String.fromCharCode(65 + q.correctIndex)} · 提交{" "}
+                          {q.kind === "sentence_completion" ? q.acceptedAnswers?.join(" / ") || "尚未设置" : q.correctIndex == null ? "尚未设置" : String.fromCharCode(65 + q.correctIndex)} · 提交{" "}
                           {q.submittedCount} 人 · 答对 {q.correctCount ?? "—"}{" "}
                           人 · 答错 {q.wrongCount ?? "—"} 人 · 错误率{" "}
                           {showNumber(q.errorRate, true)}
@@ -523,6 +525,10 @@ export function ReadingPracticeAnalytics({
                             : "错误"}
                       </h4>
                       <p>{q.stem}</p>
+                      {(q.kind === "sentence_completion" || q.acceptedAnswers?.length) && <>
+                        <p>学生作答：{q.answerText || "未作答"}</p>
+                        <p>正确答案：{q.acceptedAnswers?.join(" / ") || "尚未设置"}</p>
+                      </>}
                       {q.options.map((o, i) => (
                         <p key={i}>
                           {String.fromCharCode(65 + i)}. {o}{" "}

@@ -24,6 +24,11 @@ const sections = [
   { key: "schedules" as const, label: "定时任务", icon: <ScheduleOutlined />, description: "安排内容生成与发布，让学习提醒按时送达。" },
   { key: "history" as const, label: "历史记录", icon: <HistoryOutlined />, description: "查看已生成的通知内容，管理发布记录。" },
 ];
+function sectionFromUrl(): Section {
+  const section = new URLSearchParams(window.location.search).get("section");
+  return sections.find(item => item.key === section)?.key ?? "users";
+}
+
 type PendingAction = { kind: "withdraw" | "deleteNotification" | "deleteSchedule" | "run"; id: number; title: string; requestUid?: string };
 const actionCopy = {
   withdraw: { label: "撤回", description: "撤回后，这条公告将不再出现在用户的通知列表中。" },
@@ -39,7 +44,18 @@ export function AdminApp() {
   const [loginForm] = Form.useForm();
   const [authed, setAuthed] = useState(false);
   const [checking, setChecking] = useState(true);
-  const [active, setActive] = useState<Section>("users");
+  const [active, updateActive] = useState<Section>(sectionFromUrl);
+  const setActive = (section: Section) => {
+    const url = new URL(window.location.href);
+    url.searchParams.set("section", section);
+    if (url.href !== window.location.href) window.history.pushState(null, "", url);
+    updateActive(section);
+  };
+  useEffect(() => {
+    const restore = () => updateActive(sectionFromUrl());
+    window.addEventListener("popstate", restore);
+    return () => window.removeEventListener("popstate", restore);
+  }, []);
   const [users, setUsers] = useState<AdminUserItem[]>([]);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [schedules, setSchedules] = useState<NotificationScheduleItem[]>([]);

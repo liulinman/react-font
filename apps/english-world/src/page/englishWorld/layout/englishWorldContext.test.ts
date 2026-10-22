@@ -12,8 +12,12 @@ describe("English World desktop context", () => {
     expect(getEnglishWorldSectionLabel("overwriteStats")).toBe("覆盖统计");
     expect(getEnglishWorldSectionLabel("memoryMap")).toBe("词汇掌握情况");
     expect(getEnglishWorldSectionLabel("contextLab")).toBe("语境练习");
-    expect(getEnglishWorldSectionLabel("ieltsCore")).toBe("雅思核心复习");
+    expect(getEnglishWorldSectionLabel("ieltsCore")).toBe("单词复习");
     expect(getEnglishWorldSectionLabel("readingPractices")).toBe("阅读练习");
+    expect(getEnglishWorldSectionLabel("intensiveReading")).toBe("文章精读");
+    expect(getEnglishWorldSectionLabel("recite")).toBe("单词复习");
+    expect(getEnglishWorldSectionLabel("wordBooks")).toBe("复习手册");
+    expect(getEnglishWorldSectionLabel("stats")).toBe("数据统计");
     expect(getEnglishWorldSectionLabel("unknown")).toBe("English World");
   });
 

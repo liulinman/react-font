@@ -1,0 +1,652 @@
+{
+  "schemaVersion": 1,
+  "source": "docs/prd/intensive-reading/prd.md",
+  "sourceHash": "7fd5bff36fc07b79c22e81afbe2a1de60f36047415ade79d5a8cf9dddea68166",
+  "cases": [
+    {
+      "id": "intensive-reading/intensive-reading-core/FR-01/WEB",
+      "title": "FR-01：本人材料库显示标题、来源类型、处理状态、最近阅读时间，支持按标题搜索、打开与继续阅读；首次进入为空态，不自动创建示例。",
+      "status": "draft",
+      "requirementIds": [
+        "intensive-reading/intensive-reading-core/FR-01"
+      ],
+      "preconditions": [
+        "一次性MySQL、真实Nest HTTP与React界面，两个隔离账号，原文含重复句；外部识别响应为本地供应商替身。"
+      ],
+      "steps": [
+        "imports pasted original, corrects paragraphs and opens the independent workbench"
+      ],
+      "expectedResults": [
+        "FR-01：本人材料库显示标题、来源类型、处理状态、最近阅读时间，支持按标题搜索、打开与继续阅读；首次进入为空态，不自动创建示例。"
+      ],
+      "cleanup": "每例受保护seed重置隔离库；不连接生产。",
+      "bindings": [
+        {
+          "suite": "intensive-reading-desktop",
+          "title": "Intensive reading desktop > imports pasted original, corrects paragraphs and opens the independent workbench"
+        }
+      ],
+      "reviewNote": "已绑定部分业务断言；本条复合要求尚有边界子项依赖SQL/单测或人工实测，保持draft，不伪称完整浏览器覆盖。"
+    },
+    {
+      "id": "intensive-reading/intensive-reading-core/FR-02/WEB",
+      "title": "FR-02：支持粘贴文章及上传PDF、JPEG、PNG、WebP。实施决定：单文件不超过20MiB、PDF不超过20页、单次最多20文件且合计100MiB；图片最多2500万像素。前后端一致校验真实格",
+      "status": "draft",
+      "requirementIds": [
+        "intensive-reading/intensive-reading-core/FR-02"
+      ],
+      "preconditions": [
+        "一次性MySQL、真实Nest HTTP与React界面，两个隔离账号，原文含重复句；外部识别响应为本地供应商替身。"
+      ],
+      "steps": [
+        "uploads actual image and PDF, previews private originals and resumes extraction across reload",
+        "keeps a partially failed upload batch blocked until every file recovers"
+      ],
+      "expectedResults": [
+        "FR-02：支持粘贴文章及上传PDF、JPEG、PNG、WebP。实施决定：单文件不超过20MiB、PDF不超过20页、单次最多20文件且合计100MiB；图片最多2500万像素。前后端一致校验真实格式、大小与归属。"
+      ],
+      "cleanup": "每例受保护seed重置隔离库；不连接生产。",
+      "bindings": [
+        {
+          "suite": "intensive-reading-desktop",
+          "title": "Intensive reading desktop > uploads actual image and PDF, previews private originals and resumes extraction across reload"
+        },
+        {
+          "suite": "intensive-reading-desktop",
+          "title": "Intensive reading desktop > keeps a partially failed upload batch blocked until every file recovers"
+        }
+      ],
+      "reviewNote": "已绑定部分业务断言；本条复合要求尚有边界子项依赖SQL/单测或人工实测，保持draft，不伪称完整浏览器覆盖。"
+    },
+    {
+      "id": "intensive-reading/intensive-reading-core/FR-03/WEB",
+      "title": "FR-03：整理保留原文措辞、大小写与标点；仅处理阅读顺序、标题、段落和多余换行，不自动翻译、简写或改写。无法判断的内容标记待核对，不虚构缺失文字。",
+      "status": "draft",
+      "requirementIds": [
+        "intensive-reading/intensive-reading-core/FR-03"
+      ],
+      "preconditions": [
+        "一次性MySQL、真实Nest HTTP与React界面，两个隔离账号，原文含重复句；外部识别响应为本地供应商替身。"
+      ],
+      "steps": [
+        "imports pasted original, corrects paragraphs and opens the independent workbench",
+        "uploads actual image and PDF, previews private originals and resumes extraction across reload"
+      ],
+      "expectedResults": [
+        "FR-03：整理保留原文措辞、大小写与标点；仅处理阅读顺序、标题、段落和多余换行，不自动翻译、简写或改写。无法判断的内容标记待核对，不虚构缺失文字。"
+      ],
+      "cleanup": "每例受保护seed重置隔离库；不连接生产。",
+      "bindings": [
+        {
+          "suite": "intensive-reading-desktop",
+          "title": "Intensive reading desktop > imports pasted original, corrects paragraphs and opens the independent workbench"
+        },
+        {
+          "suite": "intensive-reading-desktop",
+          "title": "Intensive reading desktop > uploads actual image and PDF, previews private originals and resumes extraction across reload"
+        }
+      ],
+      "reviewNote": "已绑定部分业务断言；本条复合要求尚有边界子项依赖SQL/单测或人工实测，保持draft，不伪称完整浏览器覆盖。"
+    },
+    {
+      "id": "intensive-reading/intensive-reading-core/FR-04/WEB",
+      "title": "FR-04：原文件私有保存，原件与可编辑正文并排校对；多文件显示顺序并支持开始识别前调整顺序。用户能编辑标题、修正错字、调整段落；有正文才允许确认。粘贴来源以原始输入作为对照。",
+      "status": "draft",
+      "requirementIds": [
+        "intensive-reading/intensive-reading-core/FR-04"
+      ],
+      "preconditions": [
+        "一次性MySQL、真实Nest HTTP与React界面，两个隔离账号，原文含重复句；外部识别响应为本地供应商替身。"
+      ],
+      "steps": [
+        "imports pasted original, corrects paragraphs and opens the independent workbench",
+        "revises the original, preserves historical notes and explicitly rebinds changed anchors",
+        "uploads actual image and PDF, previews private originals and resumes extraction across reload"
+      ],
+      "expectedResults": [
+        "FR-04：原文件私有保存，原件与可编辑正文并排校对；多文件显示顺序并支持开始识别前调整顺序。用户能编辑标题、修正错字、调整段落；有正文才允许确认。粘贴来源以原始输入作为对照。"
+      ],
+      "cleanup": "每例受保护seed重置隔离库；不连接生产。",
+      "bindings": [
+        {
+          "suite": "intensive-reading-desktop",
+          "title": "Intensive reading desktop > imports pasted original, corrects paragraphs and opens the independent workbench"
+        },
+        {
+          "suite": "intensive-reading-desktop",
+          "title": "Intensive reading desktop > revises the original, preserves historical notes and explicitly rebinds changed anchors"
+        },
+        {
+          "suite": "intensive-reading-desktop",
+          "title": "Intensive reading desktop > uploads actual image and PDF, previews private originals and resumes extraction across reload"
+        }
+      ],
+      "reviewNote": "已绑定部分业务断言；本条复合要求尚有边界子项依赖SQL/单测或人工实测，保持draft，不伪称完整浏览器覆盖。"
+    },
+    {
+      "id": "intensive-reading/intensive-reading-core/FR-05/WEB",
+      "title": "FR-05：处理阶段、失败原因和重试入口可见。刷新后恢复处理中/待校对结果；重试不重复创建材料，失败保留原文件和成功结果。文件未全部上传完成不得开始识别。不得用mock内容假装识别成功。",
+      "status": "draft",
+      "requirementIds": [
+        "intensive-reading/intensive-reading-core/FR-05"
+      ],
+      "preconditions": [
+        "一次性MySQL、真实Nest HTTP与React界面，两个隔离账号，原文含重复句；外部识别响应为本地供应商替身。"
+      ],
+      "steps": [
+        "uploads actual image and PDF, previews private originals and resumes extraction across reload",
+        "keeps a partially failed upload batch blocked until every file recovers",
+        "replays a committed upload when its response was lost"
+      ],
+      "expectedResults": [
+        "FR-05：处理阶段、失败原因和重试入口可见。刷新后恢复处理中/待校对结果；重试不重复创建材料，失败保留原文件和成功结果。文件未全部上传完成不得开始识别。不得用mock内容假装识别成功。"
+      ],
+      "cleanup": "每例受保护seed重置隔离库；不连接生产。",
+      "bindings": [
+        {
+          "suite": "intensive-reading-desktop",
+          "title": "Intensive reading desktop > uploads actual image and PDF, previews private originals and resumes extraction across reload"
+        },
+        {
+          "suite": "intensive-reading-desktop",
+          "title": "Intensive reading desktop > keeps a partially failed upload batch blocked until every file recovers"
+        },
+        {
+          "suite": "intensive-reading-desktop",
+          "title": "Intensive reading desktop > replays a committed upload when its response was lost"
+        }
+      ],
+      "reviewNote": "已绑定部分业务断言；本条复合要求尚有边界子项依赖SQL/单测或人工实测，保持draft，不伪称完整浏览器覆盖。"
+    },
+    {
+      "id": "intensive-reading/intensive-reading-core/FR-06/WEB",
+      "title": "FR-06：正文支持选单词、短语、句子；选区工具条提供黄色重点、蓝色语言、粉色疑问和添加笔记；可调整字号、用目录定位段落。",
+      "status": "ready",
+      "requirementIds": [
+        "intensive-reading/intensive-reading-core/FR-06"
+      ],
+      "preconditions": [
+        "一次性MySQL、真实Nest HTTP与React界面，两个隔离账号，原文含重复句；外部识别响应为本地供应商替身。"
+      ],
+      "steps": [
+        "creates three colors, autosaves notes and resolves questions without losing highlights",
+        "locates the second repeated phrase and keeps exact text after font and directory changes",
+        "keeps three desktop sizes inside the viewport and supports keyboard marking"
+      ],
+      "expectedResults": [
+        "FR-06：正文支持选单词、短语、句子；选区工具条提供黄色重点、蓝色语言、粉色疑问和添加笔记；可调整字号、用目录定位段落。"
+      ],
+      "cleanup": "每例受保护seed重置隔离库；不连接生产。",
+      "bindings": [
+        {
+          "suite": "intensive-reading-desktop",
+          "title": "Intensive reading desktop > creates three colors, autosaves notes and resolves questions without losing highlights"
+        },
+        {
+          "suite": "intensive-reading-desktop",
+          "title": "Intensive reading desktop > locates the second repeated phrase and keeps exact text after font and directory changes"
+        },
+        {
+          "suite": "intensive-reading-desktop",
+          "title": "Intensive reading desktop > keeps three desktop sizes inside the viewport and supports keyboard marking"
+        }
+      ],
+      "reviewNote": "具体脚本断言已复核，状态仅代表可执行，结果以当前运行为准。"
+    },
+    {
+      "id": "intensive-reading/intensive-reading-core/FR-07/WEB",
+      "title": "FR-07：笔记自动引用选区原文，可输入纯文本，分类可选词汇、语法、段意、疑问；不强制分类。笔记和高亮同时存在，编辑笔记不丢高亮。分类与颜色分别保存。",
+      "status": "draft",
+      "requirementIds": [
+        "intensive-reading/intensive-reading-core/FR-07"
+      ],
+      "preconditions": [
+        "一次性MySQL、真实Nest HTTP与React界面，两个隔离账号，原文含重复句；外部识别响应为本地供应商替身。"
+      ],
+      "steps": [
+        "creates three colors, autosaves notes and resolves questions without losing highlights"
+      ],
+      "expectedResults": [
+        "FR-07：笔记自动引用选区原文，可输入纯文本，分类可选词汇、语法、段意、疑问；不强制分类。笔记和高亮同时存在，编辑笔记不丢高亮。分类与颜色分别保存。"
+      ],
+      "cleanup": "每例受保护seed重置隔离库；不连接生产。",
+      "bindings": [
+        {
+          "suite": "intensive-reading-desktop",
+          "title": "Intensive reading desktop > creates three colors, autosaves notes and resolves questions without losing highlights"
+        }
+      ],
+      "reviewNote": "已绑定部分业务断言；本条复合要求尚有边界子项依赖SQL/单测或人工实测，保持draft，不伪称完整浏览器覆盖。"
+    },
+    {
+      "id": "intensive-reading/intensive-reading-core/FR-08/WEB",
+      "title": "FR-08：点击标记显示对应笔记，点击笔记引用定位原文并短暂突出；允许修改颜色、编辑笔记、删除标记。实施决定：跨段选区提示按段标注；重叠选区提示打开已有标记，第一版不创建重叠标注。",
+      "status": "draft",
+      "requirementIds": [
+        "intensive-reading/intensive-reading-core/FR-08"
+      ],
+      "preconditions": [
+        "一次性MySQL、真实Nest HTTP与React界面，两个隔离账号，原文含重复句；外部识别响应为本地供应商替身。"
+      ],
+      "steps": [
+        "creates three colors, autosaves notes and resolves questions without losing highlights",
+        "locates the second repeated phrase and keeps exact text after font and directory changes",
+        "revises the original, preserves historical notes and explicitly rebinds changed anchors"
+      ],
+      "expectedResults": [
+        "FR-08：点击标记显示对应笔记，点击笔记引用定位原文并短暂突出；允许修改颜色、编辑笔记、删除标记。实施决定：跨段选区提示按段标注；重叠选区提示打开已有标记，第一版不创建重叠标注。"
+      ],
+      "cleanup": "每例受保护seed重置隔离库；不连接生产。",
+      "bindings": [
+        {
+          "suite": "intensive-reading-desktop",
+          "title": "Intensive reading desktop > creates three colors, autosaves notes and resolves questions without losing highlights"
+        },
+        {
+          "suite": "intensive-reading-desktop",
+          "title": "Intensive reading desktop > locates the second repeated phrase and keeps exact text after font and directory changes"
+        },
+        {
+          "suite": "intensive-reading-desktop",
+          "title": "Intensive reading desktop > revises the original, preserves historical notes and explicitly rebinds changed anchors"
+        }
+      ],
+      "reviewNote": "已绑定部分业务断言；本条复合要求尚有边界子项依赖SQL/单测或人工实测，保持draft，不伪称完整浏览器覆盖。"
+    },
+    {
+      "id": "intensive-reading/intensive-reading-core/FR-09/WEB",
+      "title": "FR-09：右侧提供全部、语言积累、待解决筛选；疑问可解决和重新打开，已解决内容仍在全部中。回顾模式清晰显示引用、笔记、分类和疑问状态，支持返回阅读。",
+      "status": "draft",
+      "requirementIds": [
+        "intensive-reading/intensive-reading-core/FR-09"
+      ],
+      "preconditions": [
+        "一次性MySQL、真实Nest HTTP与React界面，两个隔离账号，原文含重复句；外部识别响应为本地供应商替身。"
+      ],
+      "steps": [
+        "creates three colors, autosaves notes and resolves questions without losing highlights"
+      ],
+      "expectedResults": [
+        "FR-09：右侧提供全部、语言积累、待解决筛选；疑问可解决和重新打开，已解决内容仍在全部中。回顾模式清晰显示引用、笔记、分类和疑问状态，支持返回阅读。"
+      ],
+      "cleanup": "每例受保护seed重置隔离库；不连接生产。",
+      "bindings": [
+        {
+          "suite": "intensive-reading-desktop",
+          "title": "Intensive reading desktop > creates three colors, autosaves notes and resolves questions without losing highlights"
+        }
+      ],
+      "reviewNote": "已绑定部分业务断言；本条复合要求尚有边界子项依赖SQL/单测或人工实测，保持draft，不伪称完整浏览器覆盖。"
+    },
+    {
+      "id": "intensive-reading/intensive-reading-core/FR-10/WEB",
+      "title": "FR-10：服务端按当前用户持久保存材料、标注和阅读位置；换设备登录仍可恢复。显示保存中、已保存、保存失败和重试；失败保留本地未保存输入，不能显示成功。离开有未保存编辑时提示。",
+      "status": "draft",
+      "requirementIds": [
+        "intensive-reading/intensive-reading-core/FR-10"
+      ],
+      "preconditions": [
+        "一次性MySQL、真实Nest HTTP与React界面，两个隔离账号，原文含重复句；外部识别响应为本地供应商替身。"
+      ],
+      "steps": [
+        "imports pasted original, corrects paragraphs and opens the independent workbench",
+        "creates three colors, autosaves notes and resolves questions without losing highlights",
+        "keeps failed note input, retries persistence and rejects stale window versions"
+      ],
+      "expectedResults": [
+        "FR-10：服务端按当前用户持久保存材料、标注和阅读位置；换设备登录仍可恢复。显示保存中、已保存、保存失败和重试；失败保留本地未保存输入，不能显示成功。离开有未保存编辑时提示。"
+      ],
+      "cleanup": "每例受保护seed重置隔离库；不连接生产。",
+      "bindings": [
+        {
+          "suite": "intensive-reading-desktop",
+          "title": "Intensive reading desktop > imports pasted original, corrects paragraphs and opens the independent workbench"
+        },
+        {
+          "suite": "intensive-reading-desktop",
+          "title": "Intensive reading desktop > creates three colors, autosaves notes and resolves questions without losing highlights"
+        },
+        {
+          "suite": "intensive-reading-desktop",
+          "title": "Intensive reading desktop > keeps failed note input, retries persistence and rejects stale window versions"
+        }
+      ],
+      "reviewNote": "已绑定部分业务断言；本条复合要求尚有边界子项依赖SQL/单测或人工实测，保持draft，不伪称完整浏览器覆盖。"
+    },
+    {
+      "id": "intensive-reading/intensive-reading-core/FR-11/WEB",
+      "title": "FR-11：阅读位置保存段落ID和段内相对位置，字号及布局变化不改变标注。标注必须绑定正文版本、段落ID、字符起止及原文引用，后端核对引用一致。",
+      "status": "draft",
+      "requirementIds": [
+        "intensive-reading/intensive-reading-core/FR-11"
+      ],
+      "preconditions": [
+        "一次性MySQL、真实Nest HTTP与React界面，两个隔离账号，原文含重复句；外部识别响应为本地供应商替身。"
+      ],
+      "steps": [
+        "locates the second repeated phrase and keeps exact text after font and directory changes"
+      ],
+      "expectedResults": [
+        "FR-11：阅读位置保存段落ID和段内相对位置，字号及布局变化不改变标注。标注必须绑定正文版本、段落ID、字符起止及原文引用，后端核对引用一致。"
+      ],
+      "cleanup": "每例受保护seed重置隔离库；不连接生产。",
+      "bindings": [
+        {
+          "suite": "intensive-reading-desktop",
+          "title": "Intensive reading desktop > locates the second repeated phrase and keeps exact text after font and directory changes"
+        }
+      ],
+      "reviewNote": "已绑定部分业务断言；本条复合要求尚有边界子项依赖SQL/单测或人工实测，保持draft，不伪称完整浏览器覆盖。"
+    },
+    {
+      "id": "intensive-reading/intensive-reading-core/FR-12/WEB",
+      "title": "FR-12：开始精读后仍可回到校对。实施决定：确认修改时创建新正文版本，旧版本及标注可只读查看；未改段落按稳定ID及原文精确校验继承标注，变更段落的标注显示“待重新确认”，禁止静默贴到相似句子。新上传",
+      "status": "ready",
+      "requirementIds": [
+        "intensive-reading/intensive-reading-core/FR-12"
+      ],
+      "preconditions": [
+        "一次性MySQL、真实Nest HTTP与React界面，两个隔离账号，原文含重复句；外部识别响应为本地供应商替身。"
+      ],
+      "steps": [
+        "revises the original, preserves historical notes and explicitly rebinds changed anchors"
+      ],
+      "expectedResults": [
+        "FR-12：开始精读后仍可回到校对。实施决定：确认修改时创建新正文版本，旧版本及标注可只读查看；未改段落按稳定ID及原文精确校验继承标注，变更段落的标注显示“待重新确认”，禁止静默贴到相似句子。新上传不覆盖旧材料。"
+      ],
+      "cleanup": "每例受保护seed重置隔离库；不连接生产。",
+      "bindings": [
+        {
+          "suite": "intensive-reading-desktop",
+          "title": "Intensive reading desktop > revises the original, preserves historical notes and explicitly rebinds changed anchors"
+        }
+      ],
+      "reviewNote": "具体脚本断言已复核，状态仅代表可执行，结果以当前运行为准。"
+    },
+    {
+      "id": "intensive-reading/intensive-reading-core/FR-13/WEB",
+      "title": "FR-13：多窗口并发写入检查版本，冲突返回明确提示且保留本地输入；不得最后写入静默覆盖。保存请求支持安全重试，旧响应不得覆盖新编辑。",
+      "status": "ready",
+      "requirementIds": [
+        "intensive-reading/intensive-reading-core/FR-13"
+      ],
+      "preconditions": [
+        "一次性MySQL、真实Nest HTTP与React界面，两个隔离账号，原文含重复句；外部识别响应为本地供应商替身。"
+      ],
+      "steps": [
+        "keeps failed note input, retries persistence and rejects stale window versions",
+        "freezes editable body while confirmation is in flight",
+        "replays a committed upload when its response was lost"
+      ],
+      "expectedResults": [
+        "FR-13：多窗口并发写入检查版本，冲突返回明确提示且保留本地输入；不得最后写入静默覆盖。保存请求支持安全重试，旧响应不得覆盖新编辑。"
+      ],
+      "cleanup": "每例受保护seed重置隔离库；不连接生产。",
+      "bindings": [
+        {
+          "suite": "intensive-reading-desktop",
+          "title": "Intensive reading desktop > keeps failed note input, retries persistence and rejects stale window versions"
+        },
+        {
+          "suite": "intensive-reading-desktop",
+          "title": "Intensive reading desktop > freezes editable body while confirmation is in flight"
+        },
+        {
+          "suite": "intensive-reading-desktop",
+          "title": "Intensive reading desktop > replays a committed upload when its response was lost"
+        }
+      ],
+      "reviewNote": "具体脚本断言已复核，状态仅代表可执行，结果以当前运行为准。"
+    },
+    {
+      "id": "intensive-reading/intensive-reading-core/FR-14/WEB",
+      "title": "FR-14：本人才能读取/修改材料、任务、文件及笔记；不生成学生分配、通知、考试或知识笔记副本。未知与他人资源统一返回不可访问。",
+      "status": "draft",
+      "requirementIds": [
+        "intensive-reading/intensive-reading-core/FR-14"
+      ],
+      "preconditions": [
+        "一次性MySQL、真实Nest HTTP与React界面，两个隔离账号，原文含重复句；外部识别响应为本地供应商替身。"
+      ],
+      "steps": [
+        "enforces real user ownership for materials, notes, files and tasks"
+      ],
+      "expectedResults": [
+        "FR-14：本人才能读取/修改材料、任务、文件及笔记；不生成学生分配、通知、考试或知识笔记副本。未知与他人资源统一返回不可访问。"
+      ],
+      "cleanup": "每例受保护seed重置隔离库；不连接生产。",
+      "bindings": [
+        {
+          "suite": "intensive-reading-desktop",
+          "title": "Intensive reading desktop > enforces real user ownership for materials, notes, files and tasks"
+        }
+      ],
+      "reviewNote": "已绑定部分业务断言；本条复合要求尚有边界子项依赖SQL/单测或人工实测，保持draft，不伪称完整浏览器覆盖。"
+    },
+    {
+      "id": "intensive-reading/intensive-reading-core/AC-01/WEB",
+      "title": "AC-01：真实粘贴文章及真实PDF、照片分别完成上传/识别、对照校对、确认并阅读；正文不被改写，原件可查；供应商失败明确失败且可恢复。",
+      "status": "draft",
+      "requirementIds": [
+        "intensive-reading/intensive-reading-core/AC-01"
+      ],
+      "preconditions": [
+        "一次性MySQL、真实Nest HTTP与React界面，两个隔离账号，原文含重复句；外部识别响应为本地供应商替身。"
+      ],
+      "steps": [
+        "imports pasted original, corrects paragraphs and opens the independent workbench",
+        "uploads actual image and PDF, previews private originals and resumes extraction across reload"
+      ],
+      "expectedResults": [
+        "AC-01：真实粘贴文章及真实PDF、照片分别完成上传/识别、对照校对、确认并阅读；正文不被改写，原件可查；供应商失败明确失败且可恢复。"
+      ],
+      "cleanup": "每例受保护seed重置隔离库；不连接生产。",
+      "bindings": [
+        {
+          "suite": "intensive-reading-desktop",
+          "title": "Intensive reading desktop > imports pasted original, corrects paragraphs and opens the independent workbench"
+        },
+        {
+          "suite": "intensive-reading-desktop",
+          "title": "Intensive reading desktop > uploads actual image and PDF, previews private originals and resumes extraction across reload"
+        }
+      ],
+      "reviewNote": "真实图片/PDF供应商提取另有只读样本验证；Cypress外部供应商是替身，不认证实际服务。"
+    },
+    {
+      "id": "intensive-reading/intensive-reading-core/AC-02/WEB",
+      "title": "AC-02：黄色高亮、蓝色笔记、粉色疑问分别创建成功，刷新后保持；改颜色、改笔记、删除标记正确，其他标记不受影响。",
+      "status": "ready",
+      "requirementIds": [
+        "intensive-reading/intensive-reading-core/AC-02"
+      ],
+      "preconditions": [
+        "一次性MySQL、真实Nest HTTP与React界面，两个隔离账号，原文含重复句；外部识别响应为本地供应商替身。"
+      ],
+      "steps": [
+        "creates three colors, autosaves notes and resolves questions without losing highlights"
+      ],
+      "expectedResults": [
+        "AC-02：黄色高亮、蓝色笔记、粉色疑问分别创建成功，刷新后保持；改颜色、改笔记、删除标记正确，其他标记不受影响。"
+      ],
+      "cleanup": "每例受保护seed重置隔离库；不连接生产。",
+      "bindings": [
+        {
+          "suite": "intensive-reading-desktop",
+          "title": "Intensive reading desktop > creates three colors, autosaves notes and resolves questions without losing highlights"
+        }
+      ],
+      "reviewNote": "具体脚本断言已复核，状态仅代表可执行，结果以当前运行为准。"
+    },
+    {
+      "id": "intensive-reading/intensive-reading-core/AC-03/WEB",
+      "title": "AC-03：三种筛选计数准确；解决后从待解决消失，全部中保留，可重新打开；点击引用能定位重复句子中被选的那一句。",
+      "status": "draft",
+      "requirementIds": [
+        "intensive-reading/intensive-reading-core/AC-03"
+      ],
+      "preconditions": [
+        "一次性MySQL、真实Nest HTTP与React界面，两个隔离账号，原文含重复句；外部识别响应为本地供应商替身。"
+      ],
+      "steps": [
+        "creates three colors, autosaves notes and resolves questions without losing highlights",
+        "locates the second repeated phrase and keeps exact text after font and directory changes"
+      ],
+      "expectedResults": [
+        "AC-03：三种筛选计数准确；解决后从待解决消失，全部中保留，可重新打开；点击引用能定位重复句子中被选的那一句。"
+      ],
+      "cleanup": "每例受保护seed重置隔离库；不连接生产。",
+      "bindings": [
+        {
+          "suite": "intensive-reading-desktop",
+          "title": "Intensive reading desktop > creates three colors, autosaves notes and resolves questions without losing highlights"
+        },
+        {
+          "suite": "intensive-reading-desktop",
+          "title": "Intensive reading desktop > locates the second repeated phrase and keeps exact text after font and directory changes"
+        }
+      ],
+      "reviewNote": "已绑定部分业务断言；本条复合要求尚有边界子项依赖SQL/单测或人工实测，保持draft，不伪称完整浏览器覆盖。"
+    },
+    {
+      "id": "intensive-reading/intensive-reading-core/AC-04/WEB",
+      "title": "AC-04：跨段/重叠选区提示而不破坏正文；含中文、emoji及标点的偏移在前后端一致；改字号与收起目录后定位正确。",
+      "status": "draft",
+      "requirementIds": [
+        "intensive-reading/intensive-reading-core/AC-04"
+      ],
+      "preconditions": [
+        "一次性MySQL、真实Nest HTTP与React界面，两个隔离账号，原文含重复句；外部识别响应为本地供应商替身。"
+      ],
+      "steps": [
+        "locates the second repeated phrase and keeps exact text after font and directory changes"
+      ],
+      "expectedResults": [
+        "AC-04：跨段/重叠选区提示而不破坏正文；含中文、emoji及标点的偏移在前后端一致；改字号与收起目录后定位正确。"
+      ],
+      "cleanup": "每例受保护seed重置隔离库；不连接生产。",
+      "bindings": [
+        {
+          "suite": "intensive-reading-desktop",
+          "title": "Intensive reading desktop > locates the second repeated phrase and keeps exact text after font and directory changes"
+        }
+      ],
+      "reviewNote": "UTF16由SQL/单测补充；跨段和重叠UI提示尚未逐项绑定浏览器断言。"
+    },
+    {
+      "id": "intensive-reading/intensive-reading-core/AC-05/WEB",
+      "title": "AC-05：修改正文生成版本，未改段落保留标注，改动处待确认，旧正文及笔记可查，不产生悬空引用。",
+      "status": "ready",
+      "requirementIds": [
+        "intensive-reading/intensive-reading-core/AC-05"
+      ],
+      "preconditions": [
+        "一次性MySQL、真实Nest HTTP与React界面，两个隔离账号，原文含重复句；外部识别响应为本地供应商替身。"
+      ],
+      "steps": [
+        "revises the original, preserves historical notes and explicitly rebinds changed anchors"
+      ],
+      "expectedResults": [
+        "AC-05：修改正文生成版本，未改段落保留标注，改动处待确认，旧正文及笔记可查，不产生悬空引用。"
+      ],
+      "cleanup": "每例受保护seed重置隔离库；不连接生产。",
+      "bindings": [
+        {
+          "suite": "intensive-reading-desktop",
+          "title": "Intensive reading desktop > revises the original, preserves historical notes and explicitly rebinds changed anchors"
+        }
+      ],
+      "reviewNote": "具体脚本断言已复核，状态仅代表可执行，结果以当前运行为准。"
+    },
+    {
+      "id": "intensive-reading/intensive-reading-core/AC-06/WEB",
+      "title": "AC-06：网络失败、刷新、重复提交、两个窗口冲突下不丢笔记、不重复创建、错误不伪装成功；重试后数据一致。",
+      "status": "draft",
+      "requirementIds": [
+        "intensive-reading/intensive-reading-core/AC-06"
+      ],
+      "preconditions": [
+        "一次性MySQL、真实Nest HTTP与React界面，两个隔离账号，原文含重复句；外部识别响应为本地供应商替身。"
+      ],
+      "steps": [
+        "keeps failed note input, retries persistence and rejects stale window versions",
+        "keeps a partially failed upload batch blocked until every file recovers",
+        "replays a committed upload when its response was lost"
+      ],
+      "expectedResults": [
+        "AC-06：网络失败、刷新、重复提交、两个窗口冲突下不丢笔记、不重复创建、错误不伪装成功；重试后数据一致。"
+      ],
+      "cleanup": "每例受保护seed重置隔离库；不连接生产。",
+      "bindings": [
+        {
+          "suite": "intensive-reading-desktop",
+          "title": "Intensive reading desktop > keeps failed note input, retries persistence and rejects stale window versions"
+        },
+        {
+          "suite": "intensive-reading-desktop",
+          "title": "Intensive reading desktop > keeps a partially failed upload batch blocked until every file recovers"
+        },
+        {
+          "suite": "intensive-reading-desktop",
+          "title": "Intensive reading desktop > replays a committed upload when its response was lost"
+        }
+      ],
+      "reviewNote": "供应商失败/部分进度恢复由SQL补充；未绑定全部异常为浏览器Case。"
+    },
+    {
+      "id": "intensive-reading/intensive-reading-core/AC-07/WEB",
+      "title": "AC-07：重新登录恢复阅读位置；两个用户无法读取彼此文件/笔记/任务，现有阅读练习与知识笔记无副作用；不改手机导航。",
+      "status": "draft",
+      "requirementIds": [
+        "intensive-reading/intensive-reading-core/AC-07"
+      ],
+      "preconditions": [
+        "一次性MySQL、真实Nest HTTP与React界面，两个隔离账号，原文含重复句；外部识别响应为本地供应商替身。"
+      ],
+      "steps": [
+        "freezes editable body while confirmation is in flight",
+        "enforces real user ownership for materials, notes, files and tasks"
+      ],
+      "expectedResults": [
+        "AC-07：重新登录恢复阅读位置；两个用户无法读取彼此文件/笔记/任务，现有阅读练习与知识笔记无副作用；不改手机导航。"
+      ],
+      "cleanup": "每例受保护seed重置隔离库；不连接生产。",
+      "bindings": [
+        {
+          "suite": "intensive-reading-desktop",
+          "title": "Intensive reading desktop > freezes editable body while confirmation is in flight"
+        },
+        {
+          "suite": "intensive-reading-desktop",
+          "title": "Intensive reading desktop > enforces real user ownership for materials, notes, files and tasks"
+        }
+      ],
+      "reviewNote": "已覆盖所有资源权限；跨设备进度、原模块副作用与手机导航由SQL/回归补充。"
+    },
+    {
+      "id": "intensive-reading/intensive-reading-core/AC-08/WEB",
+      "title": "AC-08：1280×800、1440×900、1920×1080桌面可用，三栏不产生页面横向溢出，工具条不出屏，正文和笔记均可独立滚动，键盘能操作标记与保存。",
+      "status": "ready",
+      "requirementIds": [
+        "intensive-reading/intensive-reading-core/AC-08"
+      ],
+      "preconditions": [
+        "一次性MySQL、真实Nest HTTP与React界面，两个隔离账号，原文含重复句；外部识别响应为本地供应商替身。"
+      ],
+      "steps": [
+        "keeps three desktop sizes inside the viewport and supports keyboard marking"
+      ],
+      "expectedResults": [
+        "AC-08：1280×800、1440×900、1920×1080桌面可用，三栏不产生页面横向溢出，工具条不出屏，正文和笔记均可独立滚动，键盘能操作标记与保存。"
+      ],
+      "cleanup": "每例受保护seed重置隔离库；不连接生产。",
+      "bindings": [
+        {
+          "suite": "intensive-reading-desktop",
+          "title": "Intensive reading desktop > keeps three desktop sizes inside the viewport and supports keyboard marking"
+        }
+      ],
+      "reviewNote": "具体脚本断言已复核，状态仅代表可执行，结果以当前运行为准。"
+    }
+  ]
+}

@@ -174,7 +174,7 @@ describe("RecitePage plan review", () => {
       </MemoryRouter>,
     );
 
-    await user.click(screen.getByRole("button", { name: /开始今日复习/ }));
+    await user.click(screen.getByRole("button", { name: /开始单词复习/ }));
 
     await waitFor(() => {
       expect(requestMock).toHaveBeenCalledWith(
@@ -191,21 +191,9 @@ describe("RecitePage plan review", () => {
     expect(await screen.findByText("脆弱的")).toBeInTheDocument();
   });
 
-  it("opens IELTS core review from the learning start panel", async () => {
-    const user = userEvent.setup();
-
-    render(
-      <MemoryRouter initialEntries={["/englishWorld/recite"]}>
-        <RecitePage />
-        <LocationProbe />
-      </MemoryRouter>,
-    );
-
-    await user.click(screen.getByRole("button", { name: /雅思核心复习/ }));
-
-    expect(screen.getByTestId("location-probe")).toHaveTextContent(
-      "/englishWorld/ielts-core",
-    );
+  it("does not expose the cancelled IELTS module", async () => {
+    render(<MemoryRouter initialEntries={["/englishWorld/recite"]}><RecitePage /></MemoryRouter>);
+    expect(screen.queryByRole("button", { name: /雅思核心复习/ })).not.toBeInTheDocument();
   });
 
   it("records next-day repair start once after the review session really starts", async () => {
@@ -221,7 +209,7 @@ describe("RecitePage plan review", () => {
       </MemoryRouter>,
     );
 
-    await user.click(screen.getByRole("button", { name: /开始今日复习/ }));
+    await user.click(screen.getByRole("button", { name: /开始单词复习/ }));
     expect(await screen.findByText("脆弱的")).toBeInTheDocument();
 
     await waitFor(() => {
@@ -261,7 +249,7 @@ describe("RecitePage plan review", () => {
       </MemoryRouter>,
     );
 
-    await user.click(screen.getByRole("button", { name: /开始今日复习/ }));
+    await user.click(screen.getByRole("button", { name: /开始单词复习/ }));
     await user.type(await screen.findByLabelText("你的答案"), "wrong{enter}");
     await user.type(await screen.findByLabelText("你的答案"), "wrong{enter}");
     await screen.findAllByTestId("recite-result-item");
@@ -285,7 +273,7 @@ describe("RecitePage plan review", () => {
     await user.click(screen.getByRole("button", { name: "收起侧栏" }));
     expect(container.querySelector(".english-world-shell-collapsed")).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: "今日复习" }),
+      screen.getByRole("heading", { name: "单词复习" }),
     ).toBeInTheDocument();
   });
 
@@ -299,7 +287,7 @@ describe("RecitePage plan review", () => {
     );
 
     await user.click(
-      screen.getByRole("button", { name: /开始复习|开始今日复习/ }),
+      screen.getByRole("button", { name: /开始复习|开始单词复习/ }),
     );
 
     expect(await screen.findByText("脆弱的")).toBeInTheDocument();
@@ -326,7 +314,7 @@ describe("RecitePage plan review", () => {
     );
 
     await user.click(
-      screen.getByRole("button", { name: /开始复习|开始今日复习/ }),
+      screen.getByRole("button", { name: /开始复习|开始单词复习/ }),
     );
     await user.click(await screen.findByRole("button", { name: "下一题" }));
     await user.click(screen.getByRole("button", { name: "下一题" }));
@@ -346,7 +334,7 @@ describe("RecitePage plan review", () => {
     );
 
     await user.click(
-      screen.getByRole("button", { name: /开始复习|开始今日复习/ }),
+      screen.getByRole("button", { name: /开始复习|开始单词复习/ }),
     );
     expect(await screen.findByText("脆弱的")).toBeInTheDocument();
 
@@ -381,7 +369,7 @@ describe("RecitePage plan review", () => {
       </MemoryRouter>,
     );
 
-    await user.click(screen.getByRole("button", { name: /开始复习|开始今日复习/ }));
+    await user.click(screen.getByRole("button", { name: /开始复习|开始单词复习/ }));
     await user.type(await screen.findByLabelText("你的答案"), "fragil{enter}");
     await user.type(await screen.findByLabelText("你的答案"), "resilient{enter}");
 
@@ -402,7 +390,7 @@ describe("RecitePage plan review", () => {
     );
 
     await user.click(
-      screen.getByRole("button", { name: /开始复习|开始今日复习/ }),
+      screen.getByRole("button", { name: /开始复习|开始单词复习/ }),
     );
     await user.type(await screen.findByLabelText("你的答案"), "fragil{enter}");
     await user.type(await screen.findByLabelText("你的答案"), "resilient{enter}");
@@ -451,7 +439,7 @@ describe("RecitePage plan review", () => {
     );
 
     await user.click(
-      screen.getByRole("button", { name: /开始复习|开始今日复习/ }),
+      screen.getByRole("button", { name: /开始复习|开始单词复习/ }),
     );
     await user.type(await screen.findByLabelText("你的答案"), "fragil{enter}");
     await user.type(await screen.findByLabelText("你的答案"), "resilient{enter}");
@@ -491,7 +479,7 @@ describe("RecitePage plan review", () => {
     );
 
     await user.click(
-      screen.getByRole("button", { name: /开始复习|开始今日复习/ }),
+      screen.getByRole("button", { name: /开始复习|开始单词复习/ }),
     );
     await user.type(await screen.findByLabelText("你的答案"), "fragile{enter}");
     await user.type(await screen.findByLabelText("你的答案"), "resilient{enter}");
@@ -573,7 +561,7 @@ describe("RecitePage plan review", () => {
     );
 
     await user.click(
-      screen.getByRole("button", { name: /开始复习|开始今日复习/ }),
+      screen.getByRole("button", { name: /开始复习|开始单词复习/ }),
     );
     await user.type(await screen.findByLabelText("你的答案"), "fragil{enter}");
     await user.type(await screen.findByLabelText("你的答案"), "resilient{enter}");

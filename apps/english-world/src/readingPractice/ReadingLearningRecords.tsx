@@ -46,7 +46,7 @@ export function ReadingLearningRecords({ basePath }: { basePath: string }) {
               <h3>题型与薄弱项</h3>
               {data.byKind.map((s: any) => (
                 <p key={s.kind}>
-                  {s.kind === "choice"
+                  {s.kind === "sentence_completion" ? "句子填空" : s.kind === "matching_features" ? "人物匹配" : s.kind === "choice"
                     ? "单项选择"
                     : "True / False / Not Given"}
                   ：{s.correct}/{s.total} ·{" "}
@@ -64,8 +64,8 @@ export function ReadingLearningRecords({ basePath }: { basePath: string }) {
                       {q.title} · {q.stem}
                     </summary>
                     <p>
-                      你的答案：{q.options[q.selectedIndex]}；当前答案：
-                      {q.options[q.correctIndex]}
+                      你的答案：{q.kind === "sentence_completion" ? q.answerText || "未作答" : q.options[q.selectedIndex ?? -1]}；当前答案：
+                      {q.kind === "sentence_completion" ? q.acceptedAnswers?.join(" / ") : q.options[q.correctIndex ?? -1]}
                     </p>
                     <p>{q.explanation}</p>
                     <Link to={`${basePath}/${q.practiceId}/result`}>

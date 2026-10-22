@@ -1,6 +1,7 @@
-import type { ContextLabSubmitResult, ContextLabTask } from "../types/learning";
+import { isTextQuestion, type ExamResult, type ExamTask } from "./examWorkspace.types";
 
 export type ExamAnnotation = {
+  kind?: "highlight" | "note";
   id: string;
   block: string;
   start: number;
@@ -14,16 +15,16 @@ export type ExamDraft = {
   startedAt: number | null;
   deadline: number | null;
   endedAt: number | null;
-  answers: Record<string, number>;
+  answers: Record<string, number | string>;
   review: string[];
   annotations: ExamAnnotation[];
-  result: ContextLabSubmitResult | null;
+  result: ExamResult | null;
 };
-export const examQuestionId = (task: ContextLabTask, index: number) =>
+export const examQuestionId = (task: ExamTask, index: number) =>
   task.questions?.[index]?.id || `q-${index}`;
-export const examStorageKey = (userId: number, taskId: number) =>
-  `context-lab:ielts-exam:v1:${userId}:${taskId}`;
-export function newExamDraft(task: ContextLabTask): ExamDraft {
+export const examStorageKey = (userId: number, taskId: number, namespace = "context-lab") =>
+  `${namespace}:ielts-exam:v1:${userId}:${taskId}`;
+export function newExamDraft(task: ExamTask): ExamDraft {
   return {
     version: 1,
     content: JSON.stringify([
@@ -42,7 +43,7 @@ export function newExamDraft(task: ContextLabTask): ExamDraft {
 }
 export function restoreExamDraft(
   raw: string | null,
-  task: ContextLabTask,
+  task: ExamTask,
 ): ExamDraft {
   const fresh = newExamDraft(task);
   if (!raw) return fresh;
@@ -72,11 +73,11 @@ export function restoreExamDraft(
         value.endedAt > value.deadline!)
     )
       return fresh;
-    const answers: Record<string, number> = {};
+    const answers: Record<string, number | string> = {};
     const ids = (task.questions ?? []).map((q, i) => {
       const id = examQuestionId(task, i);
       const answer = value.answers[id];
-      if (Number.isInteger(answer) && answer >= 0 && answer < q.options.length)
+      if (isTextQuestion(q) ? typeof answer === "string" : typeof answer === "number" && Number.isInteger(answer) && answer >= 0 && answer < q.options.length)
         answers[id] = answer;
       return id;
     });

@@ -1,0 +1,96 @@
+{
+  "date": "2026-10-19",
+  "policy": "正文与编号保留；相对链接重定位；旧文件仅保留跳转",
+  "files": [
+    {
+      "from": "react-font/docs/superpowers/prds/prd-english-world-2026-07-17/prd.md",
+      "to": "docs/prd/review/features/weak-word-repair/prd.md",
+      "sourceSha256": "933c250f1a80015e9531198358682455264331a5c6959a3fa672d796741ee233",
+      "kind": "prd"
+    },
+    {
+      "from": "react-font/docs/superpowers/prds/prd-english-world-2026-07-17/.decision-log.md",
+      "to": "docs/prd/review/features/weak-word-repair/.decision-log.md",
+      "sourceSha256": "52816d778f362f271b3112501c2bb644c8f335139eedd6cf359f0c60a583ed8b",
+      "kind": "companion"
+    },
+    {
+      "from": "react-font/docs/superpowers/prds/prd-english-world-2026-07-17/addendum.md",
+      "to": "docs/prd/review/features/weak-word-repair/addendum.md",
+      "sourceSha256": "c2e1544f1332d36ea2626002452a876bbd7b22e30afb12831338341c71e38d34",
+      "kind": "companion"
+    },
+    {
+      "from": "react-font/docs/superpowers/prds/prd-english-world-2026-07-17/review-rubric.md",
+      "to": "docs/prd/review/features/weak-word-repair/review-rubric.md",
+      "sourceSha256": "1dfc40982be4c89cb9a9119b7e464d92f9181bad99e57429796db2c36c6ca72f",
+      "kind": "companion"
+    },
+    {
+      "from": "react-font/docs/superpowers/prds/prd-english-world-2026-07-18/prd.md",
+      "to": "docs/prd/review/features/word-journey/prd.md",
+      "sourceSha256": "92e7a737b8cb7094770eb5d0f01c66c4ceb5a5f62d14f1c9275777a97c20858a",
+      "kind": "prd"
+    },
+    {
+      "from": "react-font/docs/superpowers/prds/prd-english-world-2026-07-18/.decision-log.md",
+      "to": "docs/prd/review/features/word-journey/.decision-log.md",
+      "sourceSha256": "c65c18b286bb76ae2b41cb10a58a9e9be0b38a05caeb1199aba7939653bd92fd",
+      "kind": "companion"
+    },
+    {
+      "from": "react-font/docs/superpowers/prds/prd-english-world-2026-07-18/addendum.md",
+      "to": "docs/prd/review/features/word-journey/addendum.md",
+      "sourceSha256": "fbb7749e8d067204c8354eafffcf613eefdff641b661639d07b6208b1d0ea99b",
+      "kind": "companion"
+    },
+    {
+      "from": "react-font/docs/superpowers/prds/prd-english-world-2026-07-18/review-rubric.md",
+      "to": "docs/prd/review/features/word-journey/review-rubric.md",
+      "sourceSha256": "cfb48e985111e5c173dfb140002d12a13df3183f85ceec69423d0e475f46c25d",
+      "kind": "companion"
+    },
+    {
+      "from": "react-font/docs/superpowers/prds/prd-english-world-2026-10-10/prd.md",
+      "to": "docs/prd/notes/features/knowledge-notes/prd.md",
+      "sourceSha256": "8ae081ff9601542cd96449f110496949c94d50e35e7339f14547150555500809",
+      "kind": "prd"
+    },
+    {
+      "from": "react-font/docs/superpowers/prds/prd-english-world-2026-10-10/.decision-log.md",
+      "to": "docs/prd/notes/features/knowledge-notes/.decision-log.md",
+      "sourceSha256": "2906fc3701332d31b3bef3da179128f529217bcc3b70a58a8961a9256a51bf94",
+      "kind": "companion"
+    },
+    {
+      "from": "react-font/docs/superpowers/prds/prd-english-world-2026-10-10/interaction.md",
+      "to": "docs/prd/notes/features/knowledge-notes/interaction.md",
+      "sourceSha256": "df13e37da34bfae0712185dac3f6a8bed7453bf5f7cbef8273354fd4cdaecdde",
+      "kind": "companion"
+    },
+    {
+      "from": "docs/knowledge-folders/prd.md",
+      "to": "docs/prd/notes/features/folders/prd.md",
+      "sourceSha256": "9998cc7da6eab7de6f0a3987591fea84cdc35d22e69aa428567a033718a7bc2f",
+      "kind": "prd"
+    },
+    {
+      "from": "docs/reading-add-recipients/prd.md",
+      "to": "docs/prd/reading/features/add-recipients/prd.md",
+      "sourceSha256": "5829c03d2a29eff0303291ce23b24723083f799cf1873b658b0dfd7eb35344f6",
+      "kind": "prd"
+    },
+    {
+      "from": "docs/reading-analytics/prd.md",
+      "to": "docs/prd/reading/features/analytics/prd.md",
+      "sourceSha256": "8263c61db400e6a10a06045a0f7a32747311c80a189463e417ed8eea50b68b80",
+      "kind": "prd"
+    },
+    {
+      "from": "docs/word-book/prd.md",
+      "to": "docs/prd/word-books/features/word-book/prd.md",
+      "sourceSha256": "588e01827f0650288a9750cc7087cafb62352ee9d0da5dcc77190b2af1a3b6b5",
+      "kind": "prd"
+    }
+  ]
+}

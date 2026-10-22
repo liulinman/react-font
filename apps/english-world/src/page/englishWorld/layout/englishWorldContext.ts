@@ -1,16 +1,18 @@
 const PRIMARY_LABELS: Record<string, string> = {
   cockpit: "今天",
+  intensiveReading: "文章精读",
   readingPractices: "阅读练习",
+  wordBooks: "复习手册",
   knowledgeNotes: "知识笔记",
   words: "词库",
-  recite: "今日复习",
-  stats: "数据",
+  recite: "单词复习",
+  stats: "数据统计",
   aiWord: "词汇生成",
   bulkImport: "批量导入",
   overwriteStats: "覆盖统计",
   memoryMap: "词汇掌握情况",
   contextLab: "语境练习",
-  ieltsCore: "雅思核心复习",
+  ieltsCore: "单词复习",
   setting: "设置",
 };
 

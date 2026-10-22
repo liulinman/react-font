@@ -1,0 +1,343 @@
+{
+  "schemaVersion": 1,
+  "note": "所有用例在隔离环境执行；real 表示业务接口真实，外部 AI 为本地替身。此目录不代表 PRD 全覆盖。",
+  "suites": [
+    {
+      "id": "admin-console",
+      "modules": [
+        "notifications",
+        "auth"
+      ],
+      "spec": "cypress/e2e/admin-console.cy.ts",
+      "evidence": "mock",
+      "externalAI": "mock"
+    },
+    {
+      "id": "admin-web-design",
+      "modules": [
+        "reading",
+        "notifications",
+        "settings"
+      ],
+      "spec": "cypress/e2e/admin-web-design.cy.ts",
+      "evidence": "real",
+      "externalAI": "local-provider-double"
+    },
+    {
+      "id": "bulk-import-conflict-confirm",
+      "modules": [
+        "vocabulary"
+      ],
+      "spec": "cypress/e2e/bulk-import-conflict-confirm.cy.ts",
+      "evidence": "mock",
+      "externalAI": "mock"
+    },
+    {
+      "id": "context-lab-ielts-exam",
+      "modules": [
+        "context"
+      ],
+      "spec": "cypress/e2e/context-lab-ielts-exam.cy.ts",
+      "evidence": "mock",
+      "externalAI": "mock"
+    },
+    {
+      "id": "context-lab-practice-scroll",
+      "modules": [
+        "context"
+      ],
+      "spec": "cypress/e2e/context-lab-practice-scroll.cy.ts",
+      "evidence": "mock",
+      "externalAI": "mock"
+    },
+    {
+      "id": "context-lab-selected-word-import",
+      "modules": [
+        "context",
+        "vocabulary"
+      ],
+      "spec": "cypress/e2e/context-lab-selected-word-import.cy.ts",
+      "evidence": "mock",
+      "externalAI": "mock"
+    },
+    {
+      "id": "context-lab-toolbar-layout",
+      "modules": [
+        "context"
+      ],
+      "spec": "cypress/e2e/context-lab-toolbar-layout.cy.ts",
+      "evidence": "mock",
+      "externalAI": "mock"
+    },
+    {
+      "id": "english-world-mobile-responsive",
+      "modules": [
+        "vocabulary",
+        "settings"
+      ],
+      "spec": "cypress/e2e/english-world-mobile-responsive.cy.ts",
+      "evidence": "mock",
+      "externalAI": "mock"
+    },
+    {
+      "id": "english-world-toc",
+      "modules": [
+        "auth",
+        "vocabulary",
+        "review",
+        "context",
+        "settings"
+      ],
+      "spec": "cypress/e2e/english-world-toc.cy.ts",
+      "evidence": "mock",
+      "externalAI": "mock"
+    },
+    {
+      "id": "ios-article",
+      "modules": [
+        "context",
+        "reading"
+      ],
+      "spec": "cypress/e2e/ios-article.cy.ts",
+      "evidence": "mock",
+      "externalAI": "mock"
+    },
+    {
+      "id": "ios-entry",
+      "modules": [
+        "auth",
+        "settings"
+      ],
+      "spec": "cypress/e2e/ios-entry.cy.ts",
+      "evidence": "mock",
+      "externalAI": "mock"
+    },
+    {
+      "id": "ios-study",
+      "modules": [
+        "review"
+      ],
+      "spec": "cypress/e2e/ios-study.cy.ts",
+      "evidence": "mock",
+      "externalAI": "mock"
+    },
+    {
+      "id": "ios-usability",
+      "modules": [
+        "vocabulary",
+        "settings"
+      ],
+      "spec": "cypress/e2e/ios-usability.cy.ts",
+      "evidence": "mock",
+      "externalAI": "mock"
+    },
+    {
+      "id": "ios-word-selection",
+      "modules": [
+        "vocabulary",
+        "context"
+      ],
+      "spec": "cypress/e2e/ios-word-selection.cy.ts",
+      "evidence": "mock",
+      "externalAI": "mock"
+    },
+    {
+      "id": "knowledge-folders",
+      "modules": [
+        "notes"
+      ],
+      "spec": "cypress/e2e/knowledge-folders.cy.ts",
+      "evidence": "mixed",
+      "externalAI": "local-provider-double"
+    },
+    {
+      "id": "knowledge-notes",
+      "modules": [
+        "notes",
+        "vocabulary"
+      ],
+      "spec": "cypress/e2e/knowledge-notes.cy.ts",
+      "evidence": "mock",
+      "externalAI": "mock"
+    },
+    {
+      "id": "learning-listening-session",
+      "modules": [
+        "review"
+      ],
+      "spec": "cypress/e2e/learning-listening-session.cy.ts",
+      "evidence": "mock",
+      "externalAI": "mock"
+    },
+    {
+      "id": "login-layout",
+      "modules": [
+        "auth",
+        "settings"
+      ],
+      "spec": "cypress/e2e/login-layout.cy.ts",
+      "evidence": "mock",
+      "externalAI": "mock"
+    },
+    {
+      "id": "login",
+      "modules": [
+        "auth"
+      ],
+      "spec": "cypress/e2e/login.cy.ts",
+      "evidence": "mock",
+      "externalAI": "mock"
+    },
+    {
+      "id": "notification-inbox",
+      "modules": [
+        "notifications"
+      ],
+      "spec": "cypress/e2e/notification-inbox.cy.ts",
+      "evidence": "mock",
+      "externalAI": "mock"
+    },
+    {
+      "id": "reading-analytics",
+      "modules": [
+        "reading"
+      ],
+      "spec": "cypress/e2e/reading-analytics.cy.ts",
+      "evidence": "real",
+      "externalAI": "local-provider-double"
+    },
+    {
+      "id": "reading-import-review",
+      "modules": [
+        "reading"
+      ],
+      "spec": "cypress/e2e/reading-import-review.cy.ts",
+      "evidence": "real",
+      "externalAI": "local-provider-double"
+    },
+    {
+      "id": "reading-import-settings",
+      "modules": [
+        "reading"
+      ],
+      "spec": "cypress/e2e/reading-import-settings.cy.ts",
+      "evidence": "mock",
+      "externalAI": "mock"
+    },
+    {
+      "id": "reading-recipients",
+      "modules": [
+        "reading",
+        "notifications"
+      ],
+      "spec": "cypress/e2e/reading-recipients.cy.ts",
+      "evidence": "real",
+      "externalAI": "local-provider-double"
+    },
+    {
+      "id": "reading-scroll",
+      "modules": [
+        "reading"
+      ],
+      "spec": "cypress/e2e/reading-scroll.cy.ts",
+      "evidence": "mock",
+      "externalAI": "mock"
+    },
+    {
+      "id": "screenshot-demo",
+      "modules": [
+        "settings",
+        "review"
+      ],
+      "spec": "cypress/e2e/screenshot-demo.cy.ts",
+      "evidence": "mock",
+      "externalAI": "mock"
+    },
+    {
+      "id": "shared-reading-practice",
+      "modules": [
+        "reading"
+      ],
+      "spec": "cypress/e2e/shared-reading-practice.cy.ts",
+      "evidence": "real",
+      "externalAI": "local-provider-double"
+    },
+    {
+      "id": "site-ui",
+      "modules": [
+        "settings",
+        "reading",
+        "notifications"
+      ],
+      "spec": "cypress/e2e/site-ui.cy.ts",
+      "evidence": "mixed",
+      "externalAI": "local-provider-double"
+    },
+    {
+      "id": "word-library-batch-context-lab",
+      "modules": [
+        "vocabulary",
+        "context"
+      ],
+      "spec": "cypress/e2e/word-library-batch-context-lab.cy.ts",
+      "evidence": "mock",
+      "externalAI": "mock"
+    },
+    {
+      "id": "word-library-layout",
+      "modules": [
+        "vocabulary"
+      ],
+      "spec": "cypress/e2e/word-library-layout.cy.ts",
+      "evidence": "mock",
+      "externalAI": "mock"
+    },
+    {
+      "id": "core",
+      "modules": [
+        "auth",
+        "vocabulary",
+        "review"
+      ],
+      "spec": "cypress/integration/core.cy.ts",
+      "evidence": "real",
+      "externalAI": "local-provider-double"
+    },
+    {
+      "id": "prd-notes",
+      "modules": [
+        "notes"
+      ],
+      "spec": "cypress/integration/prd-notes.cy.ts",
+      "evidence": "real",
+      "externalAI": "local-provider-double"
+    },
+    {
+      "id": "reading-automatic-review",
+      "modules": [
+        "reading"
+      ],
+      "spec": "cypress/e2e/reading-automatic-review.cy.ts",
+      "evidence": "mock",
+      "externalAI": "mock"
+    },
+    {
+      "id": "reading-create-redesign",
+      "modules": [
+        "reading"
+      ],
+      "spec": "cypress/e2e/reading-create-redesign.cy.ts",
+      "evidence": "mock",
+      "externalAI": "mock"
+    },
+    {
+      "id": "intensive-reading-desktop",
+      "modules": [
+        "intensive-reading"
+      ],
+      "spec": "cypress/e2e/intensive-reading.cy.ts",
+      "evidence": "real",
+      "externalAI": "local-provider-double"
+    }
+  ]
+}

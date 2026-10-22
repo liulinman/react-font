@@ -97,13 +97,8 @@ const overwriteStatsRoute = protectedDesktopLayoutRoute(
     ),
 );
 const contextLabRoute = protectedDesktopLayoutRoute("contextLab", () =>
-  import("@/page/englishWorld/contextLab/ContextLabPage").then(
-    ({ ContextLabPage }) => ({ default: ContextLabPage }),
-  ),
-);
-const ieltsCoreRoute = protectedDesktopLayoutRoute("ieltsCore", () =>
-  import("@/page/englishWorld/ieltsCore/IeltsCoreReviewPage").then(
-    ({ IeltsCoreReviewPage }) => ({ default: IeltsCoreReviewPage }),
+  import("@/readingPractice/ReadingWorkspace").then(
+    ({ LegacyReadingEntry }) => ({ default: LegacyReadingEntry }),
   ),
 );
 const memoryMapRoute = protectedDesktopLayoutRoute("memoryMap", () =>
@@ -112,11 +107,16 @@ const memoryMapRoute = protectedDesktopLayoutRoute("memoryMap", () =>
   ),
 );
 
+const wordBooksRoute = protectedDesktopLayoutRoute("wordBooks", () => import("@/page/englishWorld/wordBook/WordBookPage"));
+const wordBookReaderRoute = protectedDesktopRoute(() => import("@/page/englishWorld/wordBook/BookReaderPage"));
+
 const knowledgeNotesRoute = protectedDesktopLayoutRoute("knowledgeNotes", () =>
   import("@/page/englishWorld/knowledgeNotes/KnowledgeNotesPage").then(({ KnowledgeNotesPage }) => ({ default: KnowledgeNotesPage })),
 );
 
 const readingPracticeRoute = protectedDesktopLayoutRoute("readingPractices", () => import("@/readingPractice/ReadingPracticePage"));
+
+const intensiveReadingRoute = protectedDesktopLayoutRoute("intensiveReading", () => import("@/intensiveReading/IntensiveReadingPage"));
 
 export const router = createBrowserRouter([
   { path: "/", element: <AppEntry /> },
@@ -128,8 +128,11 @@ export const router = createBrowserRouter([
     },
   },
   ...["/englishWorld/reading-practices", "/englishWorld/reading-practices/:id", "/englishWorld/reading-practices/:id/result"].map(path => ({ path, lazy: readingPracticeRoute })),
+  ...["/englishWorld/intensive-reading", "/englishWorld/intensive-reading/:id", "/englishWorld/intensive-reading/:id/review"].map(path => ({path, lazy: intensiveReadingRoute})),
   { path: "/englishWorld", lazy: englishWorldRoute },
   { path: "/englishWorld/words", lazy: englishWorldRoute },
+  { path: "/englishWorld/word-books", lazy: wordBooksRoute },
+  { path: "/englishWorld/word-books/:id", lazy: wordBookReaderRoute },
   { path: "/englishWorld/knowledge-notes/*", lazy: knowledgeNotesRoute },
   { path: "/englishWorld/stats", lazy: englishWorldRoute },
   { path: "/englishWorld/settings", lazy: settingsRoute },
@@ -137,7 +140,7 @@ export const router = createBrowserRouter([
   { path: "/englishWorld/bulk-import", lazy: bulkImportRoute },
   { path: "/englishWorld/overwrite-stats", lazy: overwriteStatsRoute },
   { path: "/englishWorld/context-lab", lazy: contextLabRoute },
-  { path: "/englishWorld/ielts-core", lazy: ieltsCoreRoute },
+  { path: "/englishWorld/ielts-core", element: <Navigate to="/englishWorld/recite" replace /> },
   { path: "/englishWorld/memory-map", lazy: memoryMapRoute },
   { path: "/englishWorld/recite", lazy: reciteRoute },
   {

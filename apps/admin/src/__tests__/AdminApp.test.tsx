@@ -13,6 +13,7 @@ describe("AdminApp", () => {
   let failedActionUrl: string | undefined;
 
   beforeEach(() => {
+    window.history.replaceState(null, "", "/admin/");
     userStatus = "active";
     failedActionUrl = undefined;
     Object.defineProperty(window, "matchMedia", {
@@ -102,6 +103,25 @@ describe("AdminApp", () => {
     await screen.findByRole("button", { name: /用户管理/ });
     await screen.findByText("alice");
   };
+
+  it("restores the selected section after refresh and follows browser history", async () => {
+    window.history.replaceState(null, "", "/admin/?section=schedules");
+    requestMock.mockImplementation(async ({ url }: { url: string }) => {
+      if (url === "/admin/me") return { username: "admin" };
+      return { list: [], total: 0 };
+    });
+    const user = userEvent.setup();
+    const view = render(<AdminApp />);
+    expect(await screen.findByRole("heading", { name: "定时任务", level: 1 })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /历史记录/ }));
+    expect(new URLSearchParams(window.location.search).get("section")).toBe("history");
+    view.unmount();
+    render(<AdminApp />);
+    expect(await screen.findByRole("heading", { name: "历史记录", level: 1 })).toBeInTheDocument();
+    window.history.replaceState(null, "", "/admin/?section=schedules");
+    window.dispatchEvent(new PopStateEvent("popstate"));
+    expect(await screen.findByRole("heading", { name: "定时任务", level: 1 })).toBeInTheDocument();
+  });
 
   const completeSecondConfirmation = async (
     user: ReturnType<typeof userEvent.setup>,

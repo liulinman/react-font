@@ -1,0 +1,24 @@
+// Web visual/interaction fixtures. Recipient transactions are covered by real SQL HTTP separately.
+describe('Web simple reading creation',()=>{
+ function setup(){
+  const paper:any={id:81,title:'Birds',status:'draft',config:{targetType:'all',ieltsBand:6,questionCount:1},assignedCount:0,submittedCount:0,workflow:{revision:1,qualityRevision:1,autoReview:{status:'ready'},issues:[],sources:[]},content:{title:'Birds',paragraphs:['Birds have claws.'],questions:[{id:'q1',kind:'choice',stem:'Birds have?',options:['Claws','Hands','Shoes'],correctIndex:0,explanation:'鸟有爪。',evidence:{paragraph:1,quote:'Birds have claws.'}}]}};
+  cy.intercept('GET','**/api/admin/me',{code:200,data:{username:'admin'}});for(const p of ['notifications','notification-schedules'])cy.intercept('GET',`**/api/admin/${p}*`,{code:200,data:{list:[],total:0}});
+  cy.intercept('GET','**/api/admin/users*',{code:200,data:{list:[{id:1,username:'Alice',status:'active'},{id:2,username:'Bob',status:'active'}],total:2}});
+  cy.intercept('GET','**/api/admin/reading-practices?*',{code:200,data:{list:[paper],total:1}});cy.intercept('GET','**/api/admin/reading-practices/81',{code:200,data:paper});cy.intercept('GET','**/api/admin/reading-practices/81/feedback',{code:200,data:{list:[]}});
+  cy.viewport(1440,900);cy.visit('/admin/?section=practices');return paper;
+ }
+ it('focuses on upload, retains pasted material across switches and fixes the action footer',()=>{
+  const paper=setup();cy.intercept('POST','**/api/admin/reading-practices/imports',req=>{expect(req.body.text).to.equal('Birds have claws. Questions: Birds have ____.');expect(req.body.autoProcess).to.equal(true);expect(req.body.config.targetType).to.equal('all');req.reply({code:200,data:paper});}).as('create');
+  cy.contains('button','新建练习').click();cy.contains('拖拽 PDF 或照片到这里').should('be.visible');cy.contains('.reading-create','接收学生').should('not.exist');cy.get('.reading-create-footer').should('be.visible');cy.contains('button','开始整理').should('be.visible');cy.get('.reading-create-more').should('not.have.attr','open');cy.get('.reading-create .ant-drawer-content-wrapper, .reading-create-footer, .reading-create-dropzone').should($nodes=>{const rows=[...$nodes].map(e=>({cls:e.className,right:e.getBoundingClientRect().right}));expect(rows.every(e=>e.right<=1441),JSON.stringify(rows)).to.equal(true);});cy.screenshot('create-upload' ,{capture:'viewport'});
+  cy.contains('.ant-segmented-item','粘贴文本').click();cy.get('#text').type('Birds have claws. Questions: Birds have ____.');cy.contains('.ant-segmented-item','上传文件').click();cy.contains('同时附带已粘贴的文本').should('be.visible');cy.contains('.ant-segmented-item','粘贴文本').click();cy.get('#text').should('have.value','Birds have claws. Questions: Birds have ____.');cy.screenshot('create-text',{capture:'viewport'});cy.contains('button','开始整理').click();cy.wait('@create');cy.get('.reading-workbench').should('be.visible');
+ });
+ it('keeps AI generation concise with editable defaults and opens the result',()=>{
+  const paper=setup();cy.intercept('POST','**/api/admin/reading-practices',req=>{expect(req.body.config.questionCount).to.equal(6);expect(req.body.config.ieltsBand).to.equal(6);expect(req.body.config.wordCount).to.equal(400);expect(req.body.config.topic).to.equal('城市花园');req.reply({code:200,data:paper});}).as('generate');
+  cy.contains('button','新建练习').click();cy.contains('[role=tab]','AI 出题').click();cy.contains('想练什么？').should('be.visible');cy.contains('5 题 · 雅思 6 分 · 400 词').should('be.visible');cy.get('.reading-create-settings').should('not.have.attr','open');cy.get('#topic').type('城市花园');cy.get('.reading-create-settings summary').click();cy.get('#questionCount').clear().type('6').blur();cy.get('.reading-create-settings summary').click();cy.contains('6 题 · 雅思 6 分 · 400 词').should('be.visible');cy.screenshot('create-generate',{capture:'viewport'});cy.contains('button','开始生成').click();cy.wait('@generate');cy.get('.reading-workbench').should('be.visible');
+ });
+ it('chooses recipients only in final publication confirmation and cancellation does not publish',()=>{
+  const paper=setup();cy.intercept('POST','**/api/admin/reading-practices/81/publish',req=>{expect(req.body.recipients).to.deep.equal({targetType:'selected',targetUserIds:[2]});req.reply({delay:150,body:{code:200,data:{...paper,status:'published'}}});}).as('publish');
+  cy.contains('button','审核练习').click();cy.contains('button','确认并发布').click();cy.get('.ant-modal:visible').contains('button','再检查一下').click();cy.get('@publish.all').should('have.length',0);
+  cy.contains('button','确认并发布').click();cy.get('.ant-modal:visible').contains('指定学生').click();cy.get('.ant-modal:visible .ant-select-selector:visible').click();cy.get('.ant-select-dropdown:visible .ant-select-item-option').contains('Bob').click();cy.contains('button', /^确认发布$/).should('be.visible').click();cy.wait('@publish');
+ });
+});

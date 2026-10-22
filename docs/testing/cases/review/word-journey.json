@@ -1,0 +1,271 @@
+{
+  "schemaVersion": 1,
+  "source": "docs/prd/review/features/word-journey/prd.md",
+  "sourceHash": "0fa6f08adb7be59039a099f915c131fa19693c4649e8343b4094039c0a751320",
+  "cases": [
+    {
+      "id": "review/word-journey/FR-1/CASE-01",
+      "title": "#### FR-1：为弱词批量返回轨迹",
+      "status": "draft",
+      "requirementIds": [
+        "review/word-journey/FR-1"
+      ],
+      "preconditions": [
+        "一次性 MySQL/NestJS 测试环境；仅使用本次创建的数据，禁止连接生产。"
+      ],
+      "steps": [
+        "建立无记录、首次错误、同日修复、次日验证及再次出错的词汇样本。",
+        "打开 Memory Map 队列和详情，检查阶段、证据时间线与主要动作。",
+        "对照复习/语境原始记录检查阶段可逆与用户隔离。"
+      ],
+      "expectedResults": [
+        "#### FR-1：为弱词批量返回轨迹\n\n系统为 Memory Map 当前最多 12 个弱词返回词汇轨迹，实现 UJ-1、UJ-2。\n\n**可测试结果：**\n\n- 单次请求批量查询，不产生逐词 N+1。\n- 只读取当前用户拥有的词和学习记录。\n- 查询窗口为最近 90 天，时间线每词最多 5 条。\n- 返回稳定阶段枚举以及中文标签、原因、推荐动作和建议时间。\n- 无历史时返回真实空证据，不生成模拟事件。"
+      ],
+      "cleanup": "由隔离环境 runner 清理；同一 spec 内记录并清理创建的数据。",
+      "bindings": [],
+      "reviewNote": "初始需求候选；Codex 必须核对整份 PRD、字段表和决策补充，细化数据与操作，补充边界场景后标为 ready。"
+    },
+    {
+      "id": "review/word-journey/FR-2/CASE-01",
+      "title": "#### FR-2：使用可逆阶段规则",
+      "status": "draft",
+      "requirementIds": [
+        "review/word-journey/FR-2"
+      ],
+      "preconditions": [
+        "一次性 MySQL/NestJS 测试环境；仅使用本次创建的数据，禁止连接生产。"
+      ],
+      "steps": [
+        "建立无记录、首次错误、同日修复、次日验证及再次出错的词汇样本。",
+        "打开 Memory Map 队列和详情，检查阶段、证据时间线与主要动作。",
+        "对照复习/语境原始记录检查阶段可逆与用户隔离。"
+      ],
+      "expectedResults": [
+        "#### FR-2：使用可逆阶段规则\n\n系统依据学习证据确定阶段，且最新错误优先于更早正确。\n\n**可测试结果：**\n\n- 无历史或最新 Recite 为错误时为“待巩固”。\n- 最新错误后有语境通过、但没有跨时段独立答对时为“修复中”。\n- 最新 Recite 正确、但缺少跨时段正确或主动回忆证据时为“待复查”。\n- 最近 30 天存在跨时段正确且至少一次为主动回忆、最新 Recite 正确时为“趋于稳定”。\n- 新错误发生后，“趋于稳定”立即回退为“待巩固”。\n- 手动 `englishLevel` 不得覆盖事实阶段。"
+      ],
+      "cleanup": "由隔离环境 runner 清理；同一 spec 内记录并清理创建的数据。",
+      "bindings": [],
+      "reviewNote": "初始需求候选；Codex 必须核对整份 PRD、字段表和决策补充，细化数据与操作，补充边界场景后标为 ready。"
+    },
+    {
+      "id": "review/word-journey/FR-3/CASE-01",
+      "title": "#### FR-3：归因语境证据",
+      "status": "draft",
+      "requirementIds": [
+        "review/word-journey/FR-3"
+      ],
+      "preconditions": [
+        "一次性 MySQL/NestJS 测试环境；仅使用本次创建的数据，禁止连接生产。"
+      ],
+      "steps": [
+        "建立无记录、首次错误、同日修复、次日验证及再次出错的词汇样本。",
+        "打开 Memory Map 队列和详情，检查阶段、证据时间线与主要动作。",
+        "对照复习/语境原始记录检查阶段可逆与用户隔离。"
+      ],
+      "expectedResults": [
+        "#### FR-3：归因语境证据\n\n系统只把明确属于目标词的微语境结果加入轨迹。\n\n**可测试结果：**\n\n- 任务、attempt 和词均属于当前用户。\n- 只读取微语境任务，不把普通长文练习混入修复轨迹。\n- 以题目结果中的 `targetWord` 进行大小写不敏感的完整文本匹配。\n- 同一 attempt 同一词只生成一条聚合证据：全部正确为“语境通过”，否则为“语境待加强”。\n- 损坏或缺失 JSON 被安全忽略，不影响 Recite 轨迹。"
+      ],
+      "cleanup": "由隔离环境 runner 清理；同一 spec 内记录并清理创建的数据。",
+      "bindings": [],
+      "reviewNote": "初始需求候选；Codex 必须核对整份 PRD、字段表和决策补充，细化数据与操作，补充边界场景后标为 ready。"
+    },
+    {
+      "id": "review/word-journey/FR-4/CASE-01",
+      "title": "#### FR-4：队列展示阶段",
+      "status": "draft",
+      "requirementIds": [
+        "review/word-journey/FR-4"
+      ],
+      "preconditions": [
+        "一次性 MySQL/NestJS 测试环境；仅使用本次创建的数据，禁止连接生产。"
+      ],
+      "steps": [
+        "建立无记录、首次错误、同日修复、次日验证及再次出错的词汇样本。",
+        "打开 Memory Map 队列和详情，检查阶段、证据时间线与主要动作。",
+        "对照复习/语境原始记录检查阶段可逆与用户隔离。"
+      ],
+      "expectedResults": [
+        "#### FR-4：队列展示阶段\n\n弱词队列每项展示阶段标签，不再用静态 `Lv` 作为主要状态。\n\n**可测试结果：**\n\n- 选中态、hover、键盘焦点和阶段标签具有清晰视觉层级。\n- 四个阶段不能只依赖颜色区分。\n- 接口失败时显示基础词信息和“证据暂不可用”，不回退模拟轨迹。"
+      ],
+      "cleanup": "由隔离环境 runner 清理；同一 spec 内记录并清理创建的数据。",
+      "bindings": [],
+      "reviewNote": "初始需求候选；Codex 必须核对整份 PRD、字段表和决策补充，细化数据与操作，补充边界场景后标为 ready。"
+    },
+    {
+      "id": "review/word-journey/FR-5/CASE-01",
+      "title": "#### FR-5：详情展示解释和证据时间线",
+      "status": "draft",
+      "requirementIds": [
+        "review/word-journey/FR-5"
+      ],
+      "preconditions": [
+        "一次性 MySQL/NestJS 测试环境；仅使用本次创建的数据，禁止连接生产。"
+      ],
+      "steps": [
+        "建立无记录、首次错误、同日修复、次日验证及再次出错的词汇样本。",
+        "打开 Memory Map 队列和详情，检查阶段、证据时间线与主要动作。",
+        "对照复习/语境原始记录检查阶段可逆与用户隔离。"
+      ],
+      "expectedResults": [
+        "#### FR-5：详情展示解释和证据时间线\n\n用户选择词后立即看到阶段说明和最多 5 条证据。\n\n**可测试结果：**\n\n- 阶段卡包含阶段、原因和建议时间。\n- 每条证据包含类型、面向用户的文案和本地化时间。\n- Recite 证据区分中译英与英译中；不展示原始用户答案。\n- 无证据时展示可操作空状态。"
+      ],
+      "cleanup": "由隔离环境 runner 清理；同一 spec 内记录并清理创建的数据。",
+      "bindings": [],
+      "reviewNote": "初始需求候选；Codex 必须核对整份 PRD、字段表和决策补充，细化数据与操作，补充边界场景后标为 ready。"
+    },
+    {
+      "id": "review/word-journey/FR-6/CASE-01",
+      "title": "#### FR-6：只突出一个推荐动作",
+      "status": "draft",
+      "requirementIds": [
+        "review/word-journey/FR-6"
+      ],
+      "preconditions": [
+        "一次性 MySQL/NestJS 测试环境；仅使用本次创建的数据，禁止连接生产。"
+      ],
+      "steps": [
+        "建立无记录、首次错误、同日修复、次日验证及再次出错的词汇样本。",
+        "打开 Memory Map 队列和详情，检查阶段、证据时间线与主要动作。",
+        "对照复习/语境原始记录检查阶段可逆与用户隔离。"
+      ],
+      "expectedResults": [
+        "#### FR-6：只突出一个推荐动作\n\n行动中心根据词汇轨迹突出唯一推荐动作。\n\n**可测试结果：**\n\n- `review` 进入定向 Recite，并只携带当前词 ID。\n- `context` 进入 Context Lab，并携带当前词作为自定义来源。\n- `wait` 不伪造可点击学习任务，显示下一次建议时间；保留次级入口供用户自主选择。\n- 主要动作的文案必须与后端 `nextAction` 一致。"
+      ],
+      "cleanup": "由隔离环境 runner 清理；同一 spec 内记录并清理创建的数据。",
+      "bindings": [],
+      "reviewNote": "初始需求候选；Codex 必须核对整份 PRD、字段表和决策补充，细化数据与操作，补充边界场景后标为 ready。"
+    },
+    {
+      "id": "review/word-journey/FR-7/CASE-01",
+      "title": "#### FR-7：移除无证据的永久掌握捷径",
+      "status": "draft",
+      "requirementIds": [
+        "review/word-journey/FR-7"
+      ],
+      "preconditions": [
+        "一次性 MySQL/NestJS 测试环境；仅使用本次创建的数据，禁止连接生产。"
+      ],
+      "steps": [
+        "建立无记录、首次错误、同日修复、次日验证及再次出错的词汇样本。",
+        "打开 Memory Map 队列和详情，检查阶段、证据时间线与主要动作。",
+        "对照复习/语境原始记录检查阶段可逆与用户隔离。"
+      ],
+      "expectedResults": [
+        "#### FR-7：移除无证据的永久掌握捷径\n\n完整页不再把“标记为已掌握”作为主要行动。\n\n**可测试结果：**\n\n- 行动中心不显示一键把词设置为 Lv3 的主按钮。\n- 词库原有等级编辑能力不在本次删除，但不参与词汇轨迹计算。\n- “趋于稳定”文案明确说明仍可能因后续错误回退。"
+      ],
+      "cleanup": "由隔离环境 runner 清理；同一 spec 内记录并清理创建的数据。",
+      "bindings": [],
+      "reviewNote": "初始需求候选；Codex 必须核对整份 PRD、字段表和决策补充，细化数据与操作，补充边界场景后标为 ready。"
+    },
+    {
+      "id": "review/word-journey/REQ-2f0b1b728a/CASE-01",
+      "title": "- 轨迹聚合 P95 目标小于 800ms；数据库查询数量不随词数线性增长。",
+      "status": "draft",
+      "requirementIds": [
+        "review/word-journey/REQ-2f0b1b728a"
+      ],
+      "preconditions": [
+        "一次性 MySQL/NestJS 测试环境；仅使用本次创建的数据，禁止连接生产。"
+      ],
+      "steps": [
+        "建立无记录、首次错误、同日修复、次日验证及再次出错的词汇样本。",
+        "打开 Memory Map 队列和详情，检查阶段、证据时间线与主要动作。",
+        "对照复习/语境原始记录检查阶段可逆与用户隔离。"
+      ],
+      "expectedResults": [
+        "- 轨迹聚合 P95 目标小于 800ms；数据库查询数量不随词数线性增长。"
+      ],
+      "cleanup": "由隔离环境 runner 清理；同一 spec 内记录并清理创建的数据。",
+      "bindings": [],
+      "reviewNote": "初始需求候选；Codex 必须核对整份 PRD、字段表和决策补充，细化数据与操作，补充边界场景后标为 ready。"
+    },
+    {
+      "id": "review/word-journey/REQ-9f4c4b5052/CASE-01",
+      "title": "- 任何记录归因错误或越权读取均阻断发布。",
+      "status": "draft",
+      "requirementIds": [
+        "review/word-journey/REQ-9f4c4b5052"
+      ],
+      "preconditions": [
+        "一次性 MySQL/NestJS 测试环境；仅使用本次创建的数据，禁止连接生产。"
+      ],
+      "steps": [
+        "建立无记录、首次错误、同日修复、次日验证及再次出错的词汇样本。",
+        "打开 Memory Map 队列和详情，检查阶段、证据时间线与主要动作。",
+        "对照复习/语境原始记录检查阶段可逆与用户隔离。"
+      ],
+      "expectedResults": [
+        "- 任何记录归因错误或越权读取均阻断发布。"
+      ],
+      "cleanup": "由隔离环境 runner 清理；同一 spec 内记录并清理创建的数据。",
+      "bindings": [],
+      "reviewNote": "初始需求候选；Codex 必须核对整份 PRD、字段表和决策补充，细化数据与操作，补充边界场景后标为 ready。"
+    },
+    {
+      "id": "review/word-journey/REQ-dbdd45de5e/CASE-01",
+      "title": "- 新 UI 满足键盘可达、可读焦点和非纯色状态区分。",
+      "status": "draft",
+      "requirementIds": [
+        "review/word-journey/REQ-dbdd45de5e"
+      ],
+      "preconditions": [
+        "一次性 MySQL/NestJS 测试环境；仅使用本次创建的数据，禁止连接生产。"
+      ],
+      "steps": [
+        "建立无记录、首次错误、同日修复、次日验证及再次出错的词汇样本。",
+        "打开 Memory Map 队列和详情，检查阶段、证据时间线与主要动作。",
+        "对照复习/语境原始记录检查阶段可逆与用户隔离。"
+      ],
+      "expectedResults": [
+        "- 新 UI 满足键盘可达、可读焦点和非纯色状态区分。"
+      ],
+      "cleanup": "由隔离环境 runner 清理；同一 spec 内记录并清理创建的数据。",
+      "bindings": [],
+      "reviewNote": "初始需求候选；Codex 必须核对整份 PRD、字段表和决策补充，细化数据与操作，补充边界场景后标为 ready。"
+    },
+    {
+      "id": "review/word-journey/REQ-73baa40608/CASE-01",
+      "title": "- 新功能不触发 AI 调用，Context Lab 不可用时 Recite 轨迹仍可展示。",
+      "status": "draft",
+      "requirementIds": [
+        "review/word-journey/REQ-73baa40608"
+      ],
+      "preconditions": [
+        "一次性 MySQL/NestJS 测试环境；仅使用本次创建的数据，禁止连接生产。"
+      ],
+      "steps": [
+        "建立无记录、首次错误、同日修复、次日验证及再次出错的词汇样本。",
+        "打开 Memory Map 队列和详情，检查阶段、证据时间线与主要动作。",
+        "对照复习/语境原始记录检查阶段可逆与用户隔离。"
+      ],
+      "expectedResults": [
+        "- 新功能不触发 AI 调用，Context Lab 不可用时 Recite 轨迹仍可展示。"
+      ],
+      "cleanup": "由隔离环境 runner 清理；同一 spec 内记录并清理创建的数据。",
+      "bindings": [],
+      "reviewNote": "初始需求候选；Codex 必须核对整份 PRD、字段表和决策补充，细化数据与操作，补充边界场景后标为 ready。"
+    },
+    {
+      "id": "review/word-journey/REQ-3d60262925/CASE-01",
+      "title": "- 前端在 1440px 及以上桌面宽度保持三栏信息层级；小屏允许单列降级但不做专项重设计。",
+      "status": "draft",
+      "requirementIds": [
+        "review/word-journey/REQ-3d60262925"
+      ],
+      "preconditions": [
+        "一次性 MySQL/NestJS 测试环境；仅使用本次创建的数据，禁止连接生产。"
+      ],
+      "steps": [
+        "建立无记录、首次错误、同日修复、次日验证及再次出错的词汇样本。",
+        "打开 Memory Map 队列和详情，检查阶段、证据时间线与主要动作。",
+        "对照复习/语境原始记录检查阶段可逆与用户隔离。"
+      ],
+      "expectedResults": [
+        "- 前端在 1440px 及以上桌面宽度保持三栏信息层级；小屏允许单列降级但不做专项重设计。"
+      ],
+      "cleanup": "由隔离环境 runner 清理；同一 spec 内记录并清理创建的数据。",
+      "bindings": [],
+      "reviewNote": "初始需求候选；Codex 必须核对整份 PRD、字段表和决策补充，细化数据与操作，补充边界场景后标为 ready。"
+    }
+  ]
+}

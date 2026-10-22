@@ -1,3 +1,4 @@
+import { NoteContent } from "@/components/notes/NoteContent";
 import { useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -218,7 +219,7 @@ function LearnFlow({ userId, search }: { userId: number; search: string }) {
             {deck.revealed ? (
               <div className="study-meaning">
                 <h3>{word.englishChinese || "这个词还没有释义"}</h3>
-                {word.englishNote && <p>{word.englishNote}</p>}
+                {word.englishNote && <NoteContent text={word.englishNote} />}
                 {word.englishReference && (
                   <p className="study-muted">{word.englishReference}</p>
                 )}

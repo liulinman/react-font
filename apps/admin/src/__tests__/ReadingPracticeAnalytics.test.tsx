@@ -277,3 +277,13 @@ it("does not describe a corrupt submission as having no wrong answers and keeps 
     screen.queryByRole("checkbox", { name: "只看错题" }),
   ).not.toBeInTheDocument();
 });
+it("shows student text and accepted answers for fill questions", async () => {
+  send.mockImplementation(async (r: any) => r.url.includes("/users/") ? {
+    ...data, learner, paragraphs: ["Source evidence"], questions: [{ id: "q1", number: 1, kind: "sentence_completion", stem: "A group called ....", options: [], selectedIndex: null, correctIndex: null, acceptedAnswers: ["theropods"], answerText: "dinosaurs", correct: false, voided: false, explanation: "Check the group name.", evidence: { paragraph: 1, quote: "Source" } }],
+  } : data);
+  render(<ReadingPracticeAnalytics id={1} onClose={vi.fn()} />);
+  await screen.findByText("Alice");
+  await userEvent.click(screen.getByRole("button", { name: "答题详情" }));
+  expect(await screen.findByText("学生作答：dinosaurs")).toBeInTheDocument();
+  expect(screen.getByText("正确答案：theropods")).toBeInTheDocument();
+});

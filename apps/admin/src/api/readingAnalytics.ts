@@ -17,7 +17,8 @@ export interface AnalyticsQuestion {
   number: number;
   kind: string;
   stem: string;
-  correctIndex: number;
+  correctIndex: number | null;
+  acceptedAnswers?: string[];
   voided: boolean;
   submittedCount: number;
   correctCount: number | null;
@@ -62,8 +63,11 @@ export interface ReadingAnalyticsDetail {
     number: number;
     stem: string;
     options: string[];
-    selectedIndex: number;
-    correctIndex: number;
+    kind?: string;
+    answerText?: string;
+    selectedIndex: number | null;
+    correctIndex: number | null;
+    acceptedAnswers?: string[];
     correct: boolean;
     voided: boolean;
     explanation: string;

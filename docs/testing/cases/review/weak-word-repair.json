@@ -1,0 +1,403 @@
+{
+  "schemaVersion": 1,
+  "source": "docs/prd/review/features/weak-word-repair/prd.md",
+  "sourceHash": "abd38cdf9ff2315f2391ff6101d7241641bae113a09f5a67f536e6967e7ce7bc",
+  "cases": [
+    {
+      "id": "review/weak-word-repair/FR-1/CASE-01",
+      "title": "#### FR-1：显示语境修复入口",
+      "status": "draft",
+      "requirementIds": [
+        "review/weak-word-repair/FR-1"
+      ],
+      "preconditions": [
+        "一次性 MySQL/NestJS 测试环境；仅使用本次创建的数据，禁止连接生产。"
+      ],
+      "steps": [
+        "完成一轮包含错词的复习，记录会话 ID、去重错词与用户时区。",
+        "从复习结果进入微语境，生成并作答，记录目标词与结果归因。",
+        "刷新/恢复当前回合，再推进到下一自然日检查复查来源；比较原始记录。"
+      ],
+      "expectedResults": [
+        "#### FR-1：显示语境修复入口\n\n当复习回合至少包含一个真实错词时，用户可以在结果页启动微语境。\n\n**可测试结果：**\n\n- 结果页有错词时显示“用错词做语境练习”按钮，并显示“约 3 分钟”。\n- [ASSUMPTION: A-2 — 用户愿意在复习后继续投入约 3 分钟；由 SM-1、SM-2 验证。]\n- 结果页全对时不显示该按钮，也不生成空任务。\n- 原有“再练错词”和“回到今日路线”能力继续可用。\n- 按钮具有明确图标、键盘焦点和可访问名称。"
+      ],
+      "cleanup": "由隔离环境 runner 清理；同一 spec 内记录并清理创建的数据。",
+      "bindings": [],
+      "reviewNote": "初始需求候选；Codex 必须核对整份 PRD、字段表和决策补充，细化数据与操作，补充边界场景后标为 ready。"
+    },
+    {
+      "id": "review/weak-word-repair/FR-2/CASE-01",
+      "title": "#### FR-2：确定性选择修复词",
+      "status": "draft",
+      "requirementIds": [
+        "review/weak-word-repair/FR-2"
+      ],
+      "preconditions": [
+        "一次性 MySQL/NestJS 测试环境；仅使用本次创建的数据，禁止连接生产。"
+      ],
+      "steps": [
+        "完成一轮包含错词的复习，记录会话 ID、去重错词与用户时区。",
+        "从复习结果进入微语境，生成并作答，记录目标词与结果归因。",
+        "刷新/恢复当前回合，再推进到下一自然日检查复查来源；比较原始记录。"
+      ],
+      "expectedResults": [
+        "#### FR-2：确定性选择修复词\n\n系统从当前回合真实错词中按结果出现顺序去重，并取前 3 个作为修复词。\n\n**可测试结果：**\n\n- 输入包含重复错词时只传递一次。\n- 错词超过 3 个时只传递前 3 个，页面明确提示本次处理数量。\n- 不传递答对词、空字符串或未知词。\n- 刷新结果页后，系统可按 reciteSessionId 读取原回合结果，修复词选择保持一致。"
+      ],
+      "cleanup": "由隔离环境 runner 清理；同一 spec 内记录并清理创建的数据。",
+      "bindings": [],
+      "reviewNote": "初始需求候选；Codex 必须核对整份 PRD、字段表和决策补充，细化数据与操作，补充边界场景后标为 ready。"
+    },
+    {
+      "id": "review/weak-word-repair/FR-3/CASE-01",
+      "title": "#### FR-3：无二次配置进入微语境",
+      "status": "draft",
+      "requirementIds": [
+        "review/weak-word-repair/FR-3"
+      ],
+      "preconditions": [
+        "一次性 MySQL/NestJS 测试环境；仅使用本次创建的数据，禁止连接生产。"
+      ],
+      "steps": [
+        "完成一轮包含错词的复习，记录会话 ID、去重错词与用户时区。",
+        "从复习结果进入微语境，生成并作答，记录目标词与结果归因。",
+        "刷新/恢复当前回合，再推进到下一自然日检查复查来源；比较原始记录。"
+      ],
+      "expectedResults": [
+        "#### FR-3：无二次配置进入微语境\n\n用户点击入口后直接进入以修复词为来源的微语境状态。\n\n**可测试结果：**\n\n- Context Lab 能识别来源为复习结果和模式为微语境。\n- 创建语境任务时必须携带 reciteSessionId；后端把它与模式持久化在任务请求快照中，并在详情和 SSE 响应中返回。\n- 后端必须先确认 reciteSessionId 属于当前用户，再从该回合 history 按原结果顺序推导前 3 个去重错词；客户端传入词必须与服务端结果逐项一致，不一致返回 `MICRO_REQUEST_INVALID`，且不得创建任务。\n- 不存在或非本人回合统一返回 404，不能通过错误差异探测其他用户回合。\n- 用户无需再次选择熟练度、数量或复制单词。\n- 微语境生成失败时，复习回合和结果不丢失；用户可通过 reciteSessionId 返回或刷新恢复结果页。\n- reciteSessionId 不存在或不属于当前用户时，结果页显示“本次复习记录不可用”，并提供返回今日路线动作。"
+      ],
+      "cleanup": "由隔离环境 runner 清理；同一 spec 内记录并清理创建的数据。",
+      "bindings": [],
+      "reviewNote": "初始需求候选；Codex 必须核对整份 PRD、字段表和决策补充，细化数据与操作，补充边界场景后标为 ready。"
+    },
+    {
+      "id": "review/weak-word-repair/FR-4/CASE-01",
+      "title": "#### FR-4：恢复复习回合结果",
+      "status": "draft",
+      "requirementIds": [
+        "review/weak-word-repair/FR-4"
+      ],
+      "preconditions": [
+        "一次性 MySQL/NestJS 测试环境；仅使用本次创建的数据，禁止连接生产。"
+      ],
+      "steps": [
+        "完成一轮包含错词的复习，记录会话 ID、去重错词与用户时区。",
+        "从复习结果进入微语境，生成并作答，记录目标词与结果归因。",
+        "刷新/恢复当前回合，再推进到下一自然日检查复查来源；比较原始记录。"
+      ],
+      "expectedResults": [
+        "#### FR-4：恢复复习回合结果\n\n用户可以通过 reciteSessionId 读取自己已提交的复习回合结果。\n\n**可测试结果：**\n\n- 接口返回回合统计和按原提交顺序排列的逐词结果。\n- 非本人回合与不存在回合均返回 404，不泄露记录是否属于其他用户。\n- 直接打开带 reciteSessionId 的结果链接、从 Context Lab 返回和页面刷新都得到一致结果。\n- 记录按现有数据库保留策略保存；MVP 不在客户端复制答案到持久存储。"
+      ],
+      "cleanup": "由隔离环境 runner 清理；同一 spec 内记录并清理创建的数据。",
+      "bindings": [],
+      "reviewNote": "初始需求候选；Codex 必须核对整份 PRD、字段表和决策补充，细化数据与操作，补充边界场景后标为 ready。"
+    },
+    {
+      "id": "review/weak-word-repair/FR-5/CASE-01",
+      "title": "#### FR-5：生成受限微语境",
+      "status": "draft",
+      "requirementIds": [
+        "review/weak-word-repair/FR-5"
+      ],
+      "preconditions": [
+        "一次性 MySQL/NestJS 测试环境；仅使用本次创建的数据，禁止连接生产。"
+      ],
+      "steps": [
+        "完成一轮包含错词的复习，记录会话 ID、去重错词与用户时区。",
+        "从复习结果进入微语境，生成并作答，记录目标词与结果归因。",
+        "刷新/恢复当前回合，再推进到下一自然日检查复查来源；比较原始记录。"
+      ],
+      "expectedResults": [
+        "#### FR-5：生成受限微语境\n\n系统可以围绕 1–3 个修复词生成 120–180 个英文词的短文和恰好 3 道单选题。\n\n**可测试结果：**\n\n- 每个修复词至少在短文中以大小写不敏感的完整词或完整短语出现一次。\n- 每道题包含稳定题目 ID、4 个选项、唯一正确答案和一个目标词。\n- 3 个修复词时题目与词一一映射；2 个词时一个词映射 2 题、另一个映射 1 题；1 个词时 3 题均映射该词。\n- 正文按空白分隔 token 计数；内容长度、题数或目标词映射不合规时，任务以 `MICRO_OUTPUT_INVALID` 失败，不落成功文章。\n- 普通 Context Lab 保持现有长文模式，不受微语境约束。\n- `mode` 必须从任务创建贯穿请求快照、后台 worker、Webhook 校验、详情、历史和 SSE；旧任务缺省为 `standard`。\n- 微语境的修复词以服务端回合校验结果为唯一事实来源，任务创建后保存的是已验证快照。\n- [ASSUMPTION: A-1 — 受限 AI 输出在结构校验下可达到 95% 可用率；由前 200 次生成验证。]"
+      ],
+      "cleanup": "由隔离环境 runner 清理；同一 spec 内记录并清理创建的数据。",
+      "bindings": [],
+      "reviewNote": "初始需求候选；Codex 必须核对整份 PRD、字段表和决策补充，细化数据与操作，补充边界场景后标为 ready。"
+    },
+    {
+      "id": "review/weak-word-repair/FR-6/CASE-01",
+      "title": "#### FR-6：显示低负担解释",
+      "status": "draft",
+      "requirementIds": [
+        "review/weak-word-repair/FR-6"
+      ],
+      "preconditions": [
+        "一次性 MySQL/NestJS 测试环境；仅使用本次创建的数据，禁止连接生产。"
+      ],
+      "steps": [
+        "完成一轮包含错词的复习，记录会话 ID、去重错词与用户时区。",
+        "从复习结果进入微语境，生成并作答，记录目标词与结果归因。",
+        "刷新/恢复当前回合，再推进到下一自然日检查复查来源；比较原始记录。"
+      ],
+      "expectedResults": [
+        "#### FR-6：显示低负担解释\n\n用户提交后，系统对错误题提供与目标词相关的简短解释。\n\n**可测试结果：**\n\n- 判题结果始终可用；AI 解释失败不改变正确性。\n- 错题默认展示错误原因和一个对比例句，总正文不超过 120 个中文字符；扩展信息可折叠。\n- 正确题不展示冗长解释，只显示目标词已通过。\n- 用户可以点击“整组再答一次”清空当前选择并复用同一文章和题目；每次提交创建新的 attemptId，初次结果不覆盖。\n- 页面默认只突出最近一次作答；历史中仍可查看此前作答。SM-5 只比较首次作答与紧随其后的第一次重试。"
+      ],
+      "cleanup": "由隔离环境 runner 清理；同一 spec 内记录并清理创建的数据。",
+      "bindings": [],
+      "reviewNote": "初始需求候选；Codex 必须核对整份 PRD、字段表和决策补充，细化数据与操作，补充边界场景后标为 ready。"
+    },
+    {
+      "id": "review/weak-word-repair/FR-7/CASE-01",
+      "title": "#### FR-7：按目标词归因结果",
+      "status": "draft",
+      "requirementIds": [
+        "review/weak-word-repair/FR-7"
+      ],
+      "preconditions": [
+        "一次性 MySQL/NestJS 测试环境；仅使用本次创建的数据，禁止连接生产。"
+      ],
+      "steps": [
+        "完成一轮包含错词的复习，记录会话 ID、去重错词与用户时区。",
+        "从复习结果进入微语境，生成并作答，记录目标词与结果归因。",
+        "刷新/恢复当前回合，再推进到下一自然日检查复查来源；比较原始记录。"
+      ],
+      "expectedResults": [
+        "#### FR-7：按目标词归因结果\n\n系统只使用题目显式目标词计算微语境中的修复词结果。\n\n**可测试结果：**\n\n- 错题结果返回对应目标词。\n- 不再通过题目序号取模或数组位置猜测单词。\n- 返回的待修复词必须属于该任务的修复词集合。\n- 语境通过与长期掌握在文案和数据语义上保持区分。"
+      ],
+      "cleanup": "由隔离环境 runner 清理；同一 spec 内记录并清理创建的数据。",
+      "bindings": [],
+      "reviewNote": "初始需求候选；Codex 必须核对整份 PRD、字段表和决策补充，细化数据与操作，补充边界场景后标为 ready。"
+    },
+    {
+      "id": "review/weak-word-repair/FR-8/CASE-01",
+      "title": "#### FR-8：按用户时区识别昨日错词",
+      "status": "draft",
+      "requirementIds": [
+        "review/weak-word-repair/FR-8"
+      ],
+      "preconditions": [
+        "一次性 MySQL/NestJS 测试环境；仅使用本次创建的数据，禁止连接生产。"
+      ],
+      "steps": [
+        "完成一轮包含错词的复习，记录会话 ID、去重错词与用户时区。",
+        "从复习结果进入微语境，生成并作答，记录目标词与结果归因。",
+        "刷新/恢复当前回合，再推进到下一自然日检查复查来源；比较原始记录。"
+      ],
+      "expectedResults": [
+        "#### FR-8：按用户时区识别昨日错词\n\n系统可以根据用户时区查询上一自然日的真实错词，并去重返回最多 3 个。\n\n**可测试结果：**\n\n- 客户端优先传 `timezoneOffsetMinutes`，单位为“UTC 到本地时间需增加的分钟数”，合法范围 `[-720, 840]`；新字段缺失时兼容合法的旧 `timezone` 小时字段。新字段存在但非法时不尝试旧字段，统一回退 `480`（中国标准时间）并记录警告；二者都缺失或旧字段非法时也回退 `480`。\n- 日期边界支持正负偏移、半小时偏移和跨 UTC 日期；每次请求使用当时偏移，不推断夏令时规则。\n- 同一词昨日多次作答时，以昨日最后一次作答结果为准；最后一次已答对则不再属于昨日错词。\n- 昨日错词按最后错误时间降序、history id 降序稳定排序；距离当前不足 8 小时的词暂不返回。\n- 只读取当前用户记录，不混入其他用户数据。\n- 没有昨日记录时返回空集合，不使用模拟错词填充。"
+      ],
+      "cleanup": "由隔离环境 runner 清理；同一 spec 内记录并清理创建的数据。",
+      "bindings": [],
+      "reviewNote": "初始需求候选；Codex 必须核对整份 PRD、字段表和决策补充，细化数据与操作，补充边界场景后标为 ready。"
+    },
+    {
+      "id": "review/weak-word-repair/FR-9/CASE-01",
+      "title": "#### FR-9：昨日错词成为首要任务",
+      "status": "draft",
+      "requirementIds": [
+        "review/weak-word-repair/FR-9"
+      ],
+      "preconditions": [
+        "一次性 MySQL/NestJS 测试环境；仅使用本次创建的数据，禁止连接生产。"
+      ],
+      "steps": [
+        "完成一轮包含错词的复习，记录会话 ID、去重错词与用户时区。",
+        "从复习结果进入微语境，生成并作答，记录目标词与结果归因。",
+        "刷新/恢复当前回合，再推进到下一自然日检查复查来源；比较原始记录。"
+      ],
+      "expectedResults": [
+        "#### FR-9：昨日错词成为首要任务\n\n当存在昨日错词时，Daily Coach 首要行动为“昨日错词复查”。\n\n**可测试结果：**\n\n- 行动说明包含入选原因和词数，携带准确 wordIds。\n- 点击后进入现有定向复习流程，不新增一套答题页。\n- 昨日错词同时可出现在薄弱词摘要中，并优先于仅由静态等级选出的词。\n- 没有昨日错词时，Daily Coach 保持现有“开始今日复习”逻辑。"
+      ],
+      "cleanup": "由隔离环境 runner 清理；同一 spec 内记录并清理创建的数据。",
+      "bindings": [],
+      "reviewNote": "初始需求候选；Codex 必须核对整份 PRD、字段表和决策补充，细化数据与操作，补充边界场景后标为 ready。"
+    },
+    {
+      "id": "review/weak-word-repair/FR-10/CASE-01",
+      "title": "#### FR-10：区分同日结果与次日证据",
+      "status": "draft",
+      "requirementIds": [
+        "review/weak-word-repair/FR-10"
+      ],
+      "preconditions": [
+        "一次性 MySQL/NestJS 测试环境；仅使用本次创建的数据，禁止连接生产。"
+      ],
+      "steps": [
+        "完成一轮包含错词的复习，记录会话 ID、去重错词与用户时区。",
+        "从复习结果进入微语境，生成并作答，记录目标词与结果归因。",
+        "刷新/恢复当前回合，再推进到下一自然日检查复查来源；比较原始记录。"
+      ],
+      "expectedResults": [
+        "#### FR-10：区分同日结果与次日证据\n\n产品文案和返回模型不得把微语境通过或同日重试称为长期掌握。\n\n**可测试结果：**\n\n- 微语境结果使用“语境通过 / 下一自然日复查”，不使用“已永久掌握”。\n- 下一自然日复查是独立复习回合，保留新的提交时间和正确性。\n- 只有间隔 8–36 小时的结果进入“下一自然日保持”分析；超出窗口仍可学习，但不计入该指标。\n- 现有统计未实现该指标时，不展示伪造的“24 小时保持率”。"
+      ],
+      "cleanup": "由隔离环境 runner 清理；同一 spec 内记录并清理创建的数据。",
+      "bindings": [],
+      "reviewNote": "初始需求候选；Codex 必须核对整份 PRD、字段表和决策补充，细化数据与操作，补充边界场景后标为 ready。"
+    },
+    {
+      "id": "review/weak-word-repair/FR-11/CASE-01",
+      "title": "#### FR-11：核心流程可恢复",
+      "status": "draft",
+      "requirementIds": [
+        "review/weak-word-repair/FR-11"
+      ],
+      "preconditions": [
+        "一次性 MySQL/NestJS 测试环境；仅使用本次创建的数据，禁止连接生产。"
+      ],
+      "steps": [
+        "完成一轮包含错词的复习，记录会话 ID、去重错词与用户时区。",
+        "从复习结果进入微语境，生成并作答，记录目标词与结果归因。",
+        "刷新/恢复当前回合，再推进到下一自然日检查复查来源；比较原始记录。"
+      ],
+      "expectedResults": [
+        "#### FR-11：核心流程可恢复\n\nAI 生成或任务订阅失败时，用户可以恢复或退出，不丢失已提交的复习结果。\n\n**可测试结果：**\n\n- 生成失败显示可操作原因、重试和返回动作。\n- 页面刷新后可通过 contextTaskId 恢复进行中或已完成任务，并可通过 reciteSessionId 返回原复习结果。\n- 任务重复回调不创建重复结果。\n- 普通复习提交不依赖微语境服务可用性。"
+      ],
+      "cleanup": "由隔离环境 runner 清理；同一 spec 内记录并清理创建的数据。",
+      "bindings": [],
+      "reviewNote": "初始需求候选；Codex 必须核对整份 PRD、字段表和决策补充，细化数据与操作，补充边界场景后标为 ready。"
+    },
+    {
+      "id": "review/weak-word-repair/FR-12/CASE-01",
+      "title": "#### FR-12：持久关联闭环与记录事件",
+      "status": "draft",
+      "requirementIds": [
+        "review/weak-word-repair/FR-12"
+      ],
+      "preconditions": [
+        "一次性 MySQL/NestJS 测试环境；仅使用本次创建的数据，禁止连接生产。"
+      ],
+      "steps": [
+        "完成一轮包含错词的复习，记录会话 ID、去重错词与用户时区。",
+        "从复习结果进入微语境，生成并作答，记录目标词与结果归因。",
+        "刷新/恢复当前回合，再推进到下一自然日检查复查来源；比较原始记录。"
+      ],
+      "expectedResults": [
+        "#### FR-12：持久关联闭环与记录事件\n\n系统持久记录不含答案正文或敏感文本的闭环漏斗事件。\n\n**可测试结果：**\n\n- 语境任务请求快照持久保存 reciteSessionId、mode 和修复词；提交记录已有 contextTaskId、attemptId 和结果，从而可查询复习回合 → 语境任务 → 词 → 下一自然日复查。\n- 新增轻量 `learning_loop_event` 表与本人鉴权写入接口，记录普通复习开始/完成、合格错词结果曝光、微语境启动/生成成功/首次完成、次日复查启动/答对事件。\n- 事件包含枚举 eventType、client flowId、eventUid、reciteSessionId、contextTaskId、attemptId、词数、耗时、时区偏移和状态，不包含用户答案、文章、题目或解释全文。\n- `(userId, eventUid)` 唯一；客户端以事件类型和 flow/session/task/attempt 生成稳定 eventUid，重复请求返回原记录，不重复计数。服务端校验所有非空关联 ID 均属于当前用户且关系一致。\n- 事件默认保留 180 天并写入 expireTime；账号删除时随用户数据删除，部署侧按 expireTime 定期清理。事件接口失败不得阻断复习、判题或结果恢复。\n- [ASSUMPTION: A-4 — requestJson、wordsJson、attempt 与事件表足以建立唯一查询链；集成测试无法从曝光追到次日词级结果时停止发布。]\n- [ASSUMPTION: A-5 — 轻量事件表能以可接受的写入成本提供 MVP 漏斗分母；用压测和重复写入测试验证。]"
+      ],
+      "cleanup": "由隔离环境 runner 清理；同一 spec 内记录并清理创建的数据。",
+      "bindings": [],
+      "reviewNote": "初始需求候选；Codex 必须核对整份 PRD、字段表和决策补充，细化数据与操作，补充边界场景后标为 ready。"
+    },
+    {
+      "id": "review/weak-word-repair/REQ-a94523b4be/CASE-01",
+      "title": "- **性能**：微语境任务创建接口 p95 小于 1.5 秒（不含后台 AI 生成）；昨日错词查询 p95 小于 300 毫秒；前端等待 90 秒仍未完成时展示“仍在生成”与返回动作，不把任务误标为失败。[ASSUMPTION: A-3 — 现有相关索引可满足该查询边界；上线前用代表性数据验证。]",
+      "status": "draft",
+      "requirementIds": [
+        "review/weak-word-repair/REQ-a94523b4be"
+      ],
+      "preconditions": [
+        "一次性 MySQL/NestJS 测试环境；仅使用本次创建的数据，禁止连接生产。"
+      ],
+      "steps": [
+        "完成一轮包含错词的复习，记录会话 ID、去重错词与用户时区。",
+        "从复习结果进入微语境，生成并作答，记录目标词与结果归因。",
+        "刷新/恢复当前回合，再推进到下一自然日检查复查来源；比较原始记录。"
+      ],
+      "expectedResults": [
+        "- **性能**：微语境任务创建接口 p95 小于 1.5 秒（不含后台 AI 生成）；昨日错词查询 p95 小于 300 毫秒；前端等待 90 秒仍未完成时展示“仍在生成”与返回动作，不把任务误标为失败。[ASSUMPTION: A-3 — 现有相关索引可满足该查询边界；上线前用代表性数据验证。]"
+      ],
+      "cleanup": "由隔离环境 runner 清理；同一 spec 内记录并清理创建的数据。",
+      "bindings": [],
+      "reviewNote": "初始需求候选；Codex 必须核对整份 PRD、字段表和决策补充，细化数据与操作，补充边界场景后标为 ready。"
+    },
+    {
+      "id": "review/weak-word-repair/REQ-1c6a0a5b64/CASE-01",
+      "title": "- **可靠性**：微语境任务重复 Webhook 不创建第二篇文章；普通复习不依赖 AI；任何已提交回合均可由 reciteSessionId 恢复。",
+      "status": "draft",
+      "requirementIds": [
+        "review/weak-word-repair/REQ-1c6a0a5b64"
+      ],
+      "preconditions": [
+        "一次性 MySQL/NestJS 测试环境；仅使用本次创建的数据，禁止连接生产。"
+      ],
+      "steps": [
+        "完成一轮包含错词的复习，记录会话 ID、去重错词与用户时区。",
+        "从复习结果进入微语境，生成并作答，记录目标词与结果归因。",
+        "刷新/恢复当前回合，再推进到下一自然日检查复查来源；比较原始记录。"
+      ],
+      "expectedResults": [
+        "- **可靠性**：微语境任务重复 Webhook 不创建第二篇文章；普通复习不依赖 AI；任何已提交回合均可由 reciteSessionId 恢复。"
+      ],
+      "cleanup": "由隔离环境 runner 清理；同一 spec 内记录并清理创建的数据。",
+      "bindings": [],
+      "reviewNote": "初始需求候选；Codex 必须核对整份 PRD、字段表和决策补充，细化数据与操作，补充边界场景后标为 ready。"
+    },
+    {
+      "id": "review/weak-word-repair/REQ-226a56f9d5/CASE-01",
+      "title": "- **隐私**：事件不记录答案、文章、题目或解释全文；生成输入仅包含修复词、mode 与 reciteSessionId；事件表只保留最小 ID、计数和状态字段，默认 180 天到期。",
+      "status": "draft",
+      "requirementIds": [
+        "review/weak-word-repair/REQ-226a56f9d5"
+      ],
+      "preconditions": [
+        "一次性 MySQL/NestJS 测试环境；仅使用本次创建的数据，禁止连接生产。"
+      ],
+      "steps": [
+        "完成一轮包含错词的复习，记录会话 ID、去重错词与用户时区。",
+        "从复习结果进入微语境，生成并作答，记录目标词与结果归因。",
+        "刷新/恢复当前回合，再推进到下一自然日检查复查来源；比较原始记录。"
+      ],
+      "expectedResults": [
+        "- **隐私**：事件不记录答案、文章、题目或解释全文；生成输入仅包含修复词、mode 与 reciteSessionId；事件表只保留最小 ID、计数和状态字段，默认 180 天到期。"
+      ],
+      "cleanup": "由隔离环境 runner 清理；同一 spec 内记录并清理创建的数据。",
+      "bindings": [],
+      "reviewNote": "初始需求候选；Codex 必须核对整份 PRD、字段表和决策补充，细化数据与操作，补充边界场景后标为 ready。"
+    },
+    {
+      "id": "review/weak-word-repair/REQ-46a83a5888/CASE-01",
+      "title": "- **可访问性**：新增按钮可键盘操作，有可见焦点；状态不只通过颜色表达；遵守 `prefers-reduced-motion`。",
+      "status": "draft",
+      "requirementIds": [
+        "review/weak-word-repair/REQ-46a83a5888"
+      ],
+      "preconditions": [
+        "一次性 MySQL/NestJS 测试环境；仅使用本次创建的数据，禁止连接生产。"
+      ],
+      "steps": [
+        "完成一轮包含错词的复习，记录会话 ID、去重错词与用户时区。",
+        "从复习结果进入微语境，生成并作答，记录目标词与结果归因。",
+        "刷新/恢复当前回合，再推进到下一自然日检查复查来源；比较原始记录。"
+      ],
+      "expectedResults": [
+        "- **可访问性**：新增按钮可键盘操作，有可见焦点；状态不只通过颜色表达；遵守 `prefers-reduced-motion`。"
+      ],
+      "cleanup": "由隔离环境 runner 清理；同一 spec 内记录并清理创建的数据。",
+      "bindings": [],
+      "reviewNote": "初始需求候选；Codex 必须核对整份 PRD、字段表和决策补充，细化数据与操作，补充边界场景后标为 ready。"
+    },
+    {
+      "id": "review/weak-word-repair/REQ-cba3da9f8d/CASE-01",
+      "title": "- **兼容性**：现有普通 Context Lab、复习、词库、统计、历史和 API 默认行为不变。",
+      "status": "draft",
+      "requirementIds": [
+        "review/weak-word-repair/REQ-cba3da9f8d"
+      ],
+      "preconditions": [
+        "一次性 MySQL/NestJS 测试环境；仅使用本次创建的数据，禁止连接生产。"
+      ],
+      "steps": [
+        "完成一轮包含错词的复习，记录会话 ID、去重错词与用户时区。",
+        "从复习结果进入微语境，生成并作答，记录目标词与结果归因。",
+        "刷新/恢复当前回合，再推进到下一自然日检查复查来源；比较原始记录。"
+      ],
+      "expectedResults": [
+        "- **兼容性**：现有普通 Context Lab、复习、词库、统计、历史和 API 默认行为不变。"
+      ],
+      "cleanup": "由隔离环境 runner 清理；同一 spec 内记录并清理创建的数据。",
+      "bindings": [],
+      "reviewNote": "初始需求候选；Codex 必须核对整份 PRD、字段表和决策补充，细化数据与操作，补充边界场景后标为 ready。"
+    },
+    {
+      "id": "review/weak-word-repair/REQ-b8d523ad95/CASE-01",
+      "title": "- **可观察性**：失败日志包含 errorCode、userId、reciteSessionId、contextTaskId、stage 和 elapsedMs，不包含答案正文；至少区分 `MICRO_REQUEST_INVALID`、`MICRO_GENERATION_FAILED`、`MICRO_OUTPUT_INVALID`、`MICRO_TASK_NOT_FOUND` 和 `RECITE_SESSION_NOT_FOUND`。",
+      "status": "draft",
+      "requirementIds": [
+        "review/weak-word-repair/REQ-b8d523ad95"
+      ],
+      "preconditions": [
+        "一次性 MySQL/NestJS 测试环境；仅使用本次创建的数据，禁止连接生产。"
+      ],
+      "steps": [
+        "完成一轮包含错词的复习，记录会话 ID、去重错词与用户时区。",
+        "从复习结果进入微语境，生成并作答，记录目标词与结果归因。",
+        "刷新/恢复当前回合，再推进到下一自然日检查复查来源；比较原始记录。"
+      ],
+      "expectedResults": [
+        "- **可观察性**：失败日志包含 errorCode、userId、reciteSessionId、contextTaskId、stage 和 elapsedMs，不包含答案正文；至少区分 `MICRO_REQUEST_INVALID`、`MICRO_GENERATION_FAILED`、`MICRO_OUTPUT_INVALID`、`MICRO_TASK_NOT_FOUND` 和 `RECITE_SESSION_NOT_FOUND`。"
+      ],
+      "cleanup": "由隔离环境 runner 清理；同一 spec 内记录并清理创建的数据。",
+      "bindings": [],
+      "reviewNote": "初始需求候选；Codex 必须核对整份 PRD、字段表和决策补充，细化数据与操作，补充边界场景后标为 ready。"
+    }
+  ]
+}

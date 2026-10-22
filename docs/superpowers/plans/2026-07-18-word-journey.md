@@ -85,7 +85,7 @@
 
 **Files:**
 - Modify: `docs/superpowers/specs/spec-word-journey.md`
-- Create: `docs/superpowers/prds/prd-english-world-2026-07-18/review-rubric.md`
+- Create: `docs/prd/review/features/word-journey/review-rubric.md`
 
 **Interfaces:**
 - Consumes: 两端实现和测试结果。

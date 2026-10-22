@@ -335,6 +335,27 @@ describe("EnglishWorld ToC routing", () => {
     expect(screen.getByRole("button", { name: "添加第一个单词" })).toBeInTheDocument();
   });
 
+  it("submits trimmed searches with Enter and keeps extra filters collapsed", async () => {
+    const user = userEvent.setup();
+    render(<MemoryRouter initialEntries={["/englishWorld/words"]}><EnglishWorld /></MemoryRouter>);
+    expect(screen.queryByText("时间范围")).not.toBeInTheDocument();
+    await user.type(screen.getByPlaceholderText("搜索单词或短语"), "  apple  {Enter}");
+    await waitFor(() => expect(requestMock).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ englishWord: "apple", page: 1 }),
+    })));
+  });
+
+  it("preserves advanced filters when collapsed and submitted again", async () => {
+    const user = userEvent.setup();
+    render(<MemoryRouter initialEntries={["/englishWorld/words"]}><EnglishWorld /></MemoryRouter>);
+    await user.click(screen.getByRole("button", { name: /更多筛选/ }));
+    await user.click(screen.getByLabelText("类型"));
+    await user.click(screen.getByText("短语", { selector: ".ant-select-item-option-content" }));
+    await user.click(screen.getByRole("button", { name: /收起筛选/ }));
+    await user.click(screen.getByRole("button", { name: /查\s*询/ }));
+    await waitFor(() => expect(requestMock).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ englishType: 1 }) })));
+  });
+
   it("renders the word filters as a compact management toolbar", () => {
     const { container } = render(
       <MemoryRouter initialEntries={["/englishWorld/words"]}>

@@ -1,0 +1,39 @@
+.note-content { color: inherit; white-space: normal; overflow-wrap: anywhere; line-height: 1.85; min-width: 0; max-width: 100%; }
+.note-content > :first-child { margin-top: 0; }
+.note-content > :last-child { margin-bottom: 0; }
+.note-content :is(h1,h2,h3,h4,h5,h6) { color: inherit; font-family: inherit; font-weight: 650; line-height: 1.5; margin: 1.5em 0 .65em; }
+.note-content h1 { font-size: 1.55em; }
+.note-content h2 { font-size: 1.3em; }
+.note-content :is(h3,h4,h5,h6) { font-size: 1.1em; }
+.note-content p { margin: .65em 0; white-space: normal; font-size: inherit; color: inherit; }
+.note-content :is(ul,ol) { display: block; margin: .65em 0; padding-inline-start: 1.6em; }
+.note-content ul { list-style: disc; }
+.note-content ol { list-style: decimal; }
+.note-content li { display: list-item; margin: .25em 0; }
+.note-content blockquote { margin: 1em 0; padding: .5em 1em; border-left: 3px solid var(--ew-accent, #2563eb); background: var(--ew-surface-muted, #f8fafc); color: inherit; }
+.note-content a { color: var(--ew-accent, #2563eb); text-decoration: underline; text-underline-offset: 3px; overflow-wrap: anywhere; }
+.note-content code { padding: .1em .3em; border-radius: 4px; background: var(--ew-surface-muted, #f1f5f9); color: inherit; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: .9em; }
+.note-content pre { max-width: 100%; overflow-x: auto; padding: 14px; border-radius: 6px; background: var(--ew-surface-muted, #f1f5f9); white-space: pre; }
+.note-content pre code { padding: 0; background: transparent; white-space: pre; overflow-wrap: normal; }
+.note-table-scroll { max-width: 100%; overflow-x: auto; margin: 1em 0; }
+.note-table-scroll table { width: 100%; border-collapse: collapse; font-size: .94em; }
+.note-table-scroll :is(th,td) { padding: .5em .8em; min-width: 6em; border: 1px solid var(--ew-border, #cbd5e1); text-align: start; vertical-align: top; }
+.note-table-scroll th { background: var(--ew-surface-muted, #f8fafc); font-weight: 600; }
+.note-image-alt { color: inherit; font-style: italic; }
+.note-editor { min-width: 0; width: 100%; }
+.note-editor-modes { display: flex; gap: 6px; margin: 8px 0; }
+.note-editor .note-editor-modes button { width: auto; min-height: 36px; margin: 0; padding: 6px 14px; border: 1px solid var(--ew-border, #cbd5e1); border-radius: 6px; background: transparent; color: inherit; font: inherit; cursor: pointer; }
+.note-editor .note-editor-modes button[aria-pressed=true] { border-color: var(--ew-accent, #2563eb); color: var(--ew-accent, #2563eb); background: var(--ew-accent-soft, #eff6ff); }
+.note-editor-preview { padding: 16px; border: 1px solid var(--ew-border, #cbd5e1); border-radius: 8px; min-height: 8em; }
+.knowledge-article .knowledge-body.note-content { white-space: normal; }
+.knowledge-article .note-content p, .word-note-focus-content .note-content p { margin: .65em 0; color: inherit; font-size: inherit; white-space: normal; }
+.knowledge-article .note-content > p:first-child { margin-top: 0; }
+@media print {
+  .note-content :is(h1,h2,h3,h4,h5,h6) { break-after: avoid; }
+  .note-table-scroll { overflow: visible; }
+  .note-table-scroll table { table-layout: fixed; }
+  .note-table-scroll :is(th,td) { min-width: 0; overflow-wrap: anywhere; }
+  .note-content pre { white-space: pre-wrap; overflow-wrap: anywhere; overflow: visible; }
+  .note-content pre code { white-space: pre-wrap; overflow-wrap: anywhere; }
+  .note-content :is(blockquote,code,pre,th) { background: transparent; color: #111; }
+}

@@ -40,6 +40,22 @@ describe("EnglishWorldLayout sidebar state", () => {
     window.localStorage.clear();
   });
 
+  it("uses the reading workspace without changing the saved navigation preference", async () => {
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter initialEntries={["/englishWorld/reading-practices/7"]}>
+        <EnglishWorldLayout activeKey="readingPractices">content</EnglishWorldLayout>
+      </MemoryRouter>,
+    );
+    expect(screen.queryByRole("banner")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "收起侧栏" })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "显示导航" }));
+    expect(screen.getByRole("banner")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "专注阅读" }));
+    expect(screen.queryByRole("banner")).not.toBeInTheDocument();
+    expect(localStorage.getItem(SIDEBAR_COLLAPSED_STORAGE_KEY)).toBeNull();
+  });
+
   it("persists the collapsed state when the sidebar is toggled", async () => {
     const user = userEvent.setup();
     const { container } = render(

@@ -3,7 +3,7 @@ import "antd-mobile/es/global";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
-import { RouterProvider, useLocation, useParams } from "react-router-dom";
+import { RouterProvider, Navigate, useLocation, useParams } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { MobileActivityLockProvider } from "@/page/englishWorldMobile/offline/MobileActivityLockContext";
 import {
@@ -30,6 +30,7 @@ function renderRouter() {
 }
 
 const authState = {
+  user: { id: 1, username: "tester" },
   isAuthenticated: true,
   loading: false,
   checkAuth: vi.fn(),
@@ -115,6 +116,12 @@ vi.mock("@/page/englishWorld/ieltsCore/IeltsCoreReviewPage", () => ({
 vi.mock("@/page/englishWorld/memoryMap/MemoryMapPage", () => ({
   MemoryMapPage: () => <div>memory-map-page</div>,
 }));
+
+vi.mock("@/readingPractice/ReadingWorkspace", () => ({
+ LegacyReadingEntry: () => <Navigate replace to="/englishWorld/reading-practices?mode=practice&source=personal" />,
+ ReadingWorkspace: () => <div>reading-workspace-page</div>,
+}));
+vi.mock("@/intensiveReading/IntensiveReadingPage", () => ({default: () => <div>intensive-reading-page</div>}));
 
 describe("application router mobile branch", () => {
   afterEach(() => {
@@ -202,8 +209,9 @@ describe("application router desktop branch", () => {
       ["/englishWorld/ai-word", "aiWord", "ai-word-page"],
       ["/englishWorld/bulk-import", "bulkImport", "bulk-import-page"],
       ["/englishWorld/overwrite-stats", "overwriteStats", "overwrite-stats-page"],
-      ["/englishWorld/context-lab", "contextLab", "context-lab-page"],
-      ["/englishWorld/ielts-core", "ieltsCore", "ielts-core-page"],
+      ["/englishWorld/context-lab", "readingPractices", "reading-workspace-page"],
+      ["/englishWorld/intensive-reading", "intensiveReading", "intensive-reading-page"],
+
       ["/englishWorld/memory-map", "memoryMap", "memory-map-page"],
     ]) {
       await router.navigate(path);
@@ -217,6 +225,11 @@ describe("application router desktop branch", () => {
     }
   });
 
+  it("redirects the removed IELTS module to word review", async () => {
+    renderRouter(); await router.navigate("/englishWorld/ielts-core");
+    expect(await screen.findByText("recite-page")).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe("/englishWorld/recite");
+  });
   it("preserves the desktop auth redirect and source location", async () => {
     authState.isAuthenticated = false;
     renderRouter();

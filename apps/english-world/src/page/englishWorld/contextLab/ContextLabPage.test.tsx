@@ -97,6 +97,10 @@ vi.mock("../server/learning", async () => {
   };
 });
 
+vi.mock("./ContextLabExam", () => ({
+  ContextLabExam: ({ task, onExit }: { task: { taskId: number }; onExit: () => void }) => <section aria-label="限时考试">考试材料 {task.taskId}<button onClick={onExit}>退出考试工作区</button></section>,
+}));
+
 describe("ContextLabPage", () => {
   beforeEach(() => {
     taskEventHandler = undefined;
@@ -128,6 +132,23 @@ describe("ContextLabPage", () => {
     subscribeTaskEventsMock.mockReset();
     vi.restoreAllMocks();
     vi.useRealTimers();
+  });
+
+  it("opens the same history as an exam and restores its URL on refresh", async () => {
+    const task = buildSelectedWordHistory("A reading passage.").list[0];
+    requestMock.mockImplementation(async ({ url }: { url: string }) => url.includes("history") ? { list: [task], total: 1 } : task);
+    const user = userEvent.setup();
+    const view = render(<MemoryRouter initialEntries={["/englishWorld/reading-practices?mode=exam&source=personal"]}><ContextLabPage readingMode="exam" /><LocationProbe /></MemoryRouter>);
+    await user.click(await screen.findByRole("button", { name: "进入考试" }));
+    expect(await screen.findByRole("region", { name: "限时考试" })).toHaveTextContent("12");
+    expect(screen.getByTestId("location")).toHaveTextContent("taskId=12");
+    expect(screen.queryByRole("dialog", { name: /单词来源文章/ })).not.toBeInTheDocument();
+    view.unmount();
+    render(<MemoryRouter initialEntries={["/englishWorld/reading-practices?mode=exam&source=personal&taskId=12"]}><ContextLabPage readingMode="exam" /><LocationProbe /></MemoryRouter>);
+    expect(await screen.findByRole("region", { name: "限时考试" })).toHaveTextContent("12");
+    await user.click(screen.getByRole("button", { name: "退出考试工作区" }));
+    expect(screen.queryByRole("region", { name: "限时考试" })).not.toBeInTheDocument();
+    expect(screen.getByTestId("location")).not.toHaveTextContent("taskId=12");
   });
 
   it("uses a generator sidebar and full-width practice-pack workspace", async () => {

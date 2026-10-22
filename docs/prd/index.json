@@ -1,0 +1,321 @@
+{
+  "schemaVersion": 1,
+  "updated": "2026-10-22",
+  "purpose": "需求来源索引；不是已实现功能或自动化覆盖承诺",
+  "modules": [
+    {
+      "id": "auth",
+      "name": "登录与权限",
+      "entry": "auth/prd.md",
+      "baselineStatus": "missing",
+      "primaryFeatures": [],
+      "relatedFeatures": [
+        "unified-workspace"
+      ],
+      "designReferences": []
+    },
+    {
+      "id": "vocabulary",
+      "name": "词库与导入",
+      "entry": "vocabulary/prd.md",
+      "baselineStatus": "partial",
+      "primaryFeatures": [],
+      "relatedFeatures": [
+        "weak-word-repair",
+        "word-journey",
+        "knowledge-notes",
+        "word-book",
+        "unified-workspace",
+        "readable-notes"
+      ],
+      "designReferences": [
+        "docs/superpowers/specs/2026-07-16-word-library-query-pagination-consistency-design.md",
+        "docs/superpowers/specs/2026-07-28-bulk-import-shared-source-upload-design.md"
+      ]
+    },
+    {
+      "id": "review",
+      "name": "学习与复习",
+      "entry": "review/prd.md",
+      "baselineStatus": "partial",
+      "primaryFeatures": [
+        "weak-word-repair",
+        "word-journey"
+      ],
+      "relatedFeatures": [
+        "readable-notes"
+      ],
+      "designReferences": [
+        "docs/superpowers/specs/2026-06-26-recite-short-review-loop-design.md"
+      ]
+    },
+    {
+      "id": "context",
+      "name": "语境练习",
+      "entry": "context/prd.md",
+      "baselineStatus": "partial",
+      "primaryFeatures": [],
+      "relatedFeatures": [
+        "weak-word-repair",
+        "word-journey",
+        "unified-workspace"
+      ],
+      "designReferences": [
+        "docs/superpowers/specs/2026-06-22-context-lab-learning-loop-mvp-design.md",
+        "docs/superpowers/specs/2026-07-30-context-lab-mixed-ielts-question-types-design.md"
+      ]
+    },
+    {
+      "id": "reading",
+      "name": "阅读练习",
+      "entry": "reading/prd.md",
+      "baselineStatus": "partial",
+      "primaryFeatures": [
+        "add-recipients",
+        "analytics",
+        "unified-workspace",
+        "personal-removal",
+        "sentence-completion",
+        "ai-review-repair",
+        "received-ielts-workspace",
+        "permanent-deletion",
+        "automatic-review",
+        "creation-ui"
+      ],
+      "relatedFeatures": [],
+      "designReferences": [
+        "docs/superpowers/specs/2026-10-12-shared-ai-reading-practice-design.md"
+      ]
+    },
+    {
+      "id": "notes",
+      "name": "知识笔记",
+      "entry": "notes/prd.md",
+      "baselineStatus": "partial",
+      "primaryFeatures": [
+        "knowledge-notes",
+        "folders",
+        "readable-notes"
+      ],
+      "relatedFeatures": [
+        "word-book"
+      ],
+      "designReferences": []
+    },
+    {
+      "id": "word-books",
+      "name": "复习册",
+      "entry": "word-books/prd.md",
+      "baselineStatus": "partial",
+      "primaryFeatures": [
+        "word-book"
+      ],
+      "relatedFeatures": [
+        "readable-notes"
+      ],
+      "designReferences": []
+    },
+    {
+      "id": "notifications",
+      "name": "通知与公告",
+      "entry": "notifications/prd.md",
+      "baselineStatus": "partial",
+      "primaryFeatures": [],
+      "relatedFeatures": [
+        "add-recipients"
+      ],
+      "designReferences": []
+    },
+    {
+      "id": "settings",
+      "name": "设置与站点",
+      "entry": "settings/prd.md",
+      "baselineStatus": "missing",
+      "primaryFeatures": [
+        "desktop-learning-nav"
+      ],
+      "relatedFeatures": [
+        "unified-workspace"
+      ],
+      "designReferences": [
+        "docs/superpowers/specs/2026-08-17-english-world-mobile-pwa-full-redesign-design.md"
+      ]
+    },
+    {
+      "id": "intensive-reading",
+      "name": "精读",
+      "entry": "intensive-reading/prd.md",
+      "baselineStatus": "complete",
+      "primaryFeatures": [
+        "intensive-reading-core"
+      ],
+      "relatedFeatures": [],
+      "designReferences": [
+        "docs/superpowers/specs/2026-10-22-intensive-reading-design.md"
+      ]
+    }
+  ],
+  "features": [
+    {
+      "id": "weak-word-repair",
+      "title": "薄弱词语境修复闭环",
+      "primaryModule": "review",
+      "relatedModules": [
+        "context",
+        "vocabulary"
+      ],
+      "prd": "review/features/weak-word-repair/prd.md",
+      "legacySource": "react-font/docs/superpowers/prds/prd-english-world-2026-07-17/prd.md"
+    },
+    {
+      "id": "word-journey",
+      "title": "可解释词汇掌握轨迹",
+      "primaryModule": "review",
+      "relatedModules": [
+        "context",
+        "vocabulary"
+      ],
+      "prd": "review/features/word-journey/prd.md",
+      "legacySource": "react-font/docs/superpowers/prds/prd-english-world-2026-07-18/prd.md"
+    },
+    {
+      "id": "knowledge-notes",
+      "title": "长笔记编辑与独立知识笔记",
+      "primaryModule": "notes",
+      "relatedModules": [
+        "vocabulary"
+      ],
+      "prd": "notes/features/knowledge-notes/prd.md",
+      "legacySource": "react-font/docs/superpowers/prds/prd-english-world-2026-10-10/prd.md"
+    },
+    {
+      "id": "folders",
+      "title": "知识笔记文件夹管理",
+      "primaryModule": "notes",
+      "relatedModules": [],
+      "prd": "notes/features/folders/prd.md",
+      "legacySource": "docs/knowledge-folders/prd.md"
+    },
+    {
+      "id": "add-recipients",
+      "title": "已发布阅读练习追加接收人",
+      "primaryModule": "reading",
+      "relatedModules": [
+        "notifications"
+      ],
+      "prd": "reading/features/add-recipients/prd.md",
+      "legacySource": "docs/reading-add-recipients/prd.md"
+    },
+    {
+      "id": "analytics",
+      "title": "阅读练习完成情况与成绩分析",
+      "primaryModule": "reading",
+      "relatedModules": [],
+      "prd": "reading/features/analytics/prd.md",
+      "legacySource": "docs/reading-analytics/prd.md"
+    },
+    {
+      "id": "word-book",
+      "title": "单词与知识速读复习册",
+      "primaryModule": "word-books",
+      "relatedModules": [
+        "vocabulary",
+        "notes"
+      ],
+      "prd": "word-books/features/word-book/prd.md",
+      "legacySource": "docs/word-book/prd.md"
+    },
+    {
+      "id": "unified-workspace",
+      "title": "统一阅读工作区与体验整改",
+      "primaryModule": "reading",
+      "relatedModules": [
+        "context",
+        "vocabulary",
+        "settings",
+        "auth"
+      ],
+      "prd": "reading/features/unified-workspace/prd.md"
+    },
+    {
+      "id": "readable-notes",
+      "title": "笔记统一阅读展示",
+      "primaryModule": "notes",
+      "relatedModules": [
+        "vocabulary",
+        "review",
+        "word-books"
+      ],
+      "prd": "notes/features/readable-notes/prd.md"
+    },
+    {
+      "id": "personal-removal",
+      "title": "学生练习列表移除与恢复",
+      "primaryModule": "reading",
+      "relatedModules": [],
+      "prd": "reading/features/personal-removal/prd.md"
+    },
+    {
+      "id": "sentence-completion",
+      "title": "阅读练习句子填空",
+      "primaryModule": "reading",
+      "relatedModules": [],
+      "prd": "reading/features/sentence-completion/prd.md"
+    },
+    {
+      "id": "ai-review-repair",
+      "title": "AI 检查并修复与问题定位",
+      "primaryModule": "reading",
+      "relatedModules": [],
+      "prd": "reading/features/ai-review-repair/prd.md"
+    },
+    {
+      "id": "received-ielts-workspace",
+      "title": "收到练习使用雅思工作区",
+      "primaryModule": "reading",
+      "relatedModules": [
+        "context"
+      ],
+      "prd": "reading/features/received-ielts-workspace/prd.md"
+    },
+    {
+      "id": "permanent-deletion",
+      "title": "管理员永久删除阅读练习",
+      "primaryModule": "reading",
+      "relatedModules": [],
+      "prd": "reading/features/permanent-deletion/prd.md"
+    },
+    {
+      "id": "automatic-review",
+      "title": "Web材料自动处理与集中审核",
+      "primaryModule": "reading",
+      "relatedModules": [],
+      "prd": "reading/features/automatic-review/prd.md"
+    },
+    {
+      "id": "creation-ui",
+      "title": "Web新建练习界面",
+      "primaryModule": "reading",
+      "relatedModules": [],
+      "prd": "reading/features/creation-ui/prd.md"
+    },
+    {
+      "id": "intensive-reading-core",
+      "title": "电脑端独立精读",
+      "primaryModule": "intensive-reading",
+      "relatedModules": [],
+      "prd": "intensive-reading/prd.md"
+    },
+    {
+      "id": "desktop-learning-nav",
+      "title": "电脑端学习导航精简与名称统一",
+      "primaryModule": "settings",
+      "relatedModules": [
+        "review",
+        "word-books",
+        "intensive-reading"
+      ],
+      "prd": "settings/features/desktop-learning-nav/prd.md"
+    }
+  ]
+}

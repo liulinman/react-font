@@ -1,0 +1,151 @@
+@page {
+  size: A4 portrait;
+  margin: 12mm;
+  @bottom-center {
+    content: counter(page);
+    font: 8pt serif;
+    color: #555;
+  }
+}
+@media print {
+  html,
+  body,
+  body.word-book-reading,
+  #root {
+    background: white !important;
+    color: #111 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: auto !important;
+    height: auto !important;
+    overflow: visible !important;
+    min-width: 0 !important;
+  }
+  .book-reader-toolbar,
+  .book-reader-layout,
+  .ant-modal-root,
+  .ant-message,
+  .ant-notification {
+    display: none !important;
+  }
+  .book-reader {
+    background: white !important;
+    min-height: 0 !important;
+  }
+  .book-print-only {
+    display: block !important;
+  }
+  .book-print-content {
+    font-family: "Times New Roman", "Songti SC", "SimSun", serif;
+    font-size: 10pt;
+    line-height: 1.3;
+    color: #111;
+  }
+  .book-print-heading {
+    display: flex;
+    justify-content: space-between;
+    gap: 10mm;
+    font-family: inherit;
+    font-size: 10pt;
+    border-bottom: 0.4pt solid #444;
+    padding: 0 0 3mm;
+    margin-bottom: 4mm;
+    break-after: avoid;
+  }
+  .book-print-heading strong {
+    font-weight: 600;
+  }
+  .book-print-heading span {
+    font-size: 8pt;
+    white-space: nowrap;
+  }
+  .book-sections {
+    columns: 2;
+    column-gap: 7mm;
+    column-rule: 0.3pt solid #ccc;
+  }
+  .book-section {
+    margin: 0 0 4mm;
+    break-inside: auto;
+    scroll-margin: 0;
+  }
+  .book-section-heading {
+    gap: 2mm;
+    margin: 0 0 1.5mm;
+    padding: 0 0 1.2mm;
+    border-bottom: 0.4pt solid #777;
+    break-inside: avoid;
+    break-after: avoid;
+  }
+  .book-section-heading > span,
+  .book-section-heading h2 {
+    font-size: 11pt;
+    font-weight: 600;
+    color: #111;
+    font-family: inherit;
+  }
+  .book-section-heading small {
+    font-size: 7pt;
+    color: #555;
+  }
+  .book-entry {
+    padding: 1.6mm 0;
+    border-bottom: 0;
+    break-inside: avoid;
+    scroll-margin: 0;
+  }
+  .book-word-line {
+    gap: 1.5mm;
+    line-height: 1.3;
+  }
+  .book-word-line h3 {
+    font-size: 11pt;
+    color: #111;
+    line-height: 1.25;
+  }
+  .book-phonetic {
+    font-size: 8pt;
+    color: #444;
+  }
+  .book-word-line > span:not(.book-phonetic) {
+    font-size: 8pt;
+    color: #444;
+  }
+  .book-meaning {
+    font-size: 10pt;
+  }
+  .book-key-points {
+    font-size: 9pt;
+    line-height: 1.35;
+    margin: 1mm 0 0;
+    color: #222;
+  }
+  .book-key-points > li + li {
+    margin-top: 0.6mm;
+  }
+  .book-group-notes {
+    margin: 2mm 0;
+    padding: 0 0 0 2mm;
+    border-left: 1pt solid #555;
+    background: none;
+    font-size: 9pt;
+    break-inside: auto;
+  }
+  .book-group-notes p {
+    margin: 1mm 0;
+  }
+  .book-print-footer {
+    margin-top: 3mm;
+    border-top: 0.4pt solid #777;
+    padding-top: 2mm;
+    font-size: 7pt;
+    color: #555;
+  }
+  .book-content * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+  .book-source {
+    display: none !important;
+  }
+}

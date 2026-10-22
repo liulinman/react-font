@@ -1,3 +1,5 @@
+import { NoteContent } from "@/components/notes/NoteContent";
+import { NoteEditor } from "@/components/notes/NoteEditor";
 import { MobileActivityLockContext } from "@/page/englishWorldMobile/offline/MobileActivityLockContext";
 import { useContext, useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -165,8 +167,8 @@ export function KnowledgeNoteEditor({
           <aside className="knowledge-latest">
             <h2>服务器最新版本 · {latest.title}</h2>
             <p>当前输入保留在下方。请先复制需要保留的修改，再重新打开编辑。</p>
-            <p>{latest.body}</p>
-            <p>{latest.examples}</p>
+            <NoteContent text={latest.body} />
+            <NoteContent text={latest.examples} />
             <p>{latest.source}</p>
             <Link to={`${base}/${latest.id}${listSearch}`}>打开最新详情</Link>
           </aside>
@@ -211,7 +213,7 @@ export function KnowledgeNoteEditor({
               {values.body ? "在末尾追加记录模板" : "插入记录模板"}
             </button>
           </div>
-          <AutoGrowTextarea
+          <NoteEditor
             id="knowledge-body"
             aria-label="正文"
             rows={12}
@@ -232,7 +234,8 @@ export function KnowledgeNoteEditor({
           >
             <summary>补充例句、来源和关联单词</summary>
             <label htmlFor="knowledge-examples">例句与解释</label>
-            <AutoGrowTextarea
+            <NoteEditor
+              aria-label="例句与解释"
               id="knowledge-examples"
               rows={4}
               value={values.examples}

@@ -31,7 +31,7 @@ export function ContextLabExam({
       task={task}
       onExit={onExit}
       onSubmit={async (params) => {
-        const response = await request(contextLabSubmit(params));
+        const response = await request(contextLabSubmit({ sessionId: params.sessionId, elapsedSeconds: params.elapsedSeconds, answers: params.answers.flatMap(answer => typeof answer.selectedIndex === "number" ? [{questionId: answer.questionId, selectedIndex: answer.selectedIndex}] : []) }));
         onCompleted();
         return response;
       }}

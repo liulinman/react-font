@@ -27,3 +27,10 @@ describe('exam draft recovery', () => {
     expect(restoreExamDraft(JSON.stringify(draft), task).annotations).toEqual([draft.annotations[0]]);
   });
 });
+
+it('retains text drafts and rejects answers of the wrong kind', () => {
+  const mixed = {...task, questions: [task.questions![0], {id: 'q2', stem: 'A ____', options: [], kind: 'sentence_completion'}]};
+  const draft = {...newExamDraft(mixed), answers: {q1: 'text', q2: 'claw'}};
+  expect(restoreExamDraft(JSON.stringify(draft), mixed).answers).toEqual({q2: 'claw'});
+  expect(restoreExamDraft(JSON.stringify({...draft, answers: {q2: 1}}), mixed).answers).toEqual({});
+});

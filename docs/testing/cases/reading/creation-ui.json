@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "source": "docs/prd/reading/features/creation-ui/prd.md",
+  "sourceHash": "b202aea0f411ef053a35d4282a6d9a1007aa61e7b27a871cf3374c1c4bba2a50",
+  "cases": [
+    {
+      "id": "reading/creation-ui/AC-01/WEB",
+      "title": "focuses on upload, retains pasted material across switches and fixes the action footer",
+      "status": "ready",
+      "requirementIds": [
+        "reading/creation-ui/AC-01"
+      ],
+      "preconditions": [
+        "Web桌面1440×900，管理员API响应fixture，真实SQL事务由后端集成套件另行验证。"
+      ],
+      "steps": [
+        "打开新建；检查上传入口/固定操作；切换粘贴文本和上传，再切回；开始整理。"
+      ],
+      "expectedResults": [
+        "底部操作可见且不横向溢出；更多项折叠；文本保留；autoProcess:true并直接打开工作区。"
+      ],
+      "cleanup": "Cypress自动清理测试状态与拦截，无生产写入。",
+      "bindings": [
+        {
+          "suite": "reading-create-redesign",
+          "title": "Web simple reading creation > focuses on upload, retains pasted material across switches and fixes the action footer"
+        }
+      ],
+      "reviewNote": "仅UI部分为mock Web证据；AC-03事务/幂等由reading-publish-recipients.integration-spec.ts真实SQL/HTTP补充，不以fixture认证持久化。"
+    },
+    {
+      "id": "reading/creation-ui/AC-02/WEB",
+      "title": "keeps AI generation concise with editable defaults and opens the result",
+      "status": "ready",
+      "requirementIds": [
+        "reading/creation-ui/AC-02"
+      ],
+      "preconditions": [
+        "Web桌面1440×900，管理员API响应fixture，真实SQL事务由后端集成套件另行验证。"
+      ],
+      "steps": [
+        "打开AI出题；检查5题/6分/400词默认摘要和折叠；填写要求并展开将题数改为6；开始生成。"
+      ],
+      "expectedResults": [
+        "默认摘要正确，设置可展开编辑；提交6题/雅思6分/400词，成功打开结果。"
+      ],
+      "cleanup": "Cypress自动清理测试状态与拦截，无生产写入。",
+      "bindings": [
+        {
+          "suite": "reading-create-redesign",
+          "title": "Web simple reading creation > keeps AI generation concise with editable defaults and opens the result"
+        }
+      ],
+      "reviewNote": "仅UI部分为mock Web证据；AC-03事务/幂等由reading-publish-recipients.integration-spec.ts真实SQL/HTTP补充，不以fixture认证持久化。"
+    },
+    {
+      "id": "reading/creation-ui/AC-03/WEB",
+      "title": "chooses recipients only in final publication confirmation and cancellation does not publish",
+      "status": "draft",
+      "requirementIds": [
+        "reading/creation-ui/AC-03"
+      ],
+      "preconditions": [
+        "Web桌面1440×900，管理员API响应fixture，真实SQL事务由后端集成套件另行验证。"
+      ],
+      "steps": [
+        "打开审核并发布确认；取消后检查无请求；重新确认，选择Bob并发布。"
+      ],
+      "expectedResults": [
+        "取消无publish；最终请求包含selected和Bob的ID；后端真实SQL另验证只分配指定学生和幂等。"
+      ],
+      "cleanup": "Cypress自动清理测试状态与拦截，无生产写入。",
+      "bindings": [
+        {
+          "suite": "reading-create-redesign",
+          "title": "Web simple reading creation > chooses recipients only in final publication confirmation and cancellation does not publish"
+        }
+      ],
+      "reviewNote": "仅UI部分为mock Web证据；AC-03事务/幂等由reading-publish-recipients.integration-spec.ts真实SQL/HTTP补充，不以fixture认证持久化。 当前执行器只接受Cypress精确绑定，SQL补充尚未并入Case执行器，故保留draft不冒充完整自动化覆盖。"
+    }
+  ]
+}

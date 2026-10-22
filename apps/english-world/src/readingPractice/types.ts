@@ -1,7 +1,8 @@
 export interface Question {
   instructions?: string;
   id: string;
-  kind: "choice" | "true_false_not_given";
+  kind: "choice" | "true_false_not_given" | "matching_features" | "sentence_completion";
+  maxWords?: number;
   stem: string;
   options: string[];
 }
@@ -13,14 +14,14 @@ export interface PublicPractice {
   title: string;
   paragraphs: string[];
   questions: Question[];
-  ieltsBand: number;
+  ieltsBand: number | null;
   status: "published" | "withdrawn";
   submitted: boolean;
 }
 export interface PracticeSummary {
   id: number;
   title: string;
-  ieltsBand: number;
+  ieltsBand: number | null;
   questionCount: number;
   status: "published" | "withdrawn";
   submitted: boolean;
@@ -43,8 +44,10 @@ export interface PracticeResult {
   total: number;
   results: (Question & {
     voided?: boolean;
-    selectedIndex: number;
-    correctIndex: number;
+    selectedIndex?: number;
+    correctIndex: number | null;
+    answerText?: string;
+    acceptedAnswers?: string[];
     correct: boolean;
     explanation: string;
     evidence: {
@@ -56,5 +59,12 @@ export interface PracticeResult {
 }
 export interface Submission {
   requestUid: string;
-  answers: { questionId: string; selectedIndex: number }[];
+  allowUnanswered?: true;
+  elapsedSeconds?: number;
+  answers: ({ questionId: string; selectedIndex: number } | { questionId: string; answerText: string } | { questionId: string; unanswered: true })[];
+}
+
+export function readingOptionLabel(kind: string, option: string, index: number) {
+  return kind === "matching_features" && /^[A-T][.)\s]/.test(option)
+    ? option : `${String.fromCharCode(65 + index)}. ${option}`;
 }

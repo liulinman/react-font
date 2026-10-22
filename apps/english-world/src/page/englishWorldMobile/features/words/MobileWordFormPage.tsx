@@ -1,3 +1,4 @@
+import { NoteEditor } from "@/components/notes/NoteEditor";
 import { AutoGrowTextarea } from "@/page/englishWorld/knowledgeNotes/AutoGrowTextarea";
 import "@/page/englishWorld/component/wordNoteEditor.css";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -297,7 +298,7 @@ export function MobileWordFormPage() {
     <MobilePage className="word-editor word-note-mobile-focus" title="编辑笔记">
       <button type="button" onClick={() => setNoteFocused(false)}>返回表单</button>
       <p>返回表单后点击“保存”提交单词。当前输入保留在表单中。</p>
-      <label>完整笔记<AutoGrowTextarea aria-label="完整笔记" rows={18} value={values.englishNote ?? ""} onChange={event => setField("englishNote",event.target.value)} /></label>
+      <label htmlFor="mobile-full-note">完整笔记</label><NoteEditor id="mobile-full-note" aria-label="完整笔记" rows={18} value={values.englishNote ?? ""} onChange={event => setField("englishNote",event.target.value)} />
     </MobilePage>
   );
 
