@@ -1,5 +1,3 @@
-import { registerPlugin } from "@capacitor/core";
-const speech = registerPlugin<{
-  speak(options: { text: string }): Promise<void>;
-}>("EnglishWorldSpeech");
-export const speakNativeEnglish = (text: string) => speech.speak({ text });
+import { playListeningAudio } from "@/aiListening/audio";
+export const speakNativeEnglish = (text: string) =>
+  playListeningAudio("/speech/word", { body: { text } });

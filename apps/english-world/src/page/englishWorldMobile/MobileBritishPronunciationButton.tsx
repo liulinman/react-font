@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { requestUid } from "@/aiListening/api";
+import { useEffect, useState } from "react";
 import type { MouseEvent } from "react";
 import { Button, Toast } from "antd-mobile";
 import { SoundOutline } from "antd-mobile-icons";
@@ -7,13 +8,17 @@ import { playBritishPronunciation } from "@/page/englishWorld/utils/pronunciatio
 type MobileBritishPronunciationButtonProps = {
   ariaLabel?: string;
   word?: string;
+  wordId?: number;
 };
 
 export function MobileBritishPronunciationButton({
-  ariaLabel = "播放英式发音",
+  ariaLabel = "播放单词发音",
   word,
+  wordId,
 }: MobileBritishPronunciationButtonProps) {
   const [loading, setLoading] = useState(false);
+  const [failed, setFailed] = useState(false);
+  useEffect(() => setFailed(false), [word, wordId]);
 
   const handlePlay = async (event: MouseEvent<HTMLElement>) => {
     event.preventDefault();
@@ -26,10 +31,15 @@ export function MobileBritishPronunciationButton({
 
     setLoading(true);
     try {
-      await playBritishPronunciation(word);
+      await playBritishPronunciation(word, wordId, {
+        ...(failed ? { retryUid: requestUid() } : {}),
+        onError: () => setFailed(true),
+      });
+      setFailed(false);
     } catch (error) {
-      console.error("播放英式发音失败:", error);
-      Toast.show({ icon: "fail", content: "发音播放失败" });
+      if (error instanceof DOMException && error.name === "AbortError") return;
+      setFailed(true);
+      Toast.show({ icon: "fail", content: "发音播放失败，请点击重试发音" });
     } finally {
       setLoading(false);
     }
@@ -37,14 +47,14 @@ export function MobileBritishPronunciationButton({
 
   return (
     <Button
-      aria-label={ariaLabel}
+      aria-label={failed ? "重试发音" : ariaLabel}
       className="mobile-pronunciation-button"
       fill="none"
       loading={loading}
       onClick={handlePlay}
       size="small"
     >
-      <SoundOutline />
+      {failed ? "重试发音" : <SoundOutline />}
     </Button>
   );
 }

@@ -1,39 +1,28 @@
-import { describe, expect, it } from "vitest";
-import {
-  normalizeAudioUrl,
-  selectBritishAudioUrl,
-} from "./pronunciation";
-
-describe("pronunciation", () => {
-  it("优先选择英式发音音频", () => {
-    expect(
-      selectBritishAudioUrl([
-        { audio: "https://api.dictionaryapi.dev/media/pronunciations/en/hello-us.mp3" },
-        { audio: "https://api.dictionaryapi.dev/media/pronunciations/en/hello-uk.mp3" },
-      ]),
-    ).toBe("https://api.dictionaryapi.dev/media/pronunciations/en/hello-uk.mp3");
+import { expect, it, vi } from "vitest";
+vi.mock("@/aiListening/audio", () => ({
+  playListeningAudio: vi.fn().mockResolvedValue(undefined),
+  stopListeningAudio: vi.fn(),
+}));
+import { playListeningAudio } from "@/aiListening/audio";
+import { playBritishPronunciation } from "./pronunciation";
+it("uses owned word identity for contextual provider pronunciation", async () => {
+  await playBritishPronunciation("record", 12);
+  expect(playListeningAudio).toHaveBeenCalledWith("/speech/word", {
+    body: { wordId: 12 },
+    onError: undefined,
   });
-
-  it("识别 Google 字典的 gb 音频", () => {
-    expect(
-      selectBritishAudioUrl([
-        { audio: "//ssl.gstatic.com/dictionary/static/sounds/20200429/hello--_gb_1.mp3" },
-      ]),
-    ).toBe("https://ssl.gstatic.com/dictionary/static/sounds/20200429/hello--_gb_1.mp3");
+});
+it("supports bounded text-only words through the same service", async () => {
+  await playBritishPronunciation(" wander ");
+  expect(playListeningAudio).toHaveBeenCalledWith("/speech/word", {
+    body: { text: "wander" },
+    onError: undefined,
   });
-
-  it("没有英式音频时返回 null", () => {
-    expect(
-      selectBritishAudioUrl([
-        { audio: "https://api.dictionaryapi.dev/media/pronunciations/en/hello-us.mp3" },
-        { text: "/həˈləʊ/" },
-      ]),
-    ).toBeNull();
-  });
-
-  it("补齐协议相对 URL", () => {
-    expect(normalizeAudioUrl("//example.com/audio.mp3")).toBe(
-      "https://example.com/audio.mp3",
-    );
+});
+it("only supplies paid retry identity on explicit retry", async () => {
+  await playBritishPronunciation("record", 12, { retryUid: "explicit-retry" });
+  expect(playListeningAudio).toHaveBeenLastCalledWith("/speech/word", {
+    body: { wordId: 12, retryUid: "explicit-retry" },
+    onError: undefined,
   });
 });

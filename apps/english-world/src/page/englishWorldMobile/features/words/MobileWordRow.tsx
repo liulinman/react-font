@@ -51,7 +51,7 @@ export function MobileWordRow({
         </label>
       ) : <Link aria-label={word.englishWord} className="mobile-word-row__link" to={href}>{content}</Link>}
 
-      <MobileBritishPronunciationButton ariaLabel={`播放 ${word.englishWord} 的英式发音`} word={word.englishWord} />
+      <MobileBritishPronunciationButton wordId={word.id} ariaLabel={`播放 ${word.englishWord} 的单词发音`} word={word.englishWord} />
       {!selectionMode && menuItems.length > 0 && (
         <details className="mobile-word-row__menu">
           <summary aria-label={`${word.englishWord} 更多操作`}><span aria-hidden="true">···</span></summary>

@@ -94,6 +94,7 @@ export const mobileRouteConfig: RouteObject[] = orderedMobilePaths.map(
       "/mobile/tools/context-lab/:taskId/answer": async () => ({ Component: (await import("../features/reading/MobileArticleReader")).MobileArticleReader }),
       "/mobile/tools/context-lab/:taskId/attempts": async () => ({ Component: (await import("../features/reading/MobileArticleHistory")).MobileArticleHistory }),
       "/mobile/tools/context-lab/:taskId/result/:attemptId": async () => ({ Component: (await import("../features/reading/MobileArticleHistory")).MobileArticleResult }),
+      "/mobile/ai-listening": async () => ({ Component: (await import("@/aiListening/AiListeningPage")).default }),
       "/mobile/learn": async () => ({
         Component: (await import("../features/study/MobileLearnPage"))
           .MobileLearnPage,

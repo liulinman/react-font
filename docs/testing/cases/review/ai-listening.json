@@ -1,0 +1,412 @@
+{
+  "schemaVersion": 1,
+  "source": "docs/prd/review/features/ai-listening/prd.md",
+  "sourceHash": "ed03af6c70cf2c93ada26068c59d1a0ba04f2066c98bf98db143d004e8db2107",
+  "cases": [
+    {
+      "id": "review/ai-listening/AC-01/CASE-01",
+      "title": "管理员分别保存两家配置并刷新，只显示掩码；空 Key 保存保留原值，独立清除移除秘密。",
+      "status": "draft",
+      "requirementIds": [
+        "review/ai-listening/AC-01"
+      ],
+      "preconditions": [
+        "隔离MySQL、真实前后台HTTP、两学生账号和管理员；仅使用本轮创建的数据。",
+        "真实供应商条款须单独配置有效凭据与剩余额度。"
+      ],
+      "steps": [
+        "管理员在安全本机管理页分别保存DeepSeek和豆包测试凭据。",
+        "刷新页面，留空Key更新模型，再清除密钥。"
+      ],
+      "expectedResults": [
+        "管理员分别保存两家配置并刷新，只显示掩码；空 Key 保存保留原值，独立清除移除秘密。"
+      ],
+      "cleanup": "停止一次性测试服务并清理测试DB；生产不创建学习测试数据。",
+      "bindings": [],
+      "reviewNote": "已逐条核对PRD；待完整脚本断言与实际执行后再标ready，供应商替身不证明真实AI质量。"
+    },
+    {
+      "id": "review/ai-listening/AC-02/CASE-01",
+      "title": "匿名及普通用户直接访问管理读取、写入、测试均被拒绝；学生互查会话、答案和音频被拒绝。",
+      "status": "draft",
+      "requirementIds": [
+        "review/ai-listening/AC-02"
+      ],
+      "preconditions": [
+        "隔离MySQL、真实前后台HTTP、两学生账号和管理员；仅使用本轮创建的数据。",
+        "真实供应商条款须单独配置有效凭据与剩余额度。"
+      ],
+      "steps": [
+        "匿名、普通账号请求全部管理接口。",
+        "以第二账号请求首账号会话、结果与音频。"
+      ],
+      "expectedResults": [
+        "匿名及普通用户直接访问管理读取、写入、测试均被拒绝；学生互查会话、答案和音频被拒绝。"
+      ],
+      "cleanup": "停止一次性测试服务并清理测试DB；生产不创建学习测试数据。",
+      "bindings": [],
+      "reviewNote": "已逐条核对PRD；待完整脚本断言与实际执行后再标ready，供应商替身不证明真实AI质量。"
+    },
+    {
+      "id": "review/ai-listening/AC-03/CASE-01",
+      "title": "缺少加密主密钥时拒绝保存秘密；数据库、管理响应、学习响应、日志和构建产物无测试 Key 明文；更换后新请求使用新配置版本。",
+      "status": "draft",
+      "requirementIds": [
+        "review/ai-listening/AC-03"
+      ],
+      "preconditions": [
+        "隔离MySQL、真实前后台HTTP、两学生账号和管理员；仅使用本轮创建的数据。",
+        "真实供应商条款须单独配置有效凭据与剩余额度。"
+      ],
+      "steps": [
+        "无主密钥服务保存Key并观察拒绝。",
+        "启用主密钥保存、更换Key；读取DB与响应并扫描已记录日志/产物。"
+      ],
+      "expectedResults": [
+        "缺少加密主密钥时拒绝保存秘密；数据库、管理响应、学习响应、日志和构建产物无测试 Key 明文；更换后新请求使用新配置版本。"
+      ],
+      "cleanup": "停止一次性测试服务并清理测试DB；生产不创建学习测试数据。",
+      "bindings": [],
+      "reviewNote": "已逐条核对PRD；待完整脚本断言与实际执行后再标ready，供应商替身不证明真实AI质量。"
+    },
+    {
+      "id": "review/ai-listening/AC-04/CASE-01",
+      "title": "使用真实 DeepSeek 获得合法响应，真实豆包合成固定英文句并可播放；保存不等于可用，mock 不算联调通过。",
+      "status": "draft",
+      "requirementIds": [
+        "review/ai-listening/AC-04"
+      ],
+      "preconditions": [
+        "隔离MySQL、真实前后台HTTP、两学生账号和管理员；仅使用本轮创建的数据。",
+        "真实供应商条款须单独配置有效凭据与剩余额度。"
+      ],
+      "steps": [
+        "安全注入实际供应商凭据并执行两家真实连接测试。",
+        "下载并播放固定英文合成样本，记录供应商成功与音质结论。"
+      ],
+      "expectedResults": [
+        "使用真实 DeepSeek 获得合法响应，真实豆包合成固定英文句并可播放；保存不等于可用，mock 不算联调通过。"
+      ],
+      "cleanup": "停止一次性测试服务并清理测试DB；生产不创建学习测试数据。",
+      "bindings": [],
+      "reviewNote": "已逐条核对PRD；待完整脚本断言与实际执行后再标ready，供应商替身不证明真实AI质量。"
+    },
+    {
+      "id": "review/ai-listening/AC-05/CASE-01",
+      "title": "认证失败、资源/模型权限、429、额度、超时和禁用分别给可恢复状态；不输出敏感上游报文。",
+      "status": "draft",
+      "requirementIds": [
+        "review/ai-listening/AC-05"
+      ],
+      "preconditions": [
+        "隔离MySQL、真实前后台HTTP、两学生账号和管理员；仅使用本轮创建的数据。",
+        "真实供应商条款须单独配置有效凭据与剩余额度。"
+      ],
+      "steps": [
+        "供应商替身依次返回401/403/429/额度不足及超时。",
+        "观察界面和接口分类、重试入口与日志脱敏。"
+      ],
+      "expectedResults": [
+        "认证失败、资源/模型权限、429、额度、超时和禁用分别给可恢复状态；不输出敏感上游报文。"
+      ],
+      "cleanup": "停止一次性测试服务并清理测试DB；生产不创建学习测试数据。",
+      "bindings": [],
+      "reviewNote": "已逐条核对PRD；待完整脚本断言与实际执行后再标ready，供应商替身不证明真实AI质量。"
+    },
+    {
+      "id": "review/ai-listening/AC-06/CASE-01",
+      "title": "释义错词得到疑误建议，原记录不变且不出计分题；AI失败不通过；修改词义后旧校验与题目失效。",
+      "status": "draft",
+      "requirementIds": [
+        "review/ai-listening/AC-06"
+      ],
+      "preconditions": [
+        "隔离MySQL、真实前后台HTTP、两学生账号和管理员；仅使用本轮创建的数据。",
+        "真实供应商条款须单独配置有效凭据与剩余额度。"
+      ],
+      "steps": [
+        "API创建正确词与明显释义错词，开始会话。",
+        "检查疑误/原词不变；编辑词义后重试旧题和重新校验。"
+      ],
+      "expectedResults": [
+        "释义错词得到疑误建议，原记录不变且不出计分题；AI失败不通过；修改词义后旧校验与题目失效。"
+      ],
+      "cleanup": "停止一次性测试服务并清理测试DB；生产不创建学习测试数据。",
+      "bindings": [],
+      "reviewNote": "已逐条核对PRD；待完整脚本断言与实际执行后再标ready，供应商替身不证明真实AI质量。"
+    },
+    {
+      "id": "review/ai-listening/AC-07/CASE-01",
+      "title": "桌面及移动均先看词，之后直接进入场景听力，无独立默写步骤；阅读、笔记及既有学习入口保留。",
+      "status": "draft",
+      "requirementIds": [
+        "review/ai-listening/AC-07"
+      ],
+      "preconditions": [
+        "隔离MySQL、真实前后台HTTP、两学生账号和管理员；仅使用本轮创建的数据。",
+        "真实供应商条款须单独配置有效凭据与剩余额度。"
+      ],
+      "steps": [
+        "桌面和390px移动视口选词开始。",
+        "完成看词直接进入听力；只读访问原阅读/笔记/学习入口。"
+      ],
+      "expectedResults": [
+        "桌面及移动均先看词，之后直接进入场景听力，无独立默写步骤；阅读、笔记及既有学习入口保留。"
+      ],
+      "cleanup": "停止一次性测试服务并清理测试DB；生产不创建学习测试数据。",
+      "bindings": [],
+      "reviewNote": "已逐条核对PRD；待完整脚本断言与实际执行后再标ready，供应商替身不证明真实AI质量。"
+    },
+    {
+      "id": "review/ai-listening/AC-08/CASE-01",
+      "title": "真实 DeepSeek 的每题关联所选词/义项、新句子、一个空缺和实际词形；缺词、损坏JSON、映射歧义被拒绝。",
+      "status": "draft",
+      "requirementIds": [
+        "review/ai-listening/AC-08"
+      ],
+      "preconditions": [
+        "隔离MySQL、真实前后台HTTP、两学生账号和管理员；仅使用本轮创建的数据。",
+        "真实供应商条款须单独配置有效凭据与剩余额度。"
+      ],
+      "steps": [
+        "实际DeepSeek生成题目并核对目标词义/词形/新句。",
+        "替身返回缺词/损坏JSON/双空缺，验证拒绝且不计分。"
+      ],
+      "expectedResults": [
+        "真实 DeepSeek 的每题关联所选词/义项、新句子、一个空缺和实际词形；缺词、损坏JSON、映射歧义被拒绝。"
+      ],
+      "cleanup": "停止一次性测试服务并清理测试DB；生产不创建学习测试数据。",
+      "bindings": [],
+      "reviewNote": "已逐条核对PRD；待完整脚本断言与实际执行后再标ready，供应商替身不证明真实AI质量。"
+    },
+    {
+      "id": "review/ai-listening/AC-09/CASE-01",
+      "title": "首次提交前页面及题目接口无答案文本/完整台词；播放含完整答案；主动揭示被记录且不计首次独立正确。",
+      "status": "draft",
+      "requirementIds": [
+        "review/ai-listening/AC-09"
+      ],
+      "preconditions": [
+        "隔离MySQL、真实前后台HTTP、两学生账号和管理员；仅使用本轮创建的数据。",
+        "真实供应商条款须单独配置有效凭据与剩余额度。"
+      ],
+      "steps": [
+        "检查首次题目JSON及页面不含答案/解释/完整台词。",
+        "播放后填写；另题主动揭示再提交，验证不计独立正确。"
+      ],
+      "expectedResults": [
+        "首次提交前页面及题目接口无答案文本/完整台词；播放含完整答案；主动揭示被记录且不计首次独立正确。"
+      ],
+      "cleanup": "停止一次性测试服务并清理测试DB；生产不创建学习测试数据。",
+      "bindings": [],
+      "reviewNote": "已逐条核对PRD；待完整脚本断言与实际执行后再标ready，供应商替身不证明真实AI质量。"
+    },
+    {
+      "id": "review/ai-listening/AC-10/CASE-01",
+      "title": "真实豆包样本覆盖单词、短语、record名/动词、read时态、完整句及双人场景；人工试听核实准确性、自然度和角色音色，无标签朗读。",
+      "status": "draft",
+      "requirementIds": [
+        "review/ai-listening/AC-10"
+      ],
+      "preconditions": [
+        "隔离MySQL、真实前后台HTTP、两学生账号和管理员；仅使用本轮创建的数据。",
+        "真实供应商条款须单独配置有效凭据与剩余额度。"
+      ],
+      "steps": [
+        "真实豆包合成单词/短语、record两词性、read两时态及双人场景。",
+        "人工听样本核实目标读音、语气和角色，不以MP3文件存在代替。"
+      ],
+      "expectedResults": [
+        "真实豆包样本覆盖单词、短语、record名/动词、read时态、完整句及双人场景；人工试听核实准确性、自然度和角色音色，无标签朗读。"
+      ],
+      "cleanup": "停止一次性测试服务并清理测试DB；生产不创建学习测试数据。",
+      "bindings": [],
+      "reviewNote": "已逐条核对PRD；待完整脚本断言与实际执行后再标ready，供应商替身不证明真实AI质量。"
+    },
+    {
+      "id": "review/ai-listening/AC-11/CASE-01",
+      "title": "桌面及移动均可点播、重播、慢速；切词停止旧播放，重复点击不叠播；失败明确且不记学习错误。",
+      "status": "draft",
+      "requirementIds": [
+        "review/ai-listening/AC-11"
+      ],
+      "preconditions": [
+        "隔离MySQL、真实前后台HTTP、两学生账号和管理员；仅使用本轮创建的数据。",
+        "真实供应商条款须单独配置有效凭据与剩余额度。"
+      ],
+      "steps": [
+        "桌面与移动点击播放、重播、慢速，快速切题与离页。",
+        "模拟音频失败，输入保留、不写错误成绩。"
+      ],
+      "expectedResults": [
+        "桌面及移动均可点播、重播、慢速；切词停止旧播放，重复点击不叠播；失败明确且不记学习错误。"
+      ],
+      "cleanup": "停止一次性测试服务并清理测试DB；生产不创建学习测试数据。",
+      "bindings": [],
+      "reviewNote": "已逐条核对PRD；待完整脚本断言与实际执行后再标ready，供应商替身不证明真实AI质量。"
+    },
+    {
+      "id": "review/ai-listening/AC-12/CASE-01",
+      "title": "大小写与首尾空格不影响正确判定，错误词形/拼写不算对；首次提交后稳定显示标准答案和完整台词。",
+      "status": "ready",
+      "requirementIds": [
+        "review/ai-listening/AC-12"
+      ],
+      "preconditions": [
+        "隔离MySQL、真实前后台HTTP、两学生账号和管理员；仅使用本轮创建的数据。",
+        "真实供应商条款须单独配置有效凭据与剩余额度。"
+      ],
+      "steps": [
+        "听后提交含大小写和首尾空格的正确词，另一题提交错词形。",
+        "核实规则判定及提交后完整反馈。"
+      ],
+      "expectedResults": [
+        "大小写与首尾空格不影响正确判定，错误词形/拼写不算对；首次提交后稳定显示标准答案和完整台词。"
+      ],
+      "cleanup": "停止一次性测试服务并清理测试DB；生产不创建学习测试数据。",
+      "bindings": [
+        {
+          "suite": "ai-listening",
+          "title": "AI listening persisted journeys > reviews then hides answers, rejects unheard submission, persists normalized first score and ownership"
+        },
+        {
+          "suite": "ai-listening",
+          "title": "AI listening persisted journeys > reveal stays assisted; wrong spelling stays wrong; skip creates no incorrect result"
+        }
+      ],
+      "reviewNote": "真实HTTP/SQL覆盖大小写首尾空格、错词形、首次反馈与持久化。其余复合AC继续draft，不以7项脚本全绿冒充PRD全覆盖。"
+    },
+    {
+      "id": "review/ai-listening/AC-13/CASE-01",
+      "title": "双击、网络重发、并发提交仅一份首次结果；再次练习保留首次及各次结果；解释失败不影响已保存判定。",
+      "status": "draft",
+      "requirementIds": [
+        "review/ai-listening/AC-13"
+      ],
+      "preconditions": [
+        "隔离MySQL、真实前后台HTTP、两学生账号和管理员；仅使用本轮创建的数据。",
+        "真实供应商条款须单独配置有效凭据与剩余额度。"
+      ],
+      "steps": [
+        "并发提交同一题同一/不同requestUid。",
+        "刷新与再练，核对首份结果和新会话历史。"
+      ],
+      "expectedResults": [
+        "双击、网络重发、并发提交仅一份首次结果；再次练习保留首次及各次结果；解释失败不影响已保存判定。"
+      ],
+      "cleanup": "停止一次性测试服务并清理测试DB；生产不创建学习测试数据。",
+      "bindings": [],
+      "reviewNote": "已逐条核对PRD；待完整脚本断言与实际执行后再标ready，供应商替身不证明真实AI质量。"
+    },
+    {
+      "id": "review/ai-listening/AC-14/CASE-01",
+      "title": "生成失败保留题目与输入可重试/跳过；刷新和跨端恢复本人进度；系统故障与学习错误分开。",
+      "status": "draft",
+      "requirementIds": [
+        "review/ai-listening/AC-14"
+      ],
+      "preconditions": [
+        "隔离MySQL、真实前后台HTTP、两学生账号和管理员；仅使用本轮创建的数据。",
+        "真实供应商条款须单独配置有效凭据与剩余额度。"
+      ],
+      "steps": [
+        "分别在生成/音频/提交响应阶段模拟断网和刷新。",
+        "重登及移动端恢复，重试/跳过后检查成绩。"
+      ],
+      "expectedResults": [
+        "生成失败保留题目与输入可重试/跳过；刷新和跨端恢复本人进度；系统故障与学习错误分开。"
+      ],
+      "cleanup": "停止一次性测试服务并清理测试DB；生产不创建学习测试数据。",
+      "bindings": [],
+      "reviewNote": "已逐条核对PRD；待完整脚本断言与实际执行后再标ready，供应商替身不证明真实AI质量。"
+    },
+    {
+      "id": "review/ai-listening/AC-15/CASE-01",
+      "title": "相同音频重复及并发请求只触发一次上游合成；修改文本、音色、模型、语速或读音版本不命中旧缓存。",
+      "status": "draft",
+      "requirementIds": [
+        "review/ai-listening/AC-15"
+      ],
+      "preconditions": [
+        "隔离MySQL、真实前后台HTTP、两学生账号和管理员；仅使用本轮创建的数据。",
+        "真实供应商条款须单独配置有效凭据与剩余额度。"
+      ],
+      "steps": [
+        "并发请求同一音频，记录上游调用次数。",
+        "分别修改文本/音色/模型/语速/词义版本，核实新缓存。"
+      ],
+      "expectedResults": [
+        "相同音频重复及并发请求只触发一次上游合成；修改文本、音色、模型、语速或读音版本不命中旧缓存。"
+      ],
+      "cleanup": "停止一次性测试服务并清理测试DB；生产不创建学习测试数据。",
+      "bindings": [],
+      "reviewNote": "已逐条核对PRD；待完整脚本断言与实际执行后再标ready，供应商替身不证明真实AI质量。"
+    },
+    {
+      "id": "review/ai-listening/AC-16/CASE-01",
+      "title": "后端频率、并发、日限额和重试上限均能阻止超额调用；管理端显示真实本地用量与命中，无准确价格不编造金额。",
+      "status": "draft",
+      "requirementIds": [
+        "review/ai-listening/AC-16"
+      ],
+      "preconditions": [
+        "隔离MySQL、真实前后台HTTP、两学生账号和管理员；仅使用本轮创建的数据。",
+        "真实供应商条款须单独配置有效凭据与剩余额度。"
+      ],
+      "steps": [
+        "设置低日限额和频率限制，发起重复/并发请求。",
+        "管理员读取用量，核实超额被服务端拒绝、统计对应真实调用。"
+      ],
+      "expectedResults": [
+        "后端频率、并发、日限额和重试上限均能阻止超额调用；管理端显示真实本地用量与命中，无准确价格不编造金额。"
+      ],
+      "cleanup": "停止一次性测试服务并清理测试DB；生产不创建学习测试数据。",
+      "bindings": [],
+      "reviewNote": "已逐条核对PRD；待完整脚本断言与实际执行后再标ready，供应商替身不证明真实AI质量。"
+    },
+    {
+      "id": "review/ai-listening/AC-17/CASE-01",
+      "title": "按需近义词辨析关联当前场景；复查使用新场景，听力答对不自动记为主动表达掌握。",
+      "status": "draft",
+      "requirementIds": [
+        "review/ai-listening/AC-17"
+      ],
+      "preconditions": [
+        "隔离MySQL、真实前后台HTTP、两学生账号和管理员；仅使用本轮创建的数据。",
+        "真实供应商条款须单独配置有效凭据与剩余额度。"
+      ],
+      "steps": [
+        "提交后按需查看近义词解释。",
+        "从历史再练生成新场景，确认不改主动表达掌握等级。"
+      ],
+      "expectedResults": [
+        "按需近义词辨析关联当前场景；复查使用新场景，听力答对不自动记为主动表达掌握。"
+      ],
+      "cleanup": "停止一次性测试服务并清理测试DB；生产不创建学习测试数据。",
+      "bindings": [],
+      "reviewNote": "已逐条核对PRD；待完整脚本断言与实际执行后再标ready，供应商替身不证明真实AI质量。"
+    },
+    {
+      "id": "review/ai-listening/AC-18/CASE-01",
+      "title": "Key仅通过HTTPS管理页或SSH隧道localhost输入；公网HTTP不得提交Key；验证安全入口可保存、测试和清除，不要求全站改造。",
+      "status": "draft",
+      "requirementIds": [
+        "review/ai-listening/AC-18"
+      ],
+      "preconditions": [
+        "隔离MySQL、真实前后台HTTP、两学生账号和管理员；仅使用本轮创建的数据。",
+        "真实供应商条款须单独配置有效凭据与剩余额度。"
+      ],
+      "steps": [
+        "公网HTTP管理页尝试输入/提交Key。",
+        "SSH隧道localhost正常保存/测试/清除，同步检查后端拒绝伪造安全路径。"
+      ],
+      "expectedResults": [
+        "Key仅通过HTTPS管理页或SSH隧道localhost输入；公网HTTP不得提交Key；验证安全入口可保存、测试和清除，不要求全站改造。"
+      ],
+      "cleanup": "停止一次性测试服务并清理测试DB；生产不创建学习测试数据。",
+      "bindings": [],
+      "reviewNote": "已逐条核对PRD；待完整脚本断言与实际执行后再标ready，供应商替身不证明真实AI质量。"
+    }
+  ]
+}

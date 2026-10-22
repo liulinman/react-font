@@ -9,11 +9,12 @@ type MobileWordSelectionBarProps = {
   onBatchLevel(level: number): void;
   onStartLearning(): void;
   onContextLab?(): void;
+  onAiListening?(): void;
   selectedCount: number;
 };
 
 export function MobileWordSelectionBar({
-  disabled = false, onBatchLevel, onStartLearning, onContextLab, selectedCount,
+  disabled = false, onBatchLevel, onStartLearning, onContextLab, onAiListening, selectedCount,
 }: MobileWordSelectionBarProps) {
   const [level, setLevel] = useState(0);
   const canLearn = selectedCount >= 1 && selectedCount <= 20;
@@ -32,6 +33,7 @@ export function MobileWordSelectionBar({
           <summary>更多</summary>
           <div className="word-selection-options">
             <p>已选 {selectedCount} 个词</p>
+            {onAiListening && <button disabled={disabled || selectedCount<1 || selectedCount>10} onClick={onAiListening}>场景听力（1～10词）</button>}
             {onContextLab && <button disabled={disabled || !canGenerate} onClick={onContextLab} type="button">生成文章练习</button>}
             <p className="word-selection-hint">文章练习需要 3～20 个词</p>
             <label>批量掌握程度

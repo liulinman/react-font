@@ -18,6 +18,9 @@
 
 - [电脑端学习导航精简与名称统一](features/desktop-learning-nav/prd.md)（`settings/desktop-learning-nav`，2026-10-22 用户确认）。
 
+
+- [AI 词条校验、场景听力与语音服务管理](../review/features/ai-listening/prd.md)（`review/ai-listening`，2026-10-22 用户确认；含管理员双服务管理、桌面与移动学习）。
+
 ## 覆盖边界与维护
 
 当前状态：待补齐模块 PRD。

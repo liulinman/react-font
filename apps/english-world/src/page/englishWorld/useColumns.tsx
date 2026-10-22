@@ -101,7 +101,7 @@ export const useColumns = (props: Props) => {
             >
               {text}
             </a>
-            <BritishPronunciationButton word={text} />
+            <BritishPronunciationButton wordId={record.id} word={text} />
           </span>
           {hasDisplayNote(record.englishNote) && (
             <span className="word-note-indicator">有笔记</span>

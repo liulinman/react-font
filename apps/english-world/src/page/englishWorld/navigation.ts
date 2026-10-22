@@ -26,6 +26,7 @@ export const HASH_TO_NAV: Record<string, string> = {
 
 export const PATH_TO_NAV: Record<string, string> = {
   "/englishworld": "cockpit",
+  "/englishworld/ai-listening": "aiListening",
   "/englishworld/words": "words",
   "/englishworld/bulk-import": "bulkImport",
   "/englishworld/overwrite-stats": "overwriteStats",
@@ -87,6 +88,7 @@ export function getLegacyPathFromHash(hash: string): string | undefined {
 
 export function getPathForNav(key: string): string {
   const normalizedKey = normalizeActiveKey(key);
+  if (normalizedKey === "aiListening") return "/englishWorld/ai-listening";
 
   if (normalizedKey === "intensiveReading") return "/englishWorld/intensive-reading";
   if (normalizedKey === "readingPractices") return "/englishWorld/reading-practices";

@@ -175,7 +175,7 @@ export function MobileWordDetailPage() {
   const deleteDialogTitle = `删除 ${word.englishWord}？`;
 
   return (
-    <MobilePage className="study-word-detail" title={word.englishWord} actions={<MobileBritishPronunciationButton ariaLabel={`播放 ${word.englishWord} 的英式发音`} word={word.englishWord} />}>
+    <MobilePage className="study-word-detail" title={word.englishWord} actions={<MobileBritishPronunciationButton wordId={word.id} ariaLabel={`播放 ${word.englishWord} 的单词发音`} word={word.englishWord} />}>
       <a href="/mobile/words" onClick={(event) => { event.preventDefault(); navigate("/mobile/words"); }}>返回词库</a>
       <section aria-label="单词概况">
         {word.englishPhonetic && <p>{word.englishPhonetic}</p>}

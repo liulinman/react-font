@@ -95,7 +95,7 @@ describe("MobileWordLibraryPage", () => {
     renderLibrary();
 
     expect(await screen.findByRole("link", { name: /retain/ })).toHaveAttribute("href", "/mobile/words/4");
-    await user.click(screen.getByRole("button", { name: "播放 retain 的英式发音" }));
+    await user.click(screen.getByRole("button", { name: "播放 retain 的单词发音" }));
     expect(screen.getByRole("link", { name: /retain/ })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "筛选" }));
     expect(screen.getByRole("dialog", { name: "筛选词库" })).toBeVisible();

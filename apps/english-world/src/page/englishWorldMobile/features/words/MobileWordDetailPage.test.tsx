@@ -105,7 +105,7 @@ describe("MobileWordDetailPage", () => {
     expect(screen.getByText("来源")).toBeVisible();
     expect(screen.getByText("keep or continue to have")).toBeVisible();
     expect(screen.getByText("动词")).toBeVisible();
-    expect(screen.getByRole("button", { name: "播放 retain 的英式发音" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "播放 retain 的单词发音" })).toBeVisible();
     expect(screen.getByRole("link", { name: "百度查询" })).toHaveAttribute(
       "href",
       "https://www.baidu.com/s?wd=retain",

@@ -891,7 +891,7 @@ const EnglishWorld: React.FC = () => {
               >
                 {record.englishWord}
               </a>
-              <BritishPronunciationButton word={record.englishWord} />
+              <BritishPronunciationButton wordId={record.id} word={record.englishWord} />
             </span>
             <span className="word-phonetic">
               {record.englishPhonetic || "-"}
@@ -1243,6 +1243,7 @@ const EnglishWorld: React.FC = () => {
                         </Button>
                       </div>
                       <div className="word-card-batch-actions">
+                      <Button disabled={selectedCardIds.length<1 || selectedCardIds.length>10} onClick={()=>navigate(`/englishWorld/ai-listening?wordIds=${selectedCardIds.join(",")}`)}>场景听力（1～10词）</Button>
                         <Tooltip
                           title={
                             selectedCardRecords.length < 3

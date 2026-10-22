@@ -12,6 +12,7 @@ export function MobileToolsPage() {
       <p className="study-muted">把词汇变成自己的表达。</p>
       <div className="study-tool-grid">
         {[
+          {title: "场景听力", note: "先看词，再听场景填空", path: "/mobile/ai-listening", icon: <SoundOutline />},
           {title: "知识笔记", note: "记录语法、句型和易错点", path: "/mobile/tools/knowledge-notes", icon: <EditSOutline />},
           {title: "文章阅读与练习", note: "读文章、做题、看解析", path: "/mobile/tools/context-lab", icon: <EditSOutline />},
           {

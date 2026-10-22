@@ -17,6 +17,10 @@
 | `notifications` | [通知与公告](notifications/prd.md) | 已有局部 PRD，待确认模块整体完整性 |
 | `settings` | [设置与站点](settings/prd.md) | 未找到独立正式 PRD，待补齐 |
 
+## 最新跨模块需求
+
+- [AI 词条校验、场景听力与语音服务管理](review/features/ai-listening/prd.md)：DeepSeek 校验与场景生成、豆包发音、管理端双服务配置；主模块 review，关联 vocabulary/context/settings。
+
 ## 目录约定
 
 - `<module>/prd.md`：该模块当前入口、适用需求来源和覆盖缺口。

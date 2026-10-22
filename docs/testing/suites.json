@@ -338,6 +338,17 @@
       "spec": "cypress/e2e/intensive-reading.cy.ts",
       "evidence": "real",
       "externalAI": "local-provider-double"
+    },
+    {
+      "id": "ai-listening",
+      "modules": [
+        "review",
+        "settings",
+        "vocabulary"
+      ],
+      "spec": "cypress/integration/ai-listening.cy.ts",
+      "evidence": "real",
+      "externalAI": "local-provider-double"
     }
   ]
 }

@@ -26,7 +26,8 @@
         "knowledge-notes",
         "word-book",
         "unified-workspace",
-        "readable-notes"
+        "readable-notes",
+        "ai-listening"
       ],
       "designReferences": [
         "docs/superpowers/specs/2026-07-16-word-library-query-pagination-consistency-design.md",
@@ -40,7 +41,8 @@
       "baselineStatus": "partial",
       "primaryFeatures": [
         "weak-word-repair",
-        "word-journey"
+        "word-journey",
+        "ai-listening"
       ],
       "relatedFeatures": [
         "readable-notes"
@@ -58,7 +60,8 @@
       "relatedFeatures": [
         "weak-word-repair",
         "word-journey",
-        "unified-workspace"
+        "unified-workspace",
+        "ai-listening"
       ],
       "designReferences": [
         "docs/superpowers/specs/2026-06-22-context-lab-learning-loop-mvp-design.md",
@@ -135,7 +138,8 @@
         "desktop-learning-nav"
       ],
       "relatedFeatures": [
-        "unified-workspace"
+        "unified-workspace",
+        "ai-listening"
       ],
       "designReferences": [
         "docs/superpowers/specs/2026-08-17-english-world-mobile-pwa-full-redesign-design.md"
@@ -316,6 +320,17 @@
         "intensive-reading"
       ],
       "prd": "settings/features/desktop-learning-nav/prd.md"
+    },
+    {
+      "id": "ai-listening",
+      "title": "AI 词条校验、场景听力与语音服务管理",
+      "primaryModule": "review",
+      "relatedModules": [
+        "vocabulary",
+        "context",
+        "settings"
+      ],
+      "prd": "review/features/ai-listening/prd.md"
     }
   ]
 }

@@ -1,3 +1,4 @@
+import { stopListeningAudio } from '@/aiListening/audio';
 import type { ComponentType } from "react";
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -118,7 +119,10 @@ const readingPracticeRoute = protectedDesktopLayoutRoute("readingPractices", () 
 
 const intensiveReadingRoute = protectedDesktopLayoutRoute("intensiveReading", () => import("@/intensiveReading/IntensiveReadingPage"));
 
+const aiListeningRoute = protectedDesktopLayoutRoute("aiListening", () => import("@/aiListening/AiListeningPage"));
+
 export const router = createBrowserRouter([
+  { path: "/englishWorld/ai-listening", lazy: aiListeningRoute },
   { path: "/", element: <AppEntry /> },
   {
     path: "/login",
@@ -164,3 +168,6 @@ export const router = createBrowserRouter([
   },
   { path: "*", element: <AppEntry /> },
 ]);
+
+let audioLocation = router.state.location.key;
+router.subscribe(state => { if (state.location.key !== audioLocation) { audioLocation = state.location.key; stopListeningAudio(); } });

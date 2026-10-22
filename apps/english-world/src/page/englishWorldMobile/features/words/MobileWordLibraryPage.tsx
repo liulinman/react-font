@@ -320,7 +320,7 @@ export function MobileWordLibraryPage() {
       </PullToRefresh>
       {query.hasNextPage && <button disabled={query.isFetchingNextPage} onClick={() => void query.fetchNextPage()} type="button">{query.isFetchingNextPage ? "正在加载" : "加载更多"}</button>}
       {selectionMode && (
-        <MobileWordSelectionBar
+        <MobileWordSelectionBar onAiListening={()=>navigate(`/mobile/ai-listening?wordIds=${selectedIds.join(",")}`)}
           disabled={!online || actionPending}
           onBatchLevel={batchSetLevel}
 

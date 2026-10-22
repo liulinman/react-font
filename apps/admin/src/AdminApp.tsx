@@ -1,3 +1,4 @@
+import { AiServicesPanel } from './AiServicesPanel';
 import { ReadingPracticePanel, practiceLabels } from './ReadingPracticePanel';
 import { newRequestId } from './api/readingPractice';
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -16,8 +17,9 @@ import { AnnouncementComposer } from "./AnnouncementComposer";
 import { ScheduleEditor } from "./ScheduleEditor";
 import { categoryLabels, formatDate, formatSchedule, priorityLabels } from "./adminPresentation";
 
-type Section = "practices" | "users" | "announcements" | "schedules" | "history";
+type Section = "ai-services" | "practices" | "users" | "announcements" | "schedules" | "history";
 const sections = [
+  { key: "ai-services" as const, label: "AI 服务管理", icon: <ScheduleOutlined />, description: "配置 DeepSeek 与豆包，管理音色、连接和用量。" },
   { key: "practices" as const, label: "阅读练习", icon: <ScheduleOutlined />, description: "创建和发布练习，跟进学生完成情况。" },
   { key: "users" as const, label: "用户管理", icon: <TeamOutlined />, description: "查找用户，查看账号状态并管理访问权限。" },
   { key: "announcements" as const, label: "公告发布", icon: <SendOutlined />, description: "发布学习提醒和公告，将内容发送给合适的用户。" },
@@ -197,8 +199,9 @@ export function AdminApp() {
       <nav aria-label="后台导航" className="admin-nav">{sections.map(item => <button key={item.key} aria-current={active === item.key ? "page" : undefined} onClick={() => setActive(item.key)}>{item.icon}<span>{item.label}</span></button>)}</nav>
       <a className="admin-site-link" href="/englishWorld/knowledge-notes" target="_blank" rel="noreferrer">打开学习网站 ↗</a>
     </aside>
-    <section className="admin-workspace"><header className="admin-toolbar"><div><span className="admin-eyebrow">ENGLISH WORLD / 管理控制台</span><h1>{section.label}</h1><p>{section.description}</p></div><Space>{!["practices", "announcements"].includes(active) && <Button icon={<ReloadOutlined />} loading={loading} onClick={() => void refresh()}>刷新</Button>}<Button type="text" icon={<LogoutOutlined />} loading={authBusy} onClick={() => void handleLogout()}>退出</Button></Space></header>
+    <section className="admin-workspace"><header className="admin-toolbar"><div><span className="admin-eyebrow">ENGLISH WORLD / 管理控制台</span><h1>{section.label}</h1><p>{section.description}</p></div><Space>{!["practices", "announcements", "ai-services"].includes(active) && <Button icon={<ReloadOutlined />} loading={loading} onClick={() => void refresh()}>刷新</Button>}<Button type="text" icon={<LogoutOutlined />} loading={authBusy} onClick={() => void handleLogout()}>退出</Button></Space></header>
       {error && <Alert className="admin-load-error" type="error" message={error} showIcon action={<Button onClick={() => void refresh()}>重试</Button>} />}
+      {active === "ai-services" && <AiServicesPanel />}
       {active === "practices" && <ReadingPracticePanel initialId={practiceId} />}
       {active === "users" && <div>
         <section className="admin-panel"><div className="admin-list-toolbar"><div><h2>账号列表 <span className="admin-count">{userTotal}</span></h2></div><div className="admin-filters">

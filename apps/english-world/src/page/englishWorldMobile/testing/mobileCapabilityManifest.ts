@@ -1,4 +1,5 @@
 export const MOBILE_CAPABILITIES = [
+  { id: "ai-listening", desktopPath: "/englishWorld/ai-listening", mobilePath: "/mobile/ai-listening" },
   { id: "reading-practices", desktopPath: "/englishWorld/reading-practices", mobilePath: "/mobile/reading-practices" },
   { id: "reading-practice", desktopPath: "/englishWorld/reading-practices/:id", mobilePath: "/mobile/reading-practices/:id" },
   { id: "reading-practice-result", desktopPath: "/englishWorld/reading-practices/:id/result", mobilePath: "/mobile/reading-practices/:id/result" },

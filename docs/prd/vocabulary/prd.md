@@ -24,6 +24,9 @@
 
 - [统一阅读工作区与体验整改](../reading/features/unified-workspace/prd.md)（`reading/unified-workspace`，2026-10-20 用户确认）。
 
+
+- [AI 词条校验、场景听力与语音服务管理](../review/features/ai-listening/prd.md)（`review/ai-listening`，2026-10-22 用户确认；含管理员双服务管理、桌面与移动学习）。
+
 ## 覆盖边界与维护
 
 当前状态：已有局部 PRD，模块整体需求尚未确认完整。

@@ -36,6 +36,7 @@ const navItems: MenuProps["items"] = [
     children: [
       { key: "intensiveReading", icon: <ReadOutlined />, label: "文章精读" },
       { key: "readingPractices", icon: <ReadOutlined />, label: "阅读练习" },
+      { key: "aiListening", icon: <ReadOutlined />, label: "场景听力" },
       { key: "recite", icon: <ReadOutlined />, label: "单词复习" },
       { key: "wordBooks", icon: <BookFilled />, label: "复习手册" },
     ],

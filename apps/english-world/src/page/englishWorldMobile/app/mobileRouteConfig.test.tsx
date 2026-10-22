@@ -16,6 +16,7 @@ type RouteContract = {
 };
 
 const routeContracts: Record<MobileCapabilityId, RouteContract> = {
+  "ai-listening": { url: "/mobile/ai-listening", path: "ai-listening" },
   "reading-practices": { url: "/mobile/reading-practices", path: "reading-practices" },
   "reading-practice": { url: "/mobile/reading-practices/42", path: "reading-practices/:id", params: { id: "42" } },
   "reading-practice-result": { url: "/mobile/reading-practices/42/result", path: "reading-practices/:id/result", params: { id: "42" } },
