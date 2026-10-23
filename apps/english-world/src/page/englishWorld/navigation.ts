@@ -98,7 +98,7 @@ export function getPathForNav(key: string): string {
   if (normalizedKey === "knowledgeNotes") return "/englishWorld/knowledge-notes";
 
   if (normalizedKey === "recite") {
-    return "/englishWorld/recite";
+    return "/englishWorld/ai-listening";
   }
 
   if (normalizedKey === "words") {
@@ -126,7 +126,7 @@ export function getPathForNav(key: string): string {
   }
 
   if (normalizedKey === "ieltsCore") {
-    return "/englishWorld/recite";
+    return "/englishWorld/ai-listening";
   }
 
   if (normalizedKey === "memoryMap") {

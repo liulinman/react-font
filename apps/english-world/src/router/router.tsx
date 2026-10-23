@@ -70,11 +70,6 @@ const settingsRoute = protectedDesktopRoute(() =>
     ({ SystemSettingsPage }) => ({ default: SystemSettingsPage }),
   ),
 );
-const reciteRoute = protectedDesktopRoute(() =>
-  import("@/page/englishWorld/recite/RecitePage").then(({ RecitePage }) => ({
-    default: RecitePage,
-  })),
-);
 const learningSessionRoute = protectedDesktopRoute(() =>
   import("@/page/englishWorld/learning/session/MixedLearningSessionPage").then(
     ({ MixedLearningSessionPage }) => ({ default: MixedLearningSessionPage }),
@@ -144,9 +139,9 @@ export const router = createBrowserRouter([
   { path: "/englishWorld/bulk-import", lazy: bulkImportRoute },
   { path: "/englishWorld/overwrite-stats", lazy: overwriteStatsRoute },
   { path: "/englishWorld/context-lab", lazy: contextLabRoute },
-  { path: "/englishWorld/ielts-core", element: <Navigate to="/englishWorld/recite" replace /> },
+  { path: "/englishWorld/ielts-core", element: <Navigate to="/englishWorld/ai-listening" replace /> },
   { path: "/englishWorld/memory-map", lazy: memoryMapRoute },
-  { path: "/englishWorld/recite", lazy: reciteRoute },
+  { path: "/englishWorld/recite", element: <Navigate to="/englishWorld/ai-listening" replace /> },
   {
     path: "/englishWorld/learn/session/:sessionId",
     lazy: learningSessionRoute,

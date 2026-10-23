@@ -27,7 +27,7 @@ describe("EnglishHeader ToC navigation", () => {
     cleanup();
   });
 
-  it("renders learning child destinations, including IELTS core review, without implementation copy", () => {
+  it("renders learning child destinations, without removed word review, without implementation copy", () => {
     const { container } = render(
       <MemoryRouter initialEntries={["/englishWorld/words"]}>
         <EnglishHeader activeKey="words" />
@@ -43,10 +43,13 @@ describe("EnglishHeader ToC navigation", () => {
     expect(within(navigation as HTMLElement).getByText("批量导入")).toBeInTheDocument();
     expect(within(navigation as HTMLElement).getByText("覆盖统计")).toBeInTheDocument();
     expect(within(navigation as HTMLElement).getByText("学习")).toBeInTheDocument();
-    expect(within(navigation as HTMLElement).getByText("数据")).toBeInTheDocument();
-    expect(within(navigation as HTMLElement).getByText("今日复习")).toBeInTheDocument();
-    expect(within(navigation as HTMLElement).getByText("语境实验室")).toBeInTheDocument();
-    expect(within(navigation as HTMLElement).getByText("雅思核心复习")).toBeInTheDocument();
+    expect(within(navigation as HTMLElement).getByText("数据统计")).toBeInTheDocument();
+    expect(within(navigation as HTMLElement).getByText("场景听力")).toBeInTheDocument();
+    expect(within(navigation as HTMLElement).getByText("文章精读")).toBeInTheDocument();
+    expect(within(navigation as HTMLElement).getByText("阅读练习")).toBeInTheDocument();
+    expect(within(navigation as HTMLElement).getByText("复习手册")).toBeInTheDocument();
+    expect(within(navigation as HTMLElement).queryByText("单词复习")).not.toBeInTheDocument();
+    expect(within(navigation as HTMLElement).queryByText("雅思核心复习")).not.toBeInTheDocument();
     expect(within(navigation as HTMLElement).queryByText("系统设置")).not.toBeInTheDocument();
     expect(screen.queryByText("字段保留版")).not.toBeInTheDocument();
   });
@@ -79,52 +82,15 @@ describe("EnglishHeader ToC navigation", () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByText("数据").closest(".ant-menu-item")).toHaveClass(
+    expect(screen.getByText("数据统计").closest(".ant-menu-item")).toHaveClass(
       "ant-menu-item-selected",
     );
-    await user.click(screen.getByText("今日复习"));
+    await user.click(screen.getByText("场景听力"));
 
     expect(screen.getByTestId("location")).toHaveTextContent(
-      "/englishWorld/recite",
+      "/englishWorld/ai-listening",
     );
-    expect(onNavClick).toHaveBeenCalledWith("recite");
-  });
-
-  it("keeps IELTS core review under the learning primary navigation", () => {
-    const { container } = render(
-      <MemoryRouter initialEntries={["/englishWorld/ielts-core"]}>
-        <EnglishHeader activeKey="ieltsCore" />
-      </MemoryRouter>,
-    );
-
-    expect(screen.getByText("学习").closest(".ant-menu-submenu")).toHaveClass(
-      "ant-menu-submenu-open",
-    );
-    expect(screen.getByText("雅思核心复习").closest(".ant-menu-item")).toHaveClass(
-      "ant-menu-item-selected",
-    );
-    expect(container.querySelector(".english-world-nav-child-note")).toHaveTextContent(
-      "IELTS",
-    );
-  });
-
-  it("opens IELTS core review from the learning submenu", async () => {
-    const user = userEvent.setup();
-    const onNavClick = vi.fn();
-
-    render(
-      <MemoryRouter initialEntries={["/englishWorld/ielts-core"]}>
-        <EnglishHeader activeKey="recite" onNavClick={onNavClick} />
-        <LocationProbe />
-      </MemoryRouter>,
-    );
-
-    await user.click(screen.getByText("雅思核心复习"));
-
-    expect(screen.getByTestId("location")).toHaveTextContent(
-      "/englishWorld/ielts-core",
-    );
-    expect(onNavClick).toHaveBeenCalledWith("ieltsCore");
+    expect(onNavClick).toHaveBeenCalledWith("aiListening");
   });
 
   it("opens bulk import from the vocabulary submenu", async () => {
@@ -212,6 +178,6 @@ describe("EnglishHeader ToC navigation", () => {
     expect(screen.getByTitle("今天")).toBeInTheDocument();
     expect(screen.getByTitle("词库")).toBeInTheDocument();
     expect(screen.getByTitle("学习")).toBeInTheDocument();
-    expect(screen.getByTitle("数据")).toBeInTheDocument();
+    expect(screen.getByTitle("数据统计")).toBeInTheDocument();
   });
 });

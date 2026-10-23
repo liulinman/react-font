@@ -39,7 +39,8 @@ describe("english world navigation helpers", () => {
       "/englishWorld/overwrite-stats",
     );
     expect(getPathForNav("contextLab")).toBe("/englishWorld/context-lab");
-    expect(getPathForNav("ieltsCore")).toBe("/englishWorld/ielts-core");
+    expect(getPathForNav("ieltsCore")).toBe("/englishWorld/ai-listening");
+    expect(getPathForNav("recite")).toBe("/englishWorld/ai-listening");
     expect(getPathForNav("unknown")).toBe("/englishWorld");
   });
 });

@@ -12,6 +12,8 @@ import {
 } from "@/page/englishWorldMobile/pwa/PwaUpdateContext";
 import { router } from "./router";
 
+vi.mock("@/aiListening/AiListeningPage", () => ({ default: () => <div>ai-listening-page</div> }));
+
 const native = vi.hoisted(() => ({ enabled: false }));
 vi.mock("@/native/runtime", () => ({ isNativeApp: () => native.enabled }));
 
@@ -194,7 +196,6 @@ describe("application router desktop branch", () => {
       ["/englishWorld/words", "english-world-page:/englishWorld/words"],
       ["/englishWorld/stats", "english-world-page:/englishWorld/stats"],
       ["/englishWorld/settings", "settings-page"],
-      ["/englishWorld/recite", "recite-page"],
       ["/englishWorld/learn/session/42", "session-42"],
     ]) {
       await router.navigate(path);
@@ -225,10 +226,19 @@ describe("application router desktop branch", () => {
     }
   });
 
-  it("redirects the removed IELTS module to word review", async () => {
-    renderRouter(); await router.navigate("/englishWorld/ielts-core");
-    expect(await screen.findByText("recite-page")).toBeInTheDocument();
-    expect(router.state.location.pathname).toBe("/englishWorld/recite");
+  it.each(["/englishWorld/ielts-core", "/englishWorld/recite?view=result&sessionId=42"])("redirects removed review URL %s to scene listening", async (path) => {
+    renderRouter(); await router.navigate(path);
+    await waitFor(() => expect(router.state.location.pathname).toBe("/englishWorld/ai-listening"));
+    expect(router.state.location.search).toBe("");
+    expect(await screen.findByText("ai-listening-page")).toBeInTheDocument();
+    expect(screen.queryByText("recite-page")).not.toBeInTheDocument();
+  });
+  it("protects the replacement of the removed review route", async () => {
+    authState.isAuthenticated = false;
+    renderRouter();
+    await router.navigate("/englishWorld/recite");
+    await waitFor(() => expect(router.state.location.pathname).toBe("/login"));
+    expect(screen.queryByText("ai-listening-page")).not.toBeInTheDocument();
   });
   it("preserves the desktop auth redirect and source location", async () => {
     authState.isAuthenticated = false;

@@ -8,7 +8,7 @@ import "../englishWorldMobile/styles/mobile-tokens.css";
 import "./Login.css";
 
 const { TabPane } = Tabs;
-const DEFAULT_AFTER_LOGIN_PATH = "/englishWorld/recite";
+const DEFAULT_AFTER_LOGIN_PATH = "/englishWorld/ai-listening";
 
 const LOGIN_POINTS = [
   {
