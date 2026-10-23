@@ -3,8 +3,13 @@ let current: HTMLAudioElement | null = null;
 let controller: AbortController | null = null;
 let url = "";
 let generation = 0;
+export type PlaybackState = "loading" | "playing" | "idle";
+let stateListener: ((state: PlaybackState) => void) | undefined;
 export function stopListeningAudio() {
   generation++;
+  const notify = stateListener;
+  stateListener = undefined;
+  notify?.("idle");
   controller?.abort();
   controller = null;
   if (current) {
@@ -44,10 +49,14 @@ export async function playListeningAudio(
     slow?: boolean;
     onPlaying?: () => void | Promise<void>;
     onError?: (error: Error) => void;
+    onStateChange?: (state: PlaybackState) => void;
   } = {},
 ) {
   stopListeningAudio();
   const token = generation;
+  stateListener = options.onStateChange;
+  stateListener?.("loading");
+  try {
   controller = new AbortController();
   const blob = await audioFetch(path, options.body, controller.signal);
   if (token !== generation) return;
@@ -58,6 +67,8 @@ export async function playListeningAudio(
   current = audio;
   audio.playbackRate = options.slow ? 0.8 : 1;
   audio.preservesPitch = true;
+  audio.addEventListener("waiting", () => { if (token === generation) stateListener?.("loading"); });
+  audio.addEventListener("playing", () => { if (token === generation) stateListener?.("playing"); });
   audio.addEventListener(
     "playing",
     () => {
@@ -83,4 +94,8 @@ export async function playListeningAudio(
     { once: true },
   );
   await audio.play();
+  } catch (error) {
+    if (token === generation) stopListeningAudio();
+    throw error;
+  }
 }

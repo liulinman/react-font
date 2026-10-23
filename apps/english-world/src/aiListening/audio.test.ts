@@ -34,12 +34,21 @@ it("new audio stops old playback, records playing only when actual event fires",
   );
   vi.mocked(audioFetch).mockResolvedValue(new Blob(["audio"]));
   const played = vi.fn();
-  await playListeningAudio("/one", { onPlaying: played });
+  const state = vi.fn();
+  await playListeningAudio("/one", { onPlaying: played, onStateChange: state });
+  expect(state).toHaveBeenLastCalledWith("loading");
   expect(played).not.toHaveBeenCalled();
   instances[0].dispatchEvent(new Event("playing"));
   expect(played).toHaveBeenCalledTimes(1);
+  expect(state).toHaveBeenLastCalledWith("playing");
+  instances[0].dispatchEvent(new Event("waiting"));
+  expect(state).toHaveBeenLastCalledWith("loading");
+  instances[0].dispatchEvent(new Event("playing"));
+  expect(state).toHaveBeenLastCalledWith("playing");
+  expect(played).toHaveBeenCalledTimes(1);
   await playListeningAudio("/two");
   expect(instances[0].pause).toHaveBeenCalled();
+  expect(state).toHaveBeenLastCalledWith("idle");
 });
 it("late response after leaving cannot start playing", async () => {
   let resolve!: (blob: Blob) => void;

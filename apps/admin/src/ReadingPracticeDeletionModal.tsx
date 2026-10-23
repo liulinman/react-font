@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { Alert, Button, Checkbox, Modal, Spin } from 'antd';
+import { Alert, Button, Modal, Spin } from 'antd';
+import './ReadingPracticeDeletionModal.css';
 import request from '@font/api';
 import { deletePractice, previewPracticeDeletion, type DeletionScope, type PracticeDeletionPreview, type PracticeDeletionResult } from './api/readingPractice';
 
@@ -30,20 +31,29 @@ export function ReadingPracticeDeletionModal({ id, onClose, onDeleted }: { id: n
     finally { locked.current = false; setBusy(false); }
   };
   const counts = preview?.counts;
-  return <Modal open title="永久删除练习" width={640} okText="永久删除" cancelText="取消" okButtonProps={{ danger: true, disabled: !preview || loading || !acknowledged }} confirmLoading={busy} cancelButtonProps={{ disabled: busy }} closable={!busy} maskClosable={!busy} keyboard={!busy} onCancel={() => { if (!busy) onClose(); }} onOk={() => void remove()}>
-    <Alert type="warning" showIcon message="删除后无法恢复" description="所选练习及其答卷、成绩、接收记录、通知、反馈和专属原稿将永久删除，学生将无法继续作答或查看成绩。学生账号、词库和笔记不受影响。" />
-    <p><Checkbox checked={scope === 'family'} disabled={busy} onChange={e => { setError(''); setScope(e.target.checked ? 'family' : 'current'); }}>同时删除本练习的所有版本</Checkbox></p>
-    <p>{scope === 'current' ? '当前范围：仅删除当前版本，其他版本保留。' : '当前范围：删除本练习的所有版本。'}</p>
-    {error && <Alert type="error" showIcon message={error} />}
-    {loading && <div role="status"><Spin size="small" /> 正在核实删除范围…</div>}
-    {!loading && !preview && <Button onClick={() => { setError(''); void load(scope); }}>重新加载删除范围</Button>}
-    {preview && counts && <>
-      <ul aria-label="将删除的练习版本" style={{ maxHeight: 160, overflow: 'auto', paddingLeft: 22 }}>{preview.versions.map(v => <li key={v.id}>{v.title} · v{v.version} · {labels[v.status]}</li>)}</ul>
-      <div aria-label="删除影响范围" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8, marginBottom: 16 }}>
-        <span>练习版本：{counts.practices}</span><span>接收记录：{counts.assignments}</span><span>答卷及成绩：{counts.submissions}</span><span>通知：{counts.notifications}</span><span>阅读回执：{counts.receipts}</span><span>反馈及作答历史：{counts.events}</span><span>生成记录：{counts.runs}</span><span>专属原稿及附件：{counts.sources}</span>
+  return <Modal open centered title="永久删除练习" className="practice-deletion-modal" width={560} okText="永久删除" cancelText="取消" okButtonProps={{ danger: true, disabled: !preview || loading || !acknowledged }} confirmLoading={busy} cancelButtonProps={{ disabled: busy }} closable={!busy} maskClosable={!busy} keyboard={!busy} onCancel={() => { if (!busy) onClose(); }} onOk={() => void remove()}>
+    <p className="deletion-intro">删除后，学生将无法继续作答或查看相关成绩。此操作无法恢复。</p>
+    <section className="deletion-scope" aria-label="删除版本范围">
+      <h3>删除范围</h3>
+      <div className="deletion-range-options" role="radiogroup" aria-label="删除版本范围">
+        {(['current', 'family'] as const).map(value => <label key={value} className={scope === value ? 'deletion-range selected' : 'deletion-range'}>
+          <input type="radio" name={`deletion-scope-${id}`} value={value} checked={scope === value} disabled={busy} onChange={() => { setError(''); setScope(value); }} />
+          <span><strong>{value === 'current' ? '仅当前版本' : '所有版本'}</strong><small>{value === 'current' ? '其他版本保留' : '同时删除本练习的所有版本'}</small></span>
+        </label>)}
       </div>
-      <p>仍被其他练习使用的共用原稿将保留：{counts.sharedSources}。专属附件如未能立即清理，将进入后台重试。</p>
-    </>}
-    <Checkbox checked={acknowledged} disabled={!preview || loading || busy} onChange={e => setAcknowledged(e.target.checked)}>我已了解上述删除范围及不可恢复的后果，确认永久删除</Checkbox>
+    </section>
+    {error && <Alert type="error" showIcon message={error} />}
+    {loading && <div className="deletion-loading" role="status"><Spin size="small" /> 正在核实删除范围…</div>}
+    {!loading && !preview && <Button onClick={() => { setError(''); void load(scope); }}>重新加载删除范围</Button>}
+    {preview && counts && <section className="deletion-impact" aria-label="删除影响范围">
+      <div className="deletion-version-list" aria-label="将删除的练习版本">{preview.versions.map(v => <div key={v.id}><strong>{v.title}</strong><span>v{v.version} · {labels[v.status]}</span></div>)}</div>
+      <div className="deletion-summary"><div><strong>{counts.practices}</strong><span>练习版本</span></div><div><strong>{counts.assignments}</strong><span>接收记录</span></div><div><strong>{counts.submissions}</strong><span>答卷及成绩</span></div></div>
+      <details className="deletion-details"><summary>查看完整删除清单</summary>
+        <div className="deletion-counts"><span>练习版本：{counts.practices}</span><span>接收记录：{counts.assignments}</span><span>答卷及成绩：{counts.submissions}</span><span>通知：{counts.notifications}</span><span>阅读回执：{counts.receipts}</span><span>反馈及作答历史：{counts.events}</span><span>生成记录：{counts.runs}</span><span>专属原稿及附件：{counts.sources}</span><span>保留共用原稿：{counts.sharedSources}</span></div>
+        <p>仍被其他练习使用的共用原稿将保留。专属附件如未能立即清理，将在后台自动重试。</p>
+      </details>
+    </section>}
+    <p className="deletion-preserved">学生账号、词库和笔记不受影响。</p>
+    <label className="deletion-acknowledgement"><input type="checkbox" name={`deletion-confirm-${id}`} checked={acknowledged} disabled={!preview || loading || busy} onChange={e => setAcknowledged(e.target.checked)} /><span>我已了解删除范围，确认永久删除且无法恢复</span></label>
   </Modal>;
 }

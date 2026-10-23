@@ -43,7 +43,8 @@ export default function AiListeningPage() {
   }>({ sessions: [], reviewWordIds: [] });
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const [preparingAudio, setPreparingAudio] = useState("");
+  const [playback, setPlayback] = useState<{ qid: string; slow: boolean; state: "loading" | "playing" }>();
+  const audioRun = useRef(0);
   const [retrying, setRetrying] = useState<Record<string, boolean>>({});
   const [wordAudioFailed, setWordAudioFailed] = useState<
     Record<number, boolean>
@@ -53,6 +54,8 @@ export default function AiListeningPage() {
   const runId = useRef(0);
   const invalidate = () => {
     epoch.current++;
+    audioRun.current++;
+    setPlayback(undefined);
     for (const request of requests.current) request.abort();
     requests.current.clear();
     stopListeningAudio();
@@ -194,12 +197,17 @@ export default function AiListeningPage() {
     const version = epoch.current;
     const root = `/ai-learning/sessions/${session.id}/questions/${qid}`;
     let began = false;
-    setPreparingAudio(qid);
+    const audioToken = ++audioRun.current;
+    setPlayback({ qid, slow, state: "loading" });
     try {
       await playListeningAudio(
         `${root}/audio${retry ? `?retryUid=${requestUid()}` : ""}`,
         {
           slow,
+          onStateChange: (state) => {
+            if (version !== epoch.current || audioToken !== audioRun.current) return;
+            setPlayback(state === "idle" ? undefined : { qid, slow, state });
+          },
           onError: (e) => {
             if (version === epoch.current) {
               setAudioFailed((v) => ({ ...v, [qid]: true }));
@@ -231,6 +239,7 @@ export default function AiListeningPage() {
     } catch (e) {
       if (e instanceof DOMException && e.name === "AbortError") return;
       if (version !== epoch.current) return;
+      if (audioToken === audioRun.current) setPlayback(undefined);
       setAudioFailed((v) => ({ ...v, [qid]: true }));
       setError(e instanceof Error ? e.message : "音频失败");
       if (!began)
@@ -238,9 +247,6 @@ export default function AiListeningPage() {
           type: "audio_failed",
           requestUid: requestUid(),
         }).catch(() => {});
-    } finally {
-      if (version === epoch.current)
-        setPreparingAudio((current) => (current === qid ? "" : current));
     }
   };
   return (
@@ -282,8 +288,7 @@ export default function AiListeningPage() {
           <span>当前内容已保留，请检查连接后重试刚才的操作。</span>
         </div>
       )}
-      {busy && <p role="status">正在准备，请稍候…</p>}
-      {preparingAudio && <p role="status">正在准备音频，请稍候…</p>}
+      {busy && <span className="ai-busy-status" role="status">正在处理，请稍候…</span>}
       {!session ? (
         <section className="ai-selection-panel" ref={stageRef}>
           <div className="ai-section-heading">
@@ -376,7 +381,6 @@ export default function AiListeningPage() {
                 lock.current = false;
                 setBusy(false);
                 setSession(undefined);
-                setPreparingAudio("");
                 setRetrying({});
                 ids.current = {};
                 setParams({});
@@ -552,27 +556,30 @@ export default function AiListeningPage() {
               <div className="ai-listening-actions">
                 <button
                   className="ai-primary-button ai-play-button"
-                  aria-label="播放完整句子"
-                  title="播放完整句子"
+                  aria-label={playback?.qid === q.id && !playback.slow ? (playback.state === "loading" ? "正在准备音频" : "正在播放，点击停止") : "播放完整句子"}
+                  title={playback?.qid === q.id && !playback.slow ? (playback.state === "loading" ? "正在准备音频" : "正在播放，点击停止") : "播放完整句子"}
+                  aria-busy={playback?.qid === q.id && !playback.slow && playback.state === "loading"}
                   disabled={busy}
-                  onClick={() => void play(q.id)}
+                  onClick={() => playback?.qid === q.id && !playback.slow ? stopListeningAudio() : void play(q.id)}
                 >
-                  <svg
+                  {playback?.qid === q.id && !playback.slow ? <span aria-hidden="true" className={playback.state === "loading" ? "ai-audio-spinner" : "ai-audio-playing"}>{playback.state === "playing" && <><i /><i /><i /></>}</span> : <svg
                     aria-hidden="true"
                     viewBox="0 0 24 24"
                     width="22"
                     height="22"
                   >
                     <path fill="currentColor" d="M8 5v14l11-7z" />
-                  </svg>
+                  </svg>}
                 </button>
                 <button
                   className="ai-slow-button"
-                  aria-label="慢速播放"
-                  title="慢速播放"
+                  aria-label={playback?.qid === q.id && playback.slow ? (playback.state === "loading" ? "正在准备慢速音频" : "正在慢速播放，点击停止") : "慢速播放"}
+                  title="慢速播放 · 0.8倍速"
+                  aria-busy={playback?.qid === q.id && playback.slow && playback.state === "loading"}
                   disabled={busy}
-                  onClick={() => void play(q.id, true)}
+                  onClick={() => playback?.qid === q.id && playback.slow ? stopListeningAudio() : void play(q.id, true)}
                 >
+                  {playback?.qid === q.id && playback.slow && <span aria-hidden="true" className={playback.state === "loading" ? "ai-audio-spinner" : "ai-audio-playing"}>{playback.state === "playing" && <><i /><i /><i /></>}</span>}
                   <span aria-hidden="true">0.8×</span>
                 </button>
                 {audioFailed[q.id] && (

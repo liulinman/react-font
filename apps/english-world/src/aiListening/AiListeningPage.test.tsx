@@ -1,4 +1,4 @@
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, expect, it, vi } from "vitest";
@@ -11,6 +11,7 @@ vi.mock("./api", () => ({
   listeningFetch: vi.fn(),
 }));
 import { listeningFetch } from "./api";
+import { playListeningAudio } from "./audio";
 import AiListeningPage from "./AiListeningPage";
 afterEach(() => {
   cleanup();
@@ -256,6 +257,14 @@ it("hides Chinese context until requested and offers an icon play control", asyn
   expect(screen.queryByText("水壶里有很多水垢")).toBeNull();
   const play = screen.getByRole("button", { name: "播放完整句子" });
   expect(play.textContent).toBe("");
+  await userEvent.click(play);
+  const options = vi.mocked(playListeningAudio).mock.calls.slice(-1)[0]![1]!;
+  expect(screen.getByRole("button", {name:"正在准备音频"}).getAttribute("aria-busy")).toBe("true");
+  expect(screen.queryByText("正在准备音频，请稍候…")).toBeNull();
+  act(() => options.onStateChange?.("playing"));
+  expect(screen.getByRole("button", {name:"正在播放，点击停止"})).toBeTruthy();
+  act(() => options.onStateChange?.("idle"));
+  expect(screen.getByRole("button", {name:"播放完整句子"})).toBeTruthy();
   await userEvent.click(screen.getByRole("button", { name: "查看中文提示" }));
   expect(screen.getByText("水壶里有很多水垢")).toBeTruthy();
   await userEvent.click(screen.getByRole("button", { name: "隐藏中文提示" }));

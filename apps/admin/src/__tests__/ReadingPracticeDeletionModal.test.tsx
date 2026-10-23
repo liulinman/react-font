@@ -17,7 +17,7 @@ it('refreshes scope and token and requires reconfirmation after failure', async 
  const done = vi.fn(); let fail = true; const user = userEvent.setup();
  send.mockImplementation(async r => { if (r.method === 'GET') return preview(r.data.scope, fail ? 'old' : 'fresh'); if (fail) { fail = false; throw { code: 409, message: '范围已变化' }; } return { deleted: true, practiceIds: [1,2], sourceCleanup: { pending: true } }; });
  render(<ReadingPracticeDeletionModal id={1} onClose={vi.fn()} onDeleted={done} />);
- await screen.findByText('答卷及成绩：1'); await user.click(screen.getByRole('checkbox', { name: '同时删除本练习的所有版本' })); await screen.findByText('练习版本：2');
+ await screen.findByText('答卷及成绩：1'); await user.click(screen.getByRole('radio', { name: /所有版本/ })); await screen.findByText('练习版本：2');
  await user.click(screen.getByRole('checkbox', { name: /我已了解/ })); await user.click(screen.getByRole('button', { name: /永久删除$/ }));
  await screen.findByText(/删除未完成/); await waitFor(() => expect(screen.getByRole('button', { name: /永久删除$/ })).toBeDisabled()); await waitFor(() => expect(screen.getByRole('checkbox', { name: /我已了解/ })).toBeEnabled()); expect(screen.getByRole('checkbox', { name: /我已了解/ })).not.toBeChecked(); expect(done).not.toHaveBeenCalled(); expect(send.mock.calls.filter(([r]) => r.method === 'DELETE')).toHaveLength(1);
  await user.click(screen.getByRole('checkbox', { name: /我已了解/ })); await user.click(screen.getByRole('button', { name: /永久删除$/ })); await waitFor(() => expect(done).toHaveBeenCalled());
@@ -33,7 +33,7 @@ it('ignores a delayed current preview after switching to all versions', async ()
  let resolveOld: (value: any) => void = () => {};
  send.mockImplementation(r => r.data.scope === 'current' ? new Promise(resolve => { resolveOld = resolve; }) : Promise.resolve(preview('family', 'family-token')));
  const user = userEvent.setup(); render(<ReadingPracticeDeletionModal id={1} onClose={vi.fn()} onDeleted={vi.fn()} />);
- await user.click(screen.getByRole('checkbox', {name:'同时删除本练习的所有版本'})); await screen.findByText('练习版本：2');
+ await user.click(screen.getByRole('radio', {name:/所有版本/})); await screen.findByText('练习版本：2');
  resolveOld(preview()); await waitFor(() => expect(screen.getByText('练习版本：2')).toBeInTheDocument()); expect(screen.queryByText('练习版本：1')).not.toBeInTheDocument();
 });
 
@@ -42,4 +42,17 @@ it('shows the server reason when ownership prevents a deletion preview', async (
  render(<ReadingPracticeDeletionModal id={1} onClose={vi.fn()} onDeleted={vi.fn()} />);
  expect(await screen.findByText(/通知被其他练习共用/)).toBeInTheDocument();
  expect(screen.getByRole('button', {name:'永久删除'})).toBeDisabled();
+});
+
+it('keeps scope selected when acknowledgement changes and resets only acknowledgement when scope changes', async () => {
+ const user = userEvent.setup(); render(<ReadingPracticeDeletionModal id={1} onClose={vi.fn()} onDeleted={vi.fn()} />);
+ await screen.findByText('答卷及成绩：1');
+ const all = screen.getByRole('radio', {name:/所有版本/});
+ await user.click(all); await screen.findByText('练习版本：2');
+ const ack = screen.getByRole('checkbox', {name:/我已了解/});
+ await user.click(ack); expect(all).toBeChecked(); expect(ack).toBeChecked();
+ await user.click(ack); expect(all).toBeChecked(); expect(ack).not.toBeChecked();
+ await user.click(ack); await user.click(screen.getByRole('radio', {name:/仅当前版本/}));
+ await screen.findByText('练习版本：1'); expect(ack).not.toBeChecked(); expect(screen.getByRole('radio', {name:/仅当前版本/})).toBeChecked();
+ expect(send.mock.calls.every(([r]) => r.method === 'GET')).toBe(true);
 });
