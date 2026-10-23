@@ -108,15 +108,16 @@ describe('AI listening persisted journeys', () => {
   });
   it('administrator saves visible limits including unlimited daily characters and refreshes persisted configuration',()=>{
     configure();cy.viewport(1280,1000);cy.visit('/admin/?section=ai-services');
-    cy.get('input[aria-label="每用户每服务每日字符"]').clear().type('0');
-    cy.get('input[aria-label="每用户每服务每日请求"]').clear().type('500');
-    cy.intercept('PUT','**/admin/ai-services/limits').as('saveLimits');
-    cy.contains('button','保存使用限制').click();cy.wait('@saveLimits').its('response.statusCode').should('eq',200);
-    cy.contains('使用限制已保存，新请求按新配置执行').should('be.visible');
-    cy.reload();cy.get('input[aria-label="每用户每服务每日字符"]').should('have.value','0');
-    cy.get('input[aria-label="每用户每服务每日请求"]').should('have.value','500');
+    cy.get('input[aria-label="DeepSeek 每用户每服务每日字符"]').clear().type('0');
+    cy.get('input[aria-label="DeepSeek 每用户每服务每日请求"]').clear().type('500');
+    cy.intercept('PUT','**/admin/ai-services/limits/deepseek').as('saveLimits');
+    cy.contains('button','保存DeepSeek限制').click();cy.wait('@saveLimits').its('response.statusCode').should('eq',200);
+    cy.contains('DeepSeek使用限制已保存').should('be.visible');
+    cy.reload();cy.get('input[aria-label="DeepSeek 每用户每服务每日字符"]').should('have.value','0');
+    cy.get('input[aria-label="DeepSeek 每用户每服务每日请求"]').should('have.value','500');
     cy.contains('已保存的配置').should('be.visible');
-    cy.request('/api/admin/ai-services').its('body.data.limits').should('include',{charactersPerDay:0,requestsPerDay:500});
+    cy.get('input[aria-label="豆包语音 每用户每服务每日字符"]').should('have.value','30000');
+    cy.request('/api/admin/ai-services').its('body.data.providerLimits').should(value=>{expect(value.deepseek.charactersPerDay).eq(0);expect(value.doubao.charactersPerDay).eq(30000);});
     cy.screenshot('ai-services-editable-limits',{capture:'fullPage'});
   });
 

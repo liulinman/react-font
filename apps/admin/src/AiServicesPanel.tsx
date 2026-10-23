@@ -80,6 +80,9 @@ export function AiServicesPanel() {
   const [configs, setConfigs] = useState<AiConfig[]>([]);
   const [usage, setUsage] = useState<AiUsage[]>([]);
   const [limits, setLimits] = useState<Record<string, number>>({});
+  const [providerLimits, setProviderLimits] = useState<
+    Record<Provider, Record<string, number>>
+  >({ deepseek: {}, doubao: {} });
   const [limitsSource, setLimitsSource] = useState("default");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -101,10 +104,17 @@ export function AiServicesPanel() {
       usage: AiUsage[];
       limits?: Record<string, number>;
       limitsSource?: string;
+      providerLimits?: Record<Provider, Record<string, number>>;
     }>("");
     setConfigs([data.deepseek, data.doubao]);
     setUsage(data.usage);
     setLimits(data.limits || {});
+    setProviderLimits(
+      data.providerLimits || {
+        deepseek: data.limits || {},
+        doubao: data.limits || {},
+      },
+    );
     setLimitsSource(data.limitsSource || "default");
   };
   useEffect(() => {
@@ -390,66 +400,149 @@ export function AiServicesPanel() {
         ))}
       </div>
       {Object.keys(limits).length > 0 && (
-        <section className="ai-usage-card ai-limits-editor">
-          <div className="ai-usage-heading">
-            <h3>平台使用限制</h3>
-            <Tag color={limitsSource === "saved" ? "blue" : "default"}>
-              {limitsSource === "saved" ? "已保存的配置" : "当前使用默认值"}
-            </Tag>
+        <>
+          <div className="ai-provider-limit-grid">
+            {(["deepseek", "doubao"] as Provider[]).map((provider) => {
+              const name = provider === "deepseek" ? "DeepSeek" : "豆包语音";
+              const fields = limitFields.filter(
+                (field) =>
+                  field.key !== "globalConcurrency" &&
+                  field.key !==
+                    (provider === "deepseek"
+                      ? "maxAudioAttempts"
+                      : "maxSceneAttempts"),
+              );
+              return (
+                <section
+                  className="ai-usage-card ai-limits-editor"
+                  key={provider}
+                >
+                  <div className="ai-usage-heading">
+                    <h3>{name} 使用限制</h3>
+                    <Tag
+                      color={limitsSource === "default" ? "default" : "blue"}
+                    >
+                      {limitsSource === "default"
+                        ? "当前使用默认值"
+                        : limitsSource === "inherited"
+                          ? "沿用已有配置"
+                          : "已保存的配置"}
+                    </Tag>
+                  </div>
+                  <p className="ai-field-hint">
+                    仅限制{name}，不影响
+                    {provider === "deepseek" ? "豆包语音" : "DeepSeek"}
+                    。频率、每日次数和字符填 0 可关闭对应限制。
+                  </p>
+                  <div className="ai-limit-fields">
+                    {fields.map((field) => (
+                      <label key={field.key}>
+                        <span>{field.label}</span>
+                        <InputNumber
+                          aria-label={`${name} ${field.label}`}
+                          min={field.min}
+                          max={field.max}
+                          precision={0}
+                          value={providerLimits[provider][field.key]}
+                          disabled={busy}
+                          onChange={(value) =>
+                            setProviderLimits((current) => ({
+                              ...current,
+                              [provider]: {
+                                ...current[provider],
+                                [field.key]: value ?? 0,
+                              },
+                            }))
+                          }
+                        />
+                        <small>{provider === "doubao" && field.key === "charactersPerDay" ? "0 为不限制，仅统计朗读文本" : field.hint}</small>
+                      </label>
+                    ))}
+                  </div>
+                  <div className="ai-limit-save">
+                    <Button
+                      type="primary"
+                      disabled={
+                        busy ||
+                        fields.some(
+                          (field) =>
+                            !Number.isInteger(
+                              providerLimits[provider][field.key],
+                            ) ||
+                            providerLimits[provider][field.key] < field.min ||
+                            providerLimits[provider][field.key] > field.max,
+                        )
+                      }
+                      onClick={() =>
+                        void run(async () => {
+                          const values = Object.fromEntries(
+                            fields.map((field) => [
+                              field.key,
+                              providerLimits[provider][field.key],
+                            ]),
+                          );
+                          await aiFetch(`/limits/${provider}`, "PUT", values);
+                          await load();
+                          setNotice(`${name}使用限制已保存`);
+                        })
+                      }
+                    >
+                      保存{name}限制
+                    </Button>
+                  </div>
+                </section>
+              );
+            })}
           </div>
-          <p className="ai-field-hint">
-            这些是本平台的保护规则，不是供应商余额。两家服务分别累计每日用量；前三项填
-            0 可关闭相应限制。保存后对新请求生效，不清空已有用量。
-          </p>
-          <div className="ai-limit-fields">
-            {limitFields.map((field) => (
-              <label key={field.key}>
-                <span>{field.label}</span>
-                <InputNumber
-                  aria-label={field.label}
-                  min={field.min}
-                  max={field.max}
-                  precision={0}
-                  value={limits[field.key]}
-                  disabled={busy}
-                  onChange={(value) =>
-                    setLimits((current) => ({
-                      ...current,
-                      [field.key]: value ?? 0,
-                    }))
-                  }
-                />
-                <small>{field.hint}</small>
-              </label>
-            ))}
-          </div>
-          <div className="ai-limit-save">
+          <section className="ai-usage-card ai-shared-limits">
+            <div>
+              <h3>公共并发设置</h3>
+              <p className="ai-field-hint">
+                全局并发是两家服务合计可同时进行的请求数。其他限制分别在各服务中设置；保存不清空历史用量。
+              </p>
+            </div>
+            <label>
+              <span>全局并发</span>
+              <InputNumber
+                aria-label="全局并发"
+                min={1}
+                max={64}
+                precision={0}
+                value={limits.globalConcurrency}
+                disabled={busy}
+                onChange={(value) =>
+                  setLimits((current) => ({
+                    ...current,
+                    globalConcurrency: value ?? 0,
+                  }))
+                }
+              />
+            </label>
             <Button
-              type="primary"
               disabled={
                 busy ||
-                limitFields.some(
-                  (field) =>
-                    !Number.isInteger(limits[field.key]) ||
-                    limits[field.key] < field.min ||
-                    limits[field.key] > field.max,
-                )
+                !Number.isInteger(limits.globalConcurrency) ||
+                limits.globalConcurrency < 1 ||
+                limits.globalConcurrency > 64
               }
               onClick={() =>
                 void run(async () => {
-                  await aiFetch("/limits", "PUT", limits);
+                  await aiFetch("/limits/global", "PUT", {
+                    globalConcurrency: limits.globalConcurrency,
+                  });
                   await load();
-                  setNotice("使用限制已保存，新请求按新配置执行");
+                  setNotice("公共并发设置已保存");
                 })
               }
             >
-              保存使用限制
+              保存公共设置
             </Button>
-            <span>
-              每日用量按服务端日期重置；供应商自身限制仍以其控制台为准。
-            </span>
-          </div>
-        </section>
+          </section>
+          <p className="ai-platform-limit-note">
+            以上为平台自设限制，不是供应商余额。DeepSeek
+            字符含规则及上下文；豆包字符为朗读文本。两家服务各自计数，每日按服务端日期重置。
+          </p>
+        </>
       )}
       <section className="ai-usage-card">
         <div className="ai-usage-heading">
