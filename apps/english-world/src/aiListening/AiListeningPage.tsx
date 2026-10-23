@@ -21,6 +21,10 @@ export default function AiListeningPage() {
   const location = useLocation();
   const [session, setSession] = useState<Session>();
   const [words, setWords] = useState<Word[]>([]);
+  const [knownWords, setKnownWords] = useState<Record<number, Word>>({});
+  const [wordsLoading, setWordsLoading] = useState(true);
+  const [wordsError, setWordsError] = useState("");
+  const [wordReload, setWordReload] = useState(0);
   const stageRef = useRef<HTMLElement>(null);
   useEffect(() => {
     if (session)
@@ -146,6 +150,10 @@ export default function AiListeningPage() {
   }, [params.get("sessionId")]);
   useEffect(() => {
     const abort = new AbortController();
+    setWordsLoading(true);
+    setWordsError("");
+    setWords([]);
+    const timer = setTimeout(() => {
     void safeFetch<{ list: Word[]; total: number }>(
       "/english/filterWordList",
       {
@@ -157,13 +165,15 @@ export default function AiListeningPage() {
     )
       .then((data) => {
         setWords(data.list);
+        setKnownWords(previous => ({ ...previous, ...Object.fromEntries(data.list.map(word => [word.id, word])) }));
         setTotal(data.total);
       })
       .catch((e) => {
-        if (e.name !== "AbortError") setError(e.message);
-      });
-    return () => abort.abort();
-  }, [search, page]);
+        if (e.name !== "AbortError") setWordsError(e.message);
+      }).finally(() => { if (!abort.signal.aborted) setWordsLoading(false); });
+    }, 180);
+    return () => { clearTimeout(timer); abort.abort(); };
+  }, [search, page, wordReload]);
   const create = async (wordIds: number[]) => {
     if (wordIds.length < 1 || wordIds.length > 10)
       throw new Error("请选择 1～10 个单词");
@@ -250,7 +260,7 @@ export default function AiListeningPage() {
     }
   };
   return (
-    <div className="ai-listening">
+    <div className={`ai-listening${!session ? " ai-selection-view" : ""}`}>
       <header>
         <span className="ai-listening-eyebrow">LISTEN & LEARN</span>
         <h1>场景听力</h1>
@@ -292,75 +302,30 @@ export default function AiListeningPage() {
       {!session ? (
         <section className="ai-selection-panel" ref={stageRef}>
           <div className="ai-section-heading">
-            <div>
-              <h2>选择已有单词（1～10 个）</h2>
-              <p>从词库选一组今天想练的词，建议每次 4～6 个。</p>
+            <div><h2>今天想练哪些词？</h2><p>选择 1～10 个单词，先复习，再听场景填空。</p></div>
+          </div>
+          <div className="ai-selection-layout">
+            <div className="ai-word-library">
+              <div className="ai-selection-toolbar">
+                <div className="ai-word-search"><input aria-label="搜索单词" placeholder="搜索想练的单词" value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} />{search && <button aria-label="清除搜索" onClick={() => { setSearch(""); setPage(1); }}>×</button>}</div>
+                <button className="ai-quick-select" disabled={wordsLoading || !!wordsError || selected.length >= 10 || !words.some(w => !selected.includes(w.id))} onClick={() => setSelected(previous => [...previous, ...words.filter(w => !previous.includes(w.id)).slice(0, Math.min(5, 10 - previous.length)).map(w => w.id)])}>快速选 5 词</button>
+              </div>
+              <div className="ai-library-meta"><span>{wordsLoading ? "正在加载词库…" : `共 ${total} 个单词`}</span><span>可跨页选择</span></div>
+              <div className="ai-listening-words ai-word-options ai-selection-list" aria-label="可选单词" aria-busy={wordsLoading}>
+                {wordsLoading ? <p className="ai-word-list-message" role="status">正在加载单词…</p> : wordsError ? <div className="ai-word-list-message" role="alert"><p>{wordsError}</p><button onClick={() => setWordReload(v => v + 1)}>重试加载</button></div> : words.length ? words.map(w => <label key={w.id} className={selected.includes(w.id) ? "selected" : ""}>
+                  <input type="checkbox" checked={selected.includes(w.id)} disabled={!selected.includes(w.id) && selected.length >= 10} onChange={e => { const checked = e.target.checked; setSelected(previous => checked ? previous.includes(w.id) || previous.length >= 10 ? previous : [...previous, w.id] : previous.filter(id => id !== w.id)); }} />
+                  <strong>{w.englishWord}</strong><span>{w.englishChinese}</span>
+                </label>) : <div className="ai-word-list-message"><strong>{search ? "没有找到匹配的单词" : "词库里还没有单词"}</strong><p>{search ? "试试其他拼写，已选单词会保留。" : "先到词库添加单词，再回来练习。"}</p>{search ? <button onClick={() => { setSearch(""); setPage(1); }}>清除搜索</button> : <Link to={`${base}/words`}>前往词库</Link>}</div>}
+              </div>
+              <div className="ai-library-pagination"><button disabled={wordsLoading || page === 1} onClick={() => setPage(p => p - 1)}>上一页</button><span>第 {page} / {Math.max(1, Math.ceil(total / 20))} 页</span><button disabled={wordsLoading || page * 20 >= total} onClick={() => setPage(p => p + 1)}>下一页</button></div>
             </div>
-            <span className="ai-count-badge">已选 {selected.length} / 10</span>
-          </div>
-          <input
-            aria-label="搜索单词"
-            placeholder="搜索单词"
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-            }}
-          />
-          <div className="ai-selection-meta">
-            <span>共 {total} 个单词</span>
-            <span>已选 {selected.length} 个</span>
-            {selected.length > 0 && (
-              <button
-                className="ai-text-button"
-                onClick={() => setSelected([])}
-              >
-                清空选择
-              </button>
-            )}
-          </div>
-          <div className="ai-listening-words ai-word-options">
-            {words.map((w) => (
-              <label
-                key={w.id}
-                className={selected.includes(w.id) ? "selected" : ""}
-              >
-                <input
-                  type="checkbox"
-                  checked={selected.includes(w.id)}
-                  disabled={!selected.includes(w.id) && selected.length >= 10}
-                  onChange={(e) =>
-                    setSelected((v) =>
-                      e.target.checked
-                        ? [...v, w.id]
-                        : v.filter((id) => id !== w.id),
-                    )
-                  }
-                />
-                <strong>{w.englishWord}</strong>
-                <span>{w.englishChinese}</span>
-              </label>
-            ))}
-          </div>
-          {!words.length && <p>没有匹配单词，请先添加到词库。</p>}
-          <div className="ai-listening-actions ai-selection-footer">
-            <button disabled={page === 1} onClick={() => setPage((p) => p - 1)}>
-              上一页
-            </button>
-            <span>第 {page} 页</span>
-            <button
-              disabled={page * 20 >= total}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              下一页
-            </button>
-            <button
-              className="ai-primary-button"
-              disabled={busy || selected.length < 1 || selected.length > 10}
-              onClick={() => void run(() => create(selected))}
-            >
-              开始复习
-            </button>
+            <aside className="ai-selection-basket" aria-label="本轮已选单词">
+              <div className="ai-basket-heading"><h3>本轮练习</h3><span>{selected.length} / 10</span></div>
+              <p className="ai-basket-help">建议每轮 4～6 词，循序渐进。</p>
+              <div className="ai-basket-start"><button className="ai-primary-button" disabled={busy || selected.length < 1 || selected.length > 10} onClick={() => void run(() => create(selected))}>{busy ? "正在校验单词…" : "开始复习"}</button><p>{selected.length >= 10 ? "已选满 10 词，可移除后更换" : selected.length ? "下一步：确认词义与发音" : "选好单词后即可开始"}</p></div>
+              {selected.length ? <><ul className="ai-basket-list">{selected.map(id => <li key={id}><div><strong>{knownWords[id]?.englishWord || `单词 #${id}`}</strong><span>{knownWords[id]?.englishChinese || "已从词库选中"}</span></div><button aria-label={`移除 ${knownWords[id]?.englishWord || `单词 #${id}`}`} disabled={busy} onClick={() => setSelected(v => v.filter(wordId => wordId !== id))}>×</button></li>)}</ul><button className="ai-text-button ai-basket-clear" disabled={busy} onClick={() => setSelected([])}>清空选择</button></> : <div className="ai-basket-empty"><span aria-hidden="true">＋</span><strong>还没有选词</strong><p>点击单词所在行，或用<br />“快速选 5 词”开始。</p></div>}
+
+            </aside>
           </div>
         </section>
       ) : (

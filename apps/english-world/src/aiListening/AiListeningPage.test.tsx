@@ -314,3 +314,31 @@ it("treats quota failure as unavailable validation, including legacy sessions, w
     ).disabled,
   ).toBe(true);
 });
+
+it("keeps a removable selection across pages and searches, with a bounded quick selection", async () => {
+ const user = userEvent.setup();
+ vi.mocked(listeningFetch).mockImplementation(async (path, body) => {
+  if(path.includes('history')) return {sessions:[],reviewWordIds:[]};
+  const query = body as {page:number;englishWord?:string};
+  const start = query.englishWord ? 41 : query.page === 2 ? 21 : 1;
+  return {list:Array.from({length:20},(_,i)=>({id:start+i,englishWord:`word${start+i}`,englishChinese:'释义'})),total:40};
+ });
+ render(<MemoryRouter><AiListeningPage /></MemoryRouter>);
+ await screen.findByText('word1');
+ await user.click(screen.getByRole('button',{name:'快速选 5 词'}));
+ expect(screen.getByRole('button',{name:'移除 word1'})).toBeTruthy();
+ await user.click(screen.getByRole('button',{name:'下一页'}));
+ await screen.findByText('word21');
+ expect(screen.getByRole('button',{name:'移除 word1'})).toBeTruthy();
+ await user.click(screen.getByRole('button',{name:'快速选 5 词'}));
+ expect(screen.getByRole('button',{name:'移除 word21'})).toBeTruthy();
+ expect((screen.getByRole('button',{name:'快速选 5 词'}) as HTMLButtonElement).disabled).toBe(true);
+ await user.click(screen.getByRole('button',{name:'移除 word1'}));
+ await user.type(screen.getByRole('textbox',{name:'搜索单词'}),'test');
+ await screen.findByText('word41');
+ expect(screen.getByRole('button',{name:'移除 word21'})).toBeTruthy();
+ expect(screen.queryByRole('button',{name:'移除 word1'})).toBeNull();
+ await user.click(screen.getByRole('button',{name:'清空选择'}));
+ expect((screen.getByRole('button',{name:'开始复习'}) as HTMLButtonElement).disabled).toBe(true);
+ expect(vi.mocked(listeningFetch).mock.calls.every(([path])=>path !== '/ai-learning/sessions')).toBe(true);
+});
