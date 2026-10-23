@@ -196,8 +196,10 @@ it("shows attempts without replacing first feedback and supports retry input", a
       <AiListeningPage />
     </MemoryRouter>,
   );
+  await userEvent.click(await screen.findByRole("button", {name:"场景 1 · 回答错误"}));
   await screen.findByText(/双声对话/);
-  expect(screen.getByText(/首次答案/)).toBeTruthy();
+  expect(screen.getByText(/首次答错/)).toBeTruthy();
+  expect(screen.getByText(/回答正确.*本次再练/)).toBeTruthy();
   expect(screen.getByText(/第 2 次/)).toBeTruthy();
   await userEvent.click(screen.getByRole("button", { name: "再练本题" }));
   expect(screen.getByRole("textbox", { name: "场景 1 答案" })).toBeTruthy();
@@ -341,4 +343,29 @@ it("keeps a removable selection across pages and searches, with a bounded quick 
  await user.click(screen.getByRole('button',{name:'清空选择'}));
  expect((screen.getByRole('button',{name:'开始复习'}) as HTMLButtonElement).disabled).toBe(true);
  expect(vi.mocked(listeningFetch).mock.calls.every(([path])=>path !== '/ai-learning/sessions')).toBe(true);
+});
+
+it('shows an explicit wrong result and reachable round feedback without completing remaining questions', async () => {
+ const questions=[{id:'q1',wordId:1,scene:'场景',gap:'One ______.',status:'submitted',played:1,feedback:{userAnswer:'bad',answer:'good',correct:false,independent:false,transcript:'One good.',explanation:'解释',synonyms:''}},{id:'q2',wordId:2,scene:'场景2',gap:'Two ______.',status:'ready',played:0}];
+ vi.mocked(listeningFetch).mockImplementation(async path=>path.includes('history')?{sessions:[],reviewWordIds:[]}:path.includes('filterWordList')?{list:[],total:0}:{id:'s',status:'listening',words:[],questions,createdAt:'2026-10-23'});
+ render(<MemoryRouter initialEntries={['/englishWorld/ai-listening?sessionId=s']}><AiListeningPage/></MemoryRouter>);
+ await screen.findByText('Two ______.');
+ await userEvent.click(screen.getByRole('button',{name:'前往场景 1'}));
+ expect(screen.getByText('✕ 回答错误').closest('[role=status]')?.className).toContain('ai-result-wrong');
+ expect(screen.queryByText('Two ______.')).toBeNull();
+ await userEvent.click(screen.getByRole('button',{name:'学习反馈',exact:true}));
+ expect(screen.getByText('本轮学习进度')).toBeTruthy();
+ await userEvent.click(screen.getByRole('button',{name:'继续未完成的题目'}));
+ expect(screen.getByText('Two ______.')).toBeTruthy();
+});
+it('paginates history and only requests removal after explicit confirmation',async()=>{
+ let sessions=Array.from({length:5},(_,i)=>({id:`h${i}`,status:'review',createdAt:'2026-10-23',words:[],questions:[]}));
+ vi.mocked(listeningFetch).mockImplementation(async(path)=>{if(path.endsWith('/remove')){sessions=sessions.slice(1);return{removed:true}}return path.includes('history')?{sessions,reviewWordIds:[]}:{list:[],total:0}});
+ const confirm=vi.spyOn(window,'confirm').mockReturnValue(false);render(<MemoryRouter><AiListeningPage/></MemoryRouter>);
+ await screen.findAllByRole('button',{name:'删除记录'});expect(screen.getAllByRole('button',{name:'删除记录'})).toHaveLength(4);
+ await userEvent.click(screen.getAllByRole('button',{name:'删除记录'})[0]);
+ expect(vi.mocked(listeningFetch).mock.calls.some(([p])=>p.endsWith('/remove'))).toBe(false);
+ confirm.mockReturnValue(true);await userEvent.click(screen.getAllByRole('button',{name:'删除记录'})[0]);
+ await waitFor(()=>expect(listeningFetch).toHaveBeenCalledWith('/ai-learning/sessions/h0/remove',{confirmed:true},expect.any(AbortSignal)));
+ confirm.mockRestore();
 });

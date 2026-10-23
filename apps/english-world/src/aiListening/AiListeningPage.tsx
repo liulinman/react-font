@@ -20,6 +20,12 @@ export default function AiListeningPage() {
   const [params, setParams] = useSearchParams();
   const location = useLocation();
   const [session, setSession] = useState<Session>();
+  const [activeQuestion, setActiveQuestion] = useState(0);
+  const [viewResults, setViewResults] = useState(false);
+  const [historyPage, setHistoryPage] = useState(1);
+  const completedCount = session?.questions.filter(q => q.status !== "ready").length || 0;
+  const showingSummary = !!session?.questions.length && viewResults;
+  const goQuestion = (index: number) => { stopListeningAudio(); setViewResults(false); setActiveQuestion(index); requestAnimationFrame(() => stageRef.current?.scrollIntoView?.({block:"start"})); };
   const [words, setWords] = useState<Word[]>([]);
   const [knownWords, setKnownWords] = useState<Record<number, Word>>({});
   const [wordsLoading, setWordsLoading] = useState(true);
@@ -127,6 +133,8 @@ export default function AiListeningPage() {
       `/ai-learning/sessions/${encodeURIComponent(id)}`,
     );
     setSession(next);
+    setActiveQuestion(Math.max(0, next.questions.findIndex(q => q.status === "ready")));
+    setViewResults(next.status === "completed");
     setParams({ sessionId: next.id });
   };
   useEffect(() => {
@@ -138,7 +146,7 @@ export default function AiListeningPage() {
         undefined,
         abort.signal,
       )
-        .then(setSession)
+.then(next => { setSession(next); setActiveQuestion(Math.max(0, next.questions.findIndex(q => q.status === "ready"))); setViewResults(next.status === "completed"); })
         .catch((e) => {
           if (e.name !== "AbortError") setError(e.message);
         });
@@ -183,6 +191,8 @@ export default function AiListeningPage() {
       requestUid: uid(`create:${wordIds.join(",")}`),
     });
     setSession(next);
+    setActiveQuestion(Math.max(0, next.questions.findIndex(q => q.status === "ready")));
+    setViewResults(next.status === "completed");
     setParams({ sessionId: next.id });
     setAnswers({});
     await loadHistory();
@@ -276,16 +286,17 @@ export default function AiListeningPage() {
                 ? 1
                 : session.status === "completed"
                   ? 3
-                  : 2;
+                  : viewResults ? 3 : 2;
+            const done = index < current && !(index === 2 && session?.questions.some(q => q.status === "ready"));
             return (
               <li
                 key={label}
                 className={
-                  index === current ? "current" : index < current ? "done" : ""
+                  index === current ? "current" : done ? "done" : ""
                 }
               >
-                <span>{index < current ? "✓" : index + 1}</span>
-                {label}
+                <span>{done ? "✓" : index + 1}</span>
+                {index === 3 && !!session?.questions.length ? <button className="ai-step-link" onClick={() => { setViewResults(true); stopListeningAudio(); stageRef.current?.scrollIntoView?.({block:"start"}); }}>学习反馈</button> : label}
               </li>
             );
           },
@@ -494,11 +505,14 @@ export default function AiListeningPage() {
               重试校验
             </button>
           )}
-          {session.questions.map((q, index) => (
+          {!!session.questions.length && <div className="ai-question-progress"><strong>本轮进度 {completedCount} / {session.questions.length}</strong><div>{session.questions.map((q,i) => <button key={q.id} aria-label={`前往场景 ${i+1}`} aria-pressed={!showingSummary && i === activeQuestion} className={q.status === "submitted" && !q.revealed ? q.feedback?.correct ? "question-correct" : "question-wrong" : ""} onClick={() => goQuestion(i)}>{i+1}{q.status === "submitted" && !q.revealed ? q.feedback?.correct ? " ✓" : " ✕" : q.status !== "ready" ? " —" : ""}</button>)}</div><button onClick={() => { setViewResults(true); stopListeningAudio(); }}>查看本轮反馈</button></div>}
+          {showingSummary && <div className="ai-round-summary"><h3>{session.status === "completed" ? "本轮练习已完成" : "本轮学习进度"}</h3><p>已完成 {completedCount} / {session.questions.length} 题 · 首次答对 {session.questions.filter(q => q.feedback?.correct && !q.revealed).length} 题</p>{session.questions.map((q,i)=><button key={q.id} onClick={()=>goQuestion(i)}>场景 {i+1} · {q.status === "ready" ? "待完成" : q.status === "skipped" ? "已跳过" : q.revealed ? "已查看答案" : q.feedback?.correct ? "回答正确" : "回答错误"}</button>)}{completedCount < session.questions.length && <button className="ai-primary-button" onClick={()=>goQuestion(Math.max(0,session.questions.findIndex(q=>q.status === "ready")))}>继续未完成的题目</button>}</div>}
+          {session.questions.map((q, index) => (!showingSummary && index === activeQuestion ? (
             <article className="ai-listening-question" key={q.id}>
               <h3>
                 场景 {index + 1} ·{" "}
                 {q.audioMode === "dual" ? "双声对话" : "单声朗读"}
+                {q.status === "submitted" && q.feedback && !retrying[q.id] && <span className={`ai-question-outcome ${q.revealed ? "neutral" : (q.attempts?.length ? q.attempts[q.attempts.length-1].correct : q.feedback.correct) ? "correct" : "wrong"}`}>{q.revealed ? "已查看答案" : (q.attempts?.length ? q.attempts[q.attempts.length-1].correct : q.feedback.correct) ? "答对了" : "答错了"}</span>}
               </h3>
               {q.status !== "submitted" && (
                 <button
@@ -514,7 +528,7 @@ export default function AiListeningPage() {
                   {sceneHints[q.id] ? "隐藏中文提示" : "查看中文提示"}
                 </button>
               )}
-              {(q.status === "submitted" || sceneHints[q.id]) && (
+              {q.status !== "submitted" && sceneHints[q.id] && (
                 <p className="ai-scene-context">{q.scene}</p>
               )}
               <p className="ai-listening-gap">{q.gap}</p>
@@ -579,6 +593,7 @@ export default function AiListeningPage() {
                             answer: answers[q.id],
                           });
                           setRetrying((v) => ({ ...v, [q.id]: false }));
+                          requestAnimationFrame(() => document.getElementById(`ai-result-${q.id}`)?.scrollIntoView?.({block:"nearest"}));
                         })
                       }
                     >
@@ -634,49 +649,20 @@ export default function AiListeningPage() {
                   再练本题
                 </button>
               )}
-              {(q.attempts || []).map((attempt) => (
-                <p key={attempt.sequence}>
-                  第 {attempt.sequence} 次：{attempt.answer} ·{" "}
-                  {attempt.correct ? "正确" : "错误"} · 播放 {attempt.played} 次
-                  / 慢速 {attempt.slow} 次{attempt.revealed ? " · 已揭示" : ""}
-                  （不改变首次成绩）
-                </p>
-              ))}
-              {q.feedback && (
-                <div className="ai-listening-feedback">
-                  <strong>
-                    {q.revealed
-                      ? "已查看答案"
-                      : q.feedback.correct
-                        ? "回答正确"
-                        : "再练一次"}
-                    {!q.feedback.independent ? " · 非独立作答" : ""}
-                  </strong>
-                  <p>
-                    首次答案：{q.feedback.userAnswer || "未填写"}；标准答案：
-                    {q.feedback.answer}
-                  </p>
-                  <p>{q.feedback.transcript}</p>
-                  <p>{q.feedback.explanation}</p>
-                  {q.feedback.wordForm && (
-                    <div className="ai-word-form">
-                      <span>相关词形</span>
-                      <p>
-                        <strong>{q.feedback.wordForm.base}</strong> →{" "}
-                        <strong>{q.feedback.wordForm.answer}</strong>
-                        <small>{q.feedback.wordForm.partSpeech}</small>
-                      </p>
-                      <p>{q.feedback.wordForm.relation}</p>
-                    </div>
-                  )}
-                  <details>
-                    <summary>近义词辨析</summary>
-                    <p>{readableExplanation(q.feedback.synonyms)}</p>
-                  </details>
-                </div>
-              )}
+              {q.feedback && !retrying[q.id] && (() => {
+                const latest = q.attempts?.[q.attempts.length - 1];
+                const correct = latest ? latest.correct : q.feedback.correct;
+                const neutral = !latest && q.revealed;
+                return <div id={`ai-result-${q.id}`} role="status" className={`ai-listening-feedback ai-result-${neutral ? "neutral" : correct ? "correct" : "wrong"}`}>
+                  <strong className="ai-result-title">{neutral ? "已查看答案" : correct ? "✓ 回答正确" : "✕ 回答错误"}{latest ? " · 本次再练" : ""}</strong>
+                  <p>你的答案：<b>{latest?.answer || q.feedback.userAnswer || "未填写"}</b></p><p>正确答案：<b>{q.feedback.answer}</b></p>
+                  {latest && <small>再练不改变首次成绩：{q.feedback.correct ? "首次答对" : "首次答错"}</small>}
+                  <details className="ai-answer-details"><summary>查看完整句子与解析</summary><p>{q.feedback.transcript}</p><p>{q.scene}</p><p>{q.feedback.explanation}</p>{q.feedback.wordForm && <div className="ai-word-form"><span>相关词形</span><p><strong>{q.feedback.wordForm.base}</strong> → <strong>{q.feedback.wordForm.answer}</strong><small>{q.feedback.wordForm.partSpeech}</small></p><p>{q.feedback.wordForm.relation}</p></div>}<details><summary>近义词辨析</summary><p>{readableExplanation(q.feedback.synonyms)}</p></details>{(q.attempts || []).map(attempt=><p key={attempt.sequence}>第 {attempt.sequence} 次：{attempt.answer} · {attempt.correct ? "正确" : "错误"}（不改变首次成绩）</p>)}</details>
+                </div>;
+              })()}
+              {q.status !== "ready" && <div className="ai-listening-actions"><button className="ai-primary-button" onClick={()=>{const next=session.questions.findIndex((question,i)=>i>index && question.status === "ready"); if(next>=0)goQuestion(next);else {setViewResults(true);stageRef.current?.scrollIntoView?.({block:"start"});}}}>{session.questions.some((question,i)=>i>index && question.status === "ready") ? "下一题" : "查看本轮反馈"}</button></div>}
             </article>
-          ))}
+          ) : null))}
         </section>
       )}
       <section className="ai-history-panel">
@@ -699,7 +685,7 @@ export default function AiListeningPage() {
             复查待练单词（最多10个）
           </button>
         )}
-        {history.sessions.map((s) => (
+        {history.sessions.slice((historyPage - 1) * 4, historyPage * 4).map((s) => (
           <div key={s.id} className="ai-listening-history">
             <span>
               {new Date(s.createdAt).toLocaleString()} ·{" "}
@@ -716,7 +702,7 @@ export default function AiListeningPage() {
               disabled={busy}
               onClick={() => void run(() => restore(s.id))}
             >
-              继续 / 查看结果
+              {s.status === "completed" ? "查看结果" : "继续练习"}
             </button>
             <button
               disabled={busy}
@@ -738,8 +724,17 @@ export default function AiListeningPage() {
             >
               新场景再练
             </button>
+            <button className="ai-delete-history" disabled={busy} onClick={() => {
+              if (!confirm("删除这条学习记录？将删除这一轮的题目和作答结果，不影响词库及其他记录，删除后无法恢复。")) return;
+              void run(async () => {
+                await safeFetch(`/ai-learning/sessions/${s.id}/remove`, {confirmed:true});
+                if(session?.id===s.id){invalidate();setSession(undefined);setParams({});}
+                await loadHistory(); setHistoryPage(1);
+              });
+            }}>删除记录</button>
           </div>
         ))}
+        {history.sessions.length > 4 && <div className="ai-library-pagination"><button disabled={historyPage===1 || busy} onClick={()=>setHistoryPage(v=>v-1)}>上一页记录</button><span>第 {historyPage} / {Math.ceil(history.sessions.length/4)} 页</span><button disabled={historyPage*4>=history.sessions.length || busy} onClick={()=>setHistoryPage(v=>v+1)}>下一页记录</button></div>}
       </section>
     </div>
   );
