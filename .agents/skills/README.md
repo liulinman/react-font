@@ -7,6 +7,7 @@
 
 | Skill | 角色定位 | 主要解决的问题 | 默认是否修改产品代码 |
 |---|---|---|---|
+| `english-world-docs-maintenance` | 技术文档维护 | 功能变化时同步知识、实现、实例、参数与文档站验证 | 维护文档；发布跟随任务授权 |
 | `english-world-prd-testing` | PRD 自动化验收 | 指定模块或全量，维护 Case、执行、Cloud 记录、报告与 AI 失败分析 | 默认只补测试，不自动修产品 |
 | `english-world-ux-product-audit` | English World 产品经理/UX 审计负责人 | 把真实用户体验问题整理成有证据、可排期、可验收的中文需求 | 否 |
 | `english-world-ui-design-system` | English World UI 负责人/设计系统 | 统一项目视觉、组件、状态、响应式和 UI 实施规则 | 仅在明确要求实施时 |

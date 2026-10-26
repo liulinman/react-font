@@ -1,0 +1,4 @@
+interface:
+  display_name: "English World 文档维护"
+  short_description: "功能变更后同步技术教程、源码实例、参数说明并验证文档站的一致性"
+  default_prompt: "使用 $english-world-docs-maintenance，核对这次功能变更并同步 English World 技术与实践文档，完成构建和必要的页面验证。"

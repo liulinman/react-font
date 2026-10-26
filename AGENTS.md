@@ -12,3 +12,7 @@
 - 用户要求指定模块测试、全量验收或按 PRD 出具结果时，使用 `.agents/skills/english-world-prd-testing/SKILL.md`，持续完成 Case、执行、报告与 AI 分析。
 - 执行入口 `pnpm test:prd --module <模块>` 或 `--all`；Cloud 加 `--cloud`。使用前读取 `docs/testing/prd-testing.md`。
 - 初始 Case 候选不代表已自动化；不得把缺少 PRD、未实现 Case、mock 或跳过测试计为真实验收通过。
+
+## 功能与技术文档同步
+
+- 功能、API、AI/MCP、配置、交互或部署变更，收尾时使用 `.agents/skills/english-world-docs-maintenance/SKILL.md` 核对影响并同步 `apps/docs/` 公开技术文档；没有文档影响时说明理由。维护知识、实现、实例及验证口径，发布沿用任务授权。
