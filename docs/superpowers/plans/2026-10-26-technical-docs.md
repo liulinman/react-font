@@ -18,22 +18,25 @@
 - CI没有兄弟后端仓库时仍可使用审定源码快照构建。
 
 ### Task1 内容与源码片段
-- [ ] 三组内容任务分别创建8、7、10篇文章；核对实际代码。
-- [ ] apps/docs/snippets保存两份审定片段+来源摘要，scripts/sync-docs-code.mjs显式同步。
-- [ ] 逐篇核对知识、代码、示例、验证与相对链接，不发布空占位。
+- [x] 三组内容任务分别创建8、7、10篇文章；核对实际代码。
+- [x] apps/docs/snippets保存两份审定片段+来源摘要，scripts/sync-docs-code.mjs显式同步。
+- [x] 逐篇核对知识、代码、示例、验证与相对链接，不发布空占位。
 
 ### Task2 文档站与构建
-- [ ] apps/docs/package.json/content/index.md/.vitepress/config.mts/theme创建独立站，配置base/docs/、中文搜索、导航与主题。
-- [ ] scripts/check-docs.mjs检查25页、链接、敏感模式；先观察缺页失败，再内容齐备通过。
-- [ ] package根命令、Dockerfiles及CI构建产物同步，脚本检查发布前存在docs/index.html。
+- [x] apps/docs/package.json/content/index.md/.vitepress/config.mts/theme创建独立站，配置base/docs/、中文搜索、导航与主题。
+- [x] scripts/check-docs.mjs检查25页、链接、敏感模式；先观察缺页失败，再内容齐备通过。
+- [x] package根命令、Dockerfiles及CI构建产物同步，脚本检查发布前存在docs/index.html。
 
 ### Task3 主站与路由
-- [ ] EnglishHeader与MobileMorePage增加真实/docs/链接，补现有组件断言。
-- [ ] PWA deny/docs、桌面使用可选Provider模式更新提示，保持原严格hook和手机行为；补更新测试。
-- [ ] Nginx /docs静态优先级、深链.html与404；增量配置脚本保持原TLS不动，验证重复运行及未知配置拒绝。
+- [x] EnglishHeader与MobileMorePage增加真实/docs/链接，补现有组件断言。
+- [x] PWA deny/docs、桌面使用可选Provider模式更新提示，保持原严格hook和手机行为；补更新测试。
+- [x] Nginx /docs静态优先级、深链.html与404；增量配置脚本保持原TLS不动，验证重复运行及未知配置拒绝。
 
 ### Task4 验证与发布
-- [ ] 文档检查/构建、定向组件测试、真实构建站1280/390搜索和深链截图。
-- [ ] 新上下文独立审查内容与集成，修复真实缺陷。
-- [ ] 使用即时生产镜像增量部署前端+docs，保留backend/admin/TLS；核对线上正文、搜索、深链、404及摘要。
-- [ ] 记录回滚、提交和vault交接；不宣称全PRD测试完成。
+- [x] 文档检查/构建、定向组件测试、真实构建站1280/390搜索和深链截图。
+- [x] 新上下文独立审查内容与集成，修复真实缺陷。
+- [x] 使用即时生产镜像增量部署前端+docs，保留backend/admin/TLS；核对线上正文、搜索、深链、404及摘要。
+- [x] 记录回滚、提交和vault交接；不宣称全PRD测试完成。
+
+## Delivery evidence
+2026-10-26 /docs/已上线；33组件、4合并器、5本地浏览器、5公网浏览器通过，26页公网字节核对。独立审查未确认问题，未作全站PRD通过声明；旧worker一次性迁移在用户原浏览器未验证。交付资料见工作区docs/technical-docs-20261026/README.md。
