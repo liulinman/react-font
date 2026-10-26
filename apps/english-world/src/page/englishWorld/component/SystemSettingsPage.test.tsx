@@ -8,18 +8,9 @@ vi.mock("@/contexts/AuthContext", () => ({
   useAuth: () => ({ user: { username: "tester" }, logout: vi.fn() }),
 }));
 
-vi.mock("./SystemSettings", async () => {
-  const actual = await vi.importActual<typeof import("./SystemSettings")>(
-    "./SystemSettings",
-  );
-  return {
-    ...actual,
-    getSystemSettings: vi.fn(() => Promise.resolve(actual.DEFAULT_SETTINGS)),
-    saveSystemSettings: vi.fn(() => Promise.resolve(true)),
-  };
-});
-
-vi.mock("@font/api", () => ({ default: vi.fn(() => Promise.resolve(true)) }));
+vi.mock("./McpAccessCard", () => ({
+  McpAccessCard: () => <section aria-label="MCP 授权管理">MCP 授权管理</section>,
+}));
 
 describe("SystemSettingsPage", () => {
   beforeAll(() => {
@@ -49,6 +40,9 @@ describe("SystemSettingsPage", () => {
     expect(container.querySelector(".system-settings-page")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "系统设置" })).toBeInTheDocument();
     expect(screen.queryByText("偏好设置")).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /保存配置/ })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "MCP 授权管理" })).toBeInTheDocument();
+    expect(screen.queryByText("单词默写配置")).not.toBeInTheDocument();
+    expect(screen.queryByText("单词听写配置")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /保存配置|重置默认/ })).not.toBeInTheDocument();
   });
 });
