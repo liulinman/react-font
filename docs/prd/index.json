@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updated": "2026-10-22",
+  "updated": "2026-10-26",
   "purpose": "需求来源索引；不是已实现功能或自动化覆盖承诺",
   "modules": [
     {
@@ -10,7 +10,8 @@
       "baselineStatus": "missing",
       "primaryFeatures": [],
       "relatedFeatures": [
-        "unified-workspace"
+        "unified-workspace",
+        "mcp-access"
       ],
       "designReferences": []
     },
@@ -19,7 +20,9 @@
       "name": "词库与导入",
       "entry": "vocabulary/prd.md",
       "baselineStatus": "partial",
-      "primaryFeatures": [],
+      "primaryFeatures": [
+        "mcp-access"
+      ],
       "relatedFeatures": [
         "weak-word-repair",
         "word-journey",
@@ -139,7 +142,8 @@
       ],
       "relatedFeatures": [
         "unified-workspace",
-        "ai-listening"
+        "ai-listening",
+        "mcp-access"
       ],
       "designReferences": [
         "docs/superpowers/specs/2026-08-17-english-world-mobile-pwa-full-redesign-design.md"
@@ -331,6 +335,16 @@
         "settings"
       ],
       "prd": "review/features/ai-listening/prd.md"
+    },
+    {
+      "id": "mcp-access",
+      "title": "单词 MCP 与授权管理",
+      "primaryModule": "vocabulary",
+      "relatedModules": [
+        "settings",
+        "auth"
+      ],
+      "prd": "vocabulary/features/mcp-access/prd.md"
     }
   ]
 }

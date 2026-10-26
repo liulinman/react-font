@@ -25,6 +25,8 @@ import request from "@font/api";
 import { EnglishAbsorb, EnglishType, PracticeDirection } from "../enum";
 import { enumToOptions } from "@font/utils";
 
+import { McpAccessCard } from "./McpAccessCard";
+
 const { Panel } = Collapse;
 
 export const SystemSettingsPage: React.FC = () => {
@@ -137,6 +139,7 @@ export const SystemSettingsPage: React.FC = () => {
             </Space>
           }
         />
+        <McpAccessCard />
         <Card className="system-settings-surface">
           <Form
             form={form}

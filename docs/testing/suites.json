@@ -349,6 +349,16 @@
       "spec": "cypress/integration/ai-listening.cy.ts",
       "evidence": "real",
       "externalAI": "local-provider-double"
+    },
+    {
+      "id": "mcp-access",
+      "modules": [
+        "vocabulary",
+        "settings"
+      ],
+      "spec": "cypress/integration/mcp-access.cy.ts",
+      "evidence": "real",
+      "externalAI": "none"
     }
   ]
 }

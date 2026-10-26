@@ -353,7 +353,7 @@ it('shows an explicit wrong result and reachable round feedback without completi
  await userEvent.click(screen.getByRole('button',{name:'前往场景 1'}));
  expect(screen.getByText('✕ 回答错误').closest('[role=status]')?.className).toContain('ai-result-wrong');
  expect(screen.queryByText('Two ______.')).toBeNull();
- await userEvent.click(screen.getByRole('button',{name:'学习反馈',exact:true}));
+ await userEvent.click(screen.getByRole('button',{name:'学习反馈'}));
  expect(screen.getByText('本轮学习进度')).toBeTruthy();
  await userEvent.click(screen.getByRole('button',{name:'继续未完成的题目'}));
  expect(screen.getByText('Two ______.')).toBeTruthy();

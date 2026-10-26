@@ -36,3 +36,5 @@
 新需求在本入口补充或加入 `features/<feature>/prd.md` 并登记上级 `index.json`；不得在交付或历史目录继续维护另一份正文。
 
 [返回全部模块](../README.md)
+
+- [单词 MCP 与授权管理](../vocabulary/features/mcp-access/prd.md)（`vocabulary/mcp-access`，2026-10-26，含权限、预览确认及幂等）。

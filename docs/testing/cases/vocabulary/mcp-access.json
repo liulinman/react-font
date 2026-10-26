@@ -1,0 +1,670 @@
+{
+  "schemaVersion": 1,
+  "source": "docs/prd/vocabulary/features/mcp-access/prd.md",
+  "sourceHash": "38631ae03c429ead7353839d45a0bad9e36e64d2a27591b75e8c6eb4550a5e63",
+  "cases": [
+    {
+      "id": "vocabulary/mcp-access/FR-01/CASE-01",
+      "title": "FR-01：系统设置提供 MCP 授权管理，显示公网 HTTPS 接入地址和 Streamable HTTP 接入说明。明确兼容条件，不声称所有模型客户端均兼容。配置示例使用占位符，不把实际密钥嵌入 URL。",
+      "status": "ready",
+      "requirementIds": [
+        "vocabulary/mcp-access/FR-01"
+      ],
+      "preconditions": [
+        "一次性 MySQL 和真实 NestJS；resetDatabase 重置隔离账号及 resilient 词条；真实 Cookie 登录；不得指向生产。"
+      ],
+      "steps": [
+        "在1280和390宽度打开系统设置 MCP 卡片。",
+        "核对 Streamable HTTP/Bearer 接入地址，展开配置示例并检查 Authorization 占位符。",
+        "复制配置模板，检查复制成功；刷新后模拟剪贴板拒绝并复制地址。"
+      ],
+      "expectedResults": [
+        "卡片地址为当前测试公开地址 /api/mcp，标明 Streamable HTTP、Bearer 及兼容条件。",
+        "配置仅含占位符，不包含 ew_mcp_ 真实密钥；复制调用一次。"
+      ],
+      "cleanup": "每用例重置隔离库；runner 清理容器。MCP 密钥仅在测试内存传递，禁止日志及截图。",
+      "bindings": [
+        {
+          "suite": "mcp-access",
+          "title": "MCP real authorization and vocabulary > MCP-UI-1280 shows safe defaults, refreshes persisted list and revokes with spaced controls",
+          "evidence": "real"
+        },
+        {
+          "suite": "mcp-access",
+          "title": "MCP real authorization and vocabulary > MCP-UI-390 shows safe defaults, refreshes persisted list and revokes with spaced controls",
+          "evidence": "real"
+        }
+      ],
+      "reviewNote": "已覆盖客户端模板、占位符、地址与兼容条件。测试环境使用回环HTTP，公网HTTPS由发布冒烟独立确认。"
+    },
+    {
+      "id": "vocabulary/mcp-access/FR-02/CASE-01",
+      "title": "FR-02：登录用户创建命名授权，查询、新增、更新、删除四项独立权限；默认仅查询、有效期30天，可选1～365天。至少一项权限，名称1～60字。生成高强度随机令牌，只显示一次；列表、审计、日志、数据库不保存或返回明文令牌，数据库仅保存不可逆摘要。遗失需重新创建。",
+      "status": "draft",
+      "requirementIds": [
+        "vocabulary/mcp-access/FR-02"
+      ],
+      "preconditions": [
+        "一次性 MySQL 和真实 NestJS；resetDatabase 重置隔离账号及 resilient 词条；真实 Cookie 登录；不得指向生产。"
+      ],
+      "steps": [
+        "打开创建授权弹窗，核对仅查询默认选中、有效期30天，然后取消。",
+        "通过真实 API 创建只读授权，并重新获取列表检查没有明文密钥。",
+        "补充名称、权限、有效期边界及数据库摘要验证；不渲染真实密钥到 Cloud Replay。"
+      ],
+      "expectedResults": [
+        "FR-02：登录用户创建命名授权，查询、新增、更新、删除四项独立权限；默认仅查询、有效期30天，可选1～365天。至少一项权限，名称1～60字。生成高强度随机令牌，只显示一次；列表、审计、日志、数据库不保存或返回明文令牌，数据库仅保存不可逆摘要。遗失需重新创建。"
+      ],
+      "cleanup": "每用例重置隔离库；runner 清理容器。MCP 密钥仅在测试内存传递，禁止日志及截图。",
+      "bindings": [
+        {
+          "suite": "mcp-access",
+          "title": "MCP real authorization and vocabulary > MCP-05 denies cookie-only access, missing scope and revoked authorization without leaking secrets",
+          "evidence": "real"
+        },
+        {
+          "suite": "mcp-access",
+          "title": "MCP real authorization and vocabulary > MCP-UI-1280 shows safe defaults, refreshes persisted list and revokes with spaced controls",
+          "evidence": "real"
+        },
+        {
+          "suite": "mcp-access",
+          "title": "MCP real authorization and vocabulary > MCP-UI-390 shows safe defaults, refreshes persisted list and revokes with spaced controls",
+          "evidence": "real"
+        }
+      ],
+      "reviewNote": "一次展示由组件测试补充；名称/权限/有效期边界及数据库摘要由后端集成验证"
+    },
+    {
+      "id": "vocabulary/mcp-access/FR-03/CASE-01",
+      "title": "FR-03：授权列表显示名称、权限、创建时间、到期时间、最后使用时间及有效/过期/已撤销状态。用户确认后可撤销自己的授权，即时生效，不能撤销他人授权。审计展示最近50条操作的时间、动作、结果、授权标识；不记录密钥或完整词条内容。",
+      "status": "draft",
+      "requirementIds": [
+        "vocabulary/mcp-access/FR-03"
+      ],
+      "preconditions": [
+        "一次性 MySQL 和真实 NestJS；resetDatabase 重置隔离账号及 resilient 词条；真实 Cookie 登录；不得指向生产。"
+      ],
+      "steps": [
+        "真实 API 创建只读授权，刷新界面核对名称、有效状态。",
+        "取消一次撤销，再确认撤销并从 API 复核 revokedAt。",
+        "查询审计核对不含明文密钥及请求词头，并检查最多50条。",
+        "使用真实管理接口验证未登录401、缺Origin/跨Origin403、第二账号撤销他人授权404；第二账号查询、详情、预览和删除确认均无泄漏。"
+      ],
+      "expectedResults": [
+        "FR-03：授权列表显示名称、权限、创建时间、到期时间、最后使用时间及有效/过期/已撤销状态。用户确认后可撤销自己的授权，即时生效，不能撤销他人授权。审计展示最近50条操作的时间、动作、结果、授权标识；不记录密钥或完整词条内容。"
+      ],
+      "cleanup": "每用例重置隔离库；runner 清理容器。MCP 密钥仅在测试内存传递，禁止日志及截图。",
+      "bindings": [
+        {
+          "suite": "mcp-access",
+          "title": "MCP real authorization and vocabulary > MCP-05 denies cookie-only access, missing scope and revoked authorization without leaking secrets",
+          "evidence": "real"
+        },
+        {
+          "suite": "mcp-access",
+          "title": "MCP real authorization and vocabulary > MCP-UI-1280 shows safe defaults, refreshes persisted list and revokes with spaced controls",
+          "evidence": "real"
+        },
+        {
+          "suite": "mcp-access",
+          "title": "MCP real authorization and vocabulary > MCP-UI-390 shows safe defaults, refreshes persisted list and revokes with spaced controls",
+          "evidence": "real"
+        },
+        {
+          "suite": "mcp-access",
+          "title": "MCP real authorization and vocabulary > MCP-06 enforces real management login, same-origin mutations and cross-account boundaries",
+          "evidence": "real"
+        }
+      ],
+      "reviewNote": "过期状态、跨用户撤销、全部时间字段另需后端/界面证据"
+    },
+    {
+      "id": "vocabulary/mcp-access/FR-04/CASE-01",
+      "title": "FR-04：MCP 查询和详情只能返回授权账号自己的词条。支持关键词、分页，单页1～50，稳定排序；无匹配为空。他人词条与不存在词条对外等价。",
+      "status": "draft",
+      "requirementIds": [
+        "vocabulary/mcp-access/FR-04"
+      ],
+      "preconditions": [
+        "一次性 MySQL 和真实 NestJS；resetDatabase 重置隔离账号及 resilient 词条；真实 Cookie 登录；不得指向生产。"
+      ],
+      "steps": [
+        "使用隔离授权查询首条、详情及 offset=1 的下一页。",
+        "使用不存在关键词查询，检查空列表与 total=0。",
+        "补充跨账号及并发排序测试。",
+        "使用真实管理接口验证未登录401、缺Origin/跨Origin403、第二账号撤销他人授权404；第二账号查询、详情、预览和删除确认均无泄漏。"
+      ],
+      "expectedResults": [
+        "FR-04：MCP 查询和详情只能返回授权账号自己的词条。支持关键词、分页，单页1～50，稳定排序；无匹配为空。他人词条与不存在词条对外等价。"
+      ],
+      "cleanup": "每用例重置隔离库；runner 清理容器。MCP 密钥仅在测试内存传递，禁止日志及截图。",
+      "bindings": [
+        {
+          "suite": "mcp-access",
+          "title": "MCP real authorization and vocabulary > MCP-01 initializes official protocol and pages real account vocabulary",
+          "evidence": "real"
+        },
+        {
+          "suite": "mcp-access",
+          "title": "MCP real authorization and vocabulary > MCP-06 enforces real management login, same-origin mutations and cross-account boundaries",
+          "evidence": "real"
+        }
+      ],
+      "reviewNote": "跨账号隔离及稳定排序需补证据"
+    },
+    {
+      "id": "vocabulary/mcp-access/FR-05/CASE-01",
+      "title": "FR-05：新增要求英文及有效字段，规范化空白和大小写，与已有词条判重。同词已存在时返回冲突与覆盖流程说明，不新增副本、不直接覆盖。",
+      "status": "ready",
+      "requirementIds": [
+        "vocabulary/mcp-access/FR-05"
+      ],
+      "preconditions": [
+        "一次性 MySQL 和真实 NestJS；resetDatabase 重置隔离账号及 resilient 词条；真实 Cookie 登录；不得指向生产。"
+      ],
+      "steps": [
+        "尝试空白词头，要求拒绝。",
+        "新增含首尾空白、连续空格及大写的 Test Phrase。",
+        "使用相同请求ID重试，再使用不同内容重用ID；随后使用新ID新增同词大写版本。",
+        "查询 test phrase 并确认只有1条。"
+      ],
+      "expectedResults": [
+        "空词拒绝；词头保存为 test phrase；重复请求返回相同ID，内容冲突与同词新增均拒绝；总数1。"
+      ],
+      "cleanup": "每用例重置隔离库；runner 清理容器。MCP 密钥仅在测试内存传递，禁止日志及截图。",
+      "bindings": [
+        {
+          "suite": "mcp-access",
+          "title": "MCP real authorization and vocabulary > MCP-02 creates normalized words and rejects duplicate or conflicting retries",
+          "evidence": "real"
+        }
+      ],
+      "reviewNote": "已按本条全部要求编写真实 HTTP/MCP 断言；通过状态只以实际执行证据为准。"
+    },
+    {
+      "id": "vocabulary/mcp-access/FR-06/CASE-01",
+      "title": "FR-06：更新必须先预览，展示原值、拟覆盖值和实际变化字段，返回10分钟有效的确认凭证。遵循已有安全覆盖规则：空白内容不清空原值，不更改单词主键、所属人和英文词头；只有明确提供的非空有效字段参与覆盖。确认覆盖后原记录的覆盖计数加1，不能旁路计数。",
+      "status": "ready",
+      "requirementIds": [
+        "vocabulary/mcp-access/FR-06"
+      ],
+      "preconditions": [
+        "一次性 MySQL 和真实 NestJS；resetDatabase 重置隔离账号及 resilient 词条；真实 Cookie 登录；不得指向生产。"
+      ],
+      "steps": [
+        "新增有旧释义和保留笔记的 overwritecase。",
+        "预览修改释义并传空白笔记，核对变化字段、前后值及保留笔记。",
+        "尝试携带 englishWord 的更新预览，要求拒绝。",
+        "未确认先提交并复查旧值；显式确认后核对原ID及计数1，再重复确认。",
+        "原释义不变时请求预览，检查 no_changes，不签发可用确认凭证；随后有效覆盖计数仍恰1。"
+      ],
+      "expectedResults": [
+        "拒绝修改词头；空白笔记保留；预览不写入，未显式确认不写入；确认后ID不变、释义更新、计数恰1且重试不增加。"
+      ],
+      "cleanup": "每用例重置隔离库；runner 清理容器。MCP 密钥仅在测试内存传递，禁止日志及截图。",
+      "bindings": [
+        {
+          "suite": "mcp-access",
+          "title": "MCP real authorization and vocabulary > MCP-03 previews safe overwrite and consumes explicit confirmation once",
+          "evidence": "real"
+        }
+      ],
+      "reviewNote": "已按本条全部要求编写真实 HTTP/MCP 断言；通过状态只以实际执行证据为准。"
+    },
+    {
+      "id": "vocabulary/mcp-access/FR-07/CASE-01",
+      "title": "FR-07：确认凭证绑定授权、账号、动作、词条版本和拟更新内容；提交要求显式确认。过期、错账号/授权、动作不符、词条预览后变化均拒绝并要求重新预览。确认凭证单次执行，重试返回原结果，不重复写入或计数。",
+      "status": "draft",
+      "requirementIds": [
+        "vocabulary/mcp-access/FR-07"
+      ],
+      "preconditions": [
+        "一次性 MySQL 和真实 NestJS；resetDatabase 重置隔离账号及 resilient 词条；真实 Cookie 登录；不得指向生产。"
+      ],
+      "steps": [
+        "为同一账号建立两个独立授权。",
+        "第一授权预览删除，第二授权使用其凭证确认应被拒绝。",
+        "预览删除后先确认一次覆盖，再提交旧删除凭证要求拒绝。",
+        "补充凭证到期、跨用户与动作不符测试。",
+        "使用真实管理接口验证未登录401、缺Origin/跨Origin403、第二账号撤销他人授权404；第二账号查询、详情、预览和删除确认均无泄漏。"
+      ],
+      "expectedResults": [
+        "FR-07：确认凭证绑定授权、账号、动作、词条版本和拟更新内容；提交要求显式确认。过期、错账号/授权、动作不符、词条预览后变化均拒绝并要求重新预览。确认凭证单次执行，重试返回原结果，不重复写入或计数。"
+      ],
+      "cleanup": "每用例重置隔离库；runner 清理容器。MCP 密钥仅在测试内存传递，禁止日志及截图。",
+      "bindings": [
+        {
+          "suite": "mcp-access",
+          "title": "MCP real authorization and vocabulary > MCP-03 previews safe overwrite and consumes explicit confirmation once",
+          "evidence": "real"
+        },
+        {
+          "suite": "mcp-access",
+          "title": "MCP real authorization and vocabulary > MCP-04 binds previews to authorization and rejects stale changes before deletion",
+          "evidence": "real"
+        },
+        {
+          "suite": "mcp-access",
+          "title": "MCP real authorization and vocabulary > MCP-06 enforces real management login, same-origin mutations and cross-account boundaries",
+          "evidence": "real"
+        }
+      ],
+      "reviewNote": "已补真实跨账号及独立授权绑定、时间戳变化快照拒绝；凭证过期仍由后端集成补证，保持draft。"
+    },
+    {
+      "id": "vocabulary/mcp-access/FR-08/CASE-01",
+      "title": "FR-08：删除必须先预览词条及不可恢复提示，再显式确认；仅删除指定所属词条，与现有词库删除行为一致。不批量删除、不删除其他词条、账号或知识笔记。凭证约束和重试行为同 FR-07。",
+      "status": "draft",
+      "requirementIds": [
+        "vocabulary/mcp-access/FR-08"
+      ],
+      "preconditions": [
+        "一次性 MySQL 和真实 NestJS；resetDatabase 重置隔离账号及 resilient 词条；真实 Cookie 登录；不得指向生产。"
+      ],
+      "steps": [
+        "新增 deletecase 并预览删除。",
+        "confirmed=false 提交删除，要求拒绝。",
+        "使用正确确认凭证删除，再使用同请求ID重试。",
+        "读取该词要求不存在；补充并发与其他关联数据保留测试。"
+      ],
+      "expectedResults": [
+        "FR-08：删除必须先预览词条及不可恢复提示，再显式确认；仅删除指定所属词条，与现有词库删除行为一致。不批量删除、不删除其他词条、账号或知识笔记。凭证约束和重试行为同 FR-07。"
+      ],
+      "cleanup": "每用例重置隔离库；runner 清理容器。MCP 密钥仅在测试内存传递，禁止日志及截图。",
+      "bindings": [
+        {
+          "suite": "mcp-access",
+          "title": "MCP real authorization and vocabulary > MCP-04 binds previews to authorization and rejects stale changes before deletion",
+          "evidence": "real"
+        }
+      ],
+      "reviewNote": "此 Cypress 仅串行重试，并发及关联数据范围需后端集成证据"
+    },
+    {
+      "id": "vocabulary/mcp-access/FR-09/CASE-01",
+      "title": "FR-09：新增携带调用方请求ID，同一授权和同一请求ID重试返回首次结果；同ID不同内容冲突，不能重复创建。覆盖/删除确认也必须具备事务原子性，并发重试只执行一次。",
+      "status": "draft",
+      "requirementIds": [
+        "vocabulary/mcp-access/FR-09"
+      ],
+      "preconditions": [
+        "一次性 MySQL 和真实 NestJS；resetDatabase 重置隔离账号及 resilient 词条；真实 Cookie 登录；不得指向生产。"
+      ],
+      "steps": [
+        "相同新增 requestId 重试应得到同ID，换内容应冲突。",
+        "覆盖相同请求ID重试及换请求ID重用凭证均检查计数仅加1。",
+        "删除同请求ID重试检查结果一致。",
+        "补充并发及故障原子性验证。"
+      ],
+      "expectedResults": [
+        "FR-09：新增携带调用方请求ID，同一授权和同一请求ID重试返回首次结果；同ID不同内容冲突，不能重复创建。覆盖/删除确认也必须具备事务原子性，并发重试只执行一次。"
+      ],
+      "cleanup": "每用例重置隔离库；runner 清理容器。MCP 密钥仅在测试内存传递，禁止日志及截图。",
+      "bindings": [
+        {
+          "suite": "mcp-access",
+          "title": "MCP real authorization and vocabulary > MCP-02 creates normalized words and rejects duplicate or conflicting retries",
+          "evidence": "real"
+        },
+        {
+          "suite": "mcp-access",
+          "title": "MCP real authorization and vocabulary > MCP-03 previews safe overwrite and consumes explicit confirmation once",
+          "evidence": "real"
+        },
+        {
+          "suite": "mcp-access",
+          "title": "MCP real authorization and vocabulary > MCP-04 binds previews to authorization and rejects stale changes before deletion",
+          "evidence": "real"
+        }
+      ],
+      "reviewNote": "并发与事务故障由后端集成补证据"
+    },
+    {
+      "id": "vocabulary/mcp-access/FR-10/CASE-01",
+      "title": "FR-10：缺失、伪造、过期、撤销的 Bearer 令牌拒绝；MCP 不接受平台登录 cookie 替代授权。无对应权限的操作拒绝，包括预览。撤销与提交并发时按事务顺序执行，撤销生效后不得再写入。管理端状态变更防跨站请求。错误信息不暴露数据库或敏感信息。",
+      "status": "draft",
+      "requirementIds": [
+        "vocabulary/mcp-access/FR-10"
+      ],
+      "preconditions": [
+        "一次性 MySQL 和真实 NestJS；resetDatabase 重置隔离账号及 resilient 词条；真实 Cookie 登录；不得指向生产。"
+      ],
+      "steps": [
+        "携带已登录Cookie但没有 Bearer 请求 MCP，检查401。",
+        "只读授权调用新增和删除预览，检查权限拒绝。",
+        "撤销授权后再次请求 MCP，检查401。",
+        "补充伪造/到期、跨站、并发撤销与敏感错误验证。",
+        "使用真实管理接口验证未登录401、缺Origin/跨Origin403、第二账号撤销他人授权404；第二账号查询、详情、预览和删除确认均无泄漏。"
+      ],
+      "expectedResults": [
+        "FR-10：缺失、伪造、过期、撤销的 Bearer 令牌拒绝；MCP 不接受平台登录 cookie 替代授权。无对应权限的操作拒绝，包括预览。撤销与提交并发时按事务顺序执行，撤销生效后不得再写入。管理端状态变更防跨站请求。错误信息不暴露数据库或敏感信息。"
+      ],
+      "cleanup": "每用例重置隔离库；runner 清理容器。MCP 密钥仅在测试内存传递，禁止日志及截图。",
+      "bindings": [
+        {
+          "suite": "mcp-access",
+          "title": "MCP real authorization and vocabulary > MCP-05 denies cookie-only access, missing scope and revoked authorization without leaking secrets",
+          "evidence": "real"
+        },
+        {
+          "suite": "mcp-access",
+          "title": "MCP real authorization and vocabulary > MCP-06 enforces real management login, same-origin mutations and cross-account boundaries",
+          "evidence": "real"
+        }
+      ],
+      "reviewNote": "过期、伪造令牌、跨站变更、撤销并发由后端集成验证"
+    },
+    {
+      "id": "vocabulary/mcp-access/AC-01/CASE-01",
+      "title": "AC-01：Given 已登录且无授权，When 创建默认授权，Then 仅查询、30天有效，令牌仅本次弹窗可见；刷新列表不再取回令牌。",
+      "status": "draft",
+      "requirementIds": [
+        "vocabulary/mcp-access/AC-01"
+      ],
+      "preconditions": [
+        "一次性 MySQL 和真实 NestJS；resetDatabase 重置隔离账号及 resilient 词条；真实 Cookie 登录；不得指向生产。"
+      ],
+      "steps": [
+        "打开创建弹窗检查只选查询和30天默认值。",
+        "API创建授权后重新查询列表，核对不包含明文。",
+        "一次展示由组件测试另行验证，真实令牌禁止进入 Cloud 页面或截图。"
+      ],
+      "expectedResults": [
+        "AC-01：Given 已登录且无授权，When 创建默认授权，Then 仅查询、30天有效，令牌仅本次弹窗可见；刷新列表不再取回令牌。"
+      ],
+      "cleanup": "每用例重置隔离库；runner 清理容器。MCP 密钥仅在测试内存传递，禁止日志及截图。",
+      "bindings": [
+        {
+          "suite": "mcp-access",
+          "title": "MCP real authorization and vocabulary > MCP-05 denies cookie-only access, missing scope and revoked authorization without leaking secrets",
+          "evidence": "real"
+        },
+        {
+          "suite": "mcp-access",
+          "title": "MCP real authorization and vocabulary > MCP-UI-1280 shows safe defaults, refreshes persisted list and revokes with spaced controls",
+          "evidence": "real"
+        },
+        {
+          "suite": "mcp-access",
+          "title": "MCP real authorization and vocabulary > MCP-UI-390 shows safe defaults, refreshes persisted list and revokes with spaced controls",
+          "evidence": "real"
+        }
+      ],
+      "reviewNote": "不将真实令牌渲染到 Cloud Replay；一次展示组件行为另有单元证据，未算真实浏览器全条通过"
+    },
+    {
+      "id": "vocabulary/mcp-access/AC-02/CASE-01",
+      "title": "AC-02：Given 两个用户，When 查询/预览/确认对方词条或撤销对方授权，Then 无内容泄露或数据改变；无权限及无效令牌请求被拒绝。",
+      "status": "draft",
+      "requirementIds": [
+        "vocabulary/mcp-access/AC-02"
+      ],
+      "preconditions": [
+        "一次性 MySQL 和真实 NestJS；resetDatabase 重置隔离账号及 resilient 词条；真实 Cookie 登录；不得指向生产。"
+      ],
+      "steps": [
+        "用第二独立授权消费第一授权的删除凭证，检查拒绝。",
+        "只读授权调用新增与删除预览，检查拒绝。",
+        "补充第二账号查询、预览、确认和撤销隔离。",
+        "使用真实管理接口验证未登录401、缺Origin/跨Origin403、第二账号撤销他人授权404；第二账号查询、详情、预览和删除确认均无泄漏。"
+      ],
+      "expectedResults": [
+        "AC-02：Given 两个用户，When 查询/预览/确认对方词条或撤销对方授权，Then 无内容泄露或数据改变；无权限及无效令牌请求被拒绝。"
+      ],
+      "cleanup": "每用例重置隔离库；runner 清理容器。MCP 密钥仅在测试内存传递，禁止日志及截图。",
+      "bindings": [
+        {
+          "suite": "mcp-access",
+          "title": "MCP real authorization and vocabulary > MCP-04 binds previews to authorization and rejects stale changes before deletion",
+          "evidence": "real"
+        },
+        {
+          "suite": "mcp-access",
+          "title": "MCP real authorization and vocabulary > MCP-05 denies cookie-only access, missing scope and revoked authorization without leaking secrets",
+          "evidence": "real"
+        },
+        {
+          "suite": "mcp-access",
+          "title": "MCP real authorization and vocabulary > MCP-06 enforces real management login, same-origin mutations and cross-account boundaries",
+          "evidence": "real"
+        }
+      ],
+      "reviewNote": "本脚本验证同账号不同授权绑定；跨用户隔离需后端补充"
+    },
+    {
+      "id": "vocabulary/mcp-access/AC-03/CASE-01",
+      "title": "AC-03：Given 支持手动 Bearer 的 MCP 客户端，When 初始化、列举工具、查询词条，Then 返回符合官方 MCP 协议的数据，分页有效。",
+      "status": "ready",
+      "requirementIds": [
+        "vocabulary/mcp-access/AC-03"
+      ],
+      "preconditions": [
+        "一次性 MySQL 和真实 NestJS；resetDatabase 重置隔离账号及 resilient 词条；真实 Cookie 登录；不得指向生产。"
+      ],
+      "steps": [
+        "发送 initialize 并核对官方协议 serverInfo。",
+        "列举工具并核对7个约定工具名称。",
+        "查询 limit=1/offset=0 和 offset=1，检查分页字段及种子数据结果。",
+        "读取返回词条ID的详情，检查词头一致；无匹配关键词应为空。"
+      ],
+      "expectedResults": [
+        "初始化返回协议 serverInfo，工具包含约定7项，分页返回准确 limit/offset，详情对应首条；无匹配为空。"
+      ],
+      "cleanup": "每用例重置隔离库；runner 清理容器。MCP 密钥仅在测试内存传递，禁止日志及截图。",
+      "bindings": [
+        {
+          "suite": "mcp-access",
+          "title": "MCP real authorization and vocabulary > MCP-01 initializes official protocol and pages real account vocabulary",
+          "evidence": "real"
+        }
+      ],
+      "reviewNote": "已按本条全部要求编写真实 HTTP/MCP 断言；通过状态只以实际执行证据为准。"
+    },
+    {
+      "id": "vocabulary/mcp-access/AC-04/CASE-01",
+      "title": "AC-04：Given 可新增授权，When 同词不同大小写/多余空格或同请求ID重试，Then 无重复词条；同ID不同内容拒绝。",
+      "status": "ready",
+      "requirementIds": [
+        "vocabulary/mcp-access/AC-04"
+      ],
+      "preconditions": [
+        "一次性 MySQL 和真实 NestJS；resetDatabase 重置隔离账号及 resilient 词条；真实 Cookie 登录；不得指向生产。"
+      ],
+      "steps": [
+        "新增带多余空白及大写的 Test Phrase。",
+        "同请求ID同内容重试检查ID一致；同ID不同内容拒绝。",
+        "新请求ID新增 TEST PHRASE 应冲突，查询确认只有1条。"
+      ],
+      "expectedResults": [
+        "规范化词头无重复；同ID同内容返回原结果，同ID不同内容拒绝。"
+      ],
+      "cleanup": "每用例重置隔离库；runner 清理容器。MCP 密钥仅在测试内存传递，禁止日志及截图。",
+      "bindings": [
+        {
+          "suite": "mcp-access",
+          "title": "MCP real authorization and vocabulary > MCP-02 creates normalized words and rejects duplicate or conflicting retries",
+          "evidence": "real"
+        }
+      ],
+      "reviewNote": "已按本条全部要求编写真实 HTTP/MCP 断言；通过状态只以实际执行证据为准。"
+    },
+    {
+      "id": "vocabulary/mcp-access/AC-05/CASE-01",
+      "title": "AC-05：Given 原词已有内容和覆盖计数，When 先预览再确认有效更新，Then 仅变化字段被覆盖，空值保留原内容、ID不变、计数恰加1；再次确认返回首次结果。",
+      "status": "ready",
+      "requirementIds": [
+        "vocabulary/mcp-access/AC-05"
+      ],
+      "preconditions": [
+        "一次性 MySQL 和真实 NestJS；resetDatabase 重置隔离账号及 resilient 词条；真实 Cookie 登录；不得指向生产。"
+      ],
+      "steps": [
+        "新增包含旧释义及保留笔记的词条。",
+        "预览新释义及空白笔记，核对仅释义变化。",
+        "显式确认覆盖并检查ID不变、笔记保留、计数1。",
+        "同请求ID与新请求ID重复消费凭证，核对计数仍1。",
+        "原释义不变时请求预览，检查 no_changes，不签发可用确认凭证；随后有效覆盖计数仍恰1。"
+      ],
+      "expectedResults": [
+        "仅释义变化；笔记和原ID保留；覆盖计数始终1。"
+      ],
+      "cleanup": "每用例重置隔离库；runner 清理容器。MCP 密钥仅在测试内存传递，禁止日志及截图。",
+      "bindings": [
+        {
+          "suite": "mcp-access",
+          "title": "MCP real authorization and vocabulary > MCP-03 previews safe overwrite and consumes explicit confirmation once",
+          "evidence": "real"
+        }
+      ],
+      "reviewNote": "已按本条全部要求编写真实 HTTP/MCP 断言；通过状态只以实际执行证据为准。"
+    },
+    {
+      "id": "vocabulary/mcp-access/AC-06/CASE-01",
+      "title": "AC-06：Given 更新或删除预览，When 凭证过期/被他人授权使用/原词已改变/未显式确认，Then 拒绝操作且原词不变。",
+      "status": "draft",
+      "requirementIds": [
+        "vocabulary/mcp-access/AC-06"
+      ],
+      "preconditions": [
+        "一次性 MySQL 和真实 NestJS；resetDatabase 重置隔离账号及 resilient 词条；真实 Cookie 登录；不得指向生产。"
+      ],
+      "steps": [
+        "第二授权提交第一授权预览凭证，检查失败。",
+        "删除预览后更新原词，再确认旧预览，检查失败。",
+        "confirmed=false 提交检查拒绝。",
+        "补充过期和跨用户凭证验证。",
+        "使用真实管理接口验证未登录401、缺Origin/跨Origin403、第二账号撤销他人授权404；第二账号查询、详情、预览和删除确认均无泄漏。"
+      ],
+      "expectedResults": [
+        "AC-06：Given 更新或删除预览，When 凭证过期/被他人授权使用/原词已改变/未显式确认，Then 拒绝操作且原词不变。"
+      ],
+      "cleanup": "每用例重置隔离库；runner 清理容器。MCP 密钥仅在测试内存传递，禁止日志及截图。",
+      "bindings": [
+        {
+          "suite": "mcp-access",
+          "title": "MCP real authorization and vocabulary > MCP-04 binds previews to authorization and rejects stale changes before deletion",
+          "evidence": "real"
+        },
+        {
+          "suite": "mcp-access",
+          "title": "MCP real authorization and vocabulary > MCP-06 enforces real management login, same-origin mutations and cross-account boundaries",
+          "evidence": "real"
+        }
+      ],
+      "reviewNote": "已补真实跨账号及独立授权绑定、时间戳变化快照拒绝；凭证过期仍由后端集成补证，保持draft。"
+    },
+    {
+      "id": "vocabulary/mcp-access/AC-07/CASE-01",
+      "title": "AC-07：Given 删除权限，When 预览且确认删除并并发重试，Then 只删除该词一次并返回一致结果；未确认不得删除。",
+      "status": "draft",
+      "requirementIds": [
+        "vocabulary/mcp-access/AC-07"
+      ],
+      "preconditions": [
+        "一次性 MySQL 和真实 NestJS；resetDatabase 重置隔离账号及 resilient 词条；真实 Cookie 登录；不得指向生产。"
+      ],
+      "steps": [
+        "新增测试词并预览删除。",
+        "未明确确认先提交应拒绝；确认删除后重试应得到一致结果。",
+        "读取词条应不存在；补充并发重试及无关数据保留断言。"
+      ],
+      "expectedResults": [
+        "AC-07：Given 删除权限，When 预览且确认删除并并发重试，Then 只删除该词一次并返回一致结果；未确认不得删除。"
+      ],
+      "cleanup": "每用例重置隔离库；runner 清理容器。MCP 密钥仅在测试内存传递，禁止日志及截图。",
+      "bindings": [
+        {
+          "suite": "mcp-access",
+          "title": "MCP real authorization and vocabulary > MCP-04 binds previews to authorization and rejects stale changes before deletion",
+          "evidence": "real"
+        }
+      ],
+      "reviewNote": "本脚本仅串行重试；并发需后端补充"
+    },
+    {
+      "id": "vocabulary/mcp-access/AC-08/CASE-01",
+      "title": "AC-08：Given 已使用授权，When 撤销或到期，Then 后续 MCP 请求拒绝；列表状态正确，审计不含明文密钥及词条全文。",
+      "status": "draft",
+      "requirementIds": [
+        "vocabulary/mcp-access/AC-08"
+      ],
+      "preconditions": [
+        "一次性 MySQL 和真实 NestJS；resetDatabase 重置隔离账号及 resilient 词条；真实 Cookie 登录；不得指向生产。"
+      ],
+      "steps": [
+        "创建并使用只读授权，查询列表及审计检查无明文密钥。",
+        "撤销后 MCP 调用返回401，界面刷新显示已撤销。",
+        "补充到期状态和自动拒绝验证。"
+      ],
+      "expectedResults": [
+        "AC-08：Given 已使用授权，When 撤销或到期，Then 后续 MCP 请求拒绝；列表状态正确，审计不含明文密钥及词条全文。"
+      ],
+      "cleanup": "每用例重置隔离库；runner 清理容器。MCP 密钥仅在测试内存传递，禁止日志及截图。",
+      "bindings": [
+        {
+          "suite": "mcp-access",
+          "title": "MCP real authorization and vocabulary > MCP-05 denies cookie-only access, missing scope and revoked authorization without leaking secrets",
+          "evidence": "real"
+        }
+      ],
+      "reviewNote": "未推进真实系统时钟模拟到期；后端测试补充到期状态"
+    },
+    {
+      "id": "vocabulary/mcp-access/AC-09/CASE-01",
+      "title": "AC-09：Given 桌面及390px手机，When 打开管理、创建、复制、撤销和错误状态，Then 无横向溢出，操作按钮可见且有间距，失败不误报成功。",
+      "status": "draft",
+      "requirementIds": [
+        "vocabulary/mcp-access/AC-09"
+      ],
+      "preconditions": [
+        "一次性 MySQL 和真实 NestJS；resetDatabase 重置隔离账号及 resilient 词条；真实 Cookie 登录；不得指向生产。"
+      ],
+      "steps": [
+        "分别在1280和390宽度打开管理，核对布局不溢出及按钮间距至少8px。",
+        "打开创建弹窗，核对默认字段并取消；不展示真实密钥。",
+        "复制配置模板成功，刷新后模拟剪贴板失败，核对错误且没有成功提示。",
+        "取消撤销后重新确认撤销，核对状态与数据库结果。"
+      ],
+      "expectedResults": [
+        "两种宽度页面无横向溢出，按钮间距至少8px；复制失败有错误反馈且不显示成功；撤销取消不改变，确认后持久化已撤销。"
+      ],
+      "cleanup": "每用例重置隔离库；runner 清理容器。MCP 密钥仅在测试内存传递，禁止日志及截图。",
+      "bindings": [
+        {
+          "suite": "mcp-access",
+          "title": "MCP real authorization and vocabulary > MCP-UI-1280 shows safe defaults, refreshes persisted list and revokes with spaced controls",
+          "evidence": "real"
+        },
+        {
+          "suite": "mcp-access",
+          "title": "MCP real authorization and vocabulary > MCP-UI-390 shows safe defaults, refreshes persisted list and revokes with spaced controls",
+          "evidence": "real"
+        }
+      ],
+      "reviewNote": "复制失败及网络失败未完整实测，保持未覆盖"
+    },
+    {
+      "id": "vocabulary/mcp-access/REQ-4bb3a6509d/CASE-01",
+      "title": "公网仅经已配置 HTTPS 入口访问。令牌不进入本地存储、示例文件、截图或报告。迁移可重复执行且只新增本功能表，不改旧业务表结构。写入、凭证消费和审计成功记录保持事务一致；故障回滚不产生部分覆盖。上线前隔离库真实 HTTP/MCP 与界面测试，线上仅未授权/只读冒烟，不删除真实词条。现有学习、管理和 HTTPS 续期配置必须保留。",
+      "status": "draft",
+      "requirementIds": [
+        "vocabulary/mcp-access/REQ-4bb3a6509d"
+      ],
+      "preconditions": [
+        "一次性 MySQL 和真实 NestJS；resetDatabase 重置隔离账号及 resilient 词条；真实 Cookie 登录；不得指向生产。"
+      ],
+      "steps": [
+        "在隔离库连续运行两次迁移，比较旧表结构及新增表。",
+        "对写入、凭证消费和审计制造事务失败，核对原词与计数不变。",
+        "上线后只执行未授权/只读 HTTPS 冒烟并核实续期配置。"
+      ],
+      "expectedResults": [
+        "公网仅经已配置 HTTPS 入口访问。令牌不进入本地存储、示例文件、截图或报告。迁移可重复执行且只新增本功能表，不改旧业务表结构。写入、凭证消费和审计成功记录保持事务一致；故障回滚不产生部分覆盖。上线前隔离库真实 HTTP/MCP 与界面测试，线上仅未授权/只读冒烟，不删除真实词条。现有学习、管理和 HTTPS 续期配置必须保留。"
+      ],
+      "cleanup": "每用例重置隔离库；runner 清理容器。MCP 密钥仅在测试内存传递，禁止日志及截图。",
+      "bindings": [],
+      "reviewNote": "非功能/发布复合要求：需要迁移重复执行、事务故障及线上 HTTPS 冒烟等独立证据，不能以本 Cypress 脚本声称全部通过。"
+    }
+  ]
+}
