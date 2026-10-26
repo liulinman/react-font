@@ -207,7 +207,7 @@ const Login: React.FC = () => {
 
         <Card className="login-card">
           <div className="login-card-header">
-            <span className="login-card-mark" />
+            <span className="login-card-mark" aria-hidden="true"><img src={brand.symbol} alt="" /></span>
             <div>
               <div className="login-title">欢迎回来</div>
               <div className="login-subtitle">进入你的个人词汇空间</div>

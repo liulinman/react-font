@@ -22,7 +22,7 @@ body { font-family: -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","M
 .english-world-shell .english-world-header-inner { padding: 22px 12px; }
 .english-world-shell .english-world-brand { gap: 10px; padding: 0 8px 24px; color: var(--ew-text); }
 .english-world-shell .english-world-brand-title { font-size: 16px; color: var(--ew-text); }
-.english-world-shell .english-world-brand-mark { width: 34px; height: 34px; border-radius: 6px; background: var(--ew-accent); font-size: 13px; font-weight: 700; }
+.english-world-shell .english-world-brand-mark { width: 34px; height: 34px; border-radius: 10px; background: linear-gradient(160deg, #b7ddf0, #f4d0b4); font-size: 13px; font-weight: 700; }
 .english-world-shell .english-world-brand-subtitle { display: none; }
 .english-world-shell .english-world-nav { min-height: 0; overflow-x: hidden; overflow-y: auto; }
 .english-world-shell .english-world-nav-menu.ant-menu { background: transparent; color: var(--ew-text-secondary); }
@@ -125,7 +125,7 @@ body { font-family: -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","M
 .login-container .login-hero { max-width: 880px; gap: 64px; }
 .login-container .login-copy h1 { font-size: 30px; line-height: 1.4; letter-spacing: 0; }
 .login-container .login-copy p { font-size: 15px; line-height: 1.8; }
-.login-container .login-brand-mark { border-radius: 6px; background: var(--ew-accent); box-shadow: none; }
+.login-container .login-brand-mark, .login-container .login-card-mark { border-radius: 10px; background: linear-gradient(160deg, #b7ddf0, #f4d0b4); box-shadow: none; }
 .login-container .login-card { backdrop-filter: none; }
 .english-world-shell .english-world-nav-menu.ant-menu .ant-menu-sub .ant-menu-item:not(.ant-menu-item-selected) { color: var(--ew-text-secondary); }
 .english-world-main .reading-practice :is(.rp-card p,.rp-submit small) { color: var(--ew-text-secondary); }

@@ -1,6 +1,6 @@
 ---
 title: Freewing 品牌统一
-status: in-progress
+status: done
 type: feature
 created: 2026-10-26
 baseline_commit: aeca904
@@ -19,10 +19,13 @@ context: []
 - `apps/docs/`：文档品牌；正式需求见`docs/prd/settings/features/freewing-brand/prd.md`（相对仓库）。
 - `scripts/`、`apps/english-world/scripts/generate-pwa-icons.mjs`：品牌资源与安装图标。
 ## Tasks & Acceptance
-- [ ] 单一品牌资产与可重复派生资源；新增品牌配置与必要测试。
-- [ ] 三站全部用户可见品牌替换，favicon/PWA/iOS显示名及图标源同步，保留所有机器标识。
-- [ ] PRD入口索引与公开文档同步；构建、局部测试及390px真实页面检查。
-- [ ] 独立审查、增量发布与线上核对，保存回滚与交接。
+- [x] 单一品牌资产与可重复派生资源；新增品牌配置与必要测试。
+- [x] 三站全部用户可见品牌替换，favicon/PWA/iOS显示名及图标源同步，保留所有机器标识。
+- [x] PRD入口索引与公开文档同步；构建、局部测试及390px真实页面检查。
+- [x] 独立审查、增量发布与线上核对，保存回滚与交接。
 ## Verification
 学生与后台受影响Vitest、三站构建、PWA检查、真实浏览器登录/管理/文档页面及manifest/资产，既有业务不写入。不是全站PRD验收或原生安装包发布。
 ## Spec Change Log
+
+## Review and evidence
+三层只读审查：修复后台登录缺可见品牌名；实际截图发现全局workbench覆盖品牌底色和登录卡占位图，补充符号与匹配底色。学生25、管理10、资源3通过，三站构建/PWA验证通过，线上5项浏览器通过；未编译或分发iOS应用。证据在工作区docs/freewing-brand-20261026/。
