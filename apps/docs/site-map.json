@@ -1,5 +1,5 @@
 [
- {"text":"开始阅读","items":[{"text":"项目介绍与功能地图","link":"/start/overview"},{"text":"本地运行项目","link":"/start/local-development"}]},
+ {"text":"开始阅读","items":[{"text":"项目总览与 AI 实践","link":"/start/overview"},{"text":"本地运行项目","link":"/start/local-development"}]},
  {"text":"AI 与 MCP","items":[{"text":"模型、Agent 与工具调用","link":"/mcp/concepts"},{"text":"MCP 如何连接业务系统","link":"/mcp/connection"},{"text":"实现 query_words","link":"/mcp/query-words"},{"text":"新增与覆盖更新单词","link":"/mcp/write-workflow"},{"text":"接入 Codex 与排错","link":"/mcp/clients"}]},
  {"text":"AI 学习功能","items":[{"text":"场景听力完整流程","link":"/ai/listening-flow"},{"text":"DeepSeek 生成与校验","link":"/ai/deepseek"},{"text":"豆包语音合成","link":"/ai/doubao"},{"text":"从单词到听力题","link":"/ai/word-to-question"}]},
  {"text":"后端与数据","items":[{"text":"请求如何进入 NestJS","link":"/backend/nestjs-request"},{"text":"数据库、分页与账号隔离","link":"/backend/database-isolation"},{"text":"事务、并发与幂等","link":"/backend/transactions-idempotency"},{"text":"重复请求为什么不能重复计数","link":"/backend/retry-example"}]},

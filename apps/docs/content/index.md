@@ -9,7 +9,7 @@ hero:
     alt: English World
   actions:
     - theme: brand
-      text: 开始阅读
+      text: 技术与 AI 实践总结
       link: /start/overview
     - theme: alt
       text: 从 MCP 实例开始
