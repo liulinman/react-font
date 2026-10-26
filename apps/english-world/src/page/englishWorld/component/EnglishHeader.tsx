@@ -1,3 +1,4 @@
+import { brand } from "@/brand";
 import {
   BookFilled,
   CloudUploadOutlined,
@@ -121,11 +122,9 @@ export const EnglishHeader = ({
       <div className="english-world-header-inner">
         {/* Logo */}
         <div className="english-world-brand">
-          <span className="english-world-brand-mark">
-            EW
-          </span>
+          <span className="english-world-brand-mark" aria-hidden="true"><img src={brand.symbol} alt="" /></span>
           <span className="english-world-brand-copy">
-            <span className="english-world-brand-title">English World</span>
+            <span className="english-world-brand-title">{brand.name}</span>
             <span className="english-world-brand-subtitle">专注词汇成长</span>
           </span>
         </div>

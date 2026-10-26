@@ -2,7 +2,7 @@
 
 ## 一次连接经过哪些边界
 
-English World 把 MCP 服务放在与平台业务相连的 HTTP 入口，公开示例为 `https://your-host.example/api/mcp`。客户端通过网络发送 MCP 消息，后端将工具调用转到词库服务。它不是把整个数据库交给 AI，也不是让浏览器登录 Cookie 自动成为外部客户端的授权。
+Freewing 把 MCP 服务放在与平台业务相连的 HTTP 入口，公开示例为 `https://your-host.example/api/mcp`。客户端通过网络发送 MCP 消息，后端将工具调用转到词库服务。它不是把整个数据库交给 AI，也不是让浏览器登录 Cookie 自动成为外部客户端的授权。
 
 [MCP 传输规范](https://modelcontextprotocol.io/specification/2025-06-18/basic/transports)定义消息如何通过 Streamable HTTP 传输；本项目选择无会话模式和 JSON 响应。后端 `src/interface/mcp-access/mcp.controller.ts` 创建 `StreamableHTTPServerTransport`，设置 `sessionIdGenerator: undefined` 与 `enableJsonResponse: true`。当前控制器仅接受 POST，其他方法返回 405；不要用浏览器 GET 的结果判定整个服务失效。
 

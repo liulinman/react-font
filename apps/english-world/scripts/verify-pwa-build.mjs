@@ -83,6 +83,7 @@ const allowedPrecache = [
   /^index\.html$/,
   /^manifest\.webmanifest$/,
   /^icons\/[\w.-]+\.png$/,
+  /^brand\/freewing-(?:symbol|favicon)\.png$/,
   /^assets\/app-shell-[\w-]+\.js$/,
   /^assets\/index-[\w-]+\.css$/,
   /^assets\/workbox-window[\w.-]*\.js$/,

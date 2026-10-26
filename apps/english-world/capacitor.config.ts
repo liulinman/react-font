@@ -1,8 +1,9 @@
+import { brand } from "../../branding/freewing/brand.mjs";
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.liulin.englishworld',
-  appName: 'English World',
+  appName: brand.name,
   webDir: 'dist-ios',
   loggingBehavior: 'none',
   ios: {

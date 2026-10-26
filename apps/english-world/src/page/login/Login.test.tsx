@@ -56,6 +56,9 @@ describe("Login", () => {
     expect(screen.getByText("每日复习")).toBeInTheDocument();
     expect(screen.getByText("AI 语境实验室")).toBeInTheDocument();
     expect(container.querySelector(".login-copy-points")).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Freewing 登录" })).toBeInTheDocument();
+    expect(container.querySelector(".login-brand-mark img")).toHaveAttribute("src", "/brand/freewing-symbol.png");
+    expect(screen.queryByText("English World")).not.toBeInTheDocument();
     expect(container.querySelector(".login-status-strip")).not.toBeInTheDocument();
     expect(container.querySelector(".login-starfield")).not.toBeInTheDocument();
   });

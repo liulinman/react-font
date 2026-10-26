@@ -1,3 +1,4 @@
+import { brand } from "./brand";
 import { AiServicesPanel } from './AiServicesPanel';
 import { ReadingPracticePanel, practiceLabels } from './ReadingPracticePanel';
 import { newRequestId } from './api/readingPractice';
@@ -184,8 +185,8 @@ export function AdminApp() {
       <Dropdown trigger={["click"]} menu={{ items: [{ key: "delete", label: "删除公告", danger: true }], onClick: () => ask({ kind: "deleteNotification", id: row.id, title: row.title }) }}><Button type="text" aria-label={`更多操作：${row.title}`}>更多</Button></Dropdown>
     </Space> },
   ];
-  if (checking) return <main className="admin-login-page"><section className="admin-login-panel"><div className="admin-brand-mark">EW</div><h1>正在进入后台</h1><p>正在检查登录状态。</p></section></main>;
-  if (!authed) return <main className="admin-login-page"><section className="admin-login-panel"><div className="admin-brand-mark">EW</div><h1>后台登录</h1><p className="admin-muted">管理用户、学习公告与定时任务。</p>
+  if (checking) return <main className="admin-login-page"><section className="admin-login-panel"><div className="admin-brand-mark"><img src={`/admin${brand.symbol}`} alt={brand.name} /></div><p className="admin-brand-name">{brand.name}</p><h1>正在进入后台</h1><p>正在检查登录状态。</p></section></main>;
+  if (!authed) return <main className="admin-login-page"><section className="admin-login-panel"><div className="admin-brand-mark"><img src={`/admin${brand.symbol}`} alt={brand.name} /></div><p className="admin-brand-name">{brand.name}</p><h1>后台登录</h1><p className="admin-muted">管理用户、学习公告与定时任务。</p>
     {loginError && <Alert type="error" message={loginError} showIcon />}
     <Form form={loginForm} layout="vertical" onFinish={values => void handleLogin(values)} disabled={authBusy}>
       <Form.Item label="账号" name="username" rules={[{ required: true, message: "请输入账号" }]}><Input autoComplete="username" /></Form.Item>
@@ -194,7 +195,7 @@ export function AdminApp() {
     </Form></section></main>;
   const section = sections.find(item => item.key === active)!;
   return <main className="admin-shell">
-    <aside className="admin-sidebar"><div className="admin-brand"><span className="admin-brand-mark">EW</span><span><strong>English World</strong><small>管理控制台</small></span></div>
+    <aside className="admin-sidebar"><div className="admin-brand"><span className="admin-brand-mark" aria-hidden="true"><img src={`/admin${brand.symbol}`} alt="" /></span><span><strong>{brand.name}</strong><small>管理控制台</small></span></div>
       <div className="admin-nav-label">工作空间</div>
       <nav aria-label="后台导航" className="admin-nav">{sections.map(item => <button key={item.key} aria-current={active === item.key ? "page" : undefined} onClick={() => setActive(item.key)}>{item.icon}<span>{item.label}</span></button>)}</nav>
       <a className="admin-site-link" href="/englishWorld/knowledge-notes" target="_blank" rel="noreferrer">打开学习网站 ↗</a>

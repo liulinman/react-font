@@ -64,7 +64,7 @@ describe("mobile login", () => {
     renderMobileLogin({ pathname: "/mobile/tools/context-lab" });
 
     expect(
-      screen.getByRole("main", { name: "English World 移动端登录" }),
+      screen.getByRole("main", { name: "Freewing 移动端登录" }),
     ).toBeVisible();
     expect(screen.queryByText("把每个单词点亮成星图")).not.toBeInTheDocument();
   });

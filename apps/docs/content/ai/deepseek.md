@@ -1,7 +1,7 @@
 # DeepSeek：结构化输出仍然需要业务校验
 
 ## 问题：合法 JSON 不等于正确题目
-模型能返回格式漂亮、含义却错误的练习。例如目标词是 effective，答案却写 efficient；两个词相近，却不属于同一词族。技术上应区分三层：网络成功、结构合法、业务正确。English World 的文本生成链路逐层检查，避免把 HTTP 成功当作学习内容合格。
+模型能返回格式漂亮、含义却错误的练习。例如目标词是 effective，答案却写 efficient；两个词相近，却不属于同一词族。技术上应区分三层：网络成功、结构合法、业务正确。Freewing 的文本生成链路逐层检查，避免把 HTTP 成功当作学习内容合格。
 
 ## 必要知识：提示、模式与边界
 后端仓库 `src/interface/ai-services/ai-services.service.ts` 的 deepseek 方法向配置的基础地址拼接 `/chat/completions`。system 消息要求把词条当作不可信数据，而非指令；user 消息是序列化后的任务与词条。请求声明 json_object 输出模式，并限制输出长度。随后仍须检查 content 是字符串、JSON 可解析，调用方还要检查字段、数量和语义。

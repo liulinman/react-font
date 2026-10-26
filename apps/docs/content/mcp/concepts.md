@@ -6,7 +6,7 @@
 
 Agent 可以理解为围绕模型组织起来的工作循环：接收目标、选择工具、观察结果、决定下一步。它不是一个拥有无限权限的新账号。客户端负责连接服务、展示调用和处理交互，服务器负责校验权限与数据边界。用户说“查一下”也不应被客户端解释为“允许覆盖全部词条”。
 
-## English World 中的分工
+## Freewing 中的分工
 
 后端源码位于后端仓库 `src/interface/mcp-access/mcp.controller.ts` 与 `mcp.service.ts`。控制器用 `registerTool` 注册名称、说明和输入约束；服务中的 `execute` 重新检查授权是否有效，判断所需 scope，再调用查询或写入逻辑。模型看到的工具说明是选择工具的线索，真正的访问控制在服务器。
 
@@ -28,6 +28,6 @@ Agent 可以理解为围绕模型组织起来的工作循环：接收目标、�
 
 ## 协议与业务不是同一层
 
-[MCP 工具规范](https://modelcontextprotocol.io/specification/2025-06-18/server/tools)描述工具发现、调用和结果形式。`words:read`、每页最多 50 条、覆盖必须预览，则是 English World 的业务选择。工具注解中的 `readOnlyHint` 等只是客户端参考提示，不能替代服务端校验。
+[MCP 工具规范](https://modelcontextprotocol.io/specification/2025-06-18/server/tools)描述工具发现、调用和结果形式。`words:read`、每页最多 50 条、覆盖必须预览，则是 Freewing 的业务选择。工具注解中的 `readOnlyHint` 等只是客户端参考提示，不能替代服务端校验。
 
 验证时先观察客户端是否发现工具，再检查实际请求和返回结果。看到模型说“已完成”不足以证明业务成功；应确认工具结果没有 `isError: true`，必要时在平台重新读取数据。涉及写入还要区分预览和确认：预览返回变化，并没有修改词条。继续阅读 [连接过程](/mcp/connection) 和 [查询实例](/mcp/query-words)，可以把这些概念对应到真实请求。

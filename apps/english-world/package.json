@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "node ../../scripts/generate-brand-assets.mjs --app english-world && tsc -b && vite build",
     "generate:pwa-icons": "node scripts/generate-pwa-icons.mjs",
     "verify:pwa-build": "node scripts/verify-pwa-build.mjs",
     "lint": "eslint .",
@@ -18,7 +18,7 @@
     "e2e:report": "mkdir -p cypress/reports && pnpm cypress:ensure && start-server-and-test \"vite --host 127.0.0.1 --port 5175 --strictPort\" http://127.0.0.1:5175 \"cypress run --reporter xunit --reporter-options output=cypress/reports/e2e-results.xml,suiteName=english-world-e2e\"",
     "e2e:report:html": "mkdir -p cypress/reports && pnpm cypress:ensure && start-server-and-test \"vite --host 127.0.0.1 --port 5175 --strictPort\" http://127.0.0.1:5175 \"cypress run --reporter cypress-mochawesome-reporter --reporter-options reportDir=cypress/reports,reportFilename=e2e-results,charts=true,embeddedScreenshots=true,inlineAssets=true,overwrite=true\"",
     "preview": "vite preview",
-    "build:ios": "tsc -b && vite build --mode ios",
+    "build:ios": "node ../../scripts/generate-brand-assets.mjs --app english-world && tsc -b && vite build --mode ios",
     "ios:sync": "pnpm build:ios && cap sync ios",
     "ios:open": "cap open ios",
     "ios": "pnpm ios:sync && cap open ios",

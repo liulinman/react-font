@@ -6309,3 +6309,7 @@ html[data-theme="dark"] .overwrite-stats-table .ant-table-thead > tr > th {
     width: 100%;
   }
 }
+
+/* Compact brand symbol; text stays outside the image for legibility. */
+.english-world-brand-mark { background: linear-gradient(160deg, #b7ddf0, #f4d0b4); }
+.english-world-brand-mark img { width: 100%; height: 100%; object-fit: contain; display: block; }

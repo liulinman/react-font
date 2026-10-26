@@ -4,7 +4,7 @@
 浏览器 fetch 在服务器返回错误状态时通常仍会得到 Response；网络中断才进入异常路径。业务接口还可能在 HTTP 成功里携带失败 code。因此请求封装需要明确判断契约，不能用“没有抛异常”代替成功。
 
 ## 必要知识：三种数据通道
-English World 中 JSON 接口、音频二进制和授权管理具有不同错误策略。`apps/english-world/src/aiListening/api.ts` 的 listeningFetch 无 body 时 GET，有 body 时 POST，并携带登录凭据。它尝试解析 JSON，同时要求 response.ok 与业务 code=200，成功只返回 data。transport 将普通网络异常改为可理解提示，但保留 AbortError，允许调用者把取消当作正常生命周期事件。
+Freewing 中 JSON 接口、音频二进制和授权管理具有不同错误策略。`apps/english-world/src/aiListening/api.ts` 的 listeningFetch 无 body 时 GET，有 body 时 POST，并携带登录凭据。它尝试解析 JSON，同时要求 response.ok 与业务 code=200，成功只返回 data。transport 将普通网络异常改为可理解提示，但保留 AbortError，允许调用者把取消当作正常生命周期事件。
 
 同文件 audioFetch 直接读取 Blob，并检查非空和 Content-Type 含 audio/。这是必要的协议校验：错误 HTML 页面即使状态异常配置成 200，也不应该交给播放器当音频。随后 audio.ts 还会解码与检查静音，逐层收紧有效性。
 

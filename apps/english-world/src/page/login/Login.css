@@ -715,3 +715,8 @@
 .mobile-login__field label { font-size: 13px; font-weight: 500; margin-bottom: 10px; }
 .mobile-login__field .adm-input { min-height: 54px; border-radius: 15px; }
 .mobile-login__submit { min-height: 54px; border-radius: 16px; background: #28634e; border-color: #28634e; color: white; font-weight: 500; margin-top: 16px; }
+
+/* Freewing artwork keeps its own proportions inside the established login layout. */
+.login-brand-mark { background: linear-gradient(160deg, #b7ddf0, #f4d0b4); box-shadow: none; }
+.login-brand-mark img, .mobile-login__brand img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.mobile-login__brand { width: 64px; height: 64px; background: linear-gradient(160deg, #b7ddf0, #f4d0b4); transform: none; border-radius: 16px; }

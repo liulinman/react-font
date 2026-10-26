@@ -122,3 +122,8 @@ h1, h2, h3, h4 { font-weight: 600; }
 .admin-panel .ant-table .ant-btn-text { color: #606c7c; }
 .admin-panel .ant-table .ant-btn-dangerous { color: #cf3b45; }
 .admin-form .ant-input-number { width: 100%; }
+
+.admin-brand-mark { background: linear-gradient(160deg, #b7ddf0, #f4d0b4); overflow: hidden; }
+.admin-brand-mark img { display: block; width: 100%; height: 100%; object-fit: contain; }
+
+.admin-brand-name { margin: 12px 0 0; color: #07556c; font-size: 18px; font-weight: 650; }

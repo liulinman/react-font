@@ -36,6 +36,8 @@ describe("EnglishHeader ToC navigation", () => {
 
     const navigation = container.querySelector(".english-world-nav");
     expect(navigation).toBeInTheDocument();
+    expect(screen.getByText("Freewing")).toBeInTheDocument();
+    expect(container.querySelector(".english-world-brand-mark img")).toHaveAttribute("src", "/brand/freewing-symbol.png");
 
     expect(within(navigation as HTMLElement).getByText("今天")).toBeInTheDocument();
     expect(within(navigation as HTMLElement).getByText("词库")).toBeInTheDocument();

@@ -1,12 +1,12 @@
 ---
 layout: home
 hero:
-  name: English World
+  name: Freewing
   text: 从知识原理，走到真实代码
   tagline: 技术与实践 · 用一个持续演进的英语学习平台，理解 AI、MCP、前后端与工程交付。
   image:
-    src: /ew.svg
-    alt: English World
+    src: /brand/freewing-logo.webp
+    alt: Freewing · Learn freely. Explore the world.
   actions:
     - theme: brand
       text: 技术与 AI 实践总结

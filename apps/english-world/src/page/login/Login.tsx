@@ -1,3 +1,4 @@
+import { brand } from "@/brand";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Form, Input, Button, Card, Tabs, Alert, message } from "antd";
 import { UserOutlined, LockOutlined } from "@ant-design/icons";
@@ -174,15 +175,13 @@ const Login: React.FC = () => {
         <span className="login-constellation-line login-constellation-line-one" />
         <span className="login-constellation-line login-constellation-line-two" />
       </div>
-      <section className="login-hero" aria-label="英语世界登录">
+      <section className="login-hero" aria-label={`${brand.name} 登录`}>
         <div className="login-copy">
           <div className="login-brand-lockup">
-            <span className="login-brand-mark" aria-hidden="true">
-              EW
-            </span>
+            <span className="login-brand-mark" aria-hidden="true"><img src={brand.symbol} alt="" /></span>
             <span>
-              <strong>English World</strong>
-              <small>AI vocabulary learning</small>
+              <strong>{brand.name}</strong>
+              <small>{brand.tagline}</small>
             </span>
           </div>
           <div className="login-kicker">PERSONAL LEARNING SPACE</div>
@@ -355,7 +354,7 @@ const Login: React.FC = () => {
           </div>
         </Card>
       </section>
-      <div className="login-footer">English World · Learn with context</div>
+      <div className="login-footer">{brand.name} · {brand.tagline}</div>
     </div>
   );
 };

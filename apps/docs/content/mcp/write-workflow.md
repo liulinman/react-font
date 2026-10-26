@@ -2,7 +2,7 @@
 
 ## 为什么新增不能顺便覆盖
 
-用户说“保存这个词”，可能是新增，也可能是改动已有解释。English World 将这两种意图区分为不同工具。`create_word` 对规范化后的同词返回 `duplicate_word`，不会悄悄改写旧内容；覆盖则先生成预览，用户明确确认后再执行。相关实现位于后端 `src/interface/mcp-access/mcp.service.ts` 的 `createWord`、`preview`、`confirm` 与 `idempotent`。
+用户说“保存这个词”，可能是新增，也可能是改动已有解释。Freewing 将这两种意图区分为不同工具。`create_word` 对规范化后的同词返回 `duplicate_word`，不会悄悄改写旧内容；覆盖则先生成预览，用户明确确认后再执行。相关实现位于后端 `src/interface/mcp-access/mcp.service.ts` 的 `createWord`、`preview`、`confirm` 与 `idempotent`。
 
 以下是已初始化测试客户端中的工具参数演示，只在独立测试账号中经授权使用，不要直接对正式词库执行。
 

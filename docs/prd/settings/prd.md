@@ -34,3 +34,5 @@
 - [单词 MCP 与授权管理](../vocabulary/features/mcp-access/prd.md)（`vocabulary/mcp-access`，2026-10-26，含权限、预览确认及幂等）。
 
 - [技术与实践文档中心](features/technical-docs/prd.md)（2026-10-26，公开知识、技术与实例教程，随项目发布）。
+
+- [Freewing品牌名称与Logo统一](features/freewing-brand/prd.md)（2026-10-26，展示品牌与应用图标，保留旧接入标识）。

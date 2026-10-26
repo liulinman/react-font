@@ -2,7 +2,7 @@
 
 ## 要解决的查询问题
 
-用户希望“找包含 learn 的词，先给五条”。合理实现需要把自然语言转成有限查询，同时保证账号隔离、稳定顺序与分页信息。English World 的 `query_words` 只搜索词头 `englishWord`，不搜索中文、笔记或所有账号；它也没有 `page`、`pageSize` 参数。
+用户希望“找包含 learn 的词，先给五条”。合理实现需要把自然语言转成有限查询，同时保证账号隔离、稳定顺序与分页信息。Freewing 的 `query_words` 只搜索词头 `englishWord`，不搜索中文、笔记或所有账号；它也没有 `page`、`pageSize` 参数。
 
 参数定义来自后端 `src/interface/mcp-access/mcp.controller.ts`，以下片段由文档同步流程纳入构建，业务源码仍是维护入口。
 

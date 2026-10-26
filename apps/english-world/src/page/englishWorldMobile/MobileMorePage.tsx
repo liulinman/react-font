@@ -1,3 +1,4 @@
+import { brand } from "@/brand";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { Dialog, Toast } from "antd-mobile";
@@ -172,7 +173,7 @@ export function MobileMorePage({ onOpenAi }: MobileMorePageProps) {
         </span>
         <div className="mobile-more-profile-copy">
           <strong>{username}</strong>
-          <span>English World</span>
+          <span>{brand.name}</span>
         </div>
       </section>
 

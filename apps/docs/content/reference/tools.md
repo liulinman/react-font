@@ -2,7 +2,7 @@
 
 ## 调用外形与权限
 
-MCP 客户端完成初始化后，通过 `tools/list` 获取定义，通过 `tools/call` 传工具名和 `arguments`。English World 当前登记七个词库工具，定义源于后端 `src/interface/mcp-access/mcp.controller.ts`，输入 schema 位于同目录 `mcp-security.ts`。下表记录业务契约，不是所有 MCP 服务通用的工具清单。
+MCP 客户端完成初始化后，通过 `tools/list` 获取定义，通过 `tools/call` 传工具名和 `arguments`。Freewing 当前登记七个词库工具，定义源于后端 `src/interface/mcp-access/mcp.controller.ts`，输入 schema 位于同目录 `mcp-security.ts`。下表记录业务契约，不是所有 MCP 服务通用的工具清单。
 
 | 工具 | 必要参数 | 所需权限 |
 | --- | --- | --- |

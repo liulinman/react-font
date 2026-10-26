@@ -1,3 +1,4 @@
+import { brand } from "@/brand";
 import { useRef, useState } from "react";
 import { Button, Input, Toast } from "antd-mobile";
 
@@ -109,10 +110,10 @@ export default function MobileLoginForm({
   const registerMode = mode === "register";
 
   return (
-    <main aria-label="English World 移动端登录" className="mobile-login">
+    <main aria-label={`${brand.name} 移动端登录`} className="mobile-login">
       <section className="mobile-login__surface" aria-labelledby="mobile-login-title">
-        <div className="mobile-login__brand" aria-hidden="true">EW</div>
-        <p className="mobile-login__eyebrow">English World</p>
+        <div className="mobile-login__brand" aria-hidden="true"><img src={brand.symbol} alt="" /></div>
+        <p className="mobile-login__eyebrow">{brand.name}</p>
         <h1 id="mobile-login-title">{registerMode ? "创建账号" : "欢迎回来"}</h1>
         <p className="mobile-login__description">
           {registerMode ? "用一个账号开始你的词汇学习。" : "登录后继续你的学习进度。"}

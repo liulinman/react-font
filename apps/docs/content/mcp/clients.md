@@ -2,7 +2,7 @@
 
 ## 准备已有连接信息
 
-本例演示把 English World 的远程 MCP 服务接入 Codex。前提是已经安装支持 Streamable HTTP 的 Codex，并持有自己测试账号的有效只读授权。本文不会自动创建授权、调用付费模型或修改词库。先从平台设置中的 MCP 授权管理确认连接地址，不要使用平台首页地址，也不要把平台登录 Cookie 填进 Bearer 字段。
+本例演示把 Freewing 的远程 MCP 服务接入 Codex。前提是已经安装支持 Streamable HTTP 的 Codex，并持有自己测试账号的有效只读授权。本文不会自动创建授权、调用付费模型或修改词库。先从平台设置中的 MCP 授权管理确认连接地址，不要使用平台首页地址，也不要把平台登录 Cookie 填进 Bearer 字段。
 
 [Codex 官方 MCP 文档](https://developers.openai.com/codex/mcp)说明了 HTTP 服务的 URL 与凭据配置。以下配置使用环境变量保存 Bearer 密钥，变量名是本文约定，配置中的值是变量名称，而不是密钥本身。
 

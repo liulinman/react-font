@@ -1,10 +1,11 @@
+import { brand } from '../../../branding/freewing/brand.mjs';
 import { defineConfig } from 'vitepress';
 import { fileURLToPath } from 'node:url';
 import sidebar from '../site-map.json';
 
 export default defineConfig({
   lang: 'zh-CN',
-  title: 'English World',
+  title: brand.name,
   description: '技术与实践：从知识原理走到真实代码与可验证实例',
   base: '/docs/',
   srcDir: 'content',
@@ -13,10 +14,10 @@ export default defineConfig({
   vite: { publicDir: fileURLToPath(new URL('../public', import.meta.url)) },
   lastUpdated: false,
   ignoreDeadLinks: false,
-  head: [['link', { rel: 'icon', type: 'image/svg+xml', href: '/docs/ew.svg' }]],
+  head: [['link', { rel: 'icon', type: 'image/png', href: `/docs${brand.favicon}` }]],
   themeConfig: {
-    logo: '/ew.svg',
-    siteTitle: '技术与实践',
+    logo: { src: brand.symbol, alt: brand.name },
+    siteTitle: `${brand.name} · 技术与实践`,
     nav: [
       { text: '开始阅读', link: '/start/overview' },
       { text: 'MCP 实战', link: '/mcp/query-words' },
@@ -42,6 +43,6 @@ export default defineConfig({
         } } },
       },
     },
-    footer: { message: '知识 · 技术 · 实例', copyright: 'English World · 文档随项目发布' },
+    footer: { message: '知识 · 技术 · 实例', copyright: `${brand.name} · 文档随项目发布` },
   },
 });

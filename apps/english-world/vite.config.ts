@@ -1,3 +1,4 @@
+import { brand } from "../../branding/freewing/brand.mjs";
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
@@ -9,10 +10,10 @@ export default defineConfig(({ mode }) => ({
     VitePWA({
       disable: mode === 'ios',
       registerType: "prompt",
-      includeAssets: ["icons/apple-touch-icon-180x180.png"],
+      includeAssets: ["icons/freewing-apple-touch-icon-180x180.png", "brand/freewing-symbol.png", "brand/freewing-favicon.png"],
       manifest: {
-        name: "English World",
-        short_name: "English",
+        name: brand.name,
+        short_name: brand.name,
         start_url: "/mobile",
         scope: "/",
         display: "standalone",
@@ -20,17 +21,17 @@ export default defineConfig(({ mode }) => ({
         theme_color: "#F2F2F7",
         icons: [
           {
-            src: "/icons/pwa-192x192.png",
+            src: "/icons/freewing-192x192.png",
             sizes: "192x192",
             type: "image/png",
           },
           {
-            src: "/icons/pwa-512x512.png",
+            src: "/icons/freewing-512x512.png",
             sizes: "512x512",
             type: "image/png",
           },
           {
-            src: "/icons/pwa-512x512-maskable.png",
+            src: "/icons/freewing-512x512-maskable.png",
             sizes: "512x512",
             type: "image/png",
             purpose: "maskable",

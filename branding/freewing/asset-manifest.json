@@ -1,0 +1,15 @@
+{
+  "name": "Freewing",
+  "sources": {
+    "approved-logo.png": "0fcce128a0d4f8d595fb28b5c5fadd537a33a1f0be78511f35e0ce9cb339c2cc",
+    "symbol-source.png": "63e0e76045c24ccc582ec7cf6e147aa6ce6ce4ad78870d7bb86749e5e480fc2c"
+  },
+  "derived": {
+    "freewing-symbol.png": "9b47e8c2a934a15542924786225ae3e82cbf874f91789dd1a2e47f3ea13e9065",
+    "freewing-logo.webp": "6ebb108da5c5fa723ee5ecd3aa1e41c00f4e442486b7c7d0b1d72cd3b96c6706"
+  },
+  "iconSafeZone": {
+    "maskableMaxWidthRatio": 0.625,
+    "circularSafeRadiusRatio": 0.4
+  }
+}

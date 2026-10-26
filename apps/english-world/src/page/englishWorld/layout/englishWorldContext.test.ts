@@ -4,7 +4,7 @@ import {
   getEnglishWorldSectionLabel,
 } from "./englishWorldContext";
 
-describe("English World desktop context", () => {
+describe("Freewing desktop context", () => {
   it("maps primary and contextual routes to stable product sections", () => {
     expect(getEnglishWorldSectionLabel("cockpit")).toBe("今天");
     expect(getEnglishWorldSectionLabel("words")).toBe("词库");
@@ -18,7 +18,7 @@ describe("English World desktop context", () => {
     expect(getEnglishWorldSectionLabel("recite")).toBe("单词复习");
     expect(getEnglishWorldSectionLabel("wordBooks")).toBe("复习手册");
     expect(getEnglishWorldSectionLabel("stats")).toBe("数据统计");
-    expect(getEnglishWorldSectionLabel("unknown")).toBe("English World");
+    expect(getEnglishWorldSectionLabel("unknown")).toBe("Freewing");
   });
 
   it("formats the local desktop date in Chinese", () => {

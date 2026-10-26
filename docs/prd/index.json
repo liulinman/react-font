@@ -139,7 +139,8 @@
       "baselineStatus": "missing",
       "primaryFeatures": [
         "desktop-learning-nav",
-        "technical-docs"
+        "technical-docs",
+        "freewing-brand"
       ],
       "relatedFeatures": [
         "unified-workspace",
@@ -353,6 +354,15 @@
       "primaryModule": "settings",
       "relatedModules": [],
       "prd": "settings/features/technical-docs/prd.md"
+    },
+    {
+      "id": "freewing-brand",
+      "title": "Freewing品牌名称与Logo统一",
+      "primaryModule": "settings",
+      "relatedModules": [
+        "auth"
+      ],
+      "prd": "settings/features/freewing-brand/prd.md"
     }
   ]
 }

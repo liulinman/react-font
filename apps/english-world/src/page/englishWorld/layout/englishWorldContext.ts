@@ -1,3 +1,4 @@
+import { brand } from "@/brand";
 const PRIMARY_LABELS: Record<string, string> = {
   cockpit: "今天",
   aiListening: "场景听力",
@@ -18,7 +19,7 @@ const PRIMARY_LABELS: Record<string, string> = {
 };
 
 export function getEnglishWorldSectionLabel(activeKey: string) {
-  return PRIMARY_LABELS[activeKey] ?? "English World";
+  return PRIMARY_LABELS[activeKey] ?? brand.name;
 }
 
 export function formatEnglishWorldDate(date: Date) {

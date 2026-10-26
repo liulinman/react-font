@@ -102,6 +102,8 @@ describe("AdminApp", () => {
     await user.click(screen.getByRole("button", { name: "登录后台" }));
     await screen.findByRole("button", { name: /用户管理/ });
     await screen.findByText("alice");
+    expect(screen.getByText("Freewing")).toBeInTheDocument();
+    expect(document.querySelector(".admin-brand-mark img")).toHaveAttribute("src", "/admin/brand/freewing-symbol.png");
   };
 
   it("restores the selected section after refresh and follows browser history", async () => {

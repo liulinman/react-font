@@ -108,7 +108,7 @@ describe("EnglishWorldLayout sidebar state", () => {
     );
 
     const contextBar = screen.getByRole("banner");
-    expect(contextBar).toHaveTextContent("English World");
+    expect(contextBar).toHaveTextContent("Freewing");
     expect(contextBar).toHaveTextContent("词库");
     expect(
       contextBar.querySelector(".english-world-context-date"),

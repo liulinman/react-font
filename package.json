@@ -23,7 +23,9 @@
     "docs:build": "pnpm --filter @font/docs build",
     "docs:preview": "pnpm --filter @font/docs preview",
     "docs:sync-code": "node scripts/sync-docs-code.mjs",
-    "docs:check": "node scripts/check-docs.mjs"
+    "docs:check": "node scripts/check-docs.mjs",
+    "brand:generate": "node scripts/generate-brand-assets.mjs",
+    "brand:verify": "node --test scripts/brand-assets.test.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

@@ -1,3 +1,4 @@
+import { brand } from "@/brand";
 import {
   formatEnglishWorldDate,
   getEnglishWorldSectionLabel,
@@ -17,7 +18,7 @@ export function EnglishWorldContextBar({
   return (
     <header className="english-world-context-bar">
       <div className="english-world-context-path">
-        <span>English World</span>
+        <span>{brand.name}</span>
         <span aria-hidden="true">/</span>
         <strong>{getEnglishWorldSectionLabel(activeKey)}</strong>
       </div>
