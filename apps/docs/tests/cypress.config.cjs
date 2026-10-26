@@ -1,0 +1,1 @@
+module.exports = { video:false, screenshotsFolder:'../docs/technical-docs-20261026/screenshots', e2e: {baseUrl:process.env.DOCS_TEST_URL || 'http://127.0.0.1:4174',specPattern:'apps/docs/tests/site.cy.cjs',supportFile:false,viewportWidth:1280,viewportHeight:900} };

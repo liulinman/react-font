@@ -1,8 +1,10 @@
 import "@testing-library/jest-dom/vitest";
-import { cleanup, render, screen, within } from "@testing-library/react";
+import { act, cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter, useLocation } from "react-router-dom";
+import { PwaUpdateProvider, type PwaRegistrationCallbacks } from "../../englishWorldMobile/pwa/PwaUpdateContext";
+import { MobileActivityLockContext } from "../../englishWorldMobile/offline/MobileActivityLockContext";
 import { ThemeProvider } from "@/theme/ThemeProvider";
 import {
   EnglishWorldLayout,
@@ -183,4 +185,21 @@ describe("EnglishWorldLayout sidebar state", () => {
       "/englishWorldMobile?view=more",
     );
   });
+});
+
+it("shows one desktop update prompt and keeps activation behind the activity lock and user click", async () => {
+  let callbacks: PwaRegistrationCallbacks | undefined;
+  const activate = vi.fn();
+  const registration = { register(next: PwaRegistrationCallbacks) { callbacks = next; return activate; } };
+  const shell = (locked: boolean) => <MemoryRouter><MobileActivityLockContext.Provider value={{ locked, lock: () => undefined, unlock: () => undefined }}><PwaUpdateProvider registration={registration}><EnglishWorldLayout activeKey="words">content</EnglishWorldLayout></PwaUpdateProvider></MobileActivityLockContext.Provider></MemoryRouter>;
+  const view = render(shell(true));
+  act(() => callbacks?.onNeedRefresh());
+  expect(screen.getAllByText("新版本已准备好")).toHaveLength(1);
+  expect(screen.getByRole("button", { name: "立即更新" })).toBeDisabled();
+  expect(activate).not.toHaveBeenCalled();
+  view.rerender(shell(false));
+  expect(activate).not.toHaveBeenCalled();
+  await userEvent.click(screen.getByRole("button", { name: "立即更新" }));
+  expect(activate).toHaveBeenCalledExactlyOnceWith(true);
+  cleanup();
 });

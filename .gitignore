@@ -33,3 +33,10 @@ test-results/
 *.njsproj
 *.sln
 *.sw?
+
+# Documentation build and local VitePress cache
+apps/docs/dist/
+apps/docs/.vitepress/cache/
+
+# Python helper bytecode
+**/__pycache__/

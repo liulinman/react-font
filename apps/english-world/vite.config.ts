@@ -45,7 +45,7 @@ export default defineConfig(({ mode }) => ({
           "assets/workbox-window*.js",
         ],
         navigateFallback: "/index.html",
-        navigateFallbackDenylist: [/^\/admin(?:\/|$)/],
+        navigateFallbackDenylist: [/^\/admin(?:\/|$)/, /^\/docs(?:\/|$)/],
         runtimeCaching: [],
       },
     }),

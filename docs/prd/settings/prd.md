@@ -32,3 +32,5 @@
 [返回全部模块](../README.md)
 
 - [单词 MCP 与授权管理](../vocabulary/features/mcp-access/prd.md)（`vocabulary/mcp-access`，2026-10-26，含权限、预览确认及幂等）。
+
+- [技术与实践文档中心](features/technical-docs/prd.md)（2026-10-26，公开知识、技术与实例教程，随项目发布）。

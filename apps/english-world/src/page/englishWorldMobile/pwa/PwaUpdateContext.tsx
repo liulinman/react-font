@@ -86,8 +86,17 @@ export function usePwaUpdate() {
   return value;
 }
 
-export function PwaUpdatePrompt() {
-  const { applyUpdate, locked, refreshRequestId, status } = usePwaUpdate();
+export function PwaUpdatePrompt({ optionalProvider = false }: { optionalProvider?: boolean } = {}) {
+  const value = useContext(PwaUpdateContext);
+  if (!value) {
+    if (optionalProvider) return null;
+    throw new Error("usePwaUpdate must be used inside PwaUpdateProvider");
+  }
+  return <PwaUpdatePromptContent value={value} />;
+}
+
+function PwaUpdatePromptContent({ value }: { value: PwaUpdateValue }) {
+  const { applyUpdate, locked, refreshRequestId, status } = value;
   const [dismissedRequestId, setDismissedRequestId] = useState<number | null>(null);
 
   if (status !== "ready" || dismissedRequestId === refreshRequestId) return null;

@@ -9,3 +9,9 @@ node_modules
 **/cypress/videos
 .env
 .env.*
+
+# Public documents are curated separately; never ship internal requirements or evidence.
+docs
+test-results
+**/.vitepress/cache
+**/.vitepress/.temp

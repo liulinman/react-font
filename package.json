@@ -18,7 +18,12 @@
     "preview:english-world": "pnpm --filter @font/english-world preview",
     "preview:web-utils": "pnpm --filter @font/web-utils preview",
     "test:prd:ai": "node scripts/test-prd-ai.mjs",
-    "test:prd:dashboard": "node scripts/prd-testing/dashboard.mjs"
+    "test:prd:dashboard": "node scripts/prd-testing/dashboard.mjs",
+    "docs:dev": "pnpm --filter @font/docs dev",
+    "docs:build": "pnpm --filter @font/docs build",
+    "docs:preview": "pnpm --filter @font/docs preview",
+    "docs:sync-code": "node scripts/sync-docs-code.mjs",
+    "docs:check": "node scripts/check-docs.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

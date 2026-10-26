@@ -25,6 +25,7 @@ type FeatureItem = {
   description: string;
   icon: ReactNode;
   path?: string;
+  documentPath?: string;
   action?: "ai" | "theme";
   tone: "blue" | "green" | "amber" | "violet" | "slate";
 };
@@ -99,6 +100,7 @@ const featureGroups: Array<{ title: string; items: FeatureItem[] }> = [
   {
     title: "设置",
     items: [
+      { title: "文档中心", description: "技术知识与项目实践", icon: <FileOutline />, documentPath: "/docs/", tone: "blue" },
       {
         title: "系统设置",
         description: "配置默写、听写数量与范围",
@@ -178,7 +180,13 @@ export function MobileMorePage({ onOpenAi }: MobileMorePageProps) {
         <section className="mobile-more-section" key={group.title}>
           <h2>{group.title}</h2>
           <div className="mobile-more-list">
-            {group.items.map((item) => (
+            {group.items.map((item) => item.documentPath ? (
+              <a className="mobile-more-item" key={item.title} href={item.documentPath}>
+                <span className={`mobile-more-item-icon mobile-more-item-icon-${item.tone}`} aria-hidden="true">{item.icon}</span>
+                <span className="mobile-more-item-copy"><strong>{item.title}</strong><span>{item.description}</span></span>
+                <RightOutline className="mobile-more-item-chevron" aria-hidden="true" />
+              </a>
+            ) : (
               <button
                 className="mobile-more-item"
                 key={item.title}

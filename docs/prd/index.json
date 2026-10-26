@@ -138,7 +138,8 @@
       "entry": "settings/prd.md",
       "baselineStatus": "missing",
       "primaryFeatures": [
-        "desktop-learning-nav"
+        "desktop-learning-nav",
+        "technical-docs"
       ],
       "relatedFeatures": [
         "unified-workspace",
@@ -345,6 +346,13 @@
         "auth"
       ],
       "prd": "vocabulary/features/mcp-access/prd.md"
+    },
+    {
+      "id": "technical-docs",
+      "title": "技术与实践文档中心",
+      "primaryModule": "settings",
+      "relatedModules": [],
+      "prd": "settings/features/technical-docs/prd.md"
     }
   ]
 }

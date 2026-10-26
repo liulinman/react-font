@@ -42,6 +42,7 @@ const navItems: MenuProps["items"] = [
   },
   { key: "knowledgeNotes", icon: <FileTextOutlined />, label: "知识笔记", title: "知识笔记" },
   { key: "stats", icon: <BarChartOutlined />, label: "数据统计", title: "数据统计" },
+  { key: "docs", icon: <FileTextOutlined />, label: <a href="/docs/">文档中心</a>, title: "文档中心" },
 ];
 
 function getPrimaryActiveKey(activeKey: string) {
@@ -105,7 +106,7 @@ export const EnglishHeader = ({
   const primaryActiveKey = getPrimaryActiveKey(activeKey);
 
   const handleNavClick: MenuProps["onClick"] = ({ key }) => {
-    if (key === "learning" || key === "vocabulary") return;
+    if (key === "learning" || key === "vocabulary" || key === "docs") return;
     const normalizedKey = normalizeActiveKey(key);
     navigate(getPathForNav(normalizedKey));
     onNavClick?.(normalizedKey);

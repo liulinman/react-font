@@ -197,3 +197,7 @@ describe("PwaUpdateProvider", () => {
     expect(screen.getByText("应用已可离线使用")).toBeInTheDocument();
   });
 });
+
+it("allows the desktop shell to omit a provider without weakening the strict hook", () => {
+  expect(renderToString(<PwaUpdatePrompt optionalProvider />)).toBe("");
+});

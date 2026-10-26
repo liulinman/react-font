@@ -1,0 +1,14 @@
+[
+  {
+    "source": "nestjs/src/interface/mcp-access/mcp.controller.ts",
+    "revision": "59bd79378d035aeccd6e67c52a1762543d0e4c1d",
+    "sha256": "2202f6109970f230e78d95d9ef3fd065b52c971766da7ed0b7eba59be57971e6",
+    "target": "mcp-query-definition.ts"
+  },
+  {
+    "source": "nestjs/src/interface/mcp-access/mcp.service.ts",
+    "revision": "59bd79378d035aeccd6e67c52a1762543d0e4c1d",
+    "sha256": "f7dda60fd29400cefc1aba1a9ea54dc18dd940dd5162a01e8277535f76193070",
+    "target": "mcp-query-handler.ts"
+  }
+]

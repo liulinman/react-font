@@ -5,6 +5,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { EnglishHeader } from "../component/EnglishHeader";
 import { EnglishWorldContextBar } from "./EnglishWorldContextBar";
 
+import { PwaUpdatePrompt } from "../../englishWorldMobile/pwa/PwaUpdateContext";
+
 export const SIDEBAR_COLLAPSED_STORAGE_KEY = "english-world-sidebar-collapsed";
 
 function getInitialSidebarCollapsed() {
@@ -83,6 +85,7 @@ export function EnglishWorldLayout({
         )}
         <main className="english-world-main">{children}</main>
       </div>
+      <PwaUpdatePrompt optionalProvider />
       {openedFromMobile ? (
         <button
           type="button"

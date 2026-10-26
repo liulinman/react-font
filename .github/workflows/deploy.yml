@@ -47,6 +47,12 @@ jobs:
       - name: Run Admin tests
         run: pnpm --filter @font/admin test --run
 
+      - name: Verify safe docs nginx merge
+        run: python3 scripts/test-install-docs-nginx.py
+
+      - name: Build documentation
+        run: pnpm docs:build
+
       - name: Build English World
         run: pnpm --filter @font/english-world build
 
@@ -60,6 +66,7 @@ jobs:
           path: |
             apps/english-world/dist/
             apps/admin/dist/
+            apps/docs/dist/
           if-no-files-found: error
           retention-days: 3
 
@@ -120,11 +127,20 @@ jobs:
             TARGET=${DEPLOY_TARGET} \
             COMPOSE_DIR=${DEPLOY_COMPOSE_DIR} \
             SERVICE=${DEPLOY_SERVICE} \
-            CONTAINER=${DEPLOY_CONTAINER} bash -s" <<'REMOTE'
+            CONTAINER=${DEPLOY_CONTAINER} \
+            DEPLOY_HOST=${DEPLOY_HOST} bash -s" <<'REMOTE'
           set -euo pipefail
 
           temp_dir="$(mktemp -d /tmp/english-world-frontend.XXXXXX)"
+          deployment_started=false
+          deployment_ready=false
+          baseline_image="english-world-frontend:before-${GITHUB_SHA:-docs}-$(date +%s)"
           cleanup() {
+            if [ "$deployment_started" = true ] && [ "$deployment_ready" = false ]; then
+              sudo cp "$temp_dir/nginx.before.conf" "$COMPOSE_DIR/nginx.conf"
+              sudo docker tag "$baseline_image" "$service_image_name"
+              (cd "$COMPOSE_DIR" && sudo docker compose up -d --no-deps --no-build "$SERVICE")
+            fi
             rm -rf "$temp_dir" "$ARCHIVE"
           }
           trap cleanup EXIT
@@ -132,26 +148,54 @@ jobs:
           tar -xzf "$ARCHIVE" -C "$temp_dir"
           sudo mkdir -p "$TARGET"
           sudo rsync -a --delete --exclude='.env*' "$temp_dir/" "$TARGET/"
-          sudo install -m 0644 "$TARGET/nginx.conf" "$COMPOSE_DIR/nginx.conf"
+          # Merge only docs locations into the active production configuration.
+          # Never overwrite production TLS/ACME settings with the repository HTTP template.
+          sudo cp "$COMPOSE_DIR/nginx.conf" "$temp_dir/nginx.before.conf"
+          sudo python3 "$TARGET/scripts/install-docs-nginx.py" "$COMPOSE_DIR/nginx.conf" --output "$temp_dir/nginx.candidate.conf"
 
           cd "$COMPOSE_DIR"
           test -s "$TARGET/apps/english-world/dist/index.html"
           test -s "$TARGET/apps/admin/dist/index.html"
+          test -s "$TARGET/apps/docs/dist/index.html"
+          test -s "$TARGET/apps/docs/dist/404.html"
           service_image_name="$(sudo docker inspect --format '{{.Config.Image}}' "$CONTAINER")"
+          baseline_image_id="$(sudo docker inspect --format '{{.Image}}' "$CONTAINER")"
+          sudo docker tag "$baseline_image_id" "$baseline_image"
+          container_network="$(sudo docker inspect --format '{{range $name, $_ := .NetworkSettings.Networks}}{{$name}}{{"\n"}}{{end}}' "$CONTAINER" | head -n 1)"
+          test -n "$container_network"
+          sudo docker run --rm --network "$container_network" --volumes-from "$CONTAINER" \
+            -v "$temp_dir/nginx.candidate.conf:/etc/nginx/nginx.conf:ro" \
+            "$service_image_name" nginx -t
+          deployment_started=true
+          sudo install -m 0644 "$temp_dir/nginx.candidate.conf" "$COMPOSE_DIR/nginx.conf"
           sudo docker build -f "$TARGET/Dockerfile.production" -t "$service_image_name" "$TARGET"
           sudo docker compose up -d --no-deps --no-build "$SERVICE"
-          for app in english-world admin; do
+          for app in english-world admin docs; do
             container_index=/usr/share/nginx/html/index.html
             if [ "$app" = admin ]; then container_index=/usr/share/nginx/html/admin/index.html; fi
+            if [ "$app" = docs ]; then container_index=/usr/share/nginx/html/docs/index.html; fi
             expected="$(sha256sum "$TARGET/apps/$app/dist/index.html" | cut -d ' ' -f 1)"
             actual="$(sudo docker exec "$CONTAINER" sha256sum "$container_index" | cut -d ' ' -f 1)"
             test "$expected" = "$actual"
           done
 
           for attempt in $(seq 1 30); do
-            if curl --fail --silent --show-error http://127.0.0.1/ >/dev/null; then
-              echo "Frontend is ready."
-              sudo docker image prune -f
+            # Verify the TLS vhost and real docs routes, not the HTTP redirect.
+            ready=true
+            for docs_path in /docs/ /docs/backend/retry-example; do
+              status="$(curl --silent --show-error --connect-timeout 5 --max-time 15 \
+                --connect-to "$DEPLOY_HOST:443:127.0.0.1:443" \
+                -o /dev/null -w '%{http_code}' "https://$DEPLOY_HOST$docs_path")" || status=000
+              if [ "$status" != 200 ]; then ready=false; fi
+            done
+            missing_status="$(curl --silent --show-error --connect-timeout 5 --max-time 15 \
+              --connect-to "$DEPLOY_HOST:443:127.0.0.1:443" \
+              -o /dev/null -w '%{http_code}' "https://$DEPLOY_HOST/docs/no-such-release-check-page")" || missing_status=000
+            if [ "$missing_status" != 404 ]; then ready=false; fi
+            if [ "$ready" = true ] && sudo docker exec "$CONTAINER" nginx -t; then
+              echo "Frontend HTTPS and documentation routes are ready."
+              deployment_ready=true
+              echo "Rollback image retained: $baseline_image"
               exit 0
             fi
             sleep 2

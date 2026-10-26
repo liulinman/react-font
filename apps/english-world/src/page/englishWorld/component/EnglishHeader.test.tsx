@@ -181,3 +181,8 @@ describe("EnglishHeader ToC navigation", () => {
     expect(screen.getByTitle("数据统计")).toBeInTheDocument();
   });
 });
+
+it("links to the independent documentation document", () => {
+  render(<MemoryRouter><EnglishHeader /></MemoryRouter>);
+  expect(screen.getByRole("link", { name: "文档中心" })).toHaveAttribute("href", "/docs/");
+});

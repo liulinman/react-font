@@ -9,6 +9,7 @@ RUN npm install -g pnpm@10.8.1
 # 复制 workspace 配置
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/admin/package.json ./apps/admin/
+COPY apps/docs/package.json ./apps/docs/
 COPY apps/english-world/package.json ./apps/english-world/
 COPY apps/web-utils/package.json ./apps/web-utils/
 COPY packages/api/package.json ./packages/api/
@@ -29,7 +30,8 @@ COPY . .
 
 # 构建前台应用和独立后台应用
 RUN pnpm --filter @font/english-world build \
-    && pnpm --filter @font/admin build
+    && pnpm --filter @font/admin build \
+    && pnpm docs:build
 
 # 第二阶段：Nginx 托管
 FROM nginx:alpine
@@ -37,6 +39,7 @@ FROM nginx:alpine
 COPY nginx.conf /etc/nginx/nginx.conf
 COPY --from=build /app/apps/english-world/dist /usr/share/nginx/html
 COPY --from=build /app/apps/admin/dist /usr/share/nginx/html/admin
+COPY --from=build /app/apps/docs/dist /usr/share/nginx/html/docs
 
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
