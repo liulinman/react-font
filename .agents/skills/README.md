@@ -1,14 +1,17 @@
 # English World 项目 Skills 说明
 
 这个目录保存 **English World 项目级 Agent Skills**。它们只对当前项目生效，
-用于补充产品分析、UX 审计、UI 设计参考和 Web 规范检查能力。
+用于补充产品分析、UX 审计、UI 设计参考、Web 规范检查、PRD 验收和雅思阅读内容运营能力。
 
 ## 一句话理解
 
 | Skill | 角色定位 | 主要解决的问题 | 默认是否修改产品代码 |
 |---|---|---|---|
+| `english-world-prd` | 正式 PRD 写作与治理 | 单独编写、修改、审核、整理正文并维护需求来源与目录 | 只维护需求材料 |
+| `english-world-delivery` | 完整研发流程 | 调用项目 PRD skill，串联设计、Spec Kit、实现和验收 | 按本次授权范围 |
 | `english-world-docs-maintenance` | 技术文档维护 | 功能变化时同步知识、实现、实例、参数与文档站验证 | 维护文档；发布跟随任务授权 |
 | `english-world-prd-testing` | PRD 自动化验收 | 指定模块或全量，维护 Case、执行、Cloud 记录、报告与 AI 失败分析 | 默认只补测试，不自动修产品 |
+| `english-world-ielts-reading` | 雅思阅读内容运营 | 按雅思难度生成阅读练习、管理端逐题审核、发布/补发/撤回给指定学生 | 只通过管理端 API 操作内容，不改产品代码 |
 | `english-world-ux-product-audit` | English World 产品经理/UX 审计负责人 | 把真实用户体验问题整理成有证据、可排期、可验收的中文需求 | 否 |
 | `english-world-ui-design-system` | English World UI 负责人/设计系统 | 统一项目视觉、组件、状态、响应式和 UI 实施规则 | 仅在明确要求实施时 |
 | `impeccable` | UI/UX 设计总监 | 评审、设计、重构和打磨具体页面或组件 | 仅在明确要求实施时 |
@@ -185,9 +188,34 @@
 
 来源记录：[SOURCE.md](web-design-guidelines/SOURCE.md)
 
-## 五个 Skill 如何配合
+## 6. english-world-ielts-reading
 
-可以把它们理解成一个小型产品团队：
+目录：[english-world-ielts-reading](english-world-ielts-reading/)
+
+这是内容运营 Skill，供管理员按雅思难度出题、在管理端审核，并发布给指定学生。
+
+### 它会做什么
+
+- 调用管理端现有 AI 生成器创建雅思阅读练习：难度 5.0–7.5、200–800 词、3–13 题，支持选择题、判断题和句子填空。
+- 读取生成内容，逐题核对答案、原文证据和中文解析，并运行服务端 AI 质量检查。
+- 在发布前列出接收人并等待明确确认，然后发布、补发、撤回或查看完成情况。
+- 提供无第三方依赖的执行脚本 `scripts/ielts-admin.mjs`，覆盖登录、查询学生、生成、轮询、检查、发布、补发和撤回。
+
+### 它不会做什么
+
+- 不覆盖听力、写作、口语；这些没有对应的阅读练习链路。
+- 不声称支持完整雅思题库或全部官方题型；当前生成器只支持三种题型。
+- 不在未读题目、未确认接收人的情况下发布，也不默认发给全部学生。
+- 不直接改数据库、绕过质量检查或把结构问题当成误报关闭。
+
+入口文件：[SKILL.md](english-world-ielts-reading/SKILL.md)
+
+- [出题范围与审核标准](english-world-ielts-reading/references/ielts-scope-and-review.md)
+- [管理端 API 契约](english-world-ielts-reading/references/admin-api.md)
+
+## 产品与设计 Skill 如何配合
+
+下面五个是产品/设计组合；内容运营使用上面的 `english-world-ielts-reading`，PRD、测试和文档入口见文末。
 
 1. `english-world-ux-product-audit` 负责选择用户任务、收集证据和确定需求优先级。
 2. `english-world-ui-design-system` 负责确定项目视觉、组件、状态和响应式标准。
@@ -230,6 +258,10 @@
 使用 Web Design Guidelines 检查 MobileContextLabPage.tsx 的可访问性和交互语义。
 ```
 
+```text
+使用 $english-world-ielts-reading 按雅思 6.5 生成一套 5 题阅读练习，审核后发给指定学生。
+```
+
 ## 已有审计产物
 
 - [English World UX 基线审计](../../docs/superpowers/research/2026-07-30-english-world-ux-baseline-audit.md)
@@ -241,3 +273,9 @@
 - 不要直接从不固定的 `main` 分支覆盖本地 Skill。
 - 更新后需要重新执行结构校验、安全检查和前向测试。
 - 项目专属规则优先于第三方通用建议。
+
+## PRD 与完整交付入口
+
+- “帮我写 PRD / 修改 PRD / 整理 PRD”：使用 [english-world-prd](english-world-prd/SKILL.md)，完成需求阶段后停止。
+- “按完整流程交付”：使用 [english-world-delivery](english-world-delivery/SKILL.md)，PRD 阶段调用前者。
+- `bmad-prd` 是通用写作能力；项目正式来源与需求保留规则由 english-world-prd 统一维护。`speckit-specify` 承接开发规格，不另建一份正式 PRD。
