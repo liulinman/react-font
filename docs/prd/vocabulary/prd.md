@@ -11,6 +11,8 @@
 
 - [Chrome 阅读查词与网页引用](features/browser-reading-extension/prd.md)（`vocabulary/browser-reading-extension`）
 
+- [单词复习资料下载](features/word-review-download/prd.md)（`vocabulary/word-review-download`）
+
 ### 跨模块关联
 
 - [薄弱词语境修复闭环](../review/features/weak-word-repair/prd.md)（`review/weak-word-repair`，只维护一份正文）

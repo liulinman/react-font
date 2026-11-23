@@ -1,0 +1,71 @@
+.word-review-download {
+  display: grid;
+  gap: 14px;
+  padding-block: 12px 8px;
+}
+
+.word-review-download-choice {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr);
+  align-items: start;
+}
+
+.word-review-download-preview {
+  min-height: 72px;
+}
+
+.word-review-download-status {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 0;
+  min-height: 64px;
+  color: var(--ew-text-muted, #586768);
+}
+
+.word-review-download-count {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0 0 8px;
+}
+
+.word-review-download-count span {
+  color: var(--ew-text-muted, #586768);
+}
+
+.word-review-download table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid #d0ded7;
+  border-radius: 8px;
+  overflow: hidden;
+  color: #183635;
+  background: #fff;
+}
+
+.word-review-download th,
+.word-review-download td {
+  padding: 8px 10px;
+  text-align: left;
+  overflow-wrap: anywhere;
+  border-bottom: 1px solid #e0eae5;
+}
+
+.word-review-download th:first-child {
+  border-right: 1px solid #d0ded7;
+}
+
+.word-review-download thead {
+  background: #e5efeb;
+}
+
+.word-review-download tbody tr:nth-child(even) {
+  background: #f3f7f5;
+}
+
+.word-review-download tbody tr:last-child > * {
+  border-bottom: 0;
+}

@@ -28,7 +28,8 @@
       "primaryFeatures": [
         "mcp-access",
         "dictionary-workspace",
-        "browser-reading-extension"
+        "browser-reading-extension",
+        "word-review-download"
       ],
       "relatedFeatures": [
         "weak-word-repair",
@@ -422,6 +423,14 @@
       "primaryModule": "vocabulary",
       "relatedModules": [],
       "prd": "vocabulary/features/browser-reading-extension/prd.md"
+    },
+    {
+      "id": "word-review-download",
+      "title": "单词复习资料下载",
+      "primaryModule": "vocabulary",
+      "relatedModules": [],
+      "prd": "vocabulary/features/word-review-download/prd.md",
+      "status": "approved"
     },
     {
       "id": "dictionary-workspace",

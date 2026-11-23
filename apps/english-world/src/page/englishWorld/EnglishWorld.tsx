@@ -1,5 +1,6 @@
 import { listeningWordPrefill } from "@/ieltsListening/wordHandoff";
 import { WordBookCreate } from "./wordBook/WordBookCreate";
+import { WordReviewDownload } from "./wordReview/WordReviewDownload";
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   Button,
@@ -59,6 +60,7 @@ import {
   AppstoreOutlined,
   BarsOutlined,
   DownOutlined,
+  DownloadOutlined,
   ExperimentOutlined,
   FullscreenExitOutlined,
   FullscreenOutlined,
@@ -144,6 +146,10 @@ const EnglishWorld: React.FC = () => {
 
   const [form] = Form.useForm();
   const [bookCreateOpen, setBookCreateOpen] = useState(false);
+  const [reviewSource, setReviewSource] = useState<{
+    ids: number[];
+    filters: Record<string, unknown>;
+  }>();
   const [type, setType] = useState<"edit" | "add">("add");
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [focusWordNote, setFocusWordNote] = useState(false);
@@ -1121,6 +1127,18 @@ const EnglishWorld: React.FC = () => {
                 </div>
                 <div className="english-world-table-tools">
                   <Button onClick={() => setBookCreateOpen(true)}>制作复习手册</Button>
+                  {!narrowWordLibrary && (
+                    <Button
+                      icon={<DownloadOutlined />}
+                      disabled={loading}
+                      onClick={() => setReviewSource({
+                        ids: selectedCardIds,
+                        filters: getLastSuccessfulFilters(),
+                      })}
+                    >
+                      下载单词
+                    </Button>
+                  )}
                   <Checkbox
                     checked={useCurrentFilterScope}
                     disabled={totalNum === 0 || selectedCardIds.length > 0}
@@ -1445,6 +1463,9 @@ const EnglishWorld: React.FC = () => {
             </Modal>
           </div>
         )}
+    {reviewSource && activeNav === "words" && !narrowWordLibrary && (
+      <WordReviewDownload {...reviewSource} onClose={() => setReviewSource(undefined)} />
+    )}
     {bookCreateOpen && <WordBookCreate ids={selectedCardIds} filters={getLastSuccessfulFilters()} onClose={() => setBookCreateOpen(false)} onCreated={id => {setBookCreateOpen(false); navigate(`/englishWorld/word-books/${id}`);}} />}
       </EnglishWorldLayout>
   );

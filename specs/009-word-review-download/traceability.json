@@ -1,0 +1,76 @@
+{
+  "featureId": "vocabulary/word-review-download",
+  "design": "docs/design/vocabulary/word-review-download/design.md",
+  "cases": [
+    {
+      "requirements": [
+        "vocabulary/word-review-download/FR-01",
+        "vocabulary/word-review-download/AC-01"
+      ],
+      "scenario": "SC-01",
+      "caseId": "vocabulary/word-review-download/AC-01/CASE-01",
+      "bindings": [
+        {
+          "suite": "word-review-download",
+          "title": "Vocabulary review downloads > previews selected words and exports the entire applied filter across pages"
+        }
+      ]
+    },
+    {
+      "requirements": [
+        "vocabulary/word-review-download/FR-02",
+        "vocabulary/word-review-download/AC-02"
+      ],
+      "scenario": "SC-02",
+      "caseId": "vocabulary/word-review-download/AC-02/CASE-01",
+      "bindings": [
+        {
+          "suite": "word-review-download",
+          "title": "Vocabulary review downloads > downloads three real files and previews only the review fields"
+        }
+      ]
+    },
+    {
+      "requirements": [
+        "vocabulary/word-review-download/FR-03",
+        "vocabulary/word-review-download/AC-03"
+      ],
+      "scenario": "SC-02",
+      "caseId": "vocabulary/word-review-download/AC-03/CASE-01",
+      "bindings": [
+        {
+          "suite": "word-review-download",
+          "title": "Vocabulary review downloads > downloads three real files and previews only the review fields"
+        }
+      ]
+    },
+    {
+      "requirements": [
+        "vocabulary/word-review-download/FR-04",
+        "vocabulary/word-review-download/AC-04"
+      ],
+      "scenario": "SC-03",
+      "caseId": "vocabulary/word-review-download/AC-04/CASE-01",
+      "bindings": [
+        {
+          "suite": "word-review-download",
+          "title": "Vocabulary review downloads > refreshes a stale preview and prevents downloads for an empty filter"
+        }
+      ]
+    },
+    {
+      "requirements": [
+        "vocabulary/word-review-download/FR-04",
+        "vocabulary/word-review-download/AC-04"
+      ],
+      "scenario": "SC-04",
+      "caseId": "vocabulary/word-review-download/AC-04/CASE-02",
+      "bindings": [
+        {
+          "suite": "word-review-download",
+          "title": "Vocabulary review downloads > keeps another account’s words out and leaves the vocabulary unchanged"
+        }
+      ]
+    }
+  ]
+}

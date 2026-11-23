@@ -1,0 +1,137 @@
+{
+  "schemaVersion": 1,
+  "source": "docs/prd/vocabulary/features/word-review-download/prd.md",
+  "sourceHash": "674655912346c4c50041e123efd8a1a48fb36bf6e640aa08b0499d69cb2c142d",
+  "cases": [
+    {
+      "id": "vocabulary/word-review-download/AC-01/CASE-01",
+      "title": "勾选范围与跨页筛选",
+      "status": "ready",
+      "requirementIds": [
+        "vocabulary/word-review-download/FR-01",
+        "vocabulary/word-review-download/AC-01"
+      ],
+      "preconditions": [
+        "隔离 MySQL、Redis 和合成账号。",
+        "批量导入 12 个复习用词、一个短语并保留一个默认词。"
+      ],
+      "steps": [
+        "在当前页勾选两个词后预览，再选择当前筛选和全部范围。"
+      ],
+      "expectedResults": [
+        "三个范围依次匹配 2、12、13 个词，筛选结果包含所有页面并排除短语。"
+      ],
+      "cleanup": "由 runner 清理数据库和测试下载目录。",
+      "bindings": [
+        {
+          "suite": "word-review-download",
+          "title": "Vocabulary review downloads > previews selected words and exports the entire applied filter across pages"
+        }
+      ]
+    },
+    {
+      "id": "vocabulary/word-review-download/AC-02/CASE-01",
+      "title": "真实三格式及短预览",
+      "status": "ready",
+      "requirementIds": [
+        "vocabulary/word-review-download/FR-02",
+        "vocabulary/word-review-download/AC-02"
+      ],
+      "preconditions": [
+        "隔离 MySQL、Redis 和合成账号。",
+        "添加有搭配和只有中文词义的两个词。"
+      ],
+      "steps": [
+        "对照预览后，在桌面 Chrome 内分别保存三份文件。"
+      ],
+      "expectedResults": [
+        "三列与词义符合预期，缺线索时为空。三份真实文件的文件名、签名与格式匹配。"
+      ],
+      "cleanup": "由 runner 清理数据库和测试下载目录。",
+      "bindings": [
+        {
+          "suite": "word-review-download",
+          "title": "Vocabulary review downloads > downloads three real files and previews only the review fields"
+        }
+      ]
+    },
+    {
+      "id": "vocabulary/word-review-download/AC-03/CASE-01",
+      "title": "复习字段和精简输出",
+      "status": "ready",
+      "requirementIds": [
+        "vocabulary/word-review-download/FR-03",
+        "vocabulary/word-review-download/AC-03"
+      ],
+      "preconditions": [
+        "隔离 MySQL、Redis 和合成账号。",
+        "实际词条包含释义、搭配、私密附注和网页引用。"
+      ],
+      "steps": [
+        "从下载弹窗检查对应词的三列和成功文件。"
+      ],
+      "expectedResults": [
+        "预览仅有主释义和短搭配，未展示私密附注或网址。"
+      ],
+      "cleanup": "由 runner 清理数据库和测试下载目录。",
+      "bindings": [
+        {
+          "suite": "word-review-download",
+          "title": "Vocabulary review downloads > downloads three real files and previews only the review fields"
+        }
+      ]
+    },
+    {
+      "id": "vocabulary/word-review-download/AC-04/CASE-01",
+      "title": "刷新与空态",
+      "status": "ready",
+      "requirementIds": [
+        "vocabulary/word-review-download/FR-04",
+        "vocabulary/word-review-download/AC-04"
+      ],
+      "preconditions": [
+        "隔离 MySQL、Redis 和合成账号。",
+        "存在一个已收集词，预览开放时增加另一词。"
+      ],
+      "steps": [
+        "下载并处理冲突，刷新后，再应用无结果的查询。"
+      ],
+      "expectedResults": [
+        "冲突显示中文提示并禁止下载，刷新显示新数量。空范围禁用下载。"
+      ],
+      "cleanup": "由 runner 清理数据库和测试下载目录。",
+      "bindings": [
+        {
+          "suite": "word-review-download",
+          "title": "Vocabulary review downloads > refreshes a stale preview and prevents downloads for an empty filter"
+        }
+      ]
+    },
+    {
+      "id": "vocabulary/word-review-download/AC-04/CASE-02",
+      "title": "账号隔离和只读下载",
+      "status": "ready",
+      "requirementIds": [
+        "vocabulary/word-review-download/FR-04",
+        "vocabulary/word-review-download/AC-04"
+      ],
+      "preconditions": [
+        "隔离 MySQL、Redis 和合成账号。",
+        "使用种子中的两个独立学生账号。"
+      ],
+      "steps": [
+        "甲查出自己的词条 ID，切换到乙并用该 ID 预览，再下载乙的全部。"
+      ],
+      "expectedResults": [
+        "乙读不到甲的词，下载前后乙仅保有自己的词。"
+      ],
+      "cleanup": "由 runner 清理数据库和测试下载目录。",
+      "bindings": [
+        {
+          "suite": "word-review-download",
+          "title": "Vocabulary review downloads > keeps another account’s words out and leaves the vocabulary unchanged"
+        }
+      ]
+    }
+  ]
+}

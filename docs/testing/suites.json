@@ -3,6 +3,15 @@
   "note": "所有用例在隔离环境执行；real 表示业务接口真实，外部 AI 为本地替身。此目录不代表 PRD 全覆盖。",
   "suites": [
     {
+      "id": "word-review-download",
+      "modules": [
+        "vocabulary"
+      ],
+      "spec": "cypress/integration/word-review-download.cy.ts",
+      "evidence": "real",
+      "externalAI": "none"
+    },
+    {
       "id": "browser-reading-sources",
       "modules": ["vocabulary"],
       "spec": "cypress/integration/browser-reading-sources.cy.ts",
