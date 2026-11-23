@@ -71,8 +71,7 @@ describe('Knowledge notes and long word notes', () => {
   });
   it('keeps desktop word fields when focusing a long note',()=>{
     cy.viewport(1440,900);visit('/englishWorld/words');
-    cy.get('[aria-label="展开 find 的笔记"]').click();
-    cy.get('[aria-label="编辑 find 的笔记"]').click();
+    cy.get('.word-dictionary-note').contains('button','编辑笔记').click();
     cy.get('#full-word-note').should('have.value',longBody);
     cy.get('#full-word-note').then($el=>expect($el[0].scrollHeight).to.be.at.most($el[0].clientHeight+2));
     cy.get('.word-note-focus-modal').should('be.visible');

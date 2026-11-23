@@ -54,7 +54,7 @@ function PracticeListView({ basePath, embedded = false, view, onViewChange }: Pr
     <main className="reading-practice">
       {!embedded && <header className="rp-heading"><h1>阅读练习</h1><p>选择练习开始作答，已完成的练习可查看解析。</p></header>}
       <div className="rp-list-toolbar" role="group" aria-label="练习列表范围">
-        <button type="button" aria-pressed={view === "active"} onClick={() => onViewChange("active")} disabled={busy}>我的练习</button>
+        <button type="button" aria-pressed={view === "active"} onClick={() => onViewChange("active")} disabled={busy}>{basePath.startsWith("/mobile/") ? "我的练习" : "全部"}</button>
         <button type="button" aria-pressed={view === "removed"} onClick={() => onViewChange("removed")} disabled={busy}>已移除</button>
       </div>
       {view === "removed" && <p className="rp-list-help">这里的练习仅从你的列表移除，原题和学习记录仍保留，随时可以恢复。</p>}
@@ -66,11 +66,12 @@ function PracticeListView({ basePath, embedded = false, view, onViewChange }: Pr
         <h2>{view === "removed" ? "没有已移除的练习" : "还没有收到练习"}</h2>
         <p>{view === "removed" ? "从练习列表移除的文章会显示在这里。" : "新练习发布后，会显示在这里；移除过的练习可在“已移除”中恢复。"}</p>
       </div>}
+      {basePath.startsWith("/englishWorld/") && <p className="rp-classroom-link"><Link to="/englishWorld/classrooms">我的班级群</Link></p>}
       <ReadingLearningRecords basePath={basePath} />
       <div className="rp-grid">
         {data?.list.map(p => <article className="rp-card" key={p.id}>
           <span className={`rp-status ${p.submitted ? "is-done" : ""}`}>{p.submitted ? "已完成" : p.status === "withdrawn" ? "已撤回" : "待完成"}</span>
-          <h2>{p.title}</h2>
+          <h2>{p.title}{p.classroomName && <small className="rp-classroom-label">{p.classroomName}</small>}</h2>
           <p>{p.ieltsBand == null ? "原稿材料 · 难度未标定" : `生成配置难度 ${p.ieltsBand.toFixed(1)}（未校准）`} · {p.questionCount} 题</p>
           <div className="rp-card-actions">
             {p.submitted && <strong>{p.score === null ? "无法评分" : `${p.score} 分`}</strong>}

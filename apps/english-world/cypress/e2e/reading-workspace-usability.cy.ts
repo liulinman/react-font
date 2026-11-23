@@ -35,7 +35,14 @@ describe("Reading workspace usability", () => {
     cy.viewport(1440, 900);
     cy.visit("/englishWorld/context-lab");
     cy.location("pathname").should("eq", "/englishWorld/reading-practices");
-    cy.get('[role="tab"]').contains("雅思考试").click();
+    cy.contains('.english-world-reading-menu [role="menuitem"]', "老师发的题").click();
+    cy.contains("h1", "老师发的题").should("be.visible");
+    cy.contains("button", "已移除").should("be.visible");
+    cy.contains('.english-world-reading-menu [role="menuitem"]', "自己出的题").click();
+    cy.contains("h1", "自己出的题").should("be.visible");
+    cy.reload();
+    cy.contains('.english-world-reading-menu .ant-menu-item-selected', "自己出的题").should("be.visible");
+    cy.contains('.english-world-reading-menu [role="menuitem"]', "雅思考试").click();
     cy.contains("button", "进入考试").should("be.visible");
     cy.screenshot("reading-workspace-desktop", { capture: "viewport" });
     cy.contains("button", "进入考试").click();

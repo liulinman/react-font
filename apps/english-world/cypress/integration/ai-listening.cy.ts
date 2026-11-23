@@ -1,3 +1,4 @@
+import {loginTestAccount} from './login-test-account';
 // Real Nest HTTP/MySQL. Vendor boundary uses local deterministic fixtures.
 // The silent MP3 verifies transport; these tests do not certify speech quality.
 describe('AI listening persisted journeys', () => {
@@ -5,7 +6,7 @@ describe('AI listening persisted journeys', () => {
   let session: any;
   const post = (path: string, body: any = {}) => cy.request('POST', `/api${path}`, body);
   const admin = () => post('/admin/login', { username: 'automation_admin', password: 'AutomationAdmin123!' });
-  const student = (username?: string) => post('/user/login', { ...f.account, ...(username ? { username } : {}) });
+  const student = (username?: string) => loginTestAccount({ ...f.account, ...(username ? { username } : {}) });
   const configure = () => {
     admin();
     ['deepseek', 'doubao'].forEach(provider => cy.request('PUT', `/api/admin/ai-services/${provider}`, {enabled:true,apiKey:'fixture-only-ai-key'}));
@@ -84,11 +85,17 @@ describe('AI listening persisted journeys', () => {
     cy.contains('button',/^提交$/).should('not.be.disabled').click();
     cy.contains('h2','本轮已完成').scrollIntoView().should('be.visible');
     cy.get('.ai-listening-feedback').should('contain.text','回答正确').and('contain.text','resilient');
-    cy.get('.ai-scene-context').should('be.visible');
+    cy.get('.ai-answer-details').should('not.have.attr','open');
+    cy.contains('summary','查看完整句子与解析').click();
+    cy.get('.ai-answer-details').should('have.attr','open');
+    cy.get('.ai-answer-details').should('contain.text', 'resilient').and('contain.text','同事在讨论工作安排');
+    cy.get('.ai-answer-details > details').should('not.have.attr','open');
     cy.contains('summary','近义词辨析').click();
     cy.get('.ai-listening-feedback').should('contain.text','strong');
     cy.reload();
-    cy.get('.ai-listening-feedback').should('contain.text','回答正确');
+    cy.contains('已完成 1 / 1 题 · 首次答对 1 题').should('be.visible');
+    cy.contains('button','场景 1 · 回答正确').click();
+    cy.get('.ai-listening-feedback').should('contain.text','回答正确').and('contain.text','resilient');
     cy.get('body').should($body=>expect($body[0].scrollWidth).at.most(mobile?390:1280));
     cy.screenshot(`ai-listening-${mobile?'mobile':'desktop'}-feedback`,{capture:'viewport'});
   }));

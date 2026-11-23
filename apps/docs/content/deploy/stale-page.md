@@ -30,3 +30,24 @@
 ## 文档导航另做独立验证
 
 更新后的浏览器应能直接访问文档首页，刷新深层文章，并让未知文章保持 404。已有旧 Service Worker 的标签也要走一遍更新流程，确认文档不会跳回平台。服务器与浏览器证据都应保留时间与版本，未执行项明确写未验证。服务端路由基础见[Docker 与 Nginx](/deploy/docker-nginx)，发布与回滚的边界见[增量发布与回滚](/deploy/release-rollback)。
+
+## 私有文档地址也需要绕过学习页面兜底
+
+管理端“产品需求”的 iframe 实际访问 `/api/admin/prd/`，后端在管理员鉴权后返回 VitePress HTML。对 Service Worker 而言，这仍是一次文档导航；仅排除 `/admin/` 和 `/docs/` 会让它返回缓存的学习站首页，出现后台里又嵌入学习网站的现象。
+
+`apps/english-world/vite.config.ts` 将 `/api` 及其子路径加入 `navigateFallbackDenylist`，使文档、资源、401 和 404 直接交给服务端。普通 `/login`、`/mobile` 与 `/englishWorld/` 导航仍保留离线兜底，不缓存接口内容或放宽管理员权限。构建检查执行生成后的缓存路由，核对这些路径的排除行为。
+
+验证时应先让旧 Service Worker 控制页面，再打开产品需求；通过现有更新入口激活新版后重试，分别确认有效管理员看到文档、失效会话显示重新登录提示。只用不受缓存控制的请求检查 200/401，无法发现此问题。更新仅替换应用文件，不删除学习记录或离线资料。
+
+## 从设置进入检查更新
+
+学习网站提供“系统设置 → 应用更新 → 检查更新”固定入口；手机端从“更多 → 系统设置”进入。按钮在新页面打开既有 `/docs/app-update.html` 工具，用户再次确认后才更新应用文件，不清除学习记录或离线资料。已登记的学习操作锁定时入口禁用，提示先完成当前操作；仅进入设置不会触发检查、激活或刷新。
+
+实现位于 `apps/english-world/src/page/englishWorld/component/ApplicationUpdateCard.tsx`，读取现有活动锁；更新工具继续沿用 Service Worker 的检查、等待安装和用户确认激活流程。该入口不替代原生安装包升级，也不新增跨标签页活动锁。
+
+
+## 下载文件被旧缓存接回平台
+
+Service Worker 的导航兜底也会拦截地址栏打开的 ZIP 链接。服务器返回 `application/zip` 并不代表已受旧 Worker 控制的浏览器能下载；如果 Worker 返回 `/index.html`，浏览器会打开学习平台。`apps/english-world/vite.config.ts` 将 `/downloads/` 加入导航排除规则。
+
+扩展安装包同时由 `/docs/downloads/` 提供，公开教程使用这一入口。现有旧版本已经排除 `/docs/`，因此用户无需清理学习数据或等待 Worker 更新也能下载；新版 Worker 激活后，原 `/downloads/` 路径同样交给服务器。验收须保留旧 Worker 控制状态，实际点击安装链接并检查下载事件与 ZIP 文件内容，不能只用独立 HTTP 请求验证。

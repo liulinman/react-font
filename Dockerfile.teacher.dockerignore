@@ -1,0 +1,8 @@
+**
+!deploy/
+!deploy/teacher/
+!deploy/teacher/nginx.conf
+!apps/
+!apps/teacher/
+!apps/teacher/dist/
+!apps/teacher/dist/**

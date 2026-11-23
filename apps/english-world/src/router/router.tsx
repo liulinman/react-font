@@ -110,13 +110,18 @@ const knowledgeNotesRoute = protectedDesktopLayoutRoute("knowledgeNotes", () =>
   import("@/page/englishWorld/knowledgeNotes/KnowledgeNotesPage").then(({ KnowledgeNotesPage }) => ({ default: KnowledgeNotesPage })),
 );
 
+const studentClassroomRoute = protectedDesktopLayoutRoute("readingPractices", () => import("@/readingPractice/StudentClassrooms"));
 const readingPracticeRoute = protectedDesktopLayoutRoute("readingPractices", () => import("@/readingPractice/ReadingPracticePage"));
 
 const intensiveReadingRoute = protectedDesktopLayoutRoute("intensiveReading", () => import("@/intensiveReading/IntensiveReadingPage"));
 
+const ieltsListeningRoute = protectedDesktopLayoutRoute("ieltsListening", () => import("@/ieltsListening/IeltsListeningPage"));
+
 const aiListeningRoute = protectedDesktopLayoutRoute("aiListening", () => import("@/aiListening/AiListeningPage"));
 
 export const router = createBrowserRouter([
+  ...["/englishWorld/classrooms", "/englishWorld/classrooms/join/:code", "/englishWorld/classrooms/:classroomId"].map(path => ({ path, lazy: studentClassroomRoute })),
+  { path: "/englishWorld/ielts-listening", lazy: ieltsListeningRoute },
   { path: "/englishWorld/ai-listening", lazy: aiListeningRoute },
   { path: "/", element: <AppEntry /> },
   {
@@ -130,6 +135,12 @@ export const router = createBrowserRouter([
   ...["/englishWorld/intensive-reading", "/englishWorld/intensive-reading/:id", "/englishWorld/intensive-reading/:id/review"].map(path => ({path, lazy: intensiveReadingRoute})),
   { path: "/englishWorld", lazy: englishWorldRoute },
   { path: "/englishWorld/words", lazy: englishWorldRoute },
+  {
+    path: "/englishWorld/browser-reading/connect",
+    lazy: async () => ({
+      Component: (await import("@/page/englishWorld/BrowserReadingConnect")).BrowserReadingConnect,
+    }),
+  },
   { path: "/englishWorld/word-books", lazy: wordBooksRoute },
   { path: "/englishWorld/word-books/:id", lazy: wordBookReaderRoute },
   { path: "/englishWorld/knowledge-notes/*", lazy: knowledgeNotesRoute },

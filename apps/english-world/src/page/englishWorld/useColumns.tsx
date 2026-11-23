@@ -16,6 +16,7 @@ import {
   getTypeLabel,
 } from "./utils/wordLabels";
 import { BritishPronunciationButton } from "./component/BritishPronunciationButton";
+import { BrowserSourceLink } from "./component/BrowserWordSources";
 import { hasDisplayNote } from "./utils/wordNote";
 import {
   getContextLabReferenceLabel,
@@ -275,6 +276,13 @@ export const useColumns = (props: Props) => {
           </Tooltip>
         );
       },
+    },
+    {
+      width: 112,
+      title: "来源链接",
+      dataIndex: "sourceUrl",
+      key: "sourceUrl",
+      render: (url: WordList["sourceUrl"]) => <BrowserSourceLink url={url} />,
     },
     {
       width: 132,

@@ -1,0 +1,410 @@
+{
+  "featureId": "notes/mcp-notes",
+  "changeId": "2026-10-28-mcp-notes",
+  "sources": [
+    {
+      "path": "docs/prd/notes/features/mcp-notes/prd.md",
+      "sha256": "964c3c2c510ea858748a5b0167e205cfe744672969bf368e117de928a5490d01"
+    },
+    {
+      "path": "docs/prd/notes/features/mcp-notes/.decision-log.md",
+      "sha256": "1083aead423f24ebab8a4bc4a3edabc82145db2ac27a72bb3bae34ec72cab488"
+    },
+    {
+      "path": "docs/design/notes/mcp-notes/design.md",
+      "sha256": "623d8ebab635612bf5edbb6977722f6f5da3a12fa45fe1ee32b3d808ef437d3e"
+    },
+    {
+      "path": "specs/003-mcp-notes/spec.md",
+      "sha256": "443bb9db93a01fccbb1ef12ed86bfd79b53a3f8464439d7bfc4098d683809964"
+    },
+    {
+      "path": "specs/003-mcp-notes/plan.md",
+      "sha256": "fdb372647d92f119ff4a88f16bcc6ce58f3992afa28ec521a2cf415f416703a8"
+    }
+  ],
+  "links": [
+    {
+      "requirement": "notes/mcp-notes/AC-01",
+      "scenario": "US1",
+      "cases": [
+        {
+          "id": "notes/mcp-notes/CASE-01",
+          "status": "ready",
+          "bindings": [
+            {
+              "suite": "mcp-notes",
+              "title": "MCP real knowledge notes > NOTE-MCP-01 advertises note tools and preserves vocabulary protocol"
+            }
+          ]
+        },
+        {
+          "id": "notes/mcp-notes/CASE-02",
+          "status": "ready",
+          "bindings": [
+            {
+              "suite": "mcp-notes",
+              "title": "MCP real knowledge notes > NOTE-MCP-02 lists existing hierarchy and saves original content into an existing folder"
+            }
+          ]
+        }
+      ],
+      "supplementalSql": "nestjs/test/integration/mcp-notes.integration-spec.ts",
+      "manualRequired": false,
+      "coverageMethod": "人工映射复核；执行器不自动合并SQL与真实AI交互证据"
+    },
+    {
+      "requirement": "notes/mcp-notes/AC-02",
+      "scenario": "US1",
+      "cases": [
+        {
+          "id": "notes/mcp-notes/CASE-02",
+          "status": "ready",
+          "bindings": [
+            {
+              "suite": "mcp-notes",
+              "title": "MCP real knowledge notes > NOTE-MCP-02 lists existing hierarchy and saves original content into an existing folder"
+            }
+          ]
+        },
+        {
+          "id": "notes/mcp-notes/CASE-17",
+          "status": "draft",
+          "bindings": []
+        }
+      ],
+      "supplementalSql": "nestjs/test/integration/mcp-notes.integration-spec.ts",
+      "manualRequired": true,
+      "coverageMethod": "人工映射复核；执行器不自动合并SQL与真实AI交互证据"
+    },
+    {
+      "requirement": "notes/mcp-notes/AC-03",
+      "scenario": "US2",
+      "cases": [
+        {
+          "id": "notes/mcp-notes/CASE-03",
+          "status": "ready",
+          "bindings": [
+            {
+              "suite": "mcp-notes",
+              "title": "MCP real knowledge notes > NOTE-MCP-03 creates a proposed folder only after confirmation and retries once"
+            }
+          ]
+        },
+        {
+          "id": "notes/mcp-notes/CASE-17",
+          "status": "draft",
+          "bindings": []
+        }
+      ],
+      "supplementalSql": "nestjs/test/integration/mcp-notes.integration-spec.ts",
+      "manualRequired": true,
+      "coverageMethod": "人工映射复核；执行器不自动合并SQL与真实AI交互证据"
+    },
+    {
+      "requirement": "notes/mcp-notes/AC-04",
+      "scenario": "US2",
+      "cases": [
+        {
+          "id": "notes/mcp-notes/CASE-06",
+          "status": "ready",
+          "bindings": [
+            {
+              "suite": "mcp-notes",
+              "title": "MCP real knowledge notes > NOTE-MCP-06 requires owned folders and validates note fields without hidden writes"
+            }
+          ]
+        },
+        {
+          "id": "notes/mcp-notes/CASE-12",
+          "status": "ready",
+          "bindings": [
+            {
+              "suite": "mcp-notes",
+              "title": "MCP real knowledge notes > NOTE-MCP-12 rejects deleted or moved targets and deleted proposed parents"
+            }
+          ]
+        },
+        {
+          "id": "notes/mcp-notes/CASE-14",
+          "status": "ready",
+          "bindings": [
+            {
+              "suite": "mcp-notes",
+              "title": "MCP real knowledge notes > NOTE-MCP-14 enforces duplicate, depth and quantity limits before folder creation"
+            }
+          ]
+        }
+      ],
+      "supplementalSql": "nestjs/test/integration/mcp-notes.integration-spec.ts",
+      "manualRequired": false,
+      "coverageMethod": "人工映射复核；执行器不自动合并SQL与真实AI交互证据"
+    },
+    {
+      "requirement": "notes/mcp-notes/AC-05",
+      "scenario": "US1",
+      "cases": [
+        {
+          "id": "notes/mcp-notes/CASE-02",
+          "status": "ready",
+          "bindings": [
+            {
+              "suite": "mcp-notes",
+              "title": "MCP real knowledge notes > NOTE-MCP-02 lists existing hierarchy and saves original content into an existing folder"
+            }
+          ]
+        },
+        {
+          "id": "notes/mcp-notes/CASE-06",
+          "status": "ready",
+          "bindings": [
+            {
+              "suite": "mcp-notes",
+              "title": "MCP real knowledge notes > NOTE-MCP-06 requires owned folders and validates note fields without hidden writes"
+            }
+          ]
+        }
+      ],
+      "supplementalSql": "nestjs/test/integration/mcp-notes.integration-spec.ts",
+      "manualRequired": false,
+      "coverageMethod": "人工映射复核；执行器不自动合并SQL与真实AI交互证据"
+    },
+    {
+      "requirement": "notes/mcp-notes/AC-06",
+      "scenario": "US3",
+      "cases": [
+        {
+          "id": "notes/mcp-notes/CASE-04",
+          "status": "ready",
+          "bindings": [
+            {
+              "suite": "mcp-notes",
+              "title": "MCP real knowledge notes > NOTE-MCP-04 previews full edits without saving and confirms one version increment"
+            }
+          ]
+        },
+        {
+          "id": "notes/mcp-notes/CASE-09",
+          "status": "ready",
+          "bindings": [
+            {
+              "suite": "mcp-notes",
+              "title": "MCP real knowledge notes > NOTE-MCP-09 replays create request safely and keeps audit summaries free of note content"
+            }
+          ]
+        }
+      ],
+      "supplementalSql": "nestjs/test/integration/mcp-notes.integration-spec.ts",
+      "manualRequired": false,
+      "coverageMethod": "人工映射复核；执行器不自动合并SQL与真实AI交互证据"
+    },
+    {
+      "requirement": "notes/mcp-notes/AC-07",
+      "scenario": "US3",
+      "cases": [
+        {
+          "id": "notes/mcp-notes/CASE-04",
+          "status": "ready",
+          "bindings": [
+            {
+              "suite": "mcp-notes",
+              "title": "MCP real knowledge notes > NOTE-MCP-04 previews full edits without saving and confirms one version increment"
+            }
+          ]
+        },
+        {
+          "id": "notes/mcp-notes/CASE-11",
+          "status": "ready",
+          "bindings": [
+            {
+              "suite": "mcp-notes",
+              "title": "MCP real knowledge notes > NOTE-MCP-11 confirms optional-field clearing, associations and folder changes exactly"
+            }
+          ]
+        }
+      ],
+      "supplementalSql": "nestjs/test/integration/mcp-notes.integration-spec.ts",
+      "manualRequired": false,
+      "coverageMethod": "人工映射复核；执行器不自动合并SQL与真实AI交互证据"
+    },
+    {
+      "requirement": "notes/mcp-notes/AC-08",
+      "scenario": "US3",
+      "cases": [
+        {
+          "id": "notes/mcp-notes/CASE-05",
+          "status": "ready",
+          "bindings": [
+            {
+              "suite": "mcp-notes",
+              "title": "MCP real knowledge notes > NOTE-MCP-05 rejects stale versions and binds previews to token and action"
+            }
+          ]
+        },
+        {
+          "id": "notes/mcp-notes/CASE-07",
+          "status": "ready",
+          "bindings": [
+            {
+              "suite": "mcp-notes",
+              "title": "MCP real knowledge notes > NOTE-MCP-07 isolates owners and prevents folder and note access across accounts"
+            }
+          ]
+        },
+        {
+          "id": "notes/mcp-notes/CASE-12",
+          "status": "ready",
+          "bindings": [
+            {
+              "suite": "mcp-notes",
+              "title": "MCP real knowledge notes > NOTE-MCP-12 rejects deleted or moved targets and deleted proposed parents"
+            }
+          ]
+        },
+        {
+          "id": "notes/mcp-notes/CASE-15",
+          "status": "draft",
+          "bindings": []
+        }
+      ],
+      "supplementalSql": "nestjs/test/integration/mcp-notes.integration-spec.ts",
+      "manualRequired": false,
+      "coverageMethod": "人工映射复核；执行器不自动合并SQL与真实AI交互证据"
+    },
+    {
+      "requirement": "notes/mcp-notes/AC-09",
+      "scenario": "US4",
+      "cases": [
+        {
+          "id": "notes/mcp-notes/CASE-03",
+          "status": "ready",
+          "bindings": [
+            {
+              "suite": "mcp-notes",
+              "title": "MCP real knowledge notes > NOTE-MCP-03 creates a proposed folder only after confirmation and retries once"
+            }
+          ]
+        },
+        {
+          "id": "notes/mcp-notes/CASE-04",
+          "status": "ready",
+          "bindings": [
+            {
+              "suite": "mcp-notes",
+              "title": "MCP real knowledge notes > NOTE-MCP-04 previews full edits without saving and confirms one version increment"
+            }
+          ]
+        },
+        {
+          "id": "notes/mcp-notes/CASE-09",
+          "status": "ready",
+          "bindings": [
+            {
+              "suite": "mcp-notes",
+              "title": "MCP real knowledge notes > NOTE-MCP-09 replays create request safely and keeps audit summaries free of note content"
+            }
+          ]
+        },
+        {
+          "id": "notes/mcp-notes/CASE-13",
+          "status": "ready",
+          "bindings": [
+            {
+              "suite": "mcp-notes",
+              "title": "MCP real knowledge notes > NOTE-MCP-13 recovers after a folder is created but note validation fails"
+            }
+          ]
+        },
+        {
+          "id": "notes/mcp-notes/CASE-16",
+          "status": "draft",
+          "bindings": []
+        }
+      ],
+      "supplementalSql": "nestjs/test/integration/mcp-notes.integration-spec.ts",
+      "manualRequired": false,
+      "coverageMethod": "人工映射复核；执行器不自动合并SQL与真实AI交互证据"
+    },
+    {
+      "requirement": "notes/mcp-notes/AC-10",
+      "scenario": "US4",
+      "cases": [
+        {
+          "id": "notes/mcp-notes/CASE-07",
+          "status": "ready",
+          "bindings": [
+            {
+              "suite": "mcp-notes",
+              "title": "MCP real knowledge notes > NOTE-MCP-07 isolates owners and prevents folder and note access across accounts"
+            }
+          ]
+        },
+        {
+          "id": "notes/mcp-notes/CASE-08",
+          "status": "ready",
+          "bindings": [
+            {
+              "suite": "mcp-notes",
+              "title": "MCP real knowledge notes > NOTE-MCP-08 keeps note permissions independent and denies revoked tokens"
+            }
+          ]
+        }
+      ],
+      "supplementalSql": "nestjs/test/integration/mcp-notes.integration-spec.ts",
+      "manualRequired": false,
+      "coverageMethod": "人工映射复核；执行器不自动合并SQL与真实AI交互证据"
+    },
+    {
+      "requirement": "notes/mcp-notes/AC-11",
+      "scenario": "US4",
+      "cases": [
+        {
+          "id": "notes/mcp-notes/CASE-09",
+          "status": "ready",
+          "bindings": [
+            {
+              "suite": "mcp-notes",
+              "title": "MCP real knowledge notes > NOTE-MCP-09 replays create request safely and keeps audit summaries free of note content"
+            }
+          ]
+        },
+        {
+          "id": "notes/mcp-notes/CASE-10",
+          "status": "ready",
+          "bindings": [
+            {
+              "suite": "mcp-notes",
+              "title": "MCP real knowledge notes > NOTE-MCP-10 exposes separate note permissions in desktop settings without revealing secrets"
+            }
+          ]
+        }
+      ],
+      "supplementalSql": "nestjs/test/integration/mcp-notes.integration-spec.ts",
+      "manualRequired": false,
+      "coverageMethod": "人工映射复核；执行器不自动合并SQL与真实AI交互证据"
+    },
+    {
+      "requirement": "notes/mcp-notes/AC-12",
+      "scenario": "US4",
+      "cases": [
+        {
+          "id": "notes/mcp-notes/CASE-17",
+          "status": "draft",
+          "bindings": []
+        }
+      ],
+      "supplementalSql": null,
+      "manualRequired": true,
+      "coverageMethod": "人工映射复核；执行器不自动合并SQL与真实AI交互证据"
+    }
+  ],
+  "manualPending": [
+    "第三方AI展示、征询、语义归类完整流程"
+  ],
+  "supplementalEvidence": {
+    "sql": "docs/delivery/2026-10-28-mcp-notes/mysql-final.json",
+    "sdk": "docs/delivery/2026-10-28-mcp-notes/sdk-final.log",
+    "browserRun": "2026-10-28T03-40-30-144Z-6008fc14",
+    "note": "过期/真正并发有SQL证据，但Case仍无Cypress binding，不伪造自动覆盖。"
+  }
+}

@@ -1,0 +1,235 @@
+{
+  "schemaVersion": 1,
+  "source": "docs/prd/vocabulary/features/browser-reading-extension/prd.md",
+  "sourceHash": "a65802f7a5f7c641549507e152ff99f21d71cd74b99c83873b6db78276fc6163",
+  "cases": [
+    {
+      "id": "vocabulary/browser-reading-extension/AC-01/CASE-01",
+      "title": "真实 Chrome 选词与语境定位",
+      "status": "draft",
+      "requirementIds": [
+        "vocabulary/browser-reading-extension/FR-01",
+        "vocabulary/browser-reading-extension/AC-01"
+      ],
+      "preconditions": [
+        "仅使用隔离的 MySQL、Redis 和测试账号。"
+      ],
+      "steps": [
+        "本地加载扩展并授权。",
+        "选中同句第二个 bank，右键查询。然后换一篇含 river bank 的网页查同一个词。"
+      ],
+      "expectedResults": [
+        "卡片显示正确位置对应的中文义、完整原句及页面标题。"
+      ],
+      "cleanup": "隔离环境 runner 清理。",
+      "bindings": [],
+      "reviewNote": "待真实 Chrome 扩展操作和真实 AI。"
+    },
+    {
+      "id": "vocabulary/browser-reading-extension/AC-02/CASE-01",
+      "title": "同词多来源与重复保存",
+      "status": "draft",
+      "requirementIds": [
+        "vocabulary/browser-reading-extension/FR-02",
+        "vocabulary/browser-reading-extension/AC-02"
+      ],
+      "preconditions": [
+        "仅使用隔离的 MySQL、Redis 和测试账号。"
+      ],
+      "steps": [
+        "对银行和河岸语境分别预览并收藏。",
+        "重试第一次保存，并重新读取词条出处。"
+      ],
+      "expectedResults": [
+        "两个保存结果同一词条，词条下两条引用。"
+      ],
+      "cleanup": "隔离环境 runner 清理。",
+      "bindings": [
+        {
+          "suite": "browser-reading-sources",
+          "title": "Browser reading citations > persists two article citations under one word and renders links after reload"
+        }
+      ],
+      "reviewNote": "套件覆盖不同出处、同一已有词的并发提交和重试，尚未实际运行；新词创建并发仍需单独验收。"
+    },
+    {
+      "id": "vocabulary/browser-reading-extension/AC-03/CASE-01",
+      "title": "词库来源链接与安全参数",
+      "status": "draft",
+      "requirementIds": [
+        "vocabulary/browser-reading-extension/FR-03",
+        "vocabulary/browser-reading-extension/AC-03"
+      ],
+      "preconditions": [
+        "仅使用隔离的 MySQL、Redis 和测试账号。"
+      ],
+      "steps": [
+        "打开 bank 词条详情，刷新后分别读取两个出处。"
+      ],
+      "expectedResults": [
+        "显示原句和释义，链接保留 id 和普通锚点并移除 utm_source。"
+      ],
+      "cleanup": "隔离环境 runner 清理。",
+      "bindings": [
+        {
+          "suite": "browser-reading-sources",
+          "title": "Browser reading citations > persists two article citations under one word and renders links after reload"
+        }
+      ],
+      "reviewNote": "真实 API/Cypress 场景待运行。凭据地址由后端单元测试补充。"
+    },
+    {
+      "id": "vocabulary/browser-reading-extension/AC-04/CASE-01",
+      "title": "账号授权、撤销和错误恢复",
+      "status": "draft",
+      "requirementIds": [
+        "vocabulary/browser-reading-extension/FR-04",
+        "vocabulary/browser-reading-extension/FR-05",
+        "vocabulary/browser-reading-extension/AC-04"
+      ],
+      "preconditions": [
+        "仅使用隔离的 MySQL、Redis 和测试账号。"
+      ],
+      "steps": [
+        "未连接时查词，验证授权说明。授权后查词，再撤销并尝试保存。",
+        "模拟查词或保存延迟，关闭词卡，检查迟到结果。"
+      ],
+      "expectedResults": [
+        "撤销返回401，跨账号预览不可收藏。关闭后卡片不恢复，重试保留选区。"
+      ],
+      "cleanup": "隔离环境 runner 清理。",
+      "bindings": [
+        {
+          "suite": "browser-reading-sources",
+          "title": "Browser reading citations > persists two article citations under one word and renders links after reload"
+        }
+      ],
+      "reviewNote": "Cypress 断言撤销后无法保存，以及另一账号无法读取已保存的出处。过期预览、跨账号保存和 Chrome 扩展交互仍待端到端验证。"
+    },
+    {
+      "id": "vocabulary/browser-reading-extension/AC-05/CASE-01",
+      "title": "音标、整句译文与主动发音",
+      "status": "draft",
+      "requirementIds": [
+        "vocabulary/browser-reading-extension/FR-06",
+        "vocabulary/browser-reading-extension/FR-07",
+        "vocabulary/browser-reading-extension/AC-05"
+      ],
+      "preconditions": [
+        "仅使用隔离MySQL、Redis和合成账号。"
+      ],
+      "steps": [
+        "打开bank词卡并点击发音。"
+      ],
+      "expectedResults": [
+        "分别显示音标、单词义和整句译文；不自动朗读，关闭停止。"
+      ],
+      "cleanup": "隔离runner清理；原生浏览器单独使用测试账号。",
+      "bindings": [],
+      "reviewNote": "保持draft，不能用部分脚本或替身冒充原生流程、音质或完整并发通过。"
+    },
+    {
+      "id": "vocabulary/browser-reading-extension/AC-06/CASE-01",
+      "title": "保存新词笔记与整句出处",
+      "status": "ready",
+      "requirementIds": [
+        "vocabulary/browser-reading-extension/FR-07",
+        "vocabulary/browser-reading-extension/FR-08",
+        "vocabulary/browser-reading-extension/FR-09",
+        "vocabulary/browser-reading-extension/AC-06"
+      ],
+      "preconditions": [
+        "仅使用隔离MySQL、Redis和合成账号。"
+      ],
+      "steps": [
+        "查询银行义bank，编辑笔记后保存并刷新词库。"
+      ],
+      "expectedResults": [
+        "笔记完整保存；原句、句译、来源链接持久可读；查询不写词库。"
+      ],
+      "cleanup": "隔离runner清理；原生浏览器单独使用测试账号。",
+      "bindings": [
+        {
+          "suite": "browser-reading-sources",
+          "title": "Browser reading citations > persists two article citations under one word and renders links after reload"
+        }
+      ],
+      "reviewNote": "接口与持久化/刷新断言完整；外部AI为替身，不证明真实AI语义。"
+    },
+    {
+      "id": "vocabulary/browser-reading-extension/AC-07/CASE-01",
+      "title": "已有笔记追加和重试去重",
+      "status": "draft",
+      "requirementIds": [
+        "vocabulary/browser-reading-extension/FR-08",
+        "vocabulary/browser-reading-extension/AC-07"
+      ],
+      "preconditions": [
+        "仅使用隔离MySQL、Redis和合成账号。"
+      ],
+      "steps": [
+        "在已有 bank 上并行提交两次河岸引用及新笔记，再重试并检查旧字段。"
+      ],
+      "expectedResults": [
+        "旧笔记保留且新笔记只追加一次；已保存出处不重复。仍须覆盖越权、实际过期、无效笔记和非默认学习状态。"
+      ],
+      "cleanup": "隔离runner清理；原生浏览器单独使用测试账号。",
+      "bindings": [
+        {
+          "suite": "browser-reading-sources",
+          "title": "Browser reading citations > persists two article citations under one word and renders links after reload"
+        }
+      ],
+      "reviewNote": "保持draft，不能用部分脚本或替身冒充原生流程、音质或完整并发通过。"
+    },
+    {
+      "id": "vocabulary/browser-reading-extension/AC-08/CASE-01",
+      "title": "旧缓存下载及历史出处兼容",
+      "status": "draft",
+      "requirementIds": [
+        "vocabulary/browser-reading-extension/FR-09",
+        "vocabulary/browser-reading-extension/AC-08"
+      ],
+      "preconditions": [
+        "仅使用隔离MySQL、Redis和合成账号。"
+      ],
+      "steps": [
+        "旧Worker控制的Chrome下载并加载0.2.0，打开历史和新出处。"
+      ],
+      "expectedResults": [
+        "下载ZIP且扩展ID不变；新出处显示译文与来源，历史NULL兼容。"
+      ],
+      "cleanup": "隔离runner清理；原生浏览器单独使用测试账号。",
+      "bindings": [],
+      "reviewNote": "保持draft，不能用部分脚本或替身冒充原生流程、音质或完整并发通过。"
+    },
+    {
+      "id": "vocabulary/browser-reading-extension/AC-09/CASE-01",
+      "title": "词库显示最近保存的原文链接",
+      "status": "draft",
+      "requirementIds": [
+        "vocabulary/browser-reading-extension/FR-10",
+        "vocabulary/browser-reading-extension/AC-09"
+      ],
+      "preconditions": [
+        "使用隔离 MySQL、Redis 和合成账号。"
+      ],
+      "steps": [
+        "为同一个词收藏两个网页，刷新词库并检查来源链接、引用和历史出处。",
+        "对无网页出处或功能更新前已有出处的词条重复检查。"
+      ],
+      "expectedResults": [
+        "列表链接打开最后保存的网页，原引用不变，详情保留全部出处。",
+        "历史出处可见，无网页出处时显示空值。"
+      ],
+      "cleanup": "隔离环境 runner 清理。",
+      "bindings": [
+        {
+          "suite": "browser-reading-sources",
+          "title": "Browser reading citations > persists two article citations under one word and renders links after reload"
+        }
+      ],
+      "reviewNote": "Cypress 已加入最新链接断言，历史数据库与生产列表待验。"
+    }
+  ]
+}

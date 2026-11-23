@@ -1,4 +1,40 @@
 describe("english-world ToC routes", () => {
+  beforeEach(() => {
+    cy.intercept(
+      { method: "GET", pathname: "/api/notifications" },
+      { code: 200, data: { list: [], total: 0, nextCursor: null } },
+    );
+    cy.intercept("GET", "/api/notifications/unread-count", {
+      code: 200,
+      data: { count: 0 },
+    });
+    cy.intercept("GET", "/api/notifications/events", {
+      headers: { "content-type": "text/event-stream" },
+      body: ": mock notification stream\n\n",
+    });
+    cy.intercept("GET", "/api/mcp-access/tokens", {
+      code: 200,
+      data: { items: [] },
+    });
+    cy.intercept("GET", "/api/mcp-access/audit", {
+      code: 200,
+      data: { items: [] },
+    });
+    cy.intercept("GET", "/api/mcp-access/info", {
+      code: 200,
+      data: { endpoint: "/mcp", transport: "http", auth: "bearer" },
+    });
+
+    cy.intercept("POST", "/api/user/captcha", {
+      code: 200,
+      data: {
+        captchaId: "mock-captcha",
+        imageDataUrl:
+          "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jP/QAAAAASUVORK5CYII=",
+        expiresIn: 120,
+      },
+    });
+  });
   const user = {
     id: 1,
     username: "tester",
@@ -169,8 +205,8 @@ describe("english-world ToC routes", () => {
   };
 
   const expectWordLibrary = () => {
-    cy.contains("strong", "单词列表").should("be.visible");
-    cy.contains("面向复习、检索和维护的词库工作台").should("be.visible");
+    cy.contains("h1", "词库").should("be.visible");
+    cy.get('[aria-label="词库筛选"]').should("be.visible");
     cy.contains("resilient").should("be.visible");
     cy.contains("有复原力的").should("be.visible");
   };
@@ -179,16 +215,11 @@ describe("english-world ToC routes", () => {
     cy.contains("总学习单词").should("be.visible");
     cy.contains("已掌握单词").should("be.visible");
     cy.contains("掌握率").should("be.visible");
-    cy.contains("每日新增单词").should("be.visible");
+    cy.contains("新增单词趋势").should("be.visible");
     cy.contains("词性分布").should("be.visible");
   };
 
-  const openMoreMenuItem = (label: string) => {
-    cy.contains("button", "更多").click();
-    cy.contains('[role="menuitem"]', label).should("be.visible").click();
-  };
-
-  it("logs in, opens today's review, and navigates to the real words route", () => {
+  it("logs in, returns to account settings, and navigates to the real words route", () => {
     mockCurrentUser(false);
     mockWordList();
 
@@ -198,18 +229,21 @@ describe("english-world ToC routes", () => {
       data: { user },
     }).as("login");
 
-    cy.visit("/login");
+    cy.visit("/englishWorld/settings");
 
     cy.get('[data-cy="login-username"]').type("tester");
     cy.get('[data-cy="login-password"]').type("123456");
+    cy.get('[data-cy="login-captcha"]').type("ABCDE");
     cy.get('[data-cy="login-submit"]').click();
 
-    cy.wait("@login");
-    cy.location("pathname").should("eq", "/englishWorld/recite");
-    cy.contains("今日复习").should("be.visible");
-    cy.contains("开始今日复习").should("be.visible");
+    cy.wait("@login")
+      .its("request.body")
+      .should("include", { captchaId: "mock-captcha", captchaCode: "ABCDE" });
+    cy.location("pathname").should("eq", "/englishWorld/settings");
+    cy.contains("h2", "账号安全").should("be.visible");
+    cy.contains("button", "修改密码").should("be.visible");
 
-    cy.contains("button", "词库").click();
+    cy.contains('[role="menuitem"]', "词库列表").click();
     cy.location("pathname").should("eq", "/englishWorld/words");
     cy.wait("@wordFilter");
     expectWordLibrary();
@@ -271,90 +305,87 @@ describe("english-world ToC routes", () => {
     expectStatsDashboard();
   });
 
-  it("navigates from the More menu to secondary ToC routes", () => {
+  it("navigates with the sidebar, word-library actions and user settings menu", () => {
     mockProtectedEnglishWorld();
-
     cy.visit("/englishWorld/words");
-
     cy.wait("@currentUser");
     cy.wait("@wordFilter");
     expectWordLibrary();
-
-    openMoreMenuItem("学习统计");
+    cy.contains('[role="menuitem"]', "数据统计").click();
     cy.location("pathname").should("eq", "/englishWorld/stats");
     cy.wait("@englishStats");
     expectStatsDashboard();
-
-    openMoreMenuItem("语境实验室");
-    cy.location("pathname").should("eq", "/englishWorld/context-lab");
-    cy.contains("h1", "AI 语境实验室").should("be.visible");
-    cy.contains("选择练习来源").should("be.visible");
-
-    openMoreMenuItem("记忆地图");
+    cy.contains('[role="menuitem"]', "词库列表").click();
+    cy.wait("@wordFilter");
+    cy.contains("button", "记忆地图").click();
     cy.location("pathname").should("eq", "/englishWorld/memory-map");
     cy.contains("h4", "记忆地图").should("be.visible");
     cy.contains("弱词队列").should("be.visible");
-
-    openMoreMenuItem("系统设置");
+    cy.get('[aria-label="用户菜单：tester"]').click();
+    cy.contains('[role="menuitem"]', "系统设置").click();
     cy.location("pathname").should("eq", "/englishWorld/settings");
-    cy.wait("@getAllConfigs");
-    cy.contains("系统设置").should("be.visible");
-    cy.contains("单词默写配置").should("be.visible");
+    cy.contains("h1", "系统设置").should("be.visible");
+    cy.contains("h2", "账号安全").should("be.visible");
+    cy.contains("MCP 授权").should("be.visible");
+    cy.contains("单词默写配置").should("not.exist");
+    cy.contains("单词听写配置").should("not.exist");
   });
 
   it("creates an async context lab task and practices from history", () => {
     mockProtectedEnglishWorld();
-    let historyCalls = 0;
+    let created = false;
+    let completed = false;
 
     cy.intercept("POST", "**/context-lab/history", (req) => {
-      historyCalls += 1;
       req.reply({
         code: 200,
         message: "ok",
-        data:
-          historyCalls <= 2
-            ? { list: [], total: 0, page: 1, pageSize: 10 }
-            : {
-                list: [
-                  {
-                    id: 501,
-                    taskId: 501,
-                    status: "succeeded",
-                    sourceType: "proficiency",
-                    words: ["resilient", "steady", "recover"],
-                    articleExerciseId: 901,
-                    article: "A short article about resilient learning.",
-                    questions: [
-                      {
-                        id: "q1",
-                        stem: "What does resilient learning describe?",
-                        options: [
-                          "Recovering after difficulty",
-                          "Never practicing",
-                          "Avoiding all mistakes",
-                          "Forgetting words",
-                        ],
-                      },
-                    ],
-                  },
-                ],
-                total: 1,
-                page: 1,
-                pageSize: 10,
-              },
+        data: !created
+          ? { list: [], total: 0, page: 1, pageSize: 10 }
+          : {
+              list: [
+                {
+                  id: 501,
+                  taskId: 501,
+                  status: completed ? "succeeded" : "pending",
+                  sourceType: "proficiency",
+                  words: ["resilient", "steady", "recover"],
+                  articleExerciseId: 901,
+                  article: "A short article about resilient learning.",
+                  questions: [
+                    {
+                      id: "q1",
+                      stem: "What does resilient learning describe?",
+                      options: [
+                        "Recovering after difficulty",
+                        "Never practicing",
+                        "Avoiding all mistakes",
+                        "Forgetting words",
+                      ],
+                    },
+                  ],
+                },
+              ],
+              total: 1,
+              page: 1,
+              pageSize: 10,
+            },
       });
     }).as("contextHistory");
 
-    cy.intercept("POST", "**/context-lab/generate-task", {
-      code: 200,
-      message: "ok",
-      data: {
-        id: 501,
-        taskId: 501,
-        status: "pending",
-        sourceType: "proficiency",
-        words: ["resilient", "steady", "recover"],
-      },
+    cy.intercept("POST", "**/context-lab/generate-task", (req) => {
+      created = true;
+      req.reply({
+        code: 200,
+        message: "ok",
+        data: {
+          id: 501,
+          taskId: 501,
+          status: "pending",
+          sourceType: "proficiency",
+          words: ["resilient", "steady", "recover"],
+        },
+      });
     }).as("createContextTask");
 
     cy.intercept("POST", "**/context-lab/submit", (req) => {
@@ -382,11 +413,15 @@ describe("english-world ToC routes", () => {
     cy.wait("@contextHistory");
     cy.contains("button", "生成练习包").click();
     cy.wait("@createContextTask");
-    cy.contains("等待回调").should("be.visible");
+    cy.get("article.context-lab-history-item-pending").should("be.visible");
 
-    cy.contains("button", "刷新状态").click();
+    cy.then(() => {
+      completed = true;
+    });
+    cy.get('[aria-label="任务 501 更多操作"]').click();
+    cy.contains('[role="menuitem"]', "刷新状态").click();
     cy.wait("@contextHistory");
-    cy.contains("生成完成").should("be.visible");
+    cy.get("article.context-lab-history-item-succeeded").should("be.visible");
     cy.contains("button", "开始练习").click();
     cy.contains("A short article about resilient learning.").should(
       "be.visible",
@@ -397,37 +432,20 @@ describe("english-world ToC routes", () => {
     cy.contains("正确").should("be.visible");
   });
 
-  it("starts a targeted review from the daily action list", () => {
+  // settings/desktop-learning-nav FR-06, AC-05: the old desktop review entry is retired.
+  it("redirects the legacy recite entry to authenticated scene listening without creating AI work", () => {
     mockProtectedEnglishWorld();
-    cy.intercept("POST", "/api/recite/start", (req) => {
-      expect(req.body.wordIds).to.deep.equal([101, 102]);
-      req.reply({
-        code: 200,
-        message: "ok",
-        data: {
-          questions: [
-            { wordId: 101, question: "有复原力的", direction: 0 },
-            { wordId: 102, question: "稳定的", direction: 0 },
-          ],
-          direction: 0,
-          totalCount: 2,
-        },
-      });
-    }).as("startTargetedReview");
-
-    cy.visit("/englishWorld");
-
+    cy.intercept("GET", "**/ai-learning/history", {
+      code: 200,
+      data: { sessions: [], reviewWordIds: [] },
+    }).as("listeningHistory");
+    cy.intercept("POST", "**/ai-learning/sessions", () => {
+      throw new Error("Legacy navigation must not create an AI session");
+    }).as("unexpectedGeneration");
+    cy.visit("/englishWorld/recite");
     cy.wait("@currentUser");
-    cy.get('[aria-label="今日行动清单"]').should("be.visible");
-    cy.contains("修复薄弱词").should("be.visible");
-    cy.contains("button", "定向复习").click();
-
-    cy.location("pathname").should("eq", "/englishWorld/recite");
-    cy.location("search").should("contain", "wordIds=101%2C102");
-    cy.contains("这组词来自今日计划").should("be.visible");
-    cy.contains("button", "开始今日复习").click();
-
-    cy.wait("@startTargetedReview");
-    cy.contains("有复原力的").should("be.visible");
+    cy.location("pathname").should("eq", "/englishWorld/ai-listening");
+    cy.contains("h1", "场景听力").should("be.visible");
+    cy.get("@unexpectedGeneration.all").should("have.length", 0);
   });
 });

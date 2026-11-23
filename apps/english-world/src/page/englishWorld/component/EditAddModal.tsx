@@ -8,18 +8,15 @@ import {
   Form,
   Input,
   Select,
-  Upload,
   Button,
   message,
   Tag,
   Spin,
 } from "antd";
-import type { UploadProps } from "antd";
-import { UploadOutlined } from "@ant-design/icons";
+import request from "@font/api";
+import { WordImagePicker } from "./WordImagePicker";
 import TextArea from "antd/es/input/TextArea";
 import { WordList } from "@/server/word/word.type";
-import request from "@font/api";
-import { uploadFile } from "@/server";
 import { useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { enumToOptions } from "@font/utils";
 import { EnglishAbsorb, EnglishType } from "../enum";
@@ -82,6 +79,7 @@ export const EditAddModal = (props: Props) => {
   const [dirty, setDirty] = useState(false);
   const noteValue = Form.useWatch("englishNote", form);
   const [saving, setSaving] = useState(false);
+  const [imageUploading,setImageUploading] = useState(false);
   const savingRef = useRef(false);
   const bodyScrollRef = useRef(0);
   const noteSelectionRef = useRef<[number, number]>([0,0]);
@@ -229,6 +227,7 @@ export const EditAddModal = (props: Props) => {
   }, [aiLookupWord, form, isModalVisible, type]);
 
   const handleModalOk = async () => {
+    if(imageUploading) return;
     if (savingRef.current) return;
     savingRef.current = true;
     setSaving(true);
@@ -258,6 +257,7 @@ export const EditAddModal = (props: Props) => {
   };
 
   const handleModalCancel = () => {
+    if(imageUploading) return;
     if(savingRef.current) return;
     if (dirty) {
       Modal.confirm({ title: "放弃尚未保存的修改？", content: "本次修改将丢失。", okText: "放弃修改", cancelText: "继续编辑", onOk: onCancel });
@@ -325,64 +325,20 @@ export const EditAddModal = (props: Props) => {
   };
 
   // 上传文件处理方法
-  const onChange: UploadProps["onChange"] = (info) => {
-    if (info.file.status === "uploading") {
-      return;
-    }
-    if (info.file.status === "done") {
-      message.success(`${info.file.name} 上传成功`);
-      // 从 file.response 获取响应数据（customRequest 中设置的）
-      // 上传接口返回的是 URL 字符串
-      const imageUrl = info.file.response;
-      if (imageUrl) {
-        // 直接将 URL 设置到表单字段
-        form.setFieldsValue({ englishImg: imageUrl });
-      }
-    } else if (info.file.status === "error") {
-      message.error(`${info.file.name} 上传失败`);
-    }
-  };
-
-  const customRequest: UploadProps["customRequest"] = async (options) => {
-    const { file, onSuccess, onError, onProgress } = options;
-
-    try {
-      // 直接使用文件对象创建FormData
-      const formData = new FormData();
-      formData.append("file", file as Blob);
-
-      // 模拟上传进度
-      onProgress?.({ percent: 30 });
-
-      // 调用上传接口，request 函数已经处理了响应拦截，直接返回 URL 字符串
-      const imageUrl = await request<string>(uploadFile(formData));
-
-      // 模拟上传完成
-      onProgress?.({ percent: 100 });
-
-      // 直接设置表单值，确保图片URL被保存（双重保险）
-      form.setFieldsValue({ englishImg: imageUrl });
-
-      // 上传成功，onSuccess 的第一个参数会被设置到 file.response
-      onSuccess?.(imageUrl);
-    } catch (error) {
-      console.error("File upload failed", error);
-      onError?.(error as Error);
-    }
-  };
-
   return (
     <Modal
       title={noteFocused ? `${currentRecord?.englishWord ?? "单词"} · 编辑笔记` : type === "edit" ? "编辑单词" : "添加单词"}
-      className={noteFocused ? "word-note-focus-modal" : undefined}
+      className={noteFocused ? "word-note-focus-modal" : "word-dictionary-edit-modal"}
       confirmLoading={saving}
-      closable={!saving}
+      okButtonProps={{disabled:imageUploading}}
+      cancelButtonProps={{disabled:imageUploading || saving}}
+      closable={!saving && !imageUploading}
       maskClosable={false}
       footer={noteFocused ? <Button onClick={() => focusNote(false)}>返回表单</Button> : undefined}
       open={isModalVisible}
       onOk={handleModalOk}
       onCancel={handleModalCancel}
-      okText="确认"
+      okText="保存词条"
       cancelText="取消"
       destroyOnHidden
       width={noteFocused ? "min(1100px, calc(100vw - 24px))" : 800}
@@ -509,9 +465,7 @@ export const EditAddModal = (props: Props) => {
 
         {/* 图片 - 独立一行 */}
         <Form.Item label="图片" name="englishImg">
-          <Upload customRequest={customRequest} onChange={onChange}>
-            <Button icon={<UploadOutlined />}>点击上传</Button>
-          </Upload>
+          <WordImagePicker onBusy={setImageUploading} />
         </Form.Item>
 
         {/* 笔记 - 独立一行 */}

@@ -8,13 +8,16 @@ import {
   FileTextOutlined,
   FireOutlined,
   LeftOutlined,
+  MenuOutlined,
   ReadOutlined,
+  SoundOutlined,
   RightOutlined,
 } from "@ant-design/icons";
-import { Menu } from "antd";
+import { Drawer, Menu } from "antd";
 import type { MenuProps } from "antd";
-import { useNavigate } from "react-router-dom";
-import { getPathForNav, normalizeActiveKey } from "../navigation";
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { getPathForNav, getReadingNavKey, normalizeActiveKey, READING_NAV } from "../navigation";
 
 const navItems: MenuProps["items"] = [
   { key: "cockpit", icon: <DashboardOutlined />, label: "今天", title: "今天" },
@@ -36,7 +39,14 @@ const navItems: MenuProps["items"] = [
     title: "学习",
     children: [
       { key: "intensiveReading", icon: <ReadOutlined />, label: "文章精读" },
-      { key: "readingPractices", icon: <ReadOutlined />, label: "阅读练习" },
+      {
+        key: "readingPractices",
+        icon: <ReadOutlined />,
+        label: "阅读练习",
+        className: "english-world-reading-menu",
+        children: Object.entries(READING_NAV).map(([key, { label }]) => ({ key, label })),
+      },
+      { key: "ieltsListening", icon: <SoundOutlined />, label: "雅思听力" },
       { key: "aiListening", icon: <ReadOutlined />, label: "场景听力" },
       { key: "wordBooks", icon: <BookFilled />, label: "复习手册" },
     ],
@@ -46,47 +56,14 @@ const navItems: MenuProps["items"] = [
   { key: "docs", icon: <FileTextOutlined />, label: <a href="/docs/">文档中心</a>, title: "文档中心" },
 ];
 
-function getPrimaryActiveKey(activeKey: string) {
+function getSelectedNavKey(activeKey: string, search: string) {
   const normalizedKey = normalizeActiveKey(activeKey);
-  if (
-    normalizedKey === "aiWord" ||
-    normalizedKey === "memoryMap" ||
-    normalizedKey === "bulkImport" ||
-    normalizedKey === "overwriteStats"
-  ) {
-    return "words";
-  }
-  if (normalizedKey === "contextLab" || normalizedKey === "ieltsCore") {
-    return "aiListening";
-  }
-  return normalizedKey;
-}
-
-function getSelectedNavKey(activeKey: string) {
-  const normalizedKey = normalizeActiveKey(activeKey);
-  if (normalizedKey === "contextLab") return "readingPractices";
+  if (normalizedKey === "contextLab") return "readingPersonal";
+  if (normalizedKey === "readingPractices") return getReadingNavKey(new URLSearchParams(search));
   if (normalizedKey === "aiWord" || normalizedKey === "memoryMap") {
     return "words";
   }
   return normalizedKey;
-}
-
-function getDefaultOpenKeys(activeKey: string, collapsed: boolean) {
-  if (collapsed) return [];
-  const normalizedKey = normalizeActiveKey(activeKey);
-  if (
-    normalizedKey === "words" ||
-    normalizedKey === "bulkImport" ||
-    normalizedKey === "overwriteStats" ||
-    normalizedKey === "aiWord" ||
-    normalizedKey === "memoryMap" ||
-    normalizedKey === "recite" ||
-    normalizedKey === "contextLab" ||
-    normalizedKey === "ieltsCore"
-  ) {
-    return ["vocabulary", "learning"];
-  }
-  return ["vocabulary", "learning"];
 }
 
 type EnglishHeaderProps = {
@@ -103,14 +80,33 @@ export const EnglishHeader = ({
   onNavClick,
 }: EnglishHeaderProps) => {
   const navigate = useNavigate();
-  const selectedNavKey = getSelectedNavKey(activeKey);
-  const primaryActiveKey = getPrimaryActiveKey(activeKey);
+  const location = useLocation();
+  const selectedNavKey = getSelectedNavKey(activeKey, location.search);
+  const [mobileNavLocation, setMobileNavLocation] = useState<string>();
+  const mobileNavOpen = mobileNavLocation === location.key;
+  const closeMobileNav = () => setMobileNavLocation(undefined);
+
+  useEffect(() => {
+    const narrowScreen = window.matchMedia?.("(max-width: 900px)");
+    const handleResize = (event: MediaQueryListEvent) => {
+      if (!event.matches) setMobileNavLocation(undefined);
+    };
+    narrowScreen?.addEventListener("change", handleResize);
+    return () => narrowScreen?.removeEventListener("change", handleResize);
+  }, []);
 
   const handleNavClick: MenuProps["onClick"] = ({ key }) => {
     if (key === "learning" || key === "vocabulary" || key === "docs") return;
     const normalizedKey = normalizeActiveKey(key);
     navigate(getPathForNav(normalizedKey));
     onNavClick?.(normalizedKey);
+  };
+
+  const menuProps: MenuProps = {
+    defaultOpenKeys: ["vocabulary", "learning", "readingPractices"],
+    items: navItems,
+    mode: "inline",
+    selectedKeys: [selectedNavKey],
   };
 
   return (
@@ -120,7 +116,16 @@ export const EnglishHeader = ({
       }`}
     >
       <div className="english-world-header-inner">
-        {/* Logo */}
+        <button
+          type="button"
+          className="english-world-mobile-nav-toggle"
+          aria-label="打开导航"
+          aria-haspopup="dialog"
+          aria-expanded={mobileNavOpen}
+          onClick={() => setMobileNavLocation(location.key)}
+        >
+          <MenuOutlined aria-hidden="true" />
+        </button>
         <div className="english-world-brand">
           <span className="english-world-brand-mark" aria-hidden="true"><img src={brand.symbol} alt="" /></span>
           <span className="english-world-brand-copy">
@@ -131,13 +136,10 @@ export const EnglishHeader = ({
 
         <nav className="english-world-nav">
           <Menu
+            {...menuProps}
             className="english-world-nav-menu"
-            defaultOpenKeys={getDefaultOpenKeys(primaryActiveKey, collapsed)}
             inlineCollapsed={collapsed}
-            items={navItems}
-            mode="inline"
             onClick={handleNavClick}
-            selectedKeys={[selectedNavKey]}
           />
         </nav>
 
@@ -151,6 +153,26 @@ export const EnglishHeader = ({
       >
         {collapsed ? <RightOutlined /> : <LeftOutlined />}
       </button>
+      <Drawer
+        title="导航"
+        aria-label="导航"
+        placement="left"
+        width="min(320px, 90vw)"
+        open={mobileNavOpen}
+        onClose={closeMobileNav}
+        rootClassName="english-world-mobile-nav-drawer"
+      >
+        <nav aria-label="学习导航">
+          <Menu
+            {...menuProps}
+            className="english-world-nav-menu"
+            onClick={(info) => {
+              closeMobileNav();
+              handleNavClick(info);
+            }}
+          />
+        </nav>
+      </Drawer>
     </aside>
   );
 };

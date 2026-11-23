@@ -8,12 +8,18 @@ import React, {
 } from "react";
 import { useMutation } from "@font/api";
 import {
+  accountUpdateAvatar,
+  accountUpdateDisplayName,
   getCurrentUser,
   userLogin,
   userLogout,
   userRegister,
 } from "@/server/user/user";
-import type { UserInfo, LoginResponse } from "@/server/user/user.type";
+import type {
+  UserInfo,
+  LoginResponse,
+  CaptchaAnswer,
+} from "@/server/user/user.type";
 import { message } from "antd";
 
 interface ApiError {
@@ -26,14 +32,20 @@ interface AuthContextType {
   user: UserInfo | null;
   loading: boolean;
   isAuthenticated: boolean;
-  login: (username: string, password: string) => Promise<UserInfo>;
+  login: (
+    username: string,
+    password: string,
+    captcha?: CaptchaAnswer,
+  ) => Promise<UserInfo>;
   register: (
     username: string,
     password: string,
-    avatar?: string
+    secure?: { email: string; challengeId: string; emailCode: string },
   ) => Promise<UserInfo>;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
+  updateDisplayName: (name: string) => Promise<void>;
+  updateAvatar: (file: File) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -102,6 +114,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     },
   });
 
+  const { mutateAsync: saveAvatar } = useMutation(accountUpdateAvatar);
+
+  const updateAvatar = async (file: File) => {
+    const { id, avatar } = await saveAvatar(file);
+    setUser((current) => current?.id === id ? { ...current, avatar } : current);
+  };
+
+  const { mutateAsync: saveDisplayName } = useMutation(accountUpdateDisplayName);
+
+  const updateDisplayName = async (name: string) => {
+    const { id, displayName } = await saveDisplayName(name);
+    setUser((current) => current?.id === id ? { ...current, displayName } : current);
+  };
+
   const checkAuth = useCallback(async () => {
     try {
       await checkCurrentUser();
@@ -112,23 +138,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const login = async (
     username: string,
-    password: string
+    password: string,
+    captcha?: CaptchaAnswer,
   ): Promise<UserInfo> => {
-    const result = await loginMutation({ username, password });
+    const result = await loginMutation({ username, password, ...captcha });
     return result.user;
   };
 
   const register = async (
     username: string,
     password: string,
-    avatar?: string
+    secure?: { email: string; challengeId: string; emailCode: string },
   ): Promise<UserInfo> => {
-    const result = await registerMutation({ username, password, avatar });
+    if (!secure) throw new Error("请先验证注册邮箱");
+    const result = await registerMutation({ username, password, ...secure });
     return result;
   };
 
   const logout = async (): Promise<void> => {
-    await logoutMutation();
+    try {
+      await logoutMutation();
+    } finally {
+      setUser(null);
+    }
   };
 
   useEffect(() => {
@@ -143,9 +175,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     register,
     logout,
     checkAuth,
+    updateAvatar,
+    updateDisplayName,
   };
 
-  return (
-    <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

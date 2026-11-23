@@ -171,3 +171,54 @@ it('keeps the last successful filters when a new query fails', async () => {
   await waitFor(()=>expect(result.current.loading).toBe(false));
   expect(result.current.getLastSuccessfulFilters()).toEqual({});
 });
+
+
+describe("pagination performance", () => {
+  it("reuses a recently visited page and refresh invalidates cached pages", async () => {
+    requestMock.mockImplementation(config => Promise.resolve({
+      list: [{ id: config.data.page, englishWord: `page-${config.data.page}` }],
+      total: 30, totalPages: 3,
+    }));
+    const { result } = renderHook(() => useWordList(10));
+    await waitFor(() => expect(result.current.wordList[0]?.id).toBe(1));
+    act(() => result.current.changePage(2, 10));
+    await waitFor(() => expect(result.current.wordList[0]?.id).toBe(2));
+    act(() => result.current.changePage(1, 10));
+    await waitFor(() => expect(result.current.wordList[0]?.id).toBe(1));
+    expect(requestMock).toHaveBeenCalledTimes(2);
+    await act(async () => { await result.current.refresh(); });
+    await waitFor(() => expect(requestMock).toHaveBeenCalledTimes(3));
+    act(() => result.current.changePage(2, 10));
+    await waitFor(() => expect(requestMock).toHaveBeenCalledTimes(4));
+  });
+
+  it("aborts the superseded page request", async () => {
+    requestMock.mockImplementation(() => new Promise(() => {}));
+    const { result, unmount } = renderHook(() => useWordList(10));
+    const firstSignal = requestMock.mock.calls[0][0].config.signal;
+    act(() => result.current.changePage(2, 10));
+    expect(firstSignal.aborted).toBe(true);
+    const secondSignal = requestMock.mock.calls[1][0].config.signal;
+    unmount();
+    expect(secondSignal.aborted).toBe(true);
+  });
+});
+
+
+it("fetches an expired page again instead of extending stale data", async () => {
+  let now = 1000;
+  const clock = vi.spyOn(Date, "now").mockImplementation(() => now);
+  requestMock.mockImplementation(config => Promise.resolve({
+    list: [{id: config.data.page, englishWord: "word"}], total: 30, totalPages: 3,
+  }));
+  try {
+    const { result } = renderHook(() => useWordList(10));
+    await waitFor(() => expect(result.current.wordList[0]?.id).toBe(1));
+    act(() => result.current.changePage(2, 10));
+    await waitFor(() => expect(result.current.wordList[0]?.id).toBe(2));
+    now += 30_001;
+    act(() => result.current.changePage(1, 10));
+    await waitFor(() => expect(result.current.wordList[0]?.id).toBe(1));
+    expect(requestMock).toHaveBeenCalledTimes(3);
+  } finally { clock.mockRestore(); }
+});

@@ -78,17 +78,22 @@ const limitFields = [
 ];
 export function AiServicesPanel() {
   const [configs, setConfigs] = useState<AiConfig[]>([]);
+  const [tencent, setTencent] = useState<{configured:boolean; enabled:boolean; status:string}>({configured:false,enabled:false,status:"unconfigured"});
+  const [tencentId, setTencentId] = useState("");
+  const [tencentKey, setTencentKey] = useState("");
   const [usage, setUsage] = useState<AiUsage[]>([]);
   const [limits, setLimits] = useState<Record<string, number>>({});
   const [providerLimits, setProviderLimits] = useState<
     Record<Provider, Record<string, number>>
-  >({ deepseek: {}, doubao: {} });
+  >({ deepseek: {}, doubao: {}, tencent: {} });
   const [limitsSource, setLimitsSource] = useState("default");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
   const [url, setUrl] = useState("");
   const [secondUrl, setSecondUrl] = useState("");
+  const [tencentAudio, setTencentAudio] = useState<string[]>([]);
+  useEffect(() => () => tencentAudio.forEach(url => URL.revokeObjectURL(url)), [tencentAudio]);
   useEffect(
     () => () => {
       if (secondUrl) URL.revokeObjectURL(secondUrl);
@@ -101,19 +106,20 @@ export function AiServicesPanel() {
     const data = await aiFetch<{
       deepseek: AiConfig;
       doubao: AiConfig;
+      tencent?: {configured:boolean; enabled:boolean; status:string};
       usage: AiUsage[];
       limits?: Record<string, number>;
       limitsSource?: string;
       providerLimits?: Record<Provider, Record<string, number>>;
     }>("");
     setConfigs([data.deepseek, data.doubao]);
+    if (data.tencent) setTencent(data.tencent);
     setUsage(data.usage);
     setLimits(data.limits || {});
     setProviderLimits(
-      data.providerLimits || {
-        deepseek: data.limits || {},
-        doubao: data.limits || {},
-      },
+      {deepseek: data.providerLimits?.deepseek || data.limits || {},
+       doubao: data.providerLimits?.doubao || data.limits || {},
+       tencent: data.providerLimits?.tencent || data.providerLimits?.doubao || data.limits || {}},
     );
     setLimitsSource(data.limitsSource || "default");
   };
@@ -156,6 +162,31 @@ export function AiServicesPanel() {
       <Button disabled={busy} onClick={() => void run(load)}>
         刷新配置与用量
       </Button>
+      <section className="ai-provider-card" aria-label="腾讯语音配置">
+        <h3>腾讯语音</h3>
+        <p>用于雅思听力的 YunLeo 和 YunMia。密钥加密保存在服务端。</p>
+        <p>{tencent.configured ? "密钥已配置" : "尚未配置"}</p>
+        <label>SecretId<Input.Password aria-label="腾讯 SecretId" autoComplete="new-password" disabled={!secure || busy} value={tencentId} onChange={e=>setTencentId(e.target.value)} /></label>
+        <label>SecretKey<Input.Password aria-label="腾讯 SecretKey" autoComplete="new-password" disabled={!secure || busy} value={tencentKey} onChange={e=>setTencentKey(e.target.value)} /></label>
+        <Button disabled={!secure || busy || !tencentId.trim() || !tencentKey.trim()} onClick={() => void run(async () => {
+          await aiFetch('/tencent','PUT',{apiKey:JSON.stringify({secretId:tencentId.trim(),secretKey:tencentKey.trim()}),enabled:false});
+          setTencentId(""); setTencentKey(""); await load(); setNotice('密钥已保存，腾讯语音接入和测试仍在准备中。');
+        })}>保存腾讯密钥</Button>
+        <Button disabled={busy || !tencent.configured} onClick={() => void run(async () => {
+          const result = await aiFetch<{ok:boolean;message:string;audioId?:string;secondAudioId?:string}>('/tencent/test','POST');
+          if (!result.ok) throw new Error(result.message);
+          const samples: string[] = [];
+          if (result.audioId) samples.push(URL.createObjectURL(await testAudio(result.audioId)));
+          if (result.secondAudioId) samples.push(URL.createObjectURL(await testAudio(result.secondAudioId)));
+          setTencentAudio(samples);
+          setNotice(result.message); await load();
+        })}>测试腾讯音色</Button>
+        <Button disabled={busy || !tencent.configured} onClick={() => void run(async () => {
+          await aiFetch('/tencent','PUT',{enabled:!tencent.enabled});
+          setNotice(tencent.enabled ? '腾讯语音已停用' : '雅思听力已启用腾讯语音'); await load();
+        })}>{tencent.enabled ? '停用腾讯语音' : '启用腾讯语音'}</Button>
+        {tencentAudio.map((src,index) => <div key={src}><span>{index === 0 ? 'YunLeo 男声' : 'YunMia 女声'}</span><audio aria-label={index === 0 ? '腾讯男声试听' : '腾讯女声试听'} controls src={src} /></div>)}
+      </section>
       <div className="ai-services-grid">
         {configs.map((c) => (
           <section key={c.provider} className="ai-provider-card">
@@ -402,8 +433,8 @@ export function AiServicesPanel() {
       {Object.keys(limits).length > 0 && (
         <>
           <div className="ai-provider-limit-grid">
-            {(["deepseek", "doubao"] as Provider[]).map((provider) => {
-              const name = provider === "deepseek" ? "DeepSeek" : "豆包语音";
+            {(["deepseek", "doubao", "tencent"] as Provider[]).map((provider) => {
+              const name = provider === "deepseek" ? "DeepSeek" : provider === "doubao" ? "豆包语音" : "腾讯语音";
               const fields = limitFields.filter(
                 (field) =>
                   field.key !== "globalConcurrency" &&
@@ -431,8 +462,7 @@ export function AiServicesPanel() {
                   </div>
                   <p className="ai-field-hint">
                     仅限制{name}，不影响
-                    {provider === "deepseek" ? "豆包语音" : "DeepSeek"}
-                    。频率、每日次数和字符填 0 可关闭对应限制。
+                    其他服务。频率、每日次数和字符填 0 可关闭对应限制。
                   </p>
                   <div className="ai-limit-fields">
                     {fields.map((field) => (
@@ -455,7 +485,7 @@ export function AiServicesPanel() {
                             }))
                           }
                         />
-                        <small>{provider === "doubao" && field.key === "charactersPerDay" ? "0 为不限制，仅统计朗读文本" : field.hint}</small>
+                        <small>{provider !== "deepseek" && field.key === "charactersPerDay" ? "0 为不限制，仅统计朗读文本" : field.hint}</small>
                       </label>
                     ))}
                   </div>
@@ -498,7 +528,7 @@ export function AiServicesPanel() {
             <div>
               <h3>公共并发设置</h3>
               <p className="ai-field-hint">
-                全局并发是两家服务合计可同时进行的请求数。其他限制分别在各服务中设置；保存不清空历史用量。
+                全局并发是所有服务合计可同时进行的请求数。其他限制分别在各服务中设置；保存不清空历史用量。
               </p>
             </div>
             <label>
@@ -540,7 +570,7 @@ export function AiServicesPanel() {
           </section>
           <p className="ai-platform-limit-note">
             以上为平台自设限制，不是供应商余额。DeepSeek
-            字符含规则及上下文；豆包字符为朗读文本。两家服务各自计数，每日按服务端日期重置。
+            字符含规则及上下文；豆包及腾讯字符为朗读文本。各服务各自计数，每日按服务端日期重置。
           </p>
         </>
       )}
@@ -550,11 +580,11 @@ export function AiServicesPanel() {
           <span>本地记录 · 以供应商账单为准</span>
         </div>
         <div className="ai-usage-grid">
-          {(["deepseek", "doubao"] as Provider[]).map((provider) => {
+          {(["deepseek", "doubao", "tencent"] as Provider[]).map((provider) => {
             const u = usage.find((item) => item.provider === provider);
             return (
               <div key={provider}>
-                <h4>{provider === "deepseek" ? "DeepSeek" : "豆包语音"}</h4>
+                <h4>{provider === "deepseek" ? "DeepSeek" : provider === "doubao" ? "豆包语音" : "腾讯语音"}</h4>
                 <div className="ai-usage-metrics">
                   {[
                     ["请求", u?.requests || 0],

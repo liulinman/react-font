@@ -9,6 +9,7 @@ RUN npm install -g pnpm@10.8.1
 # 复制 workspace 配置
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/admin/package.json ./apps/admin/
+COPY apps/teacher/package.json ./apps/teacher/
 COPY apps/docs/package.json ./apps/docs/
 COPY apps/english-world/package.json ./apps/english-world/
 COPY apps/web-utils/package.json ./apps/web-utils/

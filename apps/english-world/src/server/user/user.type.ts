@@ -1,7 +1,9 @@
 export interface UserInfo {
   id: number;
   username: string;
-  avatar?: string;
+  displayName?: string | null;
+  avatar?: string | null;
+  email?: string;
   createTime: string;
   updateTime: string;
 }
@@ -9,12 +11,21 @@ export interface UserInfo {
 export interface RegisterParams {
   username: string;
   password: string;
-  avatar?: string;
+  email: string;
+  challengeId: string;
+  emailCode: string;
+}
+
+export interface CaptchaAnswer {
+  captchaId: string;
+  captchaCode: string;
 }
 
 export interface LoginParams {
   username: string;
   password: string;
+  captchaId?: string;
+  captchaCode?: string;
 }
 
 export interface LoginResponse {

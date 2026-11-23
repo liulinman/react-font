@@ -1,3 +1,4 @@
+import { ReadingSourceIssueReview } from "./ReadingSourceIssueReview";
 import { ReadingImportProgress } from "./ReadingImportProgress";
 import { PracticePublishDialog } from "./PracticePublishDialog";
 import "./readingWorkbench.css";
@@ -232,6 +233,16 @@ export function ReadingPracticeWorkbench({
   const unresolvedCount = unresolvedIssues.length;
   const issuesFor = (id: string) => unresolvedIssues.filter((i: any) => i.questionId === id);
   const problemQuestions = content?.questions.filter((x) => issuesFor(x.id).length || needsAnswerCompletion(content, x)) || [];
+  const firstBlock = unresolvedIssues.find((i: any) => i.blocking);
+  const handleIssue = (issue: any) => {
+    if (issue.type === "source") { setActiveTab("materials"); return; }
+    setActiveTab("review");
+    setTimeout(() => {
+      const target = document.getElementById(`review-issue-${issue.id}`);
+      target?.querySelectorAll("details").forEach(detail => { detail.open = true; });
+      target?.scrollIntoView?.({ block: "center", behavior: "smooth" });
+    }, 100);
+  };
   const checkAndRepair = () => void run("check", { revision, repair: true });
   const jumpToQuestion = (id?: string) => {
     if (id) setSelected(id);
@@ -274,7 +285,7 @@ export function ReadingPracticeWorkbench({
       onClose={close}
       footer={
         <div className="reading-workbench-footer">
-          <span role="status">
+          <div className="reading-workbench-footer-status"><span role="status">
             {!content ? "原稿已保存，可关闭后从练习列表继续查看。" : editable
               ? dirty
                 ? "修改尚未保存，保存后需要重新核对。"
@@ -285,6 +296,8 @@ export function ReadingPracticeWorkbench({
                     : `共 ${content?.questions.length || 0} 题${problemQuestions.length ? `，${problemQuestions.length} 题有提示，请核实` : "，自动检查已完成，可审核后发布"}。`
               : "已发布内容仅供查看；更正答案请打开“反馈与纠错”。"}
           </span>
+            {editable && firstBlock && <p><span>发布前需处理：{humanMessage(firstBlock.message)}</span><Button size="small" onClick={() => handleIssue(firstBlock)}>前往处理</Button></p>}
+          </div>
           <Space wrap>
             <Button onClick={close}>关闭</Button>
             {content && <Button onClick={() => setPreview(true)}>学生视角预览</Button>}
@@ -851,9 +864,10 @@ export function ReadingPracticeWorkbench({
                   {(w.issues || []).filter((i: any) => !i.resolved).map((i: any) => (
                     <Card
                       key={i.id}
+                      id={`review-issue-${i.id}`}
                       size="small"
                       style={{ marginTop: 12 }}
-                      title={`${i.questionId ? `第 ${content.questions.findIndex((q) => q.id === i.questionId) + 1} 题` : "整篇文章"} · ${i.type === "structure" ? "内容需要修改" : i.type === "source" ? "请补充原稿" : "请核实"}`}
+                      title={`${i.questionId ? `第 ${content.questions.findIndex((q) => q.id === i.questionId) + 1} 题` : "整篇文章"} · ${i.type === "structure" ? "内容需要修改" : i.type === "source" ? "请补充原稿" : i.type === "source_text" ? "请核对原稿文字" : "请核实"}`}
                     >
                       <Alert
                         type={i.resolved ? "success" : "warning"}
@@ -864,10 +878,16 @@ export function ReadingPracticeWorkbench({
                             {i.evidence && <p>依据：{humanMessage(i.evidence)}</p>}
                             {i.quote && i.quote !== i.evidence && <blockquote><mark>{i.quote}</mark></blockquote>}
                             {i.suggestion && <p>建议：{humanMessage(i.suggestion)}</p>}
-                            {i.questionId && content.questions.some((x) => x.id === i.questionId) ? <Space wrap><Button size="small" onClick={() => jumpToQuestion(i.questionId)}>定位题目与依据</Button>{editable && <Button size="small" onClick={() => editQuestion(i.questionId)}>修改此处</Button>}</Space> : <Button size="small" onClick={() => setActiveTab(i.type === "source" ? "materials" : "edit")}>{i.type === "source" ? "查看并补充原稿" : "查看文章"}</Button>}
+                            {i.type === "source" ? <><p>此问题涉及材料完整性，需要补充原稿后重新识别并检查。</p><Button size="small" onClick={() => setActiveTab("materials")}>查看并补充原稿</Button></> : i.questionId && content.questions.some((x) => x.id === i.questionId) ? <Space wrap><Button size="small" onClick={() => jumpToQuestion(i.questionId)}>定位题目与依据</Button>{editable && <Button size="small" onClick={() => editQuestion(i.questionId)}>修改此处</Button>}</Space> : <Button size="small" onClick={() => setActiveTab("edit")}>查看文章</Button>}
                           </>
                         }
                       />
+                      {i.type === "source_text" && editable && <ReadingSourceIssueReview
+                        key={`${i.id}-${revision}-${sources.map(s => s.id).join(",")}`}
+                        sources={sources} disabled={dirty || busy || preparing}
+                        onSupplement={() => setActiveTab("materials")}
+                        onVerify={input => run("verify-source-issue", { revision, issueId: i.id, ...input })}
+                      />}
                       {i.type === "ai" && !i.resolved && (
                         <details><summary>高级：认为这是误报</summary>
                           <Input.TextArea

@@ -170,11 +170,13 @@ export function IeltsExamWorkspace({ task, userId, onSubmit, onExit, storageName
       setSubmitting(false);
     }
   };
+  const activeRef = useRef(active);
+  activeRef.current = active;
   useEffect(() => {
     if (mobilePane === "questions") {
-      questionRefs.current[active]?.scrollIntoView?.({ block: "start" });
+      questionRefs.current[activeRef.current]?.scrollIntoView?.({ block: "start" });
     }
-  }, [mobilePane, active]);
+  }, [mobilePane]);
   const sendRef = useRef(send);
   useEffect(() => {
     sendRef.current = send;
@@ -210,6 +212,17 @@ export function IeltsExamWorkspace({ task, userId, onSubmit, onExit, storageName
     window.addEventListener("beforeunload", warn);
     return () => window.removeEventListener("beforeunload", warn);
   }, [started, draft.result]);
+
+  useEffect(() => {
+    const blockFind = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && !event.altKey && event.key.toLowerCase() === "f") {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    };
+    window.addEventListener("keydown", blockFind, true);
+    return () => window.removeEventListener("keydown", blockFind, true);
+  }, []);
 
   useEffect(() => {
     const root = rootRef.current;
@@ -514,7 +527,7 @@ export function IeltsExamWorkspace({ task, userId, onSubmit, onExit, storageName
           <ul>
             <li>左侧阅读文章，右侧作答；底部题号可直接跳转。</li>
             <li>
-              选中文章或题干文字可高亮、添加笔记；不确定的题可以标记待检查。
+              选中文章、题干或选项文字可高亮、添加笔记；不确定的题可以标记待检查。
             </li>
             <li>
               开始后不暂停计时。刷新、退出界面后仍继续计时；到时锁定答案并尝试交卷。
@@ -668,7 +681,20 @@ export function IeltsExamWorkspace({ task, userId, onSubmit, onExit, storageName
                       <h3>Question {index + 1}</h3>
                     </div>
                     {question.instructions && (index === 0 || questions[index - 1].instructions !== question.instructions) && <p className="ielts-exam-instructions">{question.instructions}</p>}
-                    {isTextQuestion(question) ? <SentenceAnswer stem={question.stem} number={index + 1} maxWords={question.maxWords} value={draft.answers[id]} disabled={locked} onChange={(text) => {
+                    {isTextQuestion(question) ? <SentenceAnswer renderText={(text, offset) => (
+                      <AnnotatedText inline block={id} text={text}
+                        annotations={draft.annotations
+                          .filter(a => a.block === id && a.start >= offset && a.end <= offset + text.length)
+                          .map(a => ({ ...a, start: a.start - offset, end: a.end - offset }))}
+                        onSelect={(selected, point) => selectText({
+                          ...selected, start: selected.start + offset, end: selected.end + offset,
+                        }, point)}
+                        onOpen={(annotation, point, menu) => openAnnotation({
+                          ...annotation, start: annotation.start + offset, end: annotation.end + offset,
+                        }, point, menu)}
+                        readOnly={locked}
+                      />
+                    )} stem={question.stem} number={index + 1} maxWords={question.maxWords} value={draft.answers[id]} disabled={locked} onChange={(text) => {
                       if (editable()) update({ ...draftRef.current, answers: { ...draftRef.current.answers, [id]: text } });
                     }} /> : <>
                     <AnnotatedText
@@ -684,10 +710,13 @@ export function IeltsExamWorkspace({ task, userId, onSubmit, onExit, storageName
                         第 {index + 1} 题，选择一个答案
                       </legend>
                       {question.options.map((_, optionIndex) => (
-                        <label className="ielts-exam-option" key={optionIndex}>
+                        <label className="ielts-exam-option" key={optionIndex} onClick={(event) => {
+                          if (window.getSelection()?.isCollapsed === false || (event.target as Element).closest("mark")) event.preventDefault();
+                        }}>
                           <input
                             type="radio"
                             name={`exam-${id}`}
+                            aria-label={examOptionLabel(question, optionIndex)}
                             checked={draft.answers[id] === optionIndex}
                             onChange={() => {
                               if (editable())
@@ -700,13 +729,15 @@ export function IeltsExamWorkspace({ task, userId, onSubmit, onExit, storageName
                                 });
                             }}
                           />
-                          {examOptionLabel(question, optionIndex)}
+                          <AnnotatedText block={`${id}:option:${optionIndex}`} text={examOptionLabel(question, optionIndex)} annotations={draft.annotations} onSelect={selectText} onOpen={openAnnotation} readOnly={locked} />
                         </label>
                       ))}
                     </fieldset>
                     </>}
-                    {draft.answers[id] !== undefined && !locked && (
+                    {!locked && (
                       <button
+                        style={{ visibility: draft.answers[id] === undefined ? "hidden" : "visible" }}
+                        disabled={draft.answers[id] === undefined}
                         className="ielts-exam-link"
                         onClick={() => {
                           if (!editable()) return;

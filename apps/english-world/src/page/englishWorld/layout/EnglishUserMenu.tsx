@@ -2,9 +2,8 @@ import {
   BgColorsOutlined,
   LogoutOutlined,
   SettingOutlined,
-  UserOutlined,
 } from "@ant-design/icons";
-import { Dropdown, Modal } from "antd";
+import { Avatar, Dropdown, Modal } from "antd";
 import type { MenuProps } from "antd";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -15,7 +14,7 @@ export function EnglishUserMenu() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [themeSettingsOpen, setThemeSettingsOpen] = useState(false);
-  const username = user?.username || "管理员";
+  const username = user?.displayName || user?.username || "管理员";
 
   const handleLogout = () => {
     Modal.confirm({
@@ -88,7 +87,9 @@ export function EnglishUserMenu() {
           aria-label={`用户菜单：${username}`}
         >
           <span className="english-world-user-avatar" aria-hidden="true">
-            <UserOutlined />
+            <Avatar src={user?.avatar} size="small">
+              {Array.from(username)[0]?.toUpperCase()}
+            </Avatar>
           </span>
           <span className="english-world-user-name">{username}</span>
         </button>

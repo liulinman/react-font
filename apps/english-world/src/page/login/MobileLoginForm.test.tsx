@@ -1,89 +1,80 @@
 import "@testing-library/jest-dom/vitest";
-import "antd-mobile/es/global";
-import { cleanup, render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
+import { afterEach, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
-import Login from "./Login";
-
-const navigate = vi.fn();
-const auth = {
-  login: vi.fn(),
-  register: vi.fn(),
-  isAuthenticated: false,
-};
-
-vi.mock("react-router-dom", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("react-router-dom")>();
-  return { ...actual, useNavigate: () => navigate };
-});
-
+import Login, { isMobileLoginSurface, resolveAfterLoginPath } from "./Login";
+const mocks = vi.hoisted(() => ({ login: vi.fn(), navigate: vi.fn() }));
 vi.mock("@/contexts/AuthContext", () => ({
-  useAuth: () => auth,
+  useAuth: () => ({ login: mocks.login, isAuthenticated: false }),
 }));
-
-function renderMobileLogin(from: {
-  pathname: string;
-  search?: string;
-  hash?: string;
-}) {
-  return render(
-    <MemoryRouter initialEntries={[{ pathname: "/login", state: { from } }]}>
+vi.mock("@font/api", () => ({
+  useMutation: () => ({
+    mutateAsync: async () => ({
+      captchaId: "mobile-challenge",
+      imageDataUrl: "data:image/png;base64,AA",
+    }),
+  }),
+}));
+vi.mock("react-router-dom", async (original) => ({
+  ...(await original<typeof import("react-router-dom")>()),
+  useNavigate: () => mocks.navigate,
+}));
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
+it("mobile uses the secure shared form and preserves complete deep links", async () => {
+  render(
+    <MemoryRouter
+      initialEntries={[
+        {
+          pathname: "/login",
+          state: {
+            from: {
+              pathname: "/mobile/tools/context-lab",
+              search: "?task=42",
+              hash: "#answer",
+            },
+          },
+        },
+      ]}
+    >
       <Login />
     </MemoryRouter>,
   );
-}
-
-describe("mobile login", () => {
-  beforeEach(() => {
-    Object.defineProperty(window, "matchMedia", {
-      configurable: true,
-      value: vi.fn().mockImplementation((query: string) => ({
-        matches: false,
-        media: query,
-        onchange: null,
-        addListener: vi.fn(),
-        removeListener: vi.fn(),
-        addEventListener: vi.fn(),
-        removeEventListener: vi.fn(),
-        dispatchEvent: vi.fn(),
-      })),
-    });
-    auth.isAuthenticated = false;
-    auth.login.mockResolvedValue({ id: 1 });
-    auth.register.mockResolvedValue({ id: 1 });
-    navigate.mockReset();
+  await screen.findByAltText("图形验证码");
+  fireEvent.change(screen.getByLabelText("用户名"), {
+    target: { value: "mobile-user" },
   });
-
-  afterEach(() => {
-    cleanup();
-    vi.restoreAllMocks();
+  fireEvent.change(screen.getByLabelText("密码"), {
+    target: { value: "secret12" },
   });
-
-  it("uses the mobile login surface for a mobile deep link", () => {
-    renderMobileLogin({ pathname: "/mobile/tools/context-lab" });
-
-    expect(
-      screen.getByRole("main", { name: "Freewing 移动端登录" }),
-    ).toBeVisible();
-    expect(screen.queryByText("把每个单词点亮成星图")).not.toBeInTheDocument();
+  fireEvent.change(screen.getByLabelText("图形验证码"), {
+    target: { value: "ABCDE" },
   });
-
-  it("returns a signed-in user to the complete saved mobile destination", async () => {
-    const user = userEvent.setup();
-    renderMobileLogin({
-      pathname: "/mobile/tools/context-lab",
-      search: "?task=42",
-      hash: "#answer",
-    });
-
-    await user.type(screen.getByLabelText("用户名"), "mobile-user");
-    await user.type(screen.getByLabelText("密码"), "secret12");
-    await user.click(screen.getByRole("button", { name: "登录" }));
-
-    expect(navigate).toHaveBeenCalledWith(
+  fireEvent.click(screen.getByRole("button", { name: "登录" }));
+  await waitFor(() =>
+    expect(mocks.navigate).toHaveBeenCalledWith(
       "/mobile/tools/context-lab?task=42#answer",
       { replace: true },
-    );
+    ),
+  );
+  expect(mocks.login).toHaveBeenCalledWith("mobile-user", "secret12", {
+    captchaId: "mobile-challenge",
+    captchaCode: "ABCDE",
   });
+});
+it("retains standalone PWA detection and safe mobile fallback", () => {
+  Object.defineProperty(window, "matchMedia", {
+    configurable: true,
+    value: () => ({ matches: true }),
+  });
+  expect(isMobileLoginSurface(null)).toBe(true);
+  expect(resolveAfterLoginPath(null, true)).toBe("/mobile");
 });

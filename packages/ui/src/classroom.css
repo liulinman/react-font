@@ -1,0 +1,214 @@
+.fw-chat {
+  --chat-border: #dbe2ed;
+  --chat-muted: #52627a;
+  color: #202c40;
+  border: 1px solid var(--chat-border);
+  border-radius: 10px;
+  background: #fff;
+  overflow: hidden;
+}
+.fw-chat-header,
+.fw-chat-toolbar,
+.fw-chat-send {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.fw-chat-header {
+  justify-content: flex-end;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--chat-border);
+}
+.fw-chat-header h2 {
+  font-size: 16px;
+  margin: 0 auto 0 0;
+}
+.fw-chat button {
+  font: inherit;
+  background: #fff;
+  color: #26364d;
+  border: 1px solid var(--chat-border);
+  border-radius: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+.fw-chat button:hover,
+.fw-chat button[aria-expanded="true"] {
+  background: #edf3ff;
+}
+.fw-chat button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.fw-chat-layout {
+  display: flex;
+  min-width: 0;
+}
+.fw-chat-conversation {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  flex: 1;
+  min-width: 0;
+  height: clamp(380px, calc(100vh - 335px), 650px);
+}
+.fw-chat-feed {
+  list-style: none;
+  margin: 0;
+  padding: 22px clamp(16px, 3vw, 40px);
+  overflow: auto;
+  background: #fafbfd;
+  scrollbar-gutter: stable;
+}
+.fw-chat-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 17px;
+}
+.fw-chat-row:last-child {
+  margin-bottom: 0;
+}
+.fw-chat-row.grouped {
+  margin-top: -11px;
+}
+.fw-chat-row.own {
+  flex-direction: row-reverse;
+}
+.fw-chat-message {
+  display: grid;
+  justify-items: start;
+  max-width: min(76%, 475px);
+  min-width: 0;
+}
+.fw-chat-row.own .fw-chat-message {
+  justify-items: end;
+}
+.fw-chat-meta {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: var(--chat-muted);
+  margin-bottom: 4px;
+}
+.fw-chat-meta span {
+  padding: 0 4px;
+  border-radius: 3px;
+  background: #eaf0fb;
+  color: #34548b;
+}
+.fw-chat-bubble {
+  margin: 0;
+  padding: 9px 13px;
+  border-radius: 3px 12px 12px 12px;
+  background: #edf1f7;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-width: 100%;
+}
+.fw-chat-row.own .fw-chat-bubble {
+  background: #e4edff;
+  color: #233f73;
+  border-radius: 12px 3px 12px 12px;
+}
+.fw-chat-avatar,
+.fw-chat-avatar-spacer {
+  flex: none;
+  width: 34px;
+  height: 34px;
+}
+.fw-chat-avatar {
+  display: inline-grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #e3ecfc;
+  color: #244878;
+  font-size: 13px;
+  font-weight: 650;
+}
+.fw-chat-compose {
+  border-top: 1px solid var(--chat-border);
+  padding: 13px 16px;
+}
+.fw-chat-compose textarea {
+  box-sizing: border-box;
+  width: 100%;
+  display: block;
+  min-height: 58px;
+  max-height: 120px;
+  resize: vertical;
+  padding: 9px;
+  border: 1px solid #bdcce2;
+  border-radius: 6px;
+  background: #fafbfd;
+  font: inherit;
+  color: inherit;
+}
+.fw-chat-toolbar {
+  justify-content: space-between;
+  margin-top: 8px;
+}
+.fw-chat-send {
+  font-size: 12px;
+  color: var(--chat-muted);
+}
+.fw-chat-send button {
+  background: #2457d6;
+  color: #fff;
+  border-color: #2457d6;
+  font-size: 14px;
+}
+.fw-chat-send button:hover {
+  background: #1a45ba;
+}
+.fw-chat-emoji {
+  position: relative;
+}
+.fw-chat-emoji > div {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  z-index: 1;
+  white-space: nowrap;
+  padding: 5px;
+  border: 1px solid var(--chat-border);
+  border-radius: 6px;
+  background: #fff;
+}
+.fw-chat-emoji > div button {
+  border: 0;
+  padding: 6px;
+}
+.fw-chat-members {
+  flex: 0 0 190px;
+  border-left: 1px solid var(--chat-border);
+  padding: 16px;
+  max-height: 650px;
+  overflow: auto;
+}
+.fw-chat-members h3 {
+  margin: 0;
+  font-size: 14px;
+}
+.fw-chat-members ul {
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+}
+.fw-chat-members li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-wrap: anywhere;
+}
+.fw-chat-empty {
+  text-align: center;
+  margin: 12px 0;
+  color: var(--chat-muted);
+}
+.fw-chat-error {
+  padding: 0 16px;
+  color: #a01f2d;
+}

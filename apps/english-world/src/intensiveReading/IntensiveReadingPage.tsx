@@ -11,7 +11,8 @@ export default function IntensiveReadingPage() {
   const location = useLocation(),
     navigate = useNavigate();
   const [material, setMaterial] = useState<Material | null>(null),
-    [error, setError] = useState("");
+    [error, setError] = useState(""),
+    [retry, setRetry] = useState(0);
   useEffect(() => {
     let alive = true;
     setMaterial(null);
@@ -23,19 +24,20 @@ export default function IntensiveReadingPage() {
     return () => {
       alive = false;
     };
-  }, [id]);
+  }, [id, retry]);
   if (!id) return <MaterialLibrary />;
   if (error)
     return (
       <div className="ir-empty" role="alert">
         {error}
+        <button onClick={() => setRetry(n => n + 1)}>重试加载</button>
         <button onClick={() => navigate("/englishWorld/intensive-reading")}>
           返回材料库
         </button>
       </div>
     );
   if (!material || material.id !== id)
-    return <div className="ir-empty">正在加载精读材料…</div>;
+    return <div className="ir-empty" role="status">正在加载精读材料…</div>;
   return (
     <div className="ir-root">
       {location.pathname.endsWith("/review") || material.status !== "ready" ? (

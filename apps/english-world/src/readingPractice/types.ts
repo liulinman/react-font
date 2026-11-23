@@ -19,6 +19,7 @@ export interface PublicPractice {
   submitted: boolean;
 }
 export interface PracticeSummary {
+  classroomName?: string;
   id: number;
   title: string;
   ieltsBand: number | null;

@@ -1,0 +1,456 @@
+{
+  "schemaVersion": 1,
+  "source": "docs/prd/notes/features/mcp-notes/prd.md",
+  "sourceHash": "9bcb545468f2f7122beb5c9b7d9fbb5bff4271779a9d7e1f23c880a67ab74e5b",
+  "cases": [
+    {
+      "id": "notes/mcp-notes/CASE-01",
+      "title": "初始化、列工具、空搜索与旧词库读取",
+      "status": "ready",
+      "requirementIds": [
+        "notes/mcp-notes/FR-01",
+        "notes/mcp-notes/FR-09",
+        "notes/mcp-notes/AC-01"
+      ],
+      "preconditions": [
+        "一次性MySQL、真实NestJS、合成账号；每例重置数据，禁止生产。"
+      ],
+      "steps": [
+        "创建独立笔记授权，初始化MCP并列工具；无匹配查询；用词库授权读resilient。"
+      ],
+      "expectedResults": [
+        "八笔记工具与七词库工具存在；读取/预览标只读；笔记空匹配total=0；词库读取不变。"
+      ],
+      "cleanup": "由隔离runner清理一次性数据库。",
+      "bindings": [
+        {
+          "suite": "mcp-notes",
+          "title": "MCP real knowledge notes > NOTE-MCP-01 advertises note tools and preserves vocabulary protocol"
+        }
+      ],
+      "reviewNote": "按确认需求和实际断言复核；仅工具契约与合成浏览器流程，不证明AI语义归类。"
+    },
+    {
+      "id": "notes/mcp-notes/CASE-02",
+      "title": "已有层级归档与完整内容回读",
+      "status": "ready",
+      "requirementIds": [
+        "notes/mcp-notes/FR-01",
+        "notes/mcp-notes/FR-02",
+        "notes/mcp-notes/FR-04",
+        "notes/mcp-notes/AC-01",
+        "notes/mcp-notes/AC-02",
+        "notes/mcp-notes/AC-05"
+      ],
+      "preconditions": [
+        "一次性MySQL、真实NestJS、合成账号；每例重置数据，禁止生产。"
+      ],
+      "steps": [
+        "建立雅思阅读/定位技巧两层目录；在子目录创建原文、例句、来源和本人单词关联；MCP/网站API读取并按父目录+分类+关键词+单词过滤及第二页。"
+      ],
+      "expectedResults": [
+        "保留parentId；不额外建目录；原文换行、例句、来源、关联词完整；递归过滤正确，每页20，第二页空。"
+      ],
+      "cleanup": "由隔离runner清理一次性数据库。",
+      "bindings": [
+        {
+          "suite": "mcp-notes",
+          "title": "MCP real knowledge notes > NOTE-MCP-02 lists existing hierarchy and saves original content into an existing folder"
+        }
+      ],
+      "reviewNote": "按确认需求和实际断言复核；仅工具契约与合成浏览器流程，不证明AI语义归类。"
+    },
+    {
+      "id": "notes/mcp-notes/CASE-03",
+      "title": "目录确认前无写入及重复确认",
+      "status": "ready",
+      "requirementIds": [
+        "notes/mcp-notes/FR-03",
+        "notes/mcp-notes/FR-07",
+        "notes/mcp-notes/AC-03",
+        "notes/mcp-notes/AC-09"
+      ],
+      "preconditions": [
+        "一次性MySQL、真实NestJS、合成账号；每例重置数据，禁止生产。"
+      ],
+      "steps": [
+        "空目录时预览学术句型目录并读取列表；confirmed=false尝试；正确确认并同/新requestId重试，随后创建笔记。"
+      ],
+      "expectedResults": [
+        "预览名称/父级且期限约10分钟；未确认目录始终空；最终仅一个目录，重试同ID，笔记落入该目录。"
+      ],
+      "cleanup": "由隔离runner清理一次性数据库。",
+      "bindings": [
+        {
+          "suite": "mcp-notes",
+          "title": "MCP real knowledge notes > NOTE-MCP-03 creates a proposed folder only after confirmation and retries once"
+        }
+      ],
+      "reviewNote": "按确认需求和实际断言复核；仅工具契约与合成浏览器流程，不证明AI语义归类。"
+    },
+    {
+      "id": "notes/mcp-notes/CASE-04",
+      "title": "修改预览无写入及只增一版",
+      "status": "ready",
+      "requirementIds": [
+        "notes/mcp-notes/FR-05",
+        "notes/mcp-notes/FR-06",
+        "notes/mcp-notes/FR-07",
+        "notes/mcp-notes/AC-06",
+        "notes/mcp-notes/AC-07",
+        "notes/mcp-notes/AC-09"
+      ],
+      "preconditions": [
+        "一次性MySQL、真实NestJS、合成账号；每例重置数据，禁止生产。"
+      ],
+      "steps": [
+        "创建带来源和关联词笔记；预览标题正文修改；网站回读；confirmed=false；正确确认并同/新请求号重试。"
+      ],
+      "expectedResults": [
+        "before/after和变化字段准确，预览原正文/version不变；确认保留ID/来源/目录/关联，version只增1。"
+      ],
+      "cleanup": "由隔离runner清理一次性数据库。",
+      "bindings": [
+        {
+          "suite": "mcp-notes",
+          "title": "MCP real knowledge notes > NOTE-MCP-04 previews full edits without saving and confirms one version increment"
+        }
+      ],
+      "reviewNote": "按确认需求和实际断言复核；仅工具契约与合成浏览器流程，不证明AI语义归类。"
+    },
+    {
+      "id": "notes/mcp-notes/CASE-05",
+      "title": "跨授权/动作和编辑后旧版本拒绝",
+      "status": "ready",
+      "requirementIds": [
+        "notes/mcp-notes/FR-06",
+        "notes/mcp-notes/AC-08"
+      ],
+      "preconditions": [
+        "一次性MySQL、真实NestJS、合成账号；每例重置数据，禁止生产。"
+      ],
+      "steps": [
+        "两个本人授权；预览后用第二授权或目录确认动作调用；网站修改正文再确认旧凭证。"
+      ],
+      "expectedResults": [
+        "跨授权与动作拒绝；编辑后旧预览不能覆盖网站最新正文。"
+      ],
+      "cleanup": "由隔离runner清理一次性数据库。",
+      "bindings": [
+        {
+          "suite": "mcp-notes",
+          "title": "MCP real knowledge notes > NOTE-MCP-05 rejects stale versions and binds previews to token and action"
+        }
+      ],
+      "reviewNote": "按确认需求和实际断言复核；仅工具契约与合成浏览器流程，不证明AI语义归类。"
+    },
+    {
+      "id": "notes/mcp-notes/CASE-06",
+      "title": "无效字段与目录无半成品",
+      "status": "ready",
+      "requirementIds": [
+        "notes/mcp-notes/FR-03",
+        "notes/mcp-notes/FR-04",
+        "notes/mcp-notes/AC-04",
+        "notes/mcp-notes/AC-05"
+      ],
+      "preconditions": [
+        "一次性MySQL、真实NestJS、合成账号；每例重置数据，禁止生产。"
+      ],
+      "steps": [
+        "缺少/不存在folderId；空白/超限标题正文、非法分类、重复/不存在关联词；空名/41字符/保留名/控制字符/失效父级。"
+      ],
+      "expectedResults": [
+        "全部拒绝；笔记total保持0，目录名称和父级规则不能绕过。"
+      ],
+      "cleanup": "由隔离runner清理一次性数据库。",
+      "bindings": [
+        {
+          "suite": "mcp-notes",
+          "title": "MCP real knowledge notes > NOTE-MCP-06 requires owned folders and validates note fields without hidden writes"
+        }
+      ],
+      "reviewNote": "按确认需求和实际断言复核；仅工具契约与合成浏览器流程，不证明AI语义归类。"
+    },
+    {
+      "id": "notes/mcp-notes/CASE-07",
+      "title": "跨账号笔记/归属/凭证隔离",
+      "status": "ready",
+      "requirementIds": [
+        "notes/mcp-notes/FR-06",
+        "notes/mcp-notes/FR-08",
+        "notes/mcp-notes/AC-08",
+        "notes/mcp-notes/AC-10"
+      ],
+      "preconditions": [
+        "一次性MySQL、真实NestJS、合成账号；每例重置数据，禁止生产。"
+      ],
+      "steps": [
+        "主账号建目录笔记和预览；其他账号尝试搜索、列目录、详情、更新预览、归档、子目录和确认。"
+      ],
+      "expectedResults": [
+        "其他账号不见本人数据；越权读写拒绝，主账号原文不变。"
+      ],
+      "cleanup": "由隔离runner清理一次性数据库。",
+      "bindings": [
+        {
+          "suite": "mcp-notes",
+          "title": "MCP real knowledge notes > NOTE-MCP-07 isolates owners and prevents folder and note access across accounts"
+        }
+      ],
+      "reviewNote": "按确认需求和实际断言复核；仅工具契约与合成浏览器流程，不证明AI语义归类。"
+    },
+    {
+      "id": "notes/mcp-notes/CASE-08",
+      "title": "权限独立和撤销",
+      "status": "ready",
+      "requirementIds": [
+        "notes/mcp-notes/FR-08",
+        "notes/mcp-notes/AC-10"
+      ],
+      "preconditions": [
+        "一次性MySQL、真实NestJS、合成账号；每例重置数据，禁止生产。"
+      ],
+      "steps": [
+        "四词库权限尝试笔记查/建/改/建目录；笔记只读列目录但创建拒绝，撤销再调用。"
+      ],
+      "expectedResults": [
+        "词库不隐式获笔记权限；只读不能写；撤销HTTP401，笔记仍0。"
+      ],
+      "cleanup": "由隔离runner清理一次性数据库。",
+      "bindings": [
+        {
+          "suite": "mcp-notes",
+          "title": "MCP real knowledge notes > NOTE-MCP-08 keeps note permissions independent and denies revoked tokens"
+        }
+      ],
+      "reviewNote": "按确认需求和实际断言复核；仅工具契约与合成浏览器流程，不证明AI语义归类。"
+    },
+    {
+      "id": "notes/mcp-notes/CASE-09",
+      "title": "创建幂等、冲突与审计脱敏",
+      "status": "ready",
+      "requirementIds": [
+        "notes/mcp-notes/FR-05",
+        "notes/mcp-notes/FR-07",
+        "notes/mcp-notes/FR-09",
+        "notes/mcp-notes/AC-06",
+        "notes/mcp-notes/AC-09",
+        "notes/mcp-notes/AC-11"
+      ],
+      "preconditions": [
+        "一次性MySQL、真实NestJS、合成账号；每例重置数据，禁止生产。"
+      ],
+      "steps": [
+        "同请求同内容创建两次，再以不同正文重试；预览无变化；搜索并读取审计。"
+      ],
+      "expectedResults": [
+        "同请求同内容返回原ID，不同内容拒绝，仅一笔记；无变化拒绝；审计有动作无标题/正文/Bearer密钥。"
+      ],
+      "cleanup": "由隔离runner清理一次性数据库。",
+      "bindings": [
+        {
+          "suite": "mcp-notes",
+          "title": "MCP real knowledge notes > NOTE-MCP-09 replays create request safely and keeps audit summaries free of note content"
+        }
+      ],
+      "reviewNote": "按确认需求和实际断言复核；仅工具契约与合成浏览器流程，不证明AI语义归类。"
+    },
+    {
+      "id": "notes/mcp-notes/CASE-11",
+      "title": "可选清空、关联及目录变更",
+      "status": "ready",
+      "requirementIds": [
+        "notes/mcp-notes/FR-05",
+        "notes/mcp-notes/FR-06",
+        "notes/mcp-notes/AC-07"
+      ],
+      "preconditions": [
+        "一次性MySQL、真实NestJS、合成账号；每例重置数据，禁止生产。"
+      ],
+      "steps": [
+        "预览分类变更、例句来源清空、关联清空、新目录；确认后MCP与网站API回读。"
+      ],
+      "expectedResults": [
+        "完整变化含wordIds/folderId；预览原目录来源不变；原ID保留version+1，各字段与预览一致。"
+      ],
+      "cleanup": "由隔离runner清理一次性数据库。",
+      "bindings": [
+        {
+          "suite": "mcp-notes",
+          "title": "MCP real knowledge notes > NOTE-MCP-11 confirms optional-field clearing, associations and folder changes exactly"
+        }
+      ],
+      "reviewNote": "按确认需求和实际断言复核；仅工具契约与合成浏览器流程，不证明AI语义归类。"
+    },
+    {
+      "id": "notes/mcp-notes/CASE-12",
+      "title": "删除/移动与失效父级",
+      "status": "ready",
+      "requirementIds": [
+        "notes/mcp-notes/FR-03",
+        "notes/mcp-notes/FR-06",
+        "notes/mcp-notes/AC-04",
+        "notes/mcp-notes/AC-08"
+      ],
+      "preconditions": [
+        "一次性MySQL、真实NestJS、合成账号；每例重置数据，禁止生产。"
+      ],
+      "steps": [
+        "预览后网站移动笔记、删除笔记；预览子目录后删除父目录；分别确认。"
+      ],
+      "expectedResults": [
+        "移动/删除目标旧预览拒绝，不覆盖不重建；失效父级不建立子目录。"
+      ],
+      "cleanup": "由隔离runner清理一次性数据库。",
+      "bindings": [
+        {
+          "suite": "mcp-notes",
+          "title": "MCP real knowledge notes > NOTE-MCP-12 rejects deleted or moved targets and deleted proposed parents"
+        }
+      ],
+      "reviewNote": "按确认需求和实际断言复核；仅工具契约与合成浏览器流程，不证明AI语义归类。"
+    },
+    {
+      "id": "notes/mcp-notes/CASE-13",
+      "title": "目录成功笔记失败恢复",
+      "status": "ready",
+      "requirementIds": [
+        "notes/mcp-notes/FR-07",
+        "notes/mcp-notes/AC-09"
+      ],
+      "preconditions": [
+        "一次性MySQL、真实NestJS、合成账号；每例重置数据，禁止生产。"
+      ],
+      "steps": [
+        "确认恢复目录后创建空标题笔记；查笔记为空和目录存在；修正标题保存到同目录。"
+      ],
+      "expectedResults": [
+        "失败无半成品，目录状态准确；修正后保存，目录始终仅一个。"
+      ],
+      "cleanup": "由隔离runner清理一次性数据库。",
+      "bindings": [
+        {
+          "suite": "mcp-notes",
+          "title": "MCP real knowledge notes > NOTE-MCP-13 recovers after a folder is created but note validation fails"
+        }
+      ],
+      "reviewNote": "按确认需求和实际断言复核；仅工具契约与合成浏览器流程，不证明AI语义归类。"
+    },
+    {
+      "id": "notes/mcp-notes/CASE-14",
+      "title": "目录重名、5层和200个边界",
+      "status": "ready",
+      "requirementIds": [
+        "notes/mcp-notes/FR-03",
+        "notes/mcp-notes/AC-04"
+      ],
+      "preconditions": [
+        "一次性MySQL、真实NestJS、合成账号；每例重置数据，禁止生产。"
+      ],
+      "steps": [
+        "建立同名根目录，预览重名；建立5层链，预览第6层；补齐200个，预览第201个。"
+      ],
+      "expectedResults": [
+        "重名、超深度、超数量均拒绝，最终目录数保持200。"
+      ],
+      "cleanup": "由隔离runner清理一次性数据库。",
+      "bindings": [
+        {
+          "suite": "mcp-notes",
+          "title": "MCP real knowledge notes > NOTE-MCP-14 enforces duplicate, depth and quantity limits before folder creation"
+        }
+      ],
+      "reviewNote": "按确认需求和实际断言复核；仅工具契约与合成浏览器流程，不证明AI语义归类。"
+    },
+    {
+      "id": "notes/mcp-notes/CASE-10",
+      "title": "桌面笔记权限标签和安全默认",
+      "status": "ready",
+      "requirementIds": [
+        "notes/mcp-notes/FR-08",
+        "notes/mcp-notes/FR-09",
+        "notes/mcp-notes/AC-11"
+      ],
+      "preconditions": [
+        "一次性MySQL、真实NestJS、合成账号；每例重置数据，禁止生产。"
+      ],
+      "steps": [
+        "创建仅笔记授权，1280×900打开设置；打开授权弹窗，检查四选项和默认项，取消。"
+      ],
+      "expectedResults": [
+        "四权限标签与选项可见，仍只默认一项；页面无ew_mcp_密钥，无横向溢出，保存非密钥截图。"
+      ],
+      "cleanup": "由隔离runner清理一次性数据库。",
+      "bindings": [
+        {
+          "suite": "mcp-notes",
+          "title": "MCP real knowledge notes > NOTE-MCP-10 exposes separate note permissions in desktop settings without revealing secrets"
+        }
+      ],
+      "reviewNote": "按确认需求和实际断言复核；仅工具契约与合成浏览器流程，不证明AI语义归类。"
+    },
+    {
+      "id": "notes/mcp-notes/CASE-15",
+      "title": "凭证过期待SQL专项",
+      "status": "draft",
+      "requirementIds": [
+        "notes/mcp-notes/AC-08"
+      ],
+      "preconditions": [
+        "本子项尚未取得本轮合格证据。"
+      ],
+      "steps": [
+        "按需求执行专项并补充真实证据。"
+      ],
+      "expectedResults": [
+        "超过10分钟后确认拒绝；浏览器不等待10分钟，需要真实SQL证据。"
+      ],
+      "cleanup": "隔离数据清理。",
+      "bindings": [],
+      "reviewNote": "保留真实未覆盖，不用其他接口测试替代。"
+    },
+    {
+      "id": "notes/mcp-notes/CASE-16",
+      "title": "并发和丢响应待SQL专项",
+      "status": "draft",
+      "requirementIds": [
+        "notes/mcp-notes/AC-09"
+      ],
+      "preconditions": [
+        "本子项尚未取得本轮合格证据。"
+      ],
+      "steps": [
+        "按需求执行专项并补充真实证据。"
+      ],
+      "expectedResults": [
+        "并发只写一次；浏览器已验证重复请求，但真正并发与响应丢失需证据。"
+      ],
+      "cleanup": "隔离数据清理。",
+      "bindings": [],
+      "reviewNote": "保留真实未覆盖，不用其他接口测试替代。"
+    },
+    {
+      "id": "notes/mcp-notes/CASE-17",
+      "title": "第三方客户端展示与语义归类待人工",
+      "status": "draft",
+      "requirementIds": [
+        "notes/mcp-notes/AC-12",
+        "notes/mcp-notes/AC-02",
+        "notes/mcp-notes/AC-03"
+      ],
+      "preconditions": [
+        "本子项尚未取得本轮合格证据。"
+      ],
+      "steps": [
+        "按需求执行专项并补充真实证据。"
+      ],
+      "expectedResults": [
+        "AI自动选择合适目录；新目录/修改先展示征询、拒绝不写；网站回读与学习统计不变；接口测试不冒充人工客户端验收。"
+      ],
+      "cleanup": "隔离数据清理。",
+      "bindings": [],
+      "reviewNote": "保留真实未覆盖，不用其他接口测试替代。"
+    }
+  ]
+}

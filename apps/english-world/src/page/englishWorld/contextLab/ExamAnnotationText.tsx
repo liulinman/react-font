@@ -15,11 +15,13 @@ export function ExamAnnotationText({
   onOpen,
   readOnly,
   omissions = [],
+  inline = false,
 }: {
   block: string;
   text: string;
   annotations: ExamAnnotation[];
   readOnly?: boolean;
+  inline?: boolean;
   omissions?: Array<{start:number;end:number}>;
   onSelect: (selection: ExamTextSelection, anchor: AnnotationAnchor) => void;
   onOpen: (
@@ -28,7 +30,7 @@ export function ExamAnnotationText({
     menu: boolean,
   ) => void;
 }) {
-  const ref = useRef<HTMLDivElement>(null);
+  const ref = useRef<HTMLSpanElement>(null);
   const hidden=omissions.filter(r=>r.start>=0&&r.end>r.start&&r.end<=text.length).sort((a,b)=>a.start-b.start);
   const sourceOffset=(visible:number,right:boolean)=>{let skipped=0;for(const r of hidden){const boundary=r.start-skipped;if(visible<boundary||visible===boundary&&!right)break;skipped+=r.end-r.start;}return visible+skipped;};
   const marks = annotations.filter((a) => a.block === block);
@@ -108,10 +110,11 @@ export function ExamAnnotationText({
     );
   });
   return (
-    <div
+    <span
       ref={ref}
       data-testid={`exam-text-${block}`}
       className="ielts-exam-text"
+      style={{ display: inline ? "inline" : "block" }}
       onContextMenu={(event) => {
         if (capture({ left: event.clientX, top: event.clientY }))
           event.preventDefault();
@@ -126,6 +129,6 @@ export function ExamAnnotationText({
       }}
     >
       {nodes}
-    </div>
+    </span>
   );
 }

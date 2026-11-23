@@ -1,0 +1,334 @@
+{
+  "schemaVersion": 1,
+  "featureId": "auth/account-access",
+  "changeId": "2026-10-27-account-access-r01",
+  "updatedAt": "2026-10-27T12:38:19+08:00",
+  "sources": [
+    {
+      "path": "docs/prd/auth/features/account-access/prd.md",
+      "sha256": "4ff5c41ea55e105bdc7e716e0b17d4a7d1e544066e256290b8c172c7794fa76f"
+    },
+    {
+      "path": "docs/prd/auth/features/account-access/.decision-log.md",
+      "sha256": "3df779600dcd5d45fae9f143a494ee1b4c3737c7c36b9ef0517de9196db1dc8e"
+    },
+    {
+      "path": "docs/design/auth/account-access/design.md",
+      "sha256": "7159bf8e0e177af1721bf0467daa38e5ebb30334e676024caaad51cd99c71209"
+    },
+    {
+      "path": "specs/001-account-access/spec.md",
+      "sha256": "08b06422a0e252a05a9da71fbbc86c8853ee09a39fd97502a207ffae1cd26c43"
+    },
+    {
+      "path": "specs/001-account-access/contracts/account-api.md",
+      "sha256": "91dbdab8642e1ade168496ba800629d745994c696b711cbaa1ac1bf4b2f3caeb"
+    },
+    {
+      "path": "docs/design/auth/account-access/revisions/r10/prototype/index.html",
+      "sha256": "09a6a00d62976ebab4eed8a7c96e3f8c2a0b235a45ace656b724b9bda4690866"
+    },
+    {
+      "path": "docs/design/auth/account-access/revisions/r10/prototype/style.css",
+      "sha256": "2e187dec8e5463654923aa09e1d85f096bd0ef89ee8f3bd51128dca9eca0cc4d"
+    },
+    {
+      "path": "docs/design/auth/account-access/revisions/r10/prototype/app.js",
+      "sha256": "d2c61e699b320ddddac8012fbaa94f89afdb499fbaea908a8e37c1059343b4a0"
+    },
+    {
+      "path": "docs/design/auth/account-access/revisions/r10/prototype/assets/freewing-symbol.png",
+      "sha256": "9b47e8c2a934a15542924786225ae3e82cbf874f91789dd1a2e47f3ea13e9065"
+    },
+    {
+      "path": "docs/design/auth/account-access/revisions/r10/prototype/assets/freewing-logo.webp",
+      "sha256": "6ebb108da5c5fa723ee5ecd3aa1e41c00f4e442486b7c7d0b1d72cd3b96c6706"
+    },
+    {
+      "path": "docs/design/auth/account-access/revisions/r10/prototype/assets/freewing-logo-transparent.png",
+      "sha256": "4bcb8559cd4cfc52ed888124b6dd092892cb065a37935518f6e57c4b993cd580"
+    }
+  ],
+  "mappingMode": "manual sidecar, executor does not calculate Spec coverage",
+  "scenarios": [
+    {
+      "scenarioId": "S-01",
+      "requirements": [
+        "auth/account-access/FR-01",
+        "auth/account-access/FR-03",
+        "auth/account-access/AC-01",
+        "auth/account-access/AC-10"
+      ],
+      "designState": "UI-LOGIN",
+      "caseIds": [
+        "auth/account-access/AC-01/CASE-01",
+        "auth/account-access/AC-10/CASE-01"
+      ],
+      "bindings": [],
+      "verification": "Cypress real HTTP + backend SQL integration + focused Vitest/Jest; see actual run evidence",
+      "coverage": "manual mapping; compound AC coverage remains partial/draft; no automated Spec coverage calculation"
+    },
+    {
+      "scenarioId": "S-02",
+      "requirements": [
+        "auth/account-access/FR-01",
+        "auth/account-access/AC-01"
+      ],
+      "designState": "UI-LOGIN",
+      "caseIds": [
+        "auth/account-access/AC-01/CASE-01"
+      ],
+      "bindings": [],
+      "verification": "Cypress real HTTP + backend SQL integration + focused Vitest/Jest; see actual run evidence",
+      "coverage": "manual mapping; compound AC coverage remains partial/draft; no automated Spec coverage calculation"
+    },
+    {
+      "scenarioId": "S-03",
+      "requirements": [
+        "auth/account-access/FR-06",
+        "auth/account-access/FR-07",
+        "auth/account-access/AC-02",
+        "auth/account-access/AC-04"
+      ],
+      "designState": "UI-ERROR",
+      "caseIds": [
+        "auth/account-access/AC-02/CASE-01",
+        "auth/account-access/AC-04/CASE-01"
+      ],
+      "bindings": [
+        {
+          "suite": "account-access",
+          "title": "Account access real service > REGISTER: verifies captured mail once and persists normalized account without auto login"
+        },
+        {
+          "suite": "account-access",
+          "title": "Account access real service > CAPTCHA: rejects missing, refreshed and reused graphical challenges"
+        }
+      ],
+      "verification": "Cypress real HTTP + backend SQL integration + focused Vitest/Jest; see actual run evidence",
+      "coverage": "manual mapping; compound AC coverage remains partial/draft; no automated Spec coverage calculation"
+    },
+    {
+      "scenarioId": "S-04",
+      "requirements": [
+        "auth/account-access/FR-04",
+        "auth/account-access/FR-05",
+        "auth/account-access/AC-03",
+        "auth/account-access/AC-05"
+      ],
+      "designState": "UI-REGISTER",
+      "caseIds": [
+        "auth/account-access/AC-03/CASE-01",
+        "auth/account-access/AC-05/CASE-01"
+      ],
+      "bindings": [
+        {
+          "suite": "account-access",
+          "title": "Account access real service > REGISTER: verifies captured mail once and persists normalized account without auto login"
+        }
+      ],
+      "verification": "Cypress real HTTP + backend SQL integration + focused Vitest/Jest; see actual run evidence",
+      "coverage": "manual mapping; compound AC coverage remains partial/draft; no automated Spec coverage calculation"
+    },
+    {
+      "scenarioId": "S-05",
+      "requirements": [
+        "auth/account-access/FR-04",
+        "auth/account-access/FR-05",
+        "auth/account-access/AC-03"
+      ],
+      "designState": "UI-REGISTER-CODE",
+      "caseIds": [
+        "auth/account-access/AC-03/CASE-01"
+      ],
+      "bindings": [
+        {
+          "suite": "account-access",
+          "title": "Account access real service > REGISTER: verifies captured mail once and persists normalized account without auto login"
+        }
+      ],
+      "verification": "Cypress real HTTP + backend SQL integration + focused Vitest/Jest; see actual run evidence",
+      "coverage": "manual mapping; compound AC coverage remains partial/draft; no automated Spec coverage calculation"
+    },
+    {
+      "scenarioId": "S-06",
+      "requirements": [
+        "auth/account-access/FR-03",
+        "auth/account-access/FR-05",
+        "auth/account-access/AC-04",
+        "auth/account-access/AC-05"
+      ],
+      "designState": "UI-ERROR",
+      "caseIds": [
+        "auth/account-access/AC-04/CASE-01",
+        "auth/account-access/AC-05/CASE-01"
+      ],
+      "bindings": [
+        {
+          "suite": "account-access",
+          "title": "Account access real service > CAPTCHA: rejects missing, refreshed and reused graphical challenges"
+        }
+      ],
+      "verification": "Cypress real HTTP + backend SQL integration + focused Vitest/Jest; see actual run evidence",
+      "coverage": "manual mapping; compound AC coverage remains partial/draft; no automated Spec coverage calculation"
+    },
+    {
+      "scenarioId": "S-07",
+      "requirements": [
+        "auth/account-access/FR-08",
+        "auth/account-access/AC-06"
+      ],
+      "designState": "UI-FORGOT",
+      "caseIds": [
+        "auth/account-access/AC-06/CASE-01"
+      ],
+      "bindings": [
+        {
+          "suite": "account-access",
+          "title": "Account access real service > RESET: consumes mailbox proof, revokes the old learning cookie and preserves vocabulary"
+        }
+      ],
+      "verification": "Cypress real HTTP + backend SQL integration + focused Vitest/Jest; see actual run evidence",
+      "coverage": "manual mapping; compound AC coverage remains partial/draft; no automated Spec coverage calculation"
+    },
+    {
+      "scenarioId": "S-08",
+      "requirements": [
+        "auth/account-access/FR-09",
+        "auth/account-access/FR-10",
+        "auth/account-access/FR-11",
+        "auth/account-access/AC-06",
+        "auth/account-access/AC-08"
+      ],
+      "designState": "UI-RESET",
+      "caseIds": [
+        "auth/account-access/AC-06/CASE-01",
+        "auth/account-access/AC-08/CASE-01"
+      ],
+      "bindings": [
+        {
+          "suite": "account-access",
+          "title": "Account access real service > RESET: consumes mailbox proof, revokes the old learning cookie and preserves vocabulary"
+        },
+        {
+          "suite": "account-access",
+          "title": "Account access real service > RESET: consumes mailbox proof, revokes the old learning cookie and preserves vocabulary"
+        }
+      ],
+      "verification": "Cypress real HTTP + backend SQL integration + focused Vitest/Jest; see actual run evidence",
+      "coverage": "manual mapping; compound AC coverage remains partial/draft; no automated Spec coverage calculation"
+    },
+    {
+      "scenarioId": "S-09",
+      "requirements": [
+        "auth/account-access/FR-09",
+        "auth/account-access/FR-10",
+        "auth/account-access/FR-11",
+        "auth/account-access/AC-07",
+        "auth/account-access/AC-08"
+      ],
+      "designState": "UI-CHANGE",
+      "caseIds": [
+        "auth/account-access/AC-07/CASE-01",
+        "auth/account-access/AC-08/CASE-01"
+      ],
+      "bindings": [
+        {
+          "suite": "account-access",
+          "title": "Account access real service > CHANGE: validates current identity and password before requiring a new login"
+        },
+        {
+          "suite": "account-access",
+          "title": "Account access real service > RESET: consumes mailbox proof, revokes the old learning cookie and preserves vocabulary"
+        }
+      ],
+      "verification": "Cypress real HTTP + backend SQL integration + focused Vitest/Jest; see actual run evidence",
+      "coverage": "manual mapping; compound AC coverage remains partial/draft; no automated Spec coverage calculation"
+    },
+    {
+      "scenarioId": "S-10",
+      "requirements": [
+        "auth/account-access/FR-13",
+        "auth/account-access/FR-14",
+        "auth/account-access/AC-09",
+        "auth/account-access/AC-13"
+      ],
+      "designState": "UI-ERROR",
+      "caseIds": [
+        "auth/account-access/AC-09/CASE-01",
+        "auth/account-access/AC-13/CASE-01"
+      ],
+      "bindings": [
+        {
+          "suite": "account-access",
+          "title": "Account access real service > REGISTER: verifies captured mail once and persists normalized account without auto login"
+        }
+      ],
+      "verification": "Cypress real HTTP + backend SQL integration + focused Vitest/Jest; see actual run evidence",
+      "coverage": "manual mapping; compound AC coverage remains partial/draft; no automated Spec coverage calculation"
+    },
+    {
+      "scenarioId": "S-11",
+      "requirements": [
+        "auth/account-access/FR-05",
+        "auth/account-access/FR-07",
+        "auth/account-access/AC-05"
+      ],
+      "designState": "UI-ERROR",
+      "caseIds": [
+        "auth/account-access/AC-05/CASE-01"
+      ],
+      "bindings": [],
+      "verification": "Cypress real HTTP + backend SQL integration + focused Vitest/Jest; see actual run evidence",
+      "coverage": "manual mapping; compound AC coverage remains partial/draft; no automated Spec coverage calculation"
+    },
+    {
+      "scenarioId": "S-12",
+      "requirements": [
+        "auth/account-access/AC-12"
+      ],
+      "designState": "UI-LOGIN",
+      "caseIds": [
+        "auth/account-access/AC-12/CASE-01"
+      ],
+      "bindings": [
+        {
+          "suite": "account-access",
+          "title": "Account access real service > MOBILE: requires the shared real graphical challenge before opening the mobile account"
+        }
+      ],
+      "verification": "Cypress real HTTP + backend SQL integration + focused Vitest/Jest; see actual run evidence",
+      "coverage": "manual mapping; compound AC coverage remains partial/draft; no automated Spec coverage calculation"
+    }
+  ],
+  "notApplicable": [
+    {
+      "requirement": "auth/account-access/FR-12",
+      "reason": "用户不考虑旧账号"
+    },
+    {
+      "requirement": "auth/account-access/AC-11",
+      "reason": "旧账号绑定移出本轮"
+    }
+  ],
+  "gaps": [
+    "SMTP公网送达未执行",
+    "完整复合条款覆盖以Case缺口为准，不以测试全绿冒充全量通过"
+  ],
+  "evidenceRuns": [
+    {
+      "runId": "2026-10-27T04-22-00-591Z-dac61d01",
+      "cloudUrl": "https://cloud.cypress.io/projects/hajrxe/runs/35",
+      "scope": "auth full selected suites; includes mock",
+      "browserPassed": 34,
+      "backendPassed": 19
+    },
+    {
+      "runId": "2026-10-27T04-33-01-623Z-82ce30ac-account-only",
+      "cloudUrl": "https://cloud.cypress.io/projects/hajrxe/runs/36",
+      "scope": "final account subset only; real business HTTP/SQL, mail double",
+      "browserPassed": 7,
+      "backendPassed": 19
+    }
+  ]
+}

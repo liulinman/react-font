@@ -1,0 +1,47 @@
+.account-security form {
+  max-width: 400px;
+  margin-top: 16px;
+}
+.account-security button:focus-visible,
+.account-security input:focus-visible {
+  outline: 3px solid #1979ac;
+  outline-offset: 3px;
+}
+.account-security-field {
+  margin-bottom: 18px;
+}
+.account-security-field label {
+  display: block;
+  font-size: 13px;
+  font-weight: 550;
+  margin-bottom: 8px;
+}
+.account-security-input {
+  position: relative;
+}
+.account-security-input input {
+  width: 100%;
+  height: 45px;
+  padding: 10px 65px 10px 13px;
+  border: 1px solid #d5dfe6;
+  border-radius: 7px;
+  font: inherit;
+}
+.account-security-input button {
+  position: absolute;
+  cursor: pointer;
+  border: 0;
+  top: 0;
+  right: 5px;
+  height: 45px;
+  padding: 0 10px;
+  background: transparent;
+  color: #3e6883;
+  font-size: 12px;
+}
+.account-security [role="alert"] {
+  background: #fff2ee;
+  color: #974633;
+  padding: 12px 14px;
+  border-radius: 7px;
+}

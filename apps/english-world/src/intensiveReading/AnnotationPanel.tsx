@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef, type ReactNode } from "react";
 import type { Annotation } from "./types";
 import { colorName } from "./annotationAnchors";
 export default function AnnotationPanel({
@@ -6,22 +7,52 @@ export default function AnnotationPanel({
   setFilter,
   onOpen,
   onLocate,
+  editorId,
+  editorContent,
+  editBlocked = false,
 }: {
   annotations: Annotation[];
   filter: string;
   setFilter: (f: string) => void;
   onOpen: (a: Annotation) => void;
   onLocate: (a: Annotation) => void;
+  editorId?: string;
+  editorContent?: ReactNode;
+  editBlocked?: boolean;
 }) {
+  const root = useRef<HTMLDivElement>(null);
+  const previousEditor = useRef<string | undefined>(undefined);
+  useLayoutEffect(() => {
+    const active = root.current?.querySelector<HTMLElement>(".ir-editor");
+    if (editorId && active) {
+      // Adjust only the notes pane; never scroll the article or outer page.
+      const pane = active.closest<HTMLElement>(".ir-notes");
+      if (pane) {
+        const bounds = pane.getBoundingClientRect();
+        const row = active.getBoundingClientRect();
+        const available = bounds.height - 24;
+        const delta = row.height > available || row.top < bounds.top + 12
+          ? row.top - bounds.top - 12
+          : Math.max(0, row.bottom - bounds.bottom + 12);
+        pane.scrollTop += delta;
+      }
+      active.querySelector<HTMLTextAreaElement>("textarea")?.focus({ preventScroll: true });
+    } else if (previousEditor.current) {
+      const row = document.getElementById("ir-note-" + previousEditor.current);
+      (row?.querySelector<HTMLButtonElement>(".ir-note-footer button") ?? root.current?.querySelector<HTMLButtonElement>(".ir-filters .ir-selected"))?.focus({ preventScroll: true });
+    }
+    previousEditor.current = editorId;
+  }, [editorId]);
   const list = annotations.filter(
     (a) =>
+      a.id === editorId ||
       filter === "all" ||
       (filter === "language" && a.color === "blue") ||
       (filter === "question" && a.isQuestion && !a.resolved) ||
       (filter === "unbound" && a.anchorStatus === "needs_confirmation"),
   );
   return (
-    <>
+    <div ref={root} className="ir-note-list">
       <div className="ir-filters">
         {[
           ["all", "全部"],
@@ -53,11 +84,12 @@ export default function AnnotationPanel({
       )}
       {list.map((a) => (
         <section
-          className="ir-note"
+          className={a.id === editorId ? "ir-note ir-editor" : "ir-note"}
           data-note-id={a.id}
           id={"ir-note-" + a.id}
           key={a.id}
         >
+          {a.id === editorId ? editorContent : (<>
           <small>
             {colorName(a)}
             {a.category ? " · " + a.category : ""}
@@ -77,10 +109,11 @@ export default function AnnotationPanel({
             <small>
               {a.anchorStatus === "active" ? "关联原文" : "旧版引用"}
             </small>
-            <button onClick={() => onOpen(a)}>编辑标注</button>
+            <button disabled={editBlocked} onClick={() => onOpen(a)}>编辑标注</button>
           </div>
+          </>)}
         </section>
       ))}
-    </>
+    </div>
   );
 }

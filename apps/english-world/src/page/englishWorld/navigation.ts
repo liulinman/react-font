@@ -1,5 +1,19 @@
 export const ENGLISH_WORLD_HOME_PATH = "/englishWorld";
 
+const READING_PRACTICES_PATH = "/englishWorld/reading-practices";
+
+export const READING_NAV = {
+  readingAssigned: { label: "老师发的题", search: "" },
+  readingPersonal: { label: "自己出的题", search: "?mode=practice&source=personal" },
+  readingExam: { label: "雅思考试", search: "?mode=exam&source=personal" },
+};
+
+export function getReadingNavKey(params: URLSearchParams): keyof typeof READING_NAV {
+  if (params.get("mode") === "exam") return "readingExam";
+  const source = params.get("source");
+  return source !== null && source !== "assigned" ? "readingPersonal" : "readingAssigned";
+}
+
 export const HASH_TO_NAV: Record<string, string> = {
   cockpit: "cockpit",
   list: "words",
@@ -26,6 +40,7 @@ export const HASH_TO_NAV: Record<string, string> = {
 
 export const PATH_TO_NAV: Record<string, string> = {
   "/englishworld": "cockpit",
+  "/englishworld/ielts-listening": "ieltsListening",
   "/englishworld/ai-listening": "aiListening",
   "/englishworld/words": "words",
   "/englishworld/bulk-import": "bulkImport",
@@ -88,10 +103,14 @@ export function getLegacyPathFromHash(hash: string): string | undefined {
 
 export function getPathForNav(key: string): string {
   const normalizedKey = normalizeActiveKey(key);
+  if (normalizedKey === "ieltsListening") return "/englishWorld/ielts-listening";
   if (normalizedKey === "aiListening") return "/englishWorld/ai-listening";
 
   if (normalizedKey === "intensiveReading") return "/englishWorld/intensive-reading";
-  if (normalizedKey === "readingPractices") return "/englishWorld/reading-practices";
+  if (normalizedKey === "readingPractices") return READING_PRACTICES_PATH;
+  if (normalizedKey === "readingAssigned" || normalizedKey === "readingPersonal" || normalizedKey === "readingExam") {
+    return READING_PRACTICES_PATH + READING_NAV[normalizedKey].search;
+  }
 
   if (normalizedKey === "wordBooks") return "/englishWorld/word-books";
 

@@ -1,0 +1,9 @@
+:root { color-scheme: light; font: 16px/1.6 system-ui, sans-serif; color: #1d2939; background: #f5f7fa; }
+main { width: min(32rem, calc(100% - 3rem)); margin: 10vh auto 0; }
+h1 { font-size: 1.65rem; }
+label { display: block; font-weight: 600; }
+input { box-sizing: border-box; width: 100%; padding: .55rem .7rem; font: inherit; border: 1px solid #8491a2; border-radius: .4rem; }
+.actions { display: flex; gap: .6rem; margin-top: .9rem; }
+button { padding: .45rem .85rem; font: inherit; border: 1px solid #355577; border-radius: .4rem; color: #23476f; background: white; cursor: pointer; }
+button[type=submit] { background: #23476f; color: white; }
+button:disabled { opacity: .6; cursor: wait; }

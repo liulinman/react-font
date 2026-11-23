@@ -1,4 +1,12 @@
 services:
+  teacher:
+    build:
+      context: .
+      dockerfile: Dockerfile.teacher
+    networks:
+      default:
+        aliases: [teacher-frontend]
+
   # 英语单词应用 - 端口 8081
   frontend-english-world:
     build:

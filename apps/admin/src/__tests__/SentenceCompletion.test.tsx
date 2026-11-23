@@ -1,5 +1,5 @@
 import "@testing-library/jest-dom/vitest";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, it, vi } from "vitest";
 import { ReadingQuestionReadout } from "../ReadingQuestionReadout";
@@ -26,6 +26,7 @@ it("offers answer editing without an option answer selector", async () => {
   Object.defineProperty(window, "matchMedia", { writable: true, value: () => ({ matches: false, addListener() {}, removeListener() {}, addEventListener() {}, removeEventListener() {} }) });
   const paper = { id: 1, status: "draft", content, config: {}, workflow: { revision: 1, qualityRevision: 1 } } as AdminPractice;
   render(<ReadingPracticeWorkbench paper={paper} onClose={() => {}} onChange={() => {}} />);
+  await userEvent.click(screen.getByRole("tab", { name: "1 阅读文章" }));
   await userEvent.click(screen.getByRole("button", { name: "修改文章与题目" }));
   expect(screen.getByLabelText("可接受答案")).toHaveValue("theropods");
   expect(screen.getByLabelText("最多词数")).toHaveValue("1");
@@ -36,8 +37,9 @@ it("student preview has a writable answer field and hides reference answers", as
   const paper = { id: 1, status: "draft", content: { ...content, paragraphs: ["The source passage."] }, config: {}, workflow: {} } as AdminPractice;
   render(<ReadingPracticeWorkbench paper={paper} onClose={() => {}} onChange={() => {}} />);
   await userEvent.click(screen.getByRole("button", { name: "学生视角预览" }));
-  const input = await screen.findByLabelText("第 1 题答案");
+  const preview = await screen.findByRole("dialog", { name: "学生视角预览 · 提交前" });
+  const input = within(preview).getByLabelText("第 1 题答案");
   await userEvent.type(input, "my answer");
   expect(input).toHaveValue("my answer");
-  expect(screen.queryByText("正确答案：theropods")).not.toBeInTheDocument();
+  expect(within(preview).queryByText("正确答案：theropods")).not.toBeInTheDocument();
 });

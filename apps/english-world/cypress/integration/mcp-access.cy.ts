@@ -50,6 +50,11 @@ const success = (result: any) => {
   return value(result);
 };
 
+const realLogin = (credentials: { username: string; password: string }) =>
+  cy.request({ method: 'POST', url: '/api/user/captcha', body: {}, log: false }).then(({ body }) =>
+    cy.request({ method: 'POST', url: 'http://127.0.0.1:13317/__automation/account/captcha', body: { captchaId: body.data.captchaId }, log: false }).then(() =>
+      cy.request({ method: 'POST', url: '/api/user/login', body: { ...credentials, captchaId: body.data.captchaId, captchaCode: 'ABCDE' }, log: false })));
+
 describe("MCP real authorization and vocabulary", () => {
   let fixture: {
     account: { username: string; password: string };
@@ -58,12 +63,7 @@ describe("MCP real authorization and vocabulary", () => {
   beforeEach(() =>
     cy.task("resetDatabase", null, { timeout: 60000 }).then((seed: any) => {
       fixture = seed;
-      return cy.request({
-        method: "POST",
-        url: "/api/user/login",
-        body: fixture.account,
-        log: false,
-      });
+      return realLogin(fixture.account);
     }),
   );
 
@@ -320,12 +320,7 @@ describe("MCP real authorization and vocabulary", () => {
     })
       .its("status")
       .should("eq", 401);
-    cy.request({
-      method: "POST",
-      url: "/api/user/login",
-      body: fixture.account,
-      log: false,
-    });
+    realLogin(fixture.account);
     cy.request({
       method: "POST",
       url: "/api/mcp-access/tokens",
@@ -352,15 +347,7 @@ describe("MCP real authorization and vocabulary", () => {
       call(ownerSecret, "preview_delete_word", { wordId: fixture.wordId }).then(
         (result) => {
           const preview = success(result);
-          cy.request({
-            method: "POST",
-            url: "/api/user/login",
-            body: {
-              username: "automation_other",
-              password: fixture.account.password,
-            },
-            log: false,
-          });
+          realLogin({ username: "automation_other", password: fixture.account.password });
           management("/tokens").then((result) =>
             expect(result.items).to.have.length(0),
           );

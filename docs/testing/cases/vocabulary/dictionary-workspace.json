@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "source": "docs/prd/vocabulary/features/dictionary-workspace/prd.md",
+  "sourceHash": "265672cac709a40995ead7e40837a488c27576f932ecc3adf5186f2a42e9cce9",
+  "cases": [
+    {
+      "id": "vocabulary/dictionary-workspace/AC-01/CASE-01",
+      "title": "DICT-01 reads every persisted word field and edits without a table",
+      "status": "draft",
+      "requirementIds": [
+        "vocabulary/dictionary-workspace/AC-01"
+      ],
+      "preconditions": [
+        "真实隔离NestJS/MySQL，合成账号；无生产写入"
+      ],
+      "steps": [
+        "设置真实词条笔记、引用、多词性；打开词典并编辑释义，刷新复核；选择批量、检查1100布局"
+      ],
+      "expectedResults": [
+        "完整笔记和所有来源字段可达；编辑仅修改释义；批量工具可用"
+      ],
+      "cleanup": "runner结束清理隔离数据库",
+      "bindings": [
+        {
+          "suite": "dictionary-notebook",
+          "title": "Dictionary and documentation notebook > DICT-01 reads every persisted word field and edits without a table"
+        }
+      ],
+      "reviewNote": "具体场景已有脚本；复合AC尚有失败恢复、权限及其他功能回归，保持draft不夸大覆盖"
+    },
+    {
+      "id": "vocabulary/dictionary-workspace/AC-04/CASE-01",
+      "title": "NOTE-01 reads safe Markdown with real outline and persists edits with list context",
+      "status": "draft",
+      "requirementIds": [
+        "vocabulary/dictionary-workspace/AC-04"
+      ],
+      "preconditions": [
+        "真实隔离NestJS/MySQL，合成账号；无生产写入"
+      ],
+      "steps": [
+        "创建含两个标题、强调和表格笔记；带查询深链阅读；目录定位、专注切换、编辑保存刷新"
+      ],
+      "expectedResults": [
+        "目录匹配原文，强调和表格保留；查询上下文不丢；保存经后端持久化"
+      ],
+      "cleanup": "runner结束清理隔离数据库",
+      "bindings": [
+        {
+          "suite": "dictionary-notebook",
+          "title": "Dictionary and documentation notebook > NOTE-01 reads safe Markdown with real outline and persists edits with list context"
+        }
+      ],
+      "reviewNote": "具体场景已有脚本；复合AC尚有失败恢复、权限及其他功能回归，保持draft不夸大覆盖"
+    },
+    {
+      "id": "vocabulary/dictionary-workspace/AC-03/CASE-01",
+      "title": "隔离存储未配置时输入保留及图片链接持久化",
+      "status": "draft",
+      "requirementIds": [
+        "vocabulary/dictionary-workspace/AC-03"
+      ],
+      "preconditions": [
+        "真实隔离NestJS/MySQL，合成账号；无生产写入"
+      ],
+      "steps": [
+        "真实上传请求到未配置OSS的隔离服务，检查失败提示及其他字段保留；改用显式本地图片链接、预览、移除、保存并刷新"
+      ],
+      "expectedResults": [
+        "上传失败不清空表单，图片链接经真实接口持久化；外部OSS成功路径尚未认证"
+      ],
+      "cleanup": "runner结束清理隔离数据库",
+      "bindings": [
+        {
+          "suite": "dictionary-notebook",
+          "title": "Dictionary and documentation notebook > IMAGE-01 retains fields on unavailable storage and saves an explicit image URL"
+        }
+      ],
+      "reviewNote": "具体场景已有脚本；复合AC尚有失败恢复、权限及其他功能回归，保持draft不夸大覆盖"
+    }
+  ]
+}

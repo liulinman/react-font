@@ -1,0 +1,13 @@
+name: english-world-teacher
+services:
+  teacher:
+    image: ${TEACHER_IMAGE:?Set TEACHER_IMAGE to the teacher release image}
+    container_name: english-world-teacher
+    restart: unless-stopped
+    networks:
+      ingress:
+        aliases: [teacher-frontend]
+networks:
+  ingress:
+    external: true
+    name: ${INGRESS_NETWORK:?Set INGRESS_NETWORK to the shared ingress network}

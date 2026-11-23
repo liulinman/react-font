@@ -46,24 +46,29 @@ export function useWordList(initialPageSize = 10) {
     revision: 0,
   });
   const requestSequenceRef = useRef(0);
+  const pageCacheRef = useRef(new Map<string, { data: ListData; expires: number }>());
   const successfulFiltersRef = useRef<Record<string, unknown>>({});
   const { page, pageSize, filters, revision } = queryState;
 
   useEffect(() => {
     let active = true;
+    const controller = new AbortController();
+    const cacheKey = JSON.stringify({ filters, page, pageSize, revision });
     const requestSequence = requestSequenceRef.current + 1;
     requestSequenceRef.current = requestSequence;
 
     const loadWordData = async () => {
-      setLoading(true);
+      const cached = pageCacheRef.current.get(cacheKey);
+      setLoading(!cached || cached.expires <= Date.now());
       try {
-        const res = await request<ListData>(
-          wordFilter({
+        const res = cached && cached.expires > Date.now() ? cached.data : await request<ListData>({
+          ...wordFilter({
             ...filters,
             page,
             pageSize,
           } as FilterWordList),
-        );
+          config: { signal: controller.signal },
+        });
         if (!active || requestSequence !== requestSequenceRef.current) return;
 
         const lastPage = Math.max(1, Math.ceil(res.total / pageSize));
@@ -76,6 +81,13 @@ export function useWordList(initialPageSize = 10) {
               : current,
           );
           return;
+        }
+        // Keep a small, short-lived cache; mutations invalidate it below.
+        pageCacheRef.current.delete(cacheKey);
+        pageCacheRef.current.set(cacheKey, { data: res, expires: cached && cached.expires > Date.now() ? cached.expires : Date.now() + 30_000 });
+        if (pageCacheRef.current.size > 3) {
+          const oldest = pageCacheRef.current.keys().next().value;
+          if (oldest !== undefined) pageCacheRef.current.delete(oldest);
         }
         setWordList(res.list);
       } catch (error) {
@@ -94,10 +106,12 @@ export function useWordList(initialPageSize = 10) {
 
     return () => {
       active = false;
+      controller.abort();
     };
   }, [filters, page, pageSize, revision]);
 
   const search = useCallback(async (filters: Record<string, unknown>) => {
+    pageCacheRef.current.clear();
     setQueryState((current) => ({
       ...current,
       page: 1,
@@ -107,6 +121,7 @@ export function useWordList(initialPageSize = 10) {
   }, []);
 
   const reset = async () => {
+    pageCacheRef.current.clear();
     setQueryState((current) => ({
       page: 1,
       pageSize: initialPageSize,
@@ -116,6 +131,7 @@ export function useWordList(initialPageSize = 10) {
   };
 
   const refresh = async () => {
+    pageCacheRef.current.clear();
     setQueryState((current) => ({
       ...current,
       revision: current.revision + 1,
@@ -134,6 +150,7 @@ export function useWordList(initialPageSize = 10) {
   };
 
   const updateWordLevels = useCallback((updates: WordLevelUpdate[]) => {
+    pageCacheRef.current.clear();
     setWordList((current) => applyWordLevelUpdates(current, updates));
   }, []);
 

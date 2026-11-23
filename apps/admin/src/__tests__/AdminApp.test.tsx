@@ -6,7 +6,7 @@ import { AdminApp } from "../AdminApp";
 
 const requestMock = vi.hoisted(() => vi.fn());
 
-vi.mock("@font/api", () => ({ default: requestMock }));
+vi.mock("@font/api", () => ({ default: requestMock, getApiBaseUrl: () => "/api" }));
 
 describe("AdminApp", () => {
   let userStatus: "active" | "banned";
@@ -123,6 +123,16 @@ describe("AdminApp", () => {
     window.history.replaceState(null, "", "/admin/?section=schedules");
     window.dispatchEvent(new PopStateEvent("popstate"));
     expect(await screen.findByRole("heading", { name: "定时任务", level: 1 })).toBeInTheDocument();
+  });
+
+  it("restores the administrator-only PRD section", async () => {
+    window.history.replaceState(null, "", "/admin/?section=product-requirements");
+    requestMock.mockImplementation(async () => ({ username: "admin", list: [], total: 0 }));
+    render(<AdminApp />);
+    expect(await screen.findByRole("heading", { name: "产品需求", level: 1 })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "交付产线" })).toHaveAttribute("aria-selected", "true");
+    await userEvent.click(screen.getByRole("tab", { name: "需求全文" }));
+    expect(screen.getByTitle("产品需求阅读器")).toHaveAttribute("src", "/api/admin/prd/");
   });
 
   const completeSecondConfirmation = async (

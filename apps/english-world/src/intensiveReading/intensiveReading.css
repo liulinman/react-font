@@ -354,33 +354,6 @@
   max-width: 760px;
   margin: auto;
 }
-.ir-reader-tools {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font: 12px sans-serif;
-  color: #859589;
-  margin-bottom: 40px;
-}
-.ir-reader-tools button {
-  border: 0;
-  background: transparent;
-}
-.ir-paper h1 {
-  font:
-    38px/1.25 Georgia,
-    serif;
-  color: #2e4838;
-  overflow-wrap: anywhere;
-  margin: 15px 0;
-}
-.ir-dek {
-  font: 12px/1.8 sans-serif;
-  color: #8a998f;
-  padding-bottom: 25px;
-  border-bottom: 1px solid #e2e8e2;
-  margin-bottom: 30px;
-}
 .ir-paragraph-wrap {
   position: relative;
   scroll-margin-top: 20px;
@@ -657,3 +630,26 @@
 .ir-root .ir-paragraph-edit select { width: auto; margin-right: auto; padding: 6px 10px; }
 
 .ir-supplement:not([open]) > :not(summary) { display: none; }
+
+/* Editing stays in its note row; only the notes pane may reveal the form. */
+.ir-note.ir-editor {
+  padding: 17px;
+  margin: 12px 0;
+}
+.ir-editor-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.ir-editor-heading h4 { margin: 0; }
+.ir-editor-heading small { flex-shrink: 0; }
+.ir-editor textarea {
+  min-height: 88px;
+  max-height: 28vh;
+  resize: vertical;
+}
+.ir-editor .ir-actions { flex-wrap: wrap; }
+
+.ir-article-body > .ir-paragraph-wrap:first-child .ir-paragraph { margin-top: 0; }

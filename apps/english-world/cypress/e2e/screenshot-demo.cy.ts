@@ -7,10 +7,21 @@ describe("cypress syntax demo", () => {
   };
 
   beforeEach(() => {
+    cy.intercept("GET", "/api/notifications/unread-count", {code:200,data:{count:0}});
+    cy.intercept("GET", "/api/mcp-access/tokens", {code:200,data:{items:[]}});
+    cy.intercept("GET", "/api/mcp-access/audit", {code:200,data:{items:[]}});
+    cy.intercept("GET", "/api/mcp-access/info", {code:200,data:{endpoint:"/mcp",transport:"http",auth:"bearer"}});
+
+    cy.intercept("GET", "/api/notifications*", {code:200,data:{list:[],total:0,count:0,nextCursor:null}});
+    cy.intercept("GET", "/api/notifications/events", {headers:{"content-type":"text/event-stream"},body:": mock notification stream\n\n"});
+
+    cy.intercept("POST", "/api/user/captcha", {code:200,data:{captchaId:"mock-captcha",imageDataUrl:"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jP/QAAAAASUVORK5CYII=",expiresIn:120}});
+    cy.intercept("GET", "/api/ai-learning/history", {code:200,data:{sessions:[],reviewWordIds:[]}});
+    cy.intercept("POST", "/api/english/filterWordList", {code:200,data:{list:[{id:1,englishWord:"resilient",englishChinese:"有韧性的"}],total:1}}).as("words");
     cy.intercept("POST", "/api/user/getCurrentUser", {
-      code: 4001,
-      message: "未登录",
-      data: null,
+      code: 200,
+      message: "ok",
+      data: user,
     });
 
     cy.intercept("POST", "/api/user/login", {
@@ -92,31 +103,21 @@ describe("cypress syntax demo", () => {
 
   it("captures the desktop focus studio", () => {
     cy.viewport(1440, 960);
-    cy.visit("/login");
+    cy.visit("/englishWorld");
 
-    cy.get('[data-cy="login-username"]').type("tester");
-    cy.get('[data-cy="login-password"]').type("123456");
-    cy.get('[data-cy="login-submit"]').click();
-
-    cy.wait("@login");
-    cy.location("pathname").should("eq", "/englishWorld/recite");
-
-    cy.contains("button", "今天").click();
+    cy.location("pathname").should("eq", "/englishWorld");
     cy.wait("@dailyCoach");
     cy.wait("@memoryMap");
-    cy.contains("今天的学习重点").should("be.visible");
     cy.contains("今天先做这一步").should("be.visible");
     cy.screenshot("focus-studio-today", { capture: "viewport" });
-
-    cy.contains("button", "学习").click();
-
-    cy.contains("今日复习").should("be.visible");
-    cy.contains("开始今日复习").should("be.visible");
-    cy.contains("开始今日复习").click();
-    cy.wait("@settings");
-    cy.wait("@startReview");
-    cy.contains("网络摄像头").should("be.visible");
-    cy.contains(".recite-question-topline", "第 1 题").should("be.visible");
-    cy.screenshot("focus-studio-review", { capture: "viewport" });
+    cy.contains(".ant-menu-submenu", "学习").then(menu=>{if(!menu.hasClass("ant-menu-submenu-open"))cy.wrap(menu).find(".ant-menu-submenu-title").click();});
+    cy.contains('[role="menuitem"]', "场景听力").click();
+    cy.location("pathname").should("eq", "/englishWorld/ai-listening");
+    cy.contains("h1", "场景听力").should("be.visible");
+    cy.wait("@words");
+    cy.contains("label", "resilient").find('input[type="checkbox"]').check();
+    cy.get('[aria-label="本轮已选单词"]').should("contain.text", "resilient");
+    cy.contains("button", "开始复习").should("be.enabled");
+    cy.screenshot("focus-studio-listening-selection", { capture: "viewport" });
   });
 });

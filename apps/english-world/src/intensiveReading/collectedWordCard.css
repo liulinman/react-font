@@ -1,0 +1,28 @@
+.ir-word-card { position: fixed; z-index: 1100; width: min(360px, calc(100vw - 16px)); max-height: calc(100vh - 16px); display: flex; flex-direction: column; color: #304d40; background: #fff; border-radius: 12px; box-shadow: 0 10px 36px rgb(36 65 48 / 20%); font: 15px/1.6 system-ui, sans-serif; }
+.ir-word-card-header { display: flex; align-items: center; padding: 8px; border-bottom: 1px solid #dce6df; }
+.ir-word-card button { font: inherit; color: inherit; }
+.ir-word-card-handle { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; border: 0; background: transparent; cursor: grab; touch-action: none; user-select: none; padding: 6px; text-align: left; }
+.ir-word-card-handle:active { cursor: grabbing; }
+.ir-word-card-handle small { font-size: 12px; color: #526b5b; margin-left: auto; }
+.ir-word-card-close { display: grid; place-items: center; width: 36px; height: 36px; background: transparent; border: 0; cursor: pointer; }
+.ir-word-card-content { padding: 20px; overflow: auto; max-height: 70vh; overflow-wrap: anywhere; white-space: pre-wrap; }
+.ir-word-card-content h2 { font-size: 28px; line-height: 1.3; margin: 0 0 10px; }
+.ir-word-card-content h3 { font-size: 15px; margin: 24px 0 8px; }
+.ir-word-card-content p { margin: 8px 0; }
+.ir-word-card-phonetic { color: #526b5b; display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.ir-word-card-meaning { font-weight: 600; font-size: 18px; }
+.ir-word-card-content img { max-width: 100%; height: auto; }
+.ir-word-card-content > button, .ir-word-card-content [role="alert"] button { background: #eff5f0; border: 1px solid #b9cfc0; border-radius: 6px; padding: 6px 12px; cursor: pointer; }
+.ir-word-card button:focus-visible, .ir-word:focus-visible { outline: 2px solid #286b54; outline-offset: 2px; }
+.ir-word { cursor: pointer; }
+.ir-word:hover { text-decoration: underline; text-decoration-color: #8fae99; text-underline-offset: 4px; }
+
+.ir-word-card-source { font-size: 13px; color: #526b5b; }
+
+.ir-word-collect { margin-top: 16px; }
+.ir-word-collect button { background: #eff5f0; border: 1px solid #b9cfc0; border-radius: 6px; padding: 7px 12px; margin: 8px 8px 0 0; cursor: pointer; }
+.ir-word-collect button:disabled { opacity: .6; cursor: wait; }
+.ir-word-collect .ir-word-collect-primary { color: #fff; background: #286653; border-color: #286653; }
+.ir-word-collect-hint { font-size: 12px; color: #526b5b; }
+.ir-word-collect-error { color: #993b3b; }
+.ir-word-collect summary { cursor: pointer; font-size: 13px; }

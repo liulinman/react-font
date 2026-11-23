@@ -123,7 +123,7 @@ jobs:
             -o ControlPersist=300 \
             -o ServerAliveInterval=15 \
             "${DEPLOY_USER}@${DEPLOY_HOST}" \
-            "ARCHIVE=/tmp/react-font-${GITHUB_SHA}.tar.gz \
+            "sudo flock -x ${DEPLOY_COMPOSE_DIR}/codex-release.lock env ARCHIVE=/tmp/react-font-${GITHUB_SHA}.tar.gz \
             TARGET=${DEPLOY_TARGET} \
             COMPOSE_DIR=${DEPLOY_COMPOSE_DIR} \
             SERVICE=${DEPLOY_SERVICE} \

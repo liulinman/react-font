@@ -1,3 +1,4 @@
+import { DocumentReading } from "@/components/notes/DocumentReading";
 import { NoteContent } from "@/components/notes/NoteContent";
 import { noteSummary } from "@/components/notes/noteSummary";
 import { useNoteListScroll } from "./useNoteListScroll";
@@ -19,6 +20,7 @@ import {
   type NoteFilters,
 } from "./api";
 import "./knowledgeNotes.css";
+import "./knowledgeDesktop.css";
 import { NoteFolders, folderPath, useFolders } from "./NoteFolders";
 export const DESKTOP_NOTES_PATH = "/englishWorld/knowledge-notes";
 export const MOBILE_NOTES_PATH = "/mobile/tools/knowledge-notes";
@@ -40,13 +42,19 @@ function NoteList({
   base,
   filters,
   listSearch,
+  foldersOpen = true,
+  embedded = false,
 }: {
+  foldersOpen?: boolean;
+  embedded?: boolean;
   base: string;
   filters: NoteFilters;
   listSearch: string;
 }) {
   const { user } = useAuth();
   const [, setParams] = useSearchParams();
+  const navigate = useNavigate();
+  const location = useLocation();
   const desktop = base === DESKTOP_NOTES_PATH;
   const folders = useFolders(desktop);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
@@ -64,18 +72,20 @@ function NoteList({
     const params = new URLSearchParams();
     for (const [key, value] of Object.entries(next))
       if (value) params.set(key, String(value));
-    setParams(params);
+    if (embedded) navigate(`${base}${params.size ? `?${params}` : ""}`);
+    else setParams(params);
   };
   useEffect(() => {
     if (query.data && (filters.page ?? 1) > Math.max(1, Math.ceil(query.data.total / 20))) update({ ...filters, page: Math.max(1, Math.ceil(query.data.total / 20)) });
   }, [query.data, filters.page]);
+  useEffect(()=>{setQ(filters.q ?? "");setCategory(filters.category ?? "");setSelectedIds([]);},[listSearch]);
   const selected = (query.data?.list ?? []).filter(n => selectedIds.includes(n.id));
   const currentFolder = typeof filters.folderId === "number" ? folderPath(folders.data?.list ?? [], filters.folderId) : filters.folderId === "unfiled" ? "未归档" : "全部笔记";
   return (
-    <div ref={root} className={desktop ? "knowledge-folder-layout" : undefined}>
-      {desktop && <NoteFolders current={filters.folderId} onChoose={folderId => update({ ...filters, folderId, page: 1 })} selected={selected} onMoved={() => setSelectedIds([])} />}
+    <div ref={root} className={desktop ? `knowledge-folder-layout${embedded ? " is-embedded" : ""}${foldersOpen ? " folders-visible" : ""}` : undefined}>
+      {desktop && foldersOpen && <NoteFolders current={filters.folderId} onChoose={folderId => update({ ...filters, folderId, page: 1 })} selected={selected} onMoved={() => setSelectedIds([])} />}
       <div className="knowledge-folder-content">
-      <header className="knowledge-toolbar">
+      {!embedded && <header className="knowledge-toolbar">
         <div>
           <h1>知识笔记</h1>
           <p>{desktop ? "用文件夹整理句子、词语辨析和课程笔记" : "记录语法、句型、易错点和阅读方法"}</p>
@@ -83,7 +93,7 @@ function NoteList({
         <Link className="knowledge-primary" to={`${base}/new${listSearch}`}>
           ＋ 新建笔记
         </Link>
-      </header>
+      </header>}
       {desktop && <div className="knowledge-folder-location"><strong>{currentFolder || (folders.isPending ? "正在加载目录…" : folders.isError ? "目录暂不可用" : "文件夹已失效")}</strong>{typeof filters.folderId === "number" && <span>包含子文件夹</span>}</div>}
       <form
         className="knowledge-search"
@@ -94,7 +104,8 @@ function NoteList({
       >
         <input
           aria-label="搜索知识笔记"
-          placeholder={filters.folderId ? "在当前目录搜索标题、正文、例句、来源" : "搜索全部笔记：标题、正文、例句、来源"}
+          placeholder={desktop ? (filters.folderId ? "搜索当前文件夹…" : "搜索全部笔记…") : (filters.folderId ? "在当前目录搜索标题、正文、例句、来源" : "搜索全部笔记：标题、正文、例句、来源")}
+          title="搜索标题、正文、例句和来源"
           value={q}
           maxLength={200}
           onChange={(e) => setQ(e.target.value)}
@@ -151,17 +162,17 @@ function NoteList({
             </div>
           ) : (
             <>
-            {desktop && <div className="knowledge-selection"><label><input type="checkbox" aria-label="本页全选" checked={!!query.data.list.length && selectedIds.length === query.data.list.length} onChange={e => setSelectedIds(e.target.checked ? query.data.list.map(n => n.id) : [])} />本页全选</label><span>{selectedIds.length ? `已选 ${selectedIds.length} 条 · 在左侧选择“移动已选”` : "勾选笔记，可批量移动到文件夹"}</span></div>}
+            {desktop && <div className="knowledge-selection"><label><input type="checkbox" aria-label="本页全选" checked={!!query.data.list.length && selectedIds.length === query.data.list.length} onChange={e => setSelectedIds(e.target.checked ? query.data.list.map(n => n.id) : [])} />本页全选</label><span>{selectedIds.length ? `已选 ${selectedIds.length} 条 · 在左侧选择“移动已选”` : "勾选后可批量移动"}</span></div>}
             <ul className="knowledge-list">
               {query.data.list.map((note) => (
-                <li key={note.id} className={desktop ? "knowledge-selectable-row" : undefined}>
+                <li key={note.id} className={desktop ? `knowledge-selectable-row${location.pathname === `${base}/${note.id}` ? " is-active" : ""}` : undefined}>
                   {desktop && <input type="checkbox" aria-label={`选择笔记 ${note.title}`} checked={selectedIds.includes(note.id)} onChange={e => setSelectedIds(old => e.target.checked ? [...old, note.id] : old.filter(id => id !== note.id))} />}
                   <Link
                     onClick={remember}
                     to={`${base}/${note.id}${listSearch}`}
                   >
                     <div className="knowledge-list-heading">
-                      <h2>{note.title}</h2>
+                      <h2 title={note.title}>{note.title}</h2>
                       <span className="knowledge-category">
                         {note.category}
                       </span>
@@ -254,45 +265,7 @@ function NoteDetail({
         </p>
       )}
       {error && <p role="alert">{error}</p>}
-      <article className="knowledge-article">
-        <span className="knowledge-category">{note.category}</span>
-        <h1>{note.title}</h1>
-        <p className="knowledge-muted">
-          更新于 {new Date(note.updatedAt).toLocaleString()}
-        </p>
-        <NoteContent className="knowledge-body" text={note.body} />
-        {note.examples && (
-          <section>
-            <h2>例句与解释</h2>
-            <NoteContent text={note.examples} />
-          </section>
-        )}
-        {note.source && (
-          <section>
-            <h2>来源</h2>
-            <p>{note.source}</p>
-          </section>
-        )}
-        {!!note.words?.length && (
-          <section>
-            <h2>关联单词</h2>
-            <div className="knowledge-tags">
-              {note.words.map((w) => (
-                <Link
-                  key={w.id}
-                  to={
-                    base === MOBILE_NOTES_PATH
-                      ? `/mobile/words/${w.id}`
-                      : `/englishWorld/words?englishWord=${encodeURIComponent(w.englishWord)}`
-                  }
-                >
-                  {w.englishWord} ↗
-                </Link>
-              ))}
-            </div>
-          </section>
-        )}
-      </article>
+      {base === DESKTOP_NOTES_PATH ? <DocumentReading identity={`${note.id}-${note.version}`}><NoteArticle note={note} base={base}/></DocumentReading> : <NoteArticle note={note} base={base}/>}
       {confirm && (
         <div className="knowledge-dialog-backdrop">
           <section
@@ -321,10 +294,51 @@ function NoteDetail({
     </>
   );
 }
+function NoteArticle({note,base}:{note:KnowledgeNote;base:string}) { return (<article className="knowledge-article">
+        <span className="knowledge-category">{note.category}</span>
+        <h1>{note.title}</h1>
+        <p className="knowledge-muted">
+          更新于 {new Date(note.updatedAt).toLocaleString()} · 版本 {note.version}
+        </p>
+        <NoteContent className={base === DESKTOP_NOTES_PATH ? "knowledge-body vp-doc" : "knowledge-body"} text={note.body} />
+        {note.examples && (
+          <section>
+            <h2>例句与解释</h2>
+            <NoteContent className={base === DESKTOP_NOTES_PATH ? "vp-doc" : ""} text={note.examples} />
+          </section>
+        )}
+        {note.source && (
+          <section>
+            <h2>来源</h2>
+            <p>{note.source}</p>
+          </section>
+        )}
+        {!!note.words?.length && (
+          <section>
+            <h2>关联单词</h2>
+            <div className="knowledge-tags">
+              {note.words.map((w) => (
+                <Link
+                  key={w.id}
+                  to={
+                    base === MOBILE_NOTES_PATH
+                      ? `/mobile/words/${w.id}`
+                      : `/englishWorld/words?englishWord=${encodeURIComponent(w.englishWord)}`
+                  }
+                >
+                  {w.englishWord} ↗
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+      </article>); }
 export function KnowledgeNotesPage() {
   const { user } = useAuth();
   const location = useLocation();
   const [params] = useSearchParams();
+  const [foldersOpen,setFoldersOpen] = useState(false);
+  const [focus,setFocus] = useState(false);
   const base = location.pathname.startsWith("/mobile")
     ? MOBILE_NOTES_PATH
     : DESKTOP_NOTES_PATH;
@@ -332,6 +346,12 @@ export function KnowledgeNotesPage() {
     .slice(base.length)
     .split("/")
     .filter(Boolean);
+  const browsing = segments.length === 0;
+  useEffect(() => {
+    // A new document gets the reading space; toggles remain local to that route.
+    setFocus(location.pathname !== base && location.pathname !== `${base}/`);
+    setFoldersOpen(false);
+  }, [location.pathname, base]);
   const isNew = segments[0] === "new";
   const id = Number(segments[0]);
   const editing = segments[1] === "edit";
@@ -409,6 +429,10 @@ export function KnowledgeNotesPage() {
         listSearch={listSearch}
       />
     );
+  if (base === DESKTOP_NOTES_PATH) return <section className={`knowledge-notes knowledge-desktop${focus ? " is-focus" : ""}${foldersOpen ? " has-folders" : ""}${browsing ? " is-browsing" : ""}`} aria-label="知识笔记">
+    <header className="knowledge-workspace-header"><h1>知识笔记</h1><div><button aria-expanded={foldersOpen} onClick={()=>{setFoldersOpen(v=>!v);setFocus(false);}}>{foldersOpen?"收起文件夹":"文件夹"}</button>{!browsing && <button aria-expanded={!focus} onClick={()=>{setFocus(v=>!v);setFoldersOpen(false);}}>{focus?"展开笔记列表":"全宽阅读"}</button>}<Link className="knowledge-primary" to={`${base}/new${listSearch}`}>＋ 新建笔记</Link></div></header>
+    <div className="knowledge-workspace-columns"><aside className="knowledge-list-pane" aria-label="笔记浏览" hidden={focus}><NoteList base={base} filters={filters} listSearch={listSearch} foldersOpen={foldersOpen} embedded/></aside><main className="knowledge-reader-pane" hidden={browsing} key={isNew?"new":`${id}-${editing}`} aria-label="笔记阅读区">{segments.length ? content : <div className="knowledge-reader-empty"><h2>选择一篇笔记开始阅读</h2><p>正文、例句、来源与关联词条会完整显示在这里。</p><Link to={`${base}/new${listSearch}`}>创建笔记</Link></div>}</main></div>
+  </section>;
   return (
     <section
       aria-label="知识笔记"

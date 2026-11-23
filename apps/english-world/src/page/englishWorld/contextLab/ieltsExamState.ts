@@ -1,4 +1,4 @@
-import { isTextQuestion, type ExamResult, type ExamTask } from "./examWorkspace.types";
+import { examOptionLabel, isTextQuestion, type ExamResult, type ExamTask } from "./examWorkspace.types";
 
 export type ExamAnnotation = {
   kind?: "highlight" | "note";
@@ -89,10 +89,16 @@ export function restoreExamDraft(
         typeof a.note !== "string"
       )
         return false;
-      const block =
-        a.block === "article"
-          ? task.article
-          : task.questions?.[ids.indexOf(a.block)]?.stem;
+      const optionBlocks = task.questions?.flatMap((question, index) =>
+        question.options.map((_, optionIndex) => ({
+          id: `${ids[index]}:option:${optionIndex}`,
+          text: examOptionLabel(question, optionIndex),
+        })),
+      );
+      const block = a.block === "article"
+        ? task.article
+        : task.questions?.[ids.indexOf(a.block)]?.stem
+          ?? optionBlocks?.find(option => option.id === a.block)?.text;
       return (
         typeof block === "string" &&
         Number.isInteger(a.start) &&

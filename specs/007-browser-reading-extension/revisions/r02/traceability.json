@@ -1,0 +1,84 @@
+{
+  "featureId": "vocabulary/browser-reading-extension",
+  "scope": "0.2.0 新增场景；S1–S4 见上层规格。人工映射，执行器不计算 Spec 覆盖。",
+  "sources": [
+    {
+      "path": "docs/prd/vocabulary/features/browser-reading-extension/prd.md",
+      "sha256": "8457e5fca69290cab71c17dcb5d20d0ce54c2700d9ead3052ac06f5ffd11c453"
+    },
+    {
+      "path": "docs/design/vocabulary/browser-reading-extension/revisions/r02/design.md",
+      "sha256": "d0d0cd8837885d199562af10d080fc1f10e03976c5e09bd71ccccc3f0f59666e"
+    },
+    {
+      "path": "specs/007-browser-reading-extension/revisions/r02/spec.md",
+      "sha256": "c6f8ef54a4d0aee1bdea6393705d6485aaa68870822ae2739badc43b11b3e321"
+    },
+    {
+      "path": "docs/testing/cases/vocabulary/browser-reading-extension.json",
+      "sha256": "d115d57b67ba5a7235584c68ef6709f39ffdfbecc99cacc41dbe272fe6a436d3"
+    }
+  ],
+  "scenarios": [
+    {
+      "scenario": "S5",
+      "requirements": [
+        "vocabulary/browser-reading-extension/FR-06",
+        "vocabulary/browser-reading-extension/FR-07",
+        "vocabulary/browser-reading-extension/AC-05"
+      ],
+      "designState": "音标、发音、原句和译文",
+      "caseIds": [
+        "vocabulary/browser-reading-extension/AC-05/CASE-01"
+      ],
+      "suite": "browser-reading-sources",
+      "verification": "Vitest 词卡 DOM 与语音替身通过；Cloud、真实 Chrome / AI / 英语语音待验。",
+      "status": "partial"
+    },
+    {
+      "scenario": "S6",
+      "requirements": [
+        "vocabulary/browser-reading-extension/FR-08",
+        "vocabulary/browser-reading-extension/AC-06",
+        "vocabulary/browser-reading-extension/AC-07"
+      ],
+      "designState": "笔记编辑、并发与失败",
+      "caseIds": [
+        "vocabulary/browser-reading-extension/AC-06/CASE-01",
+        "vocabulary/browser-reading-extension/AC-07/CASE-01"
+      ],
+      "suite": "browser-reading-sources",
+      "verification": "Jest 事务路径与旧版兼容通过；AC-07/CASE-01 并发场景已编写，真实 SQL 待验。",
+      "status": "partial"
+    },
+    {
+      "scenario": "S7",
+      "requirements": [
+        "vocabulary/browser-reading-extension/FR-03",
+        "vocabulary/browser-reading-extension/FR-09",
+        "vocabulary/browser-reading-extension/AC-03",
+        "vocabulary/browser-reading-extension/AC-08"
+      ],
+      "designState": "来源链接和旧引用兼容",
+      "caseIds": [
+        "vocabulary/browser-reading-extension/AC-03/CASE-01"
+      ],
+      "suite": "browser-reading-sources",
+      "verification": "Vitest 新旧引用显示通过；SQL 迁移与真实刷新待验。",
+      "status": "partial"
+    },
+    {
+      "scenario": "S8",
+      "requirements": [
+        "vocabulary/browser-reading-extension/AC-08"
+      ],
+      "designState": "旧 Worker 下载和扩展 ID",
+      "caseIds": [
+        "vocabulary/browser-reading-extension/AC-08/CASE-01"
+      ],
+      "suite": "browser-reading-sources",
+      "verification": "ZIP 字节、版本、ID 和构建路径已核对；真实旧 Worker 下载待验。",
+      "status": "partial"
+    }
+  ]
+}

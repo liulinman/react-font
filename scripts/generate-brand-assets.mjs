@@ -8,8 +8,9 @@ const require=createRequire(new URL('../apps/english-world/package.json',import.
 const sharp=require('sharp');
 const root=fileURLToPath(new URL('../',import.meta.url));
 const appFlag=process.argv.indexOf('--app');
-const apps=appFlag<0?['english-world','admin','docs']:[process.argv[appFlag+1]];
-if(apps.some(app=>!['english-world','admin','docs'].includes(app)))throw Error('Unknown --app');
+const brandApps=['english-world','admin','docs','browser-reading-extension'];
+const apps=appFlag<0?brandApps:[process.argv[appFlag+1]];
+if(apps.some(app=>!brandApps.includes(app)))throw Error('Unknown --app');
 const source=await readFile(resolve(root,'branding/freewing/symbol-source.png'));
 const artwork=await readFile(resolve(root,'branding/freewing/approved-logo.png'));
 // Normalize the generated alpha padding for each use without modifying the approved source.
@@ -24,6 +25,13 @@ async function icon(size,safe=false){
  return sharp(background(size)).composite([{input:foreground,gravity:'center'}]).flatten({background:'#b7ddf0'}).removeAlpha().png().toBuffer();
 }
 for(const app of apps){
+ if(app==='browser-reading-extension'){
+  const icons=resolve(root,'apps/browser-reading-extension/icons');
+  await mkdir(icons,{recursive:true});
+  await Promise.all([16,24,32,48,128].map(size=>sharp(symbol)
+    .resize(size,size).png().toFile(resolve(icons,`freewing-${size}.png`))));
+  continue;
+ }
  const pub=resolve(root,`apps/${app}/public/brand`);await mkdir(pub,{recursive:true});
  await Promise.all([
   writeFile(resolve(pub,'freewing-symbol.png'),symbol),

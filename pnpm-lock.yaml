@@ -251,6 +251,34 @@ importers:
         specifier: ^7.4.1
         version: 7.4.1
 
+  apps/teacher:
+    dependencies:
+      '@font/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
+      react:
+        specifier: 18.3.1
+        version: 18.3.1
+      react-dom:
+        specifier: 18.3.1
+        version: 18.3.1(react@18.3.1)
+    devDependencies:
+      '@types/react':
+        specifier: ^19.0.10
+        version: 19.0.10
+      '@types/react-dom':
+        specifier: ^19.0.4
+        version: 19.0.4(@types/react@19.0.10)
+      '@vitejs/plugin-react':
+        specifier: ^4.3.4
+        version: 4.3.4(vite@6.2.1(@types/node@22.13.10)(jiti@1.21.7)(less@4.3.0)(terser@5.50.0))
+      typescript:
+        specifier: ~5.7.2
+        version: 5.7.3
+      vite:
+        specifier: ^6.2.0
+        version: 6.2.1(@types/node@22.13.10)(jiti@1.21.7)(less@4.3.0)(terser@5.50.0)
+
   apps/web-utils:
     dependencies:
       '@ant-design/icons':

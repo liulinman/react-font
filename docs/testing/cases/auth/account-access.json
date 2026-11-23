@@ -1,0 +1,311 @@
+{
+  "schemaVersion": 1,
+  "source": "docs/prd/auth/features/account-access/prd.md",
+  "sourceHash": "e218806613843c79949f582d8eb62dcb6f39f1a9a3c67f5a76349ecd5c050232",
+  "cases": [
+    {
+      "id": "auth/account-access/AC-01/CASE-01",
+      "title": "入口与安全回跳",
+      "status": "draft",
+      "requirementIds": [
+        "auth/account-access/AC-01"
+      ],
+      "preconditions": [
+        "一次性MySQL English World测试环境；测试邮件服务仅在harness注入，不证明公网送达。"
+      ],
+      "steps": [
+        "重置隔离数据，使用automation_learner或browser_user及@example.test邮箱。",
+        "真实请求图形挑战，通过受保护测试harness选定答案；邮箱通过外部传输替身捕获。",
+        "执行绑定脚本逐项断言，真实API重新读取账号/学习数据；后端集成补充SQL、并发及双会话。"
+      ],
+      "expectedResults": [
+        "入口、合法及恶意回跳、UI路由仍需浏览器完整验证"
+      ],
+      "cleanup": "测试runner销毁隔离数据库；每条用例前清理数据。",
+      "bindings": [],
+      "reviewNote": "入口、合法及恶意回跳、UI路由仍需浏览器完整验证；本条复合条款未全部覆盖，保持draft。"
+    },
+    {
+      "id": "auth/account-access/AC-02/CASE-01",
+      "title": "新账号登录及停用拒绝",
+      "status": "draft",
+      "requirementIds": [
+        "auth/account-access/AC-02"
+      ],
+      "preconditions": [
+        "一次性MySQL English World测试环境；测试邮件服务仅在harness注入，不证明公网送达。"
+      ],
+      "steps": [
+        "重置隔离数据，使用automation_learner或browser_user及@example.test邮箱。",
+        "真实请求图形挑战，通过受保护测试harness选定答案；邮箱通过外部传输替身捕获。",
+        "执行绑定脚本逐项断言，真实API重新读取账号/学习数据；后端集成补充SQL、并发及双会话。"
+      ],
+      "expectedResults": [
+        "注册后真实登录已覆盖，停用账号及UI反馈尚需补充"
+      ],
+      "cleanup": "测试runner销毁隔离数据库；每条用例前清理数据。",
+      "bindings": [
+        {
+          "suite": "account-access",
+          "title": "Account access real service > REGISTER: verifies captured mail once and persists normalized account without auto login"
+        }
+      ],
+      "reviewNote": "注册后真实登录已覆盖，停用账号及UI反馈尚需补充；本条复合条款未全部覆盖，保持draft。"
+    },
+    {
+      "id": "auth/account-access/AC-03/CASE-01",
+      "title": "验证邮箱及注册唯一性",
+      "status": "draft",
+      "requirementIds": [
+        "auth/account-access/AC-03"
+      ],
+      "preconditions": [
+        "一次性MySQL English World测试环境；测试邮件服务仅在harness注入，不证明公网送达。"
+      ],
+      "steps": [
+        "重置隔离数据，使用automation_learner或browser_user及@example.test邮箱。",
+        "真实请求图形挑战，通过受保护测试harness选定答案；邮箱通过外部传输替身捕获。",
+        "执行绑定脚本逐项断言，真实API重新读取账号/学习数据；后端集成补充SQL、并发及双会话。"
+      ],
+      "expectedResults": [
+        "浏览器验证并持久化；并发仅后端集成补充，不标全部ready"
+      ],
+      "cleanup": "测试runner销毁隔离数据库；每条用例前清理数据。",
+      "bindings": [
+        {
+          "suite": "account-access",
+          "title": "Account access real service > REGISTER: verifies captured mail once and persists normalized account without auto login"
+        }
+      ],
+      "reviewNote": "浏览器验证并持久化；并发仅后端集成补充，不标全部ready；本条复合条款未全部覆盖，保持draft。"
+    },
+    {
+      "id": "auth/account-access/AC-04/CASE-01",
+      "title": "验证码生命周期",
+      "status": "draft",
+      "requirementIds": [
+        "auth/account-access/AC-04"
+      ],
+      "preconditions": [
+        "一次性MySQL English World测试环境；测试邮件服务仅在harness注入，不证明公网送达。"
+      ],
+      "steps": [
+        "重置隔离数据，使用automation_learner或browser_user及@example.test邮箱。",
+        "真实请求图形挑战，通过受保护测试harness选定答案；邮箱通过外部传输替身捕获。",
+        "执行绑定脚本逐项断言，真实API重新读取账号/学习数据；后端集成补充SQL、并发及双会话。"
+      ],
+      "expectedResults": [
+        "图形刷新/单次及邮箱重放已覆盖；超次、旧码、跨用途、过期完整浏览器矩阵待补"
+      ],
+      "cleanup": "测试runner销毁隔离数据库；每条用例前清理数据。",
+      "bindings": [
+        {
+          "suite": "account-access",
+          "title": "Account access real service > CAPTCHA: rejects missing, refreshed and reused graphical challenges"
+        }
+      ],
+      "reviewNote": "图形刷新/单次及邮箱重放已覆盖；超次、旧码、跨用途、过期完整浏览器矩阵待补；本条复合条款未全部覆盖，保持draft。"
+    },
+    {
+      "id": "auth/account-access/AC-05/CASE-01",
+      "title": "服务端累计限额",
+      "status": "draft",
+      "requirementIds": [
+        "auth/account-access/AC-05"
+      ],
+      "preconditions": [
+        "一次性MySQL English World测试环境；测试邮件服务仅在harness注入，不证明公网送达。"
+      ],
+      "steps": [
+        "重置隔离数据，使用automation_learner或browser_user及@example.test邮箱。",
+        "真实请求图形挑战，通过受保护测试harness选定答案；邮箱通过外部传输替身捕获。",
+        "执行绑定脚本逐项断言，真实API重新读取账号/学习数据；后端集成补充SQL、并发及双会话。"
+      ],
+      "expectedResults": [
+        "持久限流边界、刷新/重发累计及并发待补"
+      ],
+      "cleanup": "测试runner销毁隔离数据库；每条用例前清理数据。",
+      "bindings": [],
+      "reviewNote": "持久限流边界、刷新/重发累计及并发待补；本条复合条款未全部覆盖，保持draft。"
+    },
+    {
+      "id": "auth/account-access/AC-06/CASE-01",
+      "title": "重置防枚举及凭证消费",
+      "status": "draft",
+      "requirementIds": [
+        "auth/account-access/AC-06"
+      ],
+      "preconditions": [
+        "一次性MySQL English World测试环境；测试邮件服务仅在harness注入，不证明公网送达。"
+      ],
+      "steps": [
+        "重置隔离数据，使用automation_learner或browser_user及@example.test邮箱。",
+        "真实请求图形挑战，通过受保护测试harness选定答案；邮箱通过外部传输替身捕获。",
+        "执行绑定脚本逐项断言，真实API重新读取账号/学习数据；后端集成补充SQL、并发及双会话。"
+      ],
+      "expectedResults": [
+        "真实邮箱捕获与重放已覆盖，枚举和旧码完整浏览器矩阵待补"
+      ],
+      "cleanup": "测试runner销毁隔离数据库；每条用例前清理数据。",
+      "bindings": [
+        {
+          "suite": "account-access",
+          "title": "Account access real service > RESET: consumes mailbox proof, revokes the old learning cookie and preserves vocabulary"
+        }
+      ],
+      "reviewNote": "真实邮箱捕获与重放已覆盖，枚举和旧码完整浏览器矩阵待补；本条复合条款未全部覆盖，保持draft。"
+    },
+    {
+      "id": "auth/account-access/AC-07/CASE-01",
+      "title": "改密身份与一致密码策略",
+      "status": "draft",
+      "requirementIds": [
+        "auth/account-access/AC-07"
+      ],
+      "preconditions": [
+        "一次性MySQL English World测试环境；测试邮件服务仅在harness注入，不证明公网送达。"
+      ],
+      "steps": [
+        "重置隔离数据，使用automation_learner或browser_user及@example.test邮箱。",
+        "真实请求图形挑战，通过受保护测试harness选定答案；邮箱通过外部传输替身捕获。",
+        "执行绑定脚本逐项断言，真实API重新读取账号/学习数据；后端集成补充SQL、并发及双会话。"
+      ],
+      "expectedResults": [
+        "匿名/当前密码/指定目标/成功改密已覆盖，Unicode长度全边界三入口待补"
+      ],
+      "cleanup": "测试runner销毁隔离数据库；每条用例前清理数据。",
+      "bindings": [
+        {
+          "suite": "account-access",
+          "title": "Account access real service > CHANGE: validates current identity and password before requiring a new login"
+        }
+      ],
+      "reviewNote": "匿名/当前密码/指定目标/成功改密已覆盖，Unicode长度全边界三入口待补；本条复合条款未全部覆盖，保持draft。"
+    },
+    {
+      "id": "auth/account-access/AC-08/CASE-01",
+      "title": "全部学习会话撤销及独立授权",
+      "status": "draft",
+      "requirementIds": [
+        "auth/account-access/AC-08"
+      ],
+      "preconditions": [
+        "一次性MySQL English World测试环境；测试邮件服务仅在harness注入，不证明公网送达。"
+      ],
+      "steps": [
+        "重置隔离数据，使用automation_learner或browser_user及@example.test邮箱。",
+        "真实请求图形挑战，通过受保护测试harness选定答案；邮箱通过外部传输替身捕获。",
+        "执行绑定脚本逐项断言，真实API重新读取账号/学习数据；后端集成补充SQL、并发及双会话。"
+      ],
+      "expectedResults": [
+        "后端双Cookie撤销补充；管理员及MCP保持授权证据待补"
+      ],
+      "cleanup": "测试runner销毁隔离数据库；每条用例前清理数据。",
+      "bindings": [
+        {
+          "suite": "account-access",
+          "title": "Account access real service > RESET: consumes mailbox proof, revokes the old learning cookie and preserves vocabulary"
+        }
+      ],
+      "reviewNote": "后端双Cookie撤销补充；管理员及MCP保持授权证据待补；本条复合条款未全部覆盖，保持draft。"
+    },
+    {
+      "id": "auth/account-access/AC-09/CASE-01",
+      "title": "SMTP不可用与隐私",
+      "status": "draft",
+      "requirementIds": [
+        "auth/account-access/AC-09"
+      ],
+      "preconditions": [
+        "一次性MySQL English World测试环境；测试邮件服务仅在harness注入，不证明公网送达。"
+      ],
+      "steps": [
+        "重置隔离数据，使用automation_learner或browser_user及@example.test邮箱。",
+        "真实请求图形挑战，通过受保护测试harness选定答案；邮箱通过外部传输替身捕获。",
+        "执行绑定脚本逐项断言，真实API重新读取账号/学习数据；后端集成补充SQL、并发及双会话。"
+      ],
+      "expectedResults": [
+        "测试替身拒绝仅证明服务边界；真实SMTP配置/超时/日志秘密检查待联调"
+      ],
+      "cleanup": "测试runner销毁隔离数据库；每条用例前清理数据。",
+      "bindings": [],
+      "reviewNote": "测试替身拒绝仅证明服务边界；真实SMTP配置/超时/日志秘密检查待联调；本条复合条款未全部覆盖，保持draft。"
+    },
+    {
+      "id": "auth/account-access/AC-10/CASE-01",
+      "title": "可访问与桌面布局",
+      "status": "draft",
+      "requirementIds": [
+        "auth/account-access/AC-10"
+      ],
+      "preconditions": [
+        "一次性MySQL English World测试环境；测试邮件服务仅在harness注入，不证明公网送达。"
+      ],
+      "steps": [
+        "重置隔离数据，使用automation_learner或browser_user及@example.test邮箱。",
+        "真实请求图形挑战，通过受保护测试harness选定答案；邮箱通过外部传输替身捕获。",
+        "执行绑定脚本逐项断言，真实API重新读取账号/学习数据；后端集成补充SQL、并发及双会话。"
+      ],
+      "expectedResults": [
+        "真实键盘/显隐/双击/响应竞态和桌面遮挡检查待补"
+      ],
+      "cleanup": "测试runner销毁隔离数据库；每条用例前清理数据。",
+      "bindings": [],
+      "reviewNote": "真实键盘/显隐/双击/响应竞态和桌面遮挡检查待补；本条复合条款未全部覆盖，保持draft。"
+    },
+    {
+      "id": "auth/account-access/AC-12/CASE-01",
+      "title": "移动共享安全入口",
+      "status": "draft",
+      "requirementIds": [
+        "auth/account-access/AC-12"
+      ],
+      "preconditions": [
+        "一次性MySQL English World测试环境；测试邮件服务仅在harness注入，不证明公网送达。"
+      ],
+      "steps": [
+        "重置隔离数据，使用automation_learner或browser_user及@example.test邮箱。",
+        "真实请求图形挑战，通过受保护测试harness选定答案；邮箱通过外部传输替身捕获。",
+        "执行绑定脚本逐项断言，真实API重新读取账号/学习数据；后端集成补充SQL、并发及双会话。"
+      ],
+      "expectedResults": [
+        "移动受保护入口通过共享真实图形挑战登录，保留/mobile回跳并可读取当前账号；未运行前不宣称兼容通过。"
+      ],
+      "cleanup": "测试runner销毁隔离数据库；每条用例前清理数据。",
+      "bindings": [
+        {
+          "suite": "account-access",
+          "title": "Account access real service > MOBILE: requires the shared real graphical challenge before opening the mobile account"
+        }
+      ],
+      "reviewNote": "新增真实移动共享安全表单登录脚本，待本次Cloud运行与证据核对，保持draft。"
+    },
+    {
+      "id": "auth/account-access/AC-13/CASE-01",
+      "title": "隔离数据库及收件证据",
+      "status": "draft",
+      "requirementIds": [
+        "auth/account-access/AC-13"
+      ],
+      "preconditions": [
+        "一次性MySQL English World测试环境；测试邮件服务仅在harness注入，不证明公网送达。"
+      ],
+      "steps": [
+        "重置隔离数据，使用automation_learner或browser_user及@example.test邮箱。",
+        "真实请求图形挑战，通过受保护测试harness选定答案；邮箱通过外部传输替身捕获。",
+        "执行绑定脚本逐项断言，真实API重新读取账号/学习数据；后端集成补充SQL、并发及双会话。"
+      ],
+      "expectedResults": [
+        "真实MySQL/HTTP和隔离捕获邮件覆盖主要流程，公网SMTP待配置；全部链路UI尚未齐"
+      ],
+      "cleanup": "测试runner销毁隔离数据库；每条用例前清理数据。",
+      "bindings": [
+        {
+          "suite": "account-access",
+          "title": "Account access real service > REGISTER: verifies captured mail once and persists normalized account without auto login"
+        }
+      ],
+      "reviewNote": "真实MySQL/HTTP和隔离捕获邮件覆盖主要流程，公网SMTP待配置；全部链路UI尚未齐；本条复合条款未全部覆盖，保持draft。"
+    }
+  ]
+}

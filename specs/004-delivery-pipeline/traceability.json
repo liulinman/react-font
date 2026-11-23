@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "featureId": "settings/prd-browser",
+  "changeId": "2026-10-28-delivery-pipeline",
+  "sources": [
+    {
+      "path": "docs/prd/settings/features/prd-browser/prd.md",
+      "sha256": "807e8f0ecc01fa0bedb8cf1124ef12a6a4b774cd9f1548668bc6eee9cea8c623"
+    },
+    {
+      "path": "docs/design/settings/prd-browser/design.md",
+      "sha256": "d313637f0e175a4e0f82297483f99e3028c018812fb2287d3f4fd2df97ef4b83"
+    },
+    {
+      "path": "specs/004-delivery-pipeline/spec.md",
+      "sha256": "94a95803e2c0943877d4a1fe5f79ad4e76fa1500f807dbe948b9e193b47b9022"
+    }
+  ],
+  "links": [
+    {
+      "requirement": "settings/prd-browser/AC-06",
+      "scenario": "US1",
+      "cases": [
+        {
+          "id": "settings/prd-browser/CASE-01"
+        }
+      ],
+      "method": "Cypress合成界面；权限/归档专项本地补充"
+    },
+    {
+      "requirement": "settings/prd-browser/AC-07",
+      "scenario": "US2",
+      "cases": [
+        {
+          "id": "settings/prd-browser/CASE-02"
+        }
+      ],
+      "method": "Cypress合成界面；权限/归档专项本地补充"
+    },
+    {
+      "requirement": "settings/prd-browser/AC-08",
+      "scenario": "US3",
+      "cases": [
+        {
+          "id": "settings/prd-browser/CASE-02"
+        }
+      ],
+      "method": "Cypress合成界面；权限/归档专项本地补充"
+    },
+    {
+      "requirement": "settings/prd-browser/AC-10",
+      "scenario": "US5",
+      "cases": [
+        {
+          "id": "settings/prd-browser/CASE-03"
+        }
+      ],
+      "method": "Cypress合成界面；权限/归档专项本地补充"
+    }
+  ],
+  "supplemental": [
+    {
+      "requirement": "settings/prd-browser/AC-09",
+      "scenario": "US4",
+      "tests": [
+        "nestjs/src/interface/product-requirements/product-requirements.spec.ts",
+        "scripts/delivery-pipeline/build.test.mjs"
+      ],
+      "method": "真实HTTP权限、路径和归档摘要专项，不计为Cypress自动覆盖"
+    }
+  ]
+}

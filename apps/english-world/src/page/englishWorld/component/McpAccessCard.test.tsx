@@ -89,3 +89,27 @@ it("distinguishes audit records with identical names using nonsecret token IDs",
   expect(await screen.findByTitle("aaaa1111-0000")).toHaveProperty("textContent", " #aaaa1111");
   expect(screen.getByTitle("bbbb2222-0000")).toHaveProperty("textContent", " #bbbb2222");
 });
+it("offers independent note permissions and submits only the selected note scopes", async () => {
+  const user = userEvent.setup(); render(<McpAccessCard />);
+  await screen.findByText("https://example.com/api/mcp");
+  await user.click(screen.getByRole("button", { name: /创建授权/ }));
+  await user.click(screen.getByRole("checkbox", { name: "查询单词" }));
+  for (const label of ["查询笔记", "新增笔记", "修改笔记", "创建文件夹"])
+    await user.click(screen.getByRole("checkbox", { name: label }));
+  await user.type(screen.getByPlaceholderText("例如：我的 AI 助手"), "Notes assistant");
+  const createButtons = screen.getAllByRole("button", { name: /创建授权/ });
+  await user.click(createButtons[createButtons.length - 1]);
+  await screen.findByDisplayValue(secret);
+  const createCall = fetchMock.mock.calls.find(([url, options]) => url.endsWith("/tokens") && options.method === "POST");
+  expect(JSON.parse(createCall![1].body as string)).toEqual({ name: "Notes assistant", scopes: ["notes:read", "notes:create", "notes:update", "notes:folders:create"], expiresInDays: 30 });
+});
+it("translates saved note permissions and note audit actions", async () => {
+  items = [{ id: "notes-1", name: "笔记助手", scopes: ["notes:read", "notes:create", "notes:update", "notes:folders:create"], expiresAt: "2099-01-01" }];
+  const existing = fetchMock.getMockImplementation() as (url: string, options: RequestInit) => Promise<unknown>;
+  fetchMock.mockImplementation(async (url: string, options: RequestInit) => url.endsWith("/audit") ? { ok: true, json: async () => ({ code: 200, data: { items: [{ id: "note-audit", tokenName: "笔记助手", action: "confirm_update_note", outcome: "success", createdAt: "2026-10-28" }] } }) } : existing(url, options));
+  render(<McpAccessCard />);
+  await screen.findByText("笔记助手");
+  for (const label of ["查询笔记", "新增笔记", "修改笔记", "创建文件夹"]) expect(screen.getByText(label)).toBeTruthy();
+  expect(screen.getByText(/笔记助手 · 确认修改笔记/)).toBeTruthy();
+  expect(screen.queryByText("notes:folders:create")).toBeNull();
+});

@@ -2,7 +2,7 @@
 
 ## 调用外形与权限
 
-MCP 客户端完成初始化后，通过 `tools/list` 获取定义，通过 `tools/call` 传工具名和 `arguments`。Freewing 当前登记七个词库工具，定义源于后端 `src/interface/mcp-access/mcp.controller.ts`，输入 schema 位于同目录 `mcp-security.ts`。下表记录业务契约，不是所有 MCP 服务通用的工具清单。
+MCP 客户端完成初始化后，通过 `tools/list` 获取定义，通过 `tools/call` 传工具名和 `arguments`。Freewing 登记七个词库工具和八个知识笔记工具，定义源于后端 `src/interface/mcp-access/mcp.controller.ts`，输入 schema 位于同目录 `mcp-security.ts`。下表记录业务契约，不是所有 MCP 服务通用的工具清单。
 
 | 工具 | 必要参数 | 所需权限 |
 | --- | --- | --- |
@@ -40,3 +40,25 @@ MCP 客户端完成初始化后，通过 `tools/list` 获取定义，通过 `too
 ## 参数验证的几个边界
 
 数组中的词性编号范围由 schema 检查，但当前定义没有额外去重规则；调用方应按实际词性传值，不能假设服务会自动补齐分类。数值零是有效的类型和熟练度，不应在客户端用真假判断过滤。与之相反，空笔记和空词性数组在安全覆盖时会被忽略。检查接口时应分别覆盖零值、空值和缺省值，它们代表不同含义，不能只测一组普通字符串便推断所有更新路径正确。
+
+
+## 笔记工具
+
+定义及严格输入校验位于后端 `src/interface/mcp-access/mcp-notes.ts`，与词库工具共用入口，权限独立。
+
+| 工具 | 必要参数 | 所需权限 |
+| --- | --- | --- |
+| `query_notes` | 无；可传 q、category、page、folderId、wordId | `notes:read` |
+| `get_note` | noteId | `notes:read` |
+| `list_note_folders` | 无 | `notes:read` |
+| `create_note` | note、folderId、requestId（UUID） | `notes:create` |
+| `preview_update_note` | noteId、changes（至少一个字段） | `notes:update` |
+| `confirm_update_note` | confirmationToken、confirmed: true、requestId | `notes:update` |
+| `preview_create_note_folder` | name；可传 parentId，根目录用 null 或省略 | `notes:folders:create` |
+| `confirm_create_note_folder` | confirmationToken、confirmed: true、requestId | `notes:folders:create` |
+
+`noteId`、`folderId`、`wordId` 为正整数；查询 `folderId` 也支持 `"unfiled"`。新建必须指定本人已有文件夹。笔记查询返回 `{list,total,page,pageSize}`（每页20）；详情返回完整笔记，新增/确认修改返回 `{note}`。文件夹列表返回 `{list,total,unfiled}`，目录包含 `id/name/parentId/noteCount`；确认创建返回 `{folder}`。
+
+`note` 必含标题（1～120）和正文（非空，最多30000），可带分类（语法/句型/词语辨析/阅读技巧/易错点/其他）、例句（最多10000）、来源（最多1000）、关联词ID（最多20个，不重复且本人所有）。`changes` 可给这些字段与已有目标 `folderId`；未给的保留，例句、来源和关联词可显式清空。修改确认不得额外夹带新内容。名称1～40字符，层级最多5层，目录最多200个，沿用网站同父级重名和系统名称约束。
+
+预览返回十分钟有效的 `confirmationToken` 和展示内容；凭证不是用户同意的替代品。客户端需要展示并征求明确同意，拒绝时不调用确认。见[完整写入流程](/mcp/write-workflow)。

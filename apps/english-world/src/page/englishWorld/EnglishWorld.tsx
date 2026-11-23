@@ -1,3 +1,4 @@
+import { listeningWordPrefill } from "@/ieltsListening/wordHandoff";
 import { WordBookCreate } from "./wordBook/WordBookCreate";
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
@@ -17,12 +18,12 @@ import {
   Select,
   Space,
   Spin,
-  Table,
   Tag,
   Tooltip,
   Typography,
 } from "antd";
 import { EditAddModal } from "./component/EditAddModal";
+import { BrowserSourceLink } from "./component/BrowserWordSources";
 import request, { useMutation } from "@font/api";
 import {
   wordAdd,
@@ -33,7 +34,7 @@ import {
   wordUpdateLevel,
 } from "@/server/word/word";
 import { WordList } from "@/server/word/word.type";
-import { useColumns } from "./useColumns";
+import { WordDictionary } from "./component/WordDictionary";
 import { EnglishStats } from "./component/EnglishStats";
 import { EnglishWorldPageHeader } from "./component/EnglishWorldPageHeader";
 import { LearningCockpitPage } from "./cockpit/LearningCockpitPage";
@@ -65,7 +66,6 @@ import {
   PlayCircleOutlined,
   PlusOutlined,
   NodeIndexOutlined,
-  RightOutlined,
   TranslationOutlined,
   UpOutlined,
 } from "@ant-design/icons";
@@ -85,8 +85,7 @@ import {
 } from "./utils/wordLabels";
 import { BritishPronunciationButton } from "./component/BritishPronunciationButton";
 import { WordLevelQuickEdit } from "./component/WordLevelQuickEdit";
-import { WordCardNote, WordExpandedNote } from "./component/WordNoteDisplay";
-import { hasDisplayNote } from "./utils/wordNote";
+import { WordCardNote } from "./component/WordNoteDisplay";
 import { EnglishWorldLayout } from "./layout/EnglishWorldLayout";
 import {
   type WordLibraryView,
@@ -104,7 +103,6 @@ import {
 import "./EnglishWorld.css";
 const { RangePicker } = DatePicker;
 const { Text, Title } = Typography;
-const WORD_TABLE_SCROLL_Y = 620;
 const WORD_LEVEL_VALUES = [0, 1, 2, 3] as const;
 
 function splitContextLabArticleParagraphs(article: string) {
@@ -128,17 +126,35 @@ function parseContextLabArticleContent(article: string) {
   };
 }
 
+const NARROW_WORD_LIBRARY = "(max-width: 620px)";
+
 const EnglishWorld: React.FC = () => {
+  const [narrowWordLibrary, setNarrowWordLibrary] = useState(
+    () => window.matchMedia?.(NARROW_WORD_LIBRARY).matches ?? false,
+  );
+
+  useEffect(() => {
+    const query = window.matchMedia?.(NARROW_WORD_LIBRARY);
+    if (!query) return;
+    const syncViewport = () => setNarrowWordLibrary(query.matches);
+    query.addEventListener?.("change", syncViewport);
+    syncViewport();
+    return () => query.removeEventListener?.("change", syncViewport);
+  }, []);
+
   const [form] = Form.useForm();
   const [bookCreateOpen, setBookCreateOpen] = useState(false);
   const [type, setType] = useState<"edit" | "add">("add");
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [focusWordNote, setFocusWordNote] = useState(false);
   const [wordRecord, setWordRecord] = useState<WordList>();
+  const [listeningPrefill,setListeningPrefill]=useState<ReturnType<typeof listeningWordPrefill>>(null);
   const [libraryView, setLibraryView] = useState<WordLibraryView>(
     wordLibraryViewPreference.read,
   );
-  const [cardBatchMode, setCardBatchMode] = useState(false);
+  const showWordCards = narrowWordLibrary || libraryView === "card";
+  const [cardBatchEnabled, setCardBatchMode] = useState(false);
+  const cardBatchMode = showWordCards && cardBatchEnabled;
   const [selectedCardIds, setSelectedCardIds] = useState<number[]>([]);
   const [useCurrentFilterScope, setUseCurrentFilterScope] = useState(false);
   const [learningScope, setLearningScope] = useState<LearningWordScope | null>(
@@ -399,14 +415,6 @@ const EnglishWorld: React.FC = () => {
     handleEdit(sourcePreviewRecord);
   };
 
-  const { columns } = useColumns({
-    handleEdit,
-    handleDelete,
-    handleOpenContextLabReference,
-    page,
-    pageSize,
-  });
-
   // 查询数据
   const handleSearch = async () => {
     setSelectedCardIds([]);
@@ -467,6 +475,7 @@ const EnglishWorld: React.FC = () => {
   };
 
   const handleAdd = () => {
+    setListeningPrefill(listeningWordPrefill(location.search));
     setFocusWordNote(false);
     handleType("add");
     setIsModalVisible(true);
@@ -479,6 +488,7 @@ const EnglishWorld: React.FC = () => {
   const handlePageChange = (page: number, pageSize: number) => {
     setSelectedCardIds([]);
     changePage(page, pageSize);
+    document.querySelector(".english-world-table-panel")?.scrollIntoView({block:"start"});
   };
 
   const handleLibraryViewChange = (view: WordLibraryView) => {
@@ -974,6 +984,12 @@ const EnglishWorld: React.FC = () => {
           word={record.englishWord}
         />
 
+        {narrowWordLibrary && record.sourceUrl && (
+          <div className="word-card-source">
+            <BrowserSourceLink url={record.sourceUrl} />
+          </div>
+        )}
+
         {record.englishReference && (
           <div className="word-card-meta">
             {contextLabReference ? (
@@ -1024,7 +1040,7 @@ const EnglishWorld: React.FC = () => {
         ) : activeNav === "stats" ? (
           <EnglishStats />
         ) : (
-          <div className="english-world-stack">
+          <div className="english-world-stack word-dictionary-page">
             <EnglishWorldPageHeader
               compact
               title="词库"
@@ -1114,23 +1130,25 @@ const EnglishWorld: React.FC = () => {
                   >
                     使用当前筛选结果（{totalNum} 个）
                   </Checkbox>
-                  <Segmented<WordLibraryView>
-                    value={libraryView}
-                    onChange={handleLibraryViewChange}
-                    options={[
-                      {
-                        label: "列表",
-                        value: "list",
-                        icon: <BarsOutlined />,
-                      },
-                      {
-                        label: "卡片",
-                        value: "card",
-                        icon: <AppstoreOutlined />,
-                      },
-                    ]}
-                  />
-                  {libraryView === "card" && (
+                  {!narrowWordLibrary && (
+                    <Segmented<WordLibraryView>
+                      value={libraryView}
+                      onChange={handleLibraryViewChange}
+                      options={[
+                        {
+                          label: "列表",
+                          value: "list",
+                          icon: <BarsOutlined />,
+                        },
+                        {
+                          label: "卡片",
+                          value: "card",
+                          icon: <AppstoreOutlined />,
+                        },
+                      ]}
+                    />
+                  )}
+                  {showWordCards && (
                     <Button
                       type={cardBatchMode ? "primary" : "default"}
                       onClick={handleToggleCardBatchMode}
@@ -1141,95 +1159,7 @@ const EnglishWorld: React.FC = () => {
                 </div>
               </div>
 
-              {libraryView === "list" ? (
-                <div
-                  className="english-world-table-wrap"
-                  aria-label="词库列表视图"
-                >
-                  <Table<WordList>
-                    bordered={false}
-                    size="middle"
-                    loading={loading}
-                    columns={columns}
-                    dataSource={wordList}
-                    rowSelection={{
-                      columnWidth: 48,
-                      selectedRowKeys: selectedCardIds,
-                      onChange: (keys) =>
-                        setSelectedCardIds(keys.map((key) => Number(key))),
-                    }}
-                    expandable={{
-                      columnWidth: 48,
-                      expandRowByClick: false,
-                      rowExpandable: (record) =>
-                        hasDisplayNote(record.englishNote),
-                      expandedRowRender: (record) => (
-                        <WordExpandedNote
-                          record={record}
-                          onEdit={(record) => handleEdit(record, true)}
-                        />
-                      ),
-                      expandIcon: ({ expanded, onExpand, record }) =>
-                        hasDisplayNote(record.englishNote) ? (
-                          <button
-                            aria-expanded={expanded}
-                            aria-label={`${expanded ? "收起" : "展开"} ${
-                              record.englishWord
-                            } 的笔记`}
-                            className="word-note-expand-button"
-                            type="button"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              onExpand(record, event);
-                            }}
-                          >
-                            <RightOutlined
-                              aria-hidden="true"
-                              rotate={expanded ? 90 : 0}
-                            />
-                          </button>
-                        ) : null,
-                    }}
-                    rowKey="id"
-                    locale={{
-                      emptyText: (
-                        <Empty
-                          image={Empty.PRESENTED_IMAGE_SIMPLE}
-                          description="词库还是空的"
-                        >
-                          <Button type="primary" onClick={handleAdd}>
-                            添加第一个单词
-                          </Button>
-                        </Empty>
-                      ),
-                    }}
-                    virtual={pageSize > 20}
-                    scroll={{
-                      // Include the expand and selection columns in the scroll width.
-                      x: columns.reduce(
-                        (width, column) => width + Number(column.width || 0),
-                        96,
-                      ),
-                      ...(pageSize > 20 ? { y: WORD_TABLE_SCROLL_Y } : {}),
-                    }}
-                    pagination={{
-                      current: page,
-                      total: totalNum,
-                      pageSizeOptions: ["10", "20", "50", "100", "200", "500"],
-                      showSizeChanger: true,
-                      showTotal: (total: number) => `共 ${total} 条数据`,
-                      pageSize: pageSize,
-                      onChange: handlePageChange,
-                      showQuickJumper: true,
-                    }}
-                  />
-                </div>
-              ) : (
-                <div
-                  className="english-world-card-view"
-                  aria-label="词库卡片视图"
-                >
-                  {cardBatchMode && (
+                  {(cardBatchMode || selectedCardIds.length > 0) && (
                     <div className="word-card-batch-toolbar">
                       <div className="word-card-batch-summary">
                         <strong>已选 {selectedCardIds.length} 项</strong>
@@ -1285,6 +1215,23 @@ const EnglishWorld: React.FC = () => {
                       </div>
                     </div>
                   )}
+
+              {!showWordCards ? (
+                <div
+                  className="english-world-table-wrap"
+                  aria-label="词库列表视图"
+                >
+                  <WordDictionary words={wordList} loading={loading} selectedIds={selectedCardIds} onSelect={setSelectedCardIds} onEdit={(word,note)=>handleEdit(word,note)} onDelete={handleDelete} onLevel={(word,level)=>void handleQuickLevelChange(word,level)} updatingIds={levelUpdatingIds} onReference={(ref,word)=>void handleOpenContextLabReference(ref,word)} onAdd={handleAdd}/>
+                  <Pagination current={page} total={totalNum} pageSize={pageSize} pageSizeOptions={["10","20","50","100","200","500"]} showSizeChanger showQuickJumper showTotal={total=>`共 ${total} 条数据`} onChange={handlePageChange}/>
+
+                </div>
+              ) : (
+                <div
+                  className="english-world-card-view"
+                  aria-label={narrowWordLibrary ? "词库列表视图" : "词库卡片视图"}
+                >
+                  <Spin spinning={loading} tip="正在加载词条…">
+                  <div aria-busy={loading}>
                   {wordList.length > 0 ? (
                     <div className="english-world-card-grid">
                       {wordList.map(renderWordCard)}
@@ -1299,13 +1246,17 @@ const EnglishWorld: React.FC = () => {
                       </Button>
                     </Empty>
                   )}
+                  </div>
+                  </Spin>
+                  {loading && <p role="status" aria-live="polite">正在加载词条…</p>}
                   <Pagination
                     current={page}
                     total={totalNum}
                     pageSize={pageSize}
                     pageSizeOptions={["10", "20", "50", "100", "200", "500"]}
                     showSizeChanger
-                    showQuickJumper
+                    showQuickJumper={!narrowWordLibrary}
+                    simple={narrowWordLibrary}
                     showTotal={(total: number) => `共 ${total} 条数据`}
                     onChange={handlePageChange}
                   />
@@ -1324,6 +1275,7 @@ const EnglishWorld: React.FC = () => {
               isModalVisible={isModalVisible}
               focusNote={focusWordNote}
               currentRecord={wordRecord}
+              addInitialValues={type === "add" ? listeningPrefill : null}
               type={type}
               onOk={handleModalOk}
               onCancel={handleModalCancel}

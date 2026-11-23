@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { runInNewContext } from "node:vm";
 import { readFile, readdir, stat } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 
@@ -95,7 +96,34 @@ for (const url of precacheUrls) {
   );
 }
 
-assert.doesNotMatch(serviceWorker, /\/api|mutation|POST|PUT|PATCH|DELETE/);
+// Execute the generated worker against a small Workbox API recorder. Test route
+// behavior instead of banning the string /api, which also forbids exclusions.
+const routes = [];
+const workerContext = {
+  define(_dependencies, factory) {
+    factory({
+      precacheAndRoute() {}, cleanupOutdatedCaches() {},
+      createHandlerBoundToURL: url => url,
+      NavigationRoute: class {
+        constructor(handler, options) { this.handler = handler; this.options = options; }
+      },
+      registerRoute: route => routes.push(route),
+    });
+  },
+  self: { addEventListener() {} },
+};
+workerContext.define.amd = true;
+runInNewContext(serviceWorker, workerContext);
+assert.equal(routes.length, 1, "only the application navigation fallback is registered");
+const { denylist = [] } = routes[0].options;
+for (const path of ["/api", "/api/admin/prd/", "/api/admin/prd/reading/prd.html", "/api/admin/prd/assets/app.js", "/admin/", "/docs/frontend/react-state.html", "/downloads", "/downloads/english-world-reading-extension-0.1.0.zip"]) {
+  assert.ok(denylist.some(pattern => pattern.test(path)), `server-owned URL must bypass the learning shell: ${path}`);
+}
+for (const path of ["/login", "/mobile", "/englishWorld/reading-practices", "/apiary", "/downloads-lesson"]) {
+  assert.ok(!denylist.some(pattern => pattern.test(path)), `learning navigation must retain its fallback: ${path}`);
+}
+assert.ok(![...precacheUrls].some(url => /^\/?api(?:\/|$)/.test(url)), "API responses must never be precached");
+assert.doesNotMatch(serviceWorker, /mutation|POST|PUT|PATCH|DELETE/);
 
 console.log(JSON.stringify({
   appRoot,

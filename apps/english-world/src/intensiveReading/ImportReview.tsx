@@ -27,6 +27,11 @@ export default function ImportReview({
       [],
     );
   const persist = useReadingPersistence(m, onChange);
+  const [confirmed, setConfirmed] = useState(false);
+  useEffect(() => {
+    if (confirmed && !persist.dirty && !persist.busy && !persist.error)
+      navigate(`/englishWorld/intensive-reading/${m.id}`);
+  }, [confirmed, persist.dirty, persist.busy, persist.error, navigate, m.id]);
   const busy = uploading || persist.busy;
   const latest = useRef(m);
   latest.current = m;
@@ -127,7 +132,7 @@ export default function ImportReview({
     const result = await persist.perform("versions", { title, paragraphs });
     if (result) {
       persist.setDirty(false);
-      navigate(`/englishWorld/intensive-reading/${m.id}`);
+      setConfirmed(true);
     }
   }
   function move(i: number, d: number) {

@@ -1,0 +1,9 @@
+# 数据模型
+
+既有knowledge_note/knowledge_note_word/knowledge_folder/knowledge_folder_lock均复用，数据归属user_id。笔记字段/关联词通过既有校验与事务服务；version乐观并发控制。
+
+新增mcp_note_preview：id SHA256凭证摘要CHAR64；token_id授权UUID；user_id账号；action VARCHAR40（preview_update_note或preview_create_note_folder）；target_id笔记/父目录ID可空；snapshot_hash SHA256；payload JSON；expires_at DATETIME(3)；consumed_at可空；result JSON可空。十分钟过期由数据库生成及UNIX_TIMESTAMP读取。原始凭证只返回客户端，不写审计。
+
+修改payload含拟存note和已展示前后folderPaths；目录payload含folder及parentPath。状态为有效未消费→确认事务内消费且存结果；取消无业务写入；异常事务回滚；已消费重试回读结果。授权状态和scope每次从DB重新检查，不相信调用者缓存scopes。
+
+沿用mcp_operation(token_id,request_id)幂等和payload hash；沿用mcp_audit动作/结果摘要，无正文。所有业务写入、确认消费、operation和audit共用同一tx。

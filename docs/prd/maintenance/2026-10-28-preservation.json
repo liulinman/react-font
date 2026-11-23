@@ -1,0 +1,1504 @@
+{
+  "date": "2026-10-28",
+  "method": "原文非空行（仅忽略Markdown标题层级）多重集合逐项保留；FR/AC引用计数一致；原段落分组摘要追踪。不是业务全量验收。",
+  "documents": [
+    {
+      "path": "review/features/weak-word-repair/prd.md",
+      "featureId": "review/weak-word-repair",
+      "beforeSha256": "85a11278e1d07e5d80238ffd534b7daf755b408ef33fb672cfbf1b2f1dcfb7b3",
+      "afterSha256": "2f7ad3b0e6cd2d2b81174fd328beb4c006f603a407883bf70a5254fbe81a6f8b",
+      "originalNonemptyLines": 213,
+      "preservedNonemptyLines": 213,
+      "requirementIds": {
+        "FR-1": 2,
+        "FR-2": 1,
+        "FR-3": 2,
+        "FR-4": 1,
+        "FR-5": 3,
+        "FR-6": 3,
+        "FR-7": 2,
+        "FR-8": 2,
+        "FR-9": 2,
+        "FR-10": 2,
+        "FR-11": 3,
+        "FR-12": 2
+      },
+      "sections": [
+        {
+          "sourceHeading": "0. 文档目的",
+          "target": "来源、决策与待决项",
+          "sha256": "20aba5581997ee153e85ae5fcfd648f40562c460802681f8bb0a57fcbf3fc603"
+        },
+        {
+          "sourceHeading": "1. 愿景",
+          "target": "背景与目标",
+          "sha256": "68ca014d04256e41d47c05be4d66394280c00ea38d2d02eb9cd4f79054cf1874"
+        },
+        {
+          "sourceHeading": "2. 目标用户",
+          "target": "用户角色与使用端",
+          "sha256": "1f330b0f96e58af2d92a51bf065af41078bbb4363708d156326aac5cbe07f3fe"
+        },
+        {
+          "sourceHeading": "3. 术语",
+          "target": "业务规则、字段与状态",
+          "sha256": "35ffe2384e45382be10af156bf1e321ee3771e28fab2952a935acf00d1fa325a"
+        },
+        {
+          "sourceHeading": "4. 功能需求",
+          "target": "功能需求",
+          "sha256": "7fb7cbbc6aa915adf12c9d303abec72c990618f3b113d47040e699a507f1ca38"
+        },
+        {
+          "sourceHeading": "5. 非目标",
+          "target": "范围与非目标",
+          "sha256": "63b2b8e55147e4a3c2f382ec1082355e2bbba492d3f6b9334300c1255ff2bfb4"
+        },
+        {
+          "sourceHeading": "6. MVP 范围",
+          "target": "范围与非目标",
+          "sha256": "9b8b19961af9fcafc5ab57611151d8b37b53f7118986d7f1c20bf8060330b4b8"
+        },
+        {
+          "sourceHeading": "7. 成功指标",
+          "target": "背景与目标",
+          "sha256": "c1b3552d2310f64e03cdb744e38dde82a79c06b9b22ac3e217051961587ffdd4"
+        },
+        {
+          "sourceHeading": "8. 跨功能质量要求",
+          "target": "非功能约束",
+          "sha256": "e1400508d605a6d0531c3c898cbbda0591029d599b94be9ca16989d00f470147"
+        },
+        {
+          "sourceHeading": "9. 约束与护栏",
+          "target": "范围与非目标",
+          "sha256": "e0f41bbb91e8967e8a653d77898ae90b9cfac131b4d3b647e67cfeae7e882eba"
+        },
+        {
+          "sourceHeading": "10. 开放问题",
+          "target": "来源、决策与待决项",
+          "sha256": "9d2a49d362124f97972c68880280aeab6afc6cff1a966bcfd666b5477f038431"
+        },
+        {
+          "sourceHeading": "11. 假设索引",
+          "target": "来源、决策与待决项",
+          "sha256": "3571caeff66f7b06248cc335b5f50619907b2a0fab3e037120ce202a5c118db9"
+        }
+      ],
+      "mobileHistorical": true
+    },
+    {
+      "path": "review/features/word-journey/prd.md",
+      "featureId": "review/word-journey",
+      "beforeSha256": "bcca2cc89ac569f0db16fcf4baa03a7dc350062a53390f1f3d306f2b62205366",
+      "afterSha256": "1b42afd3beab73aa81d4309d1a007f73877f3f399a4fd080f634422d4355b74b",
+      "originalNonemptyLines": 124,
+      "preservedNonemptyLines": 124,
+      "requirementIds": {
+        "FR-1": 3,
+        "FR-2": 1,
+        "FR-3": 2,
+        "FR-4": 2,
+        "FR-5": 3,
+        "FR-6": 2,
+        "FR-7": 1
+      },
+      "sections": [
+        {
+          "sourceHeading": "0. 文档目的",
+          "target": "来源、决策与待决项",
+          "sha256": "cab060a12ef4c7d1ff4003fafd9abc31b4d0c63d2c998de03753feb589443d95"
+        },
+        {
+          "sourceHeading": "1. 愿景",
+          "target": "背景与目标",
+          "sha256": "4c4f074790e7f3b638467c2270573e65ba306e0233acbe87302c214e75833315"
+        },
+        {
+          "sourceHeading": "2. 目标用户与旅程",
+          "target": "用户角色与使用端",
+          "sha256": "5e5e2b0041d3779056dd6f4291004a072cc1fe6cd6f2dd7a19fdaba5fbb3ced9"
+        },
+        {
+          "sourceHeading": "3. 术语",
+          "target": "业务规则、字段与状态",
+          "sha256": "b67f0c423a8fb9a233bc43e9c1cf1a181caa1ae01bb57ac726520f790b270b12"
+        },
+        {
+          "sourceHeading": "4. 功能需求",
+          "target": "功能需求",
+          "sha256": "cbb44ab479686bfda13df1a600a5ddd4d14e73db275ebefc1dc35e253b52fc90"
+        },
+        {
+          "sourceHeading": "5. 非目标",
+          "target": "范围与非目标",
+          "sha256": "c90f1d0844cbb7ce47034bb07efc694e3bb0bbbcfa15923d7ef23810e79ebcb5"
+        },
+        {
+          "sourceHeading": "6. MVP 范围",
+          "target": "范围与非目标",
+          "sha256": "209cabe5e7df9571ec3f0c709bbd989d34bf2409bc40c46bc275ba2a6e700cdf"
+        },
+        {
+          "sourceHeading": "7. 非功能要求",
+          "target": "非功能约束",
+          "sha256": "1c8e9995182547168b903cdb3a0f1c475b9914ceb4bc5ec692c60d14b98ecc8a"
+        },
+        {
+          "sourceHeading": "8. 成功指标",
+          "target": "背景与目标",
+          "sha256": "335080ad8c6f9d62971e99da4b2a04f0ac0f0438a3572a122541c219ae503914"
+        },
+        {
+          "sourceHeading": "9. 开放问题",
+          "target": "来源、决策与待决项",
+          "sha256": "d36c32e836d66969c165525585d329627029f09d1bb25b309896eeb6ed5efdf8"
+        },
+        {
+          "sourceHeading": "10. 假设索引",
+          "target": "来源、决策与待决项",
+          "sha256": "8193481db289202f8b2aaaa3230d9d83b99db78c340f10240db0b1e0a5c99d1b"
+        }
+      ],
+      "mobileHistorical": false
+    },
+    {
+      "path": "notes/features/knowledge-notes/prd.md",
+      "featureId": "notes/knowledge-notes",
+      "beforeSha256": "17a141fd26912feb8e7312502a52338844053b7fc7d52f829ae4526add82ced3",
+      "afterSha256": "4c9e5ee77845a6a33e0537622a082938623320ccd0ff58a03c2c6bfd645c7a03",
+      "originalNonemptyLines": 72,
+      "preservedNonemptyLines": 72,
+      "requirementIds": {
+        "FR-01": 1,
+        "FR-02": 1,
+        "FR-03": 1,
+        "FR-04": 1,
+        "FR-05": 1,
+        "FR-06": 1,
+        "FR-07": 1,
+        "FR-08": 1,
+        "FR-09": 1,
+        "FR-10": 1,
+        "FR-11": 1,
+        "FR-12": 1,
+        "FR-13": 1,
+        "FR-14": 1,
+        "AC-01": 1,
+        "AC-02": 1,
+        "AC-03": 1,
+        "AC-04": 1,
+        "AC-05": 1,
+        "AC-06": 1,
+        "AC-07": 1,
+        "AC-08": 1,
+        "AC-09": 1,
+        "AC-10": 1,
+        "AC-11": 1
+      },
+      "sections": [
+        {
+          "sourceHeading": "1. 需求与现状",
+          "target": "背景与目标",
+          "sha256": "f9b5692c0b421f27c3446da7ce4a675893b6c51903a07226f6c0bdadc6fa2ea8"
+        },
+        {
+          "sourceHeading": "2. 方案选择与首期范围",
+          "target": "范围与非目标",
+          "sha256": "14ab45d6a3c1bd506a88fb11772371a843fdbaa265c901bc1b38a90a1840f493"
+        },
+        {
+          "sourceHeading": "3. 功能需求",
+          "target": "功能需求",
+          "sha256": "2e2ff09794d6809b0d6bce0e2a36000fccd7aaf0a795e30753b35e7ac393d512"
+        },
+        {
+          "sourceHeading": "4. 交互方案",
+          "target": "用户流程",
+          "sha256": "a4a38808ecbd073bca54989b998562faf1e2088c9503b481aeb40dbb22ad5137"
+        },
+        {
+          "sourceHeading": "5. 验收标准",
+          "target": "验收标准",
+          "sha256": "c813b0ce4f352136d3587bc84044e2375661b1147d7c24ade7d260f58eb2b13d"
+        },
+        {
+          "sourceHeading": "6. 实施确认与交付边界",
+          "target": "来源、决策与待决项",
+          "sha256": "93619c096bb7f10fa01c67c3e4a781828d2bde036d55b4e1967c1e1d15cb466c"
+        }
+      ],
+      "mobileHistorical": true
+    },
+    {
+      "path": "notes/features/folders/prd.md",
+      "featureId": "notes/folders",
+      "beforeSha256": "9998cc7da6eab7de6f0a3987591fea84cdc35d22e69aa428567a033718a7bc2f",
+      "afterSha256": "41b81d8ce4a764c87e3a4401ecc4fd4e94e87957462591953be31679c922b3f6",
+      "originalNonemptyLines": 35,
+      "preservedNonemptyLines": 35,
+      "requirementIds": {
+        "FR-01": 1,
+        "FR-02": 1,
+        "FR-03": 1,
+        "FR-04": 1,
+        "FR-05": 1,
+        "FR-06": 1,
+        "FR-07": 1,
+        "FR-08": 1,
+        "FR-09": 1,
+        "FR-10": 1
+      },
+      "sections": [
+        {
+          "sourceHeading": "目标与范围",
+          "target": "范围与非目标",
+          "sha256": "2025f30579bc917c7296dab5fced518cba1c6d4265370f0541ed3a2961568690"
+        },
+        {
+          "sourceHeading": "用户流程",
+          "target": "用户流程",
+          "sha256": "fdf1ec641bdb7d52c8c4d28d2cb396f15931a75e16e18057fd9d01a98567d2d5"
+        },
+        {
+          "sourceHeading": "功能要求",
+          "target": "功能需求",
+          "sha256": "d855a3fa91f02c49ebfb7c8c85781fcb009641948c3b7aa28a12bf3712abb59f"
+        },
+        {
+          "sourceHeading": "质量与兼容",
+          "target": "非功能约束",
+          "sha256": "4da14053da6269757f99e1be9d4d10526a9722ee0b302146d3dfebc1577655dd"
+        },
+        {
+          "sourceHeading": "验收",
+          "target": "验收标准",
+          "sha256": "2d889a7a0e95128001691e623d71c56db02e1873bdaf861c00d3bc041a66f3eb"
+        }
+      ],
+      "mobileHistorical": true
+    },
+    {
+      "path": "reading/features/add-recipients/prd.md",
+      "featureId": "reading/add-recipients",
+      "beforeSha256": "5829c03d2a29eff0303291ce23b24723083f799cf1873b658b0dfd7eb35344f6",
+      "afterSha256": "38a457d42fdaa8a8ecf58f962232791c541877a487e2af8f663800d11a4864c7",
+      "originalNonemptyLines": 39,
+      "preservedNonemptyLines": 39,
+      "requirementIds": {
+        "FR-01": 1,
+        "FR-02": 1,
+        "FR-03": 1,
+        "FR-04": 1,
+        "FR-05": 1,
+        "FR-06": 1,
+        "FR-07": 1,
+        "FR-08": 1,
+        "AC-01": 1,
+        "AC-02": 1,
+        "AC-03": 1,
+        "AC-04": 1,
+        "AC-05": 1,
+        "AC-06": 1,
+        "AC-07": 1,
+        "AC-08": 1
+      },
+      "sections": [
+        {
+          "sourceHeading": "背景与目标",
+          "target": "背景与目标",
+          "sha256": "70ba88a9e7b066bd8896c165a4589e94ecaa208a8cd76d0981485a217574b868"
+        },
+        {
+          "sourceHeading": "使用流程",
+          "target": "用户流程",
+          "sha256": "0c928e5a4db0867da0e19aa37de71bd41beb3e7f041f9b992745fc08fc18f0a1"
+        },
+        {
+          "sourceHeading": "功能要求",
+          "target": "功能需求",
+          "sha256": "ae58f8d14d83b81ebfbf2eea6e9198c07fbb7dab19f0a56ab2006e368eea076b"
+        },
+        {
+          "sourceHeading": "边界与权限",
+          "target": "权限与异常恢复",
+          "sha256": "f2e292933cff8b2a77a3ba5e74a593fdd6173059f486c5f2cb8b1f69fe68d862"
+        },
+        {
+          "sourceHeading": "验收条件",
+          "target": "验收标准",
+          "sha256": "831837bec0302be5de7642a6ecf18f75c66da672e148d1d480e6378146940701"
+        },
+        {
+          "sourceHeading": "交付与验证",
+          "target": "来源、决策与待决项",
+          "sha256": "5164f3bf5bff674cbd6837ecc7a63284755308ba2a1b56e1b0fc7c333c2aed5f"
+        }
+      ],
+      "mobileHistorical": false
+    },
+    {
+      "path": "reading/features/analytics/prd.md",
+      "featureId": "reading/analytics",
+      "beforeSha256": "8263c61db400e6a10a06045a0f7a32747311c80a189463e417ed8eea50b68b80",
+      "afterSha256": "17d49250f755e21a88246ffb4687249290aa0ecf9df51ea989e5d91fce8f456c",
+      "originalNonemptyLines": 58,
+      "preservedNonemptyLines": 58,
+      "requirementIds": {
+        "FR-01": 1,
+        "FR-02": 1,
+        "FR-03": 1,
+        "FR-04": 1,
+        "FR-05": 1,
+        "FR-06": 1,
+        "FR-07": 1,
+        "FR-08": 1,
+        "FR-09": 1,
+        "FR-10": 1,
+        "AC-01": 1,
+        "AC-02": 1,
+        "AC-03": 1,
+        "AC-04": 1,
+        "AC-05": 1,
+        "AC-06": 1,
+        "AC-07": 1,
+        "AC-08": 1
+      },
+      "sections": [
+        {
+          "sourceHeading": "背景与目标",
+          "target": "背景与目标",
+          "sha256": "ef2b849bd7280346fee1262bcb6ccc0eec261582a2003a504bfec758518b5b2b"
+        },
+        {
+          "sourceHeading": "使用流程",
+          "target": "用户流程",
+          "sha256": "b76f60f078b6ce82f0bbb44f1ed51ebb7b1923f3d2ce53108f16954516cbad00"
+        },
+        {
+          "sourceHeading": "统计口径",
+          "target": "业务规则、字段与状态",
+          "sha256": "2332e69279608ffc656136b9084078c5a9f85ec0670f4faa07dc8bc6403a2184"
+        },
+        {
+          "sourceHeading": "功能要求",
+          "target": "功能需求",
+          "sha256": "6f2bff27fc61307fa2381cb2b577570a1779e5b21cefcb8a07adeb236c054a97"
+        },
+        {
+          "sourceHeading": "范围边界",
+          "target": "范围与非目标",
+          "sha256": "f3c83e161511b8a497118daa0cb77c610baa44e44e4c4baea7107b047b1197d2"
+        },
+        {
+          "sourceHeading": "验收条件",
+          "target": "验收标准",
+          "sha256": "e6b2b0f39282b52d6fbe88c8565d14694a13f2c2f99bf438f8eb7784ebf00b4b"
+        },
+        {
+          "sourceHeading": "发布与验证",
+          "target": "来源、决策与待决项",
+          "sha256": "1a5801289addec3e266f84f6aa6c131dc4abe06ba61ff4ba56d4c30b6052737d"
+        }
+      ],
+      "mobileHistorical": true
+    },
+    {
+      "path": "word-books/features/word-book/prd.md",
+      "featureId": "word-books/word-book",
+      "beforeSha256": "588e01827f0650288a9750cc7087cafb62352ee9d0da5dcc77190b2af1a3b6b5",
+      "afterSha256": "f2689aa70e785ade03e971f4cb78fc55679e93843b3deb72a59b1cf816e29f33",
+      "originalNonemptyLines": 109,
+      "preservedNonemptyLines": 109,
+      "requirementIds": {
+        "FR-001": 1,
+        "FR-002": 1,
+        "FR-003": 1,
+        "FR-004": 1,
+        "FR-005": 1,
+        "FR-006": 1,
+        "FR-007": 1,
+        "FR-008": 1,
+        "FR-009": 1,
+        "FR-010": 1,
+        "FR-011": 1,
+        "FR-012": 1,
+        "FR-013": 1,
+        "FR-014": 1,
+        "FR-015": 1,
+        "FR-016": 1,
+        "FR-017": 1,
+        "FR-018": 1,
+        "FR-019": 1,
+        "FR-020": 1,
+        "FR-021": 1,
+        "FR-022": 1,
+        "FR-023": 1,
+        "FR-024": 1,
+        "FR-025": 1,
+        "FR-026": 1,
+        "FR-027": 1,
+        "FR-028": 1,
+        "FR-029": 1,
+        "FR-030": 1,
+        "FR-031": 1,
+        "AC-01": 1,
+        "AC-02": 1,
+        "AC-03": 1,
+        "AC-04": 1,
+        "AC-05": 1,
+        "AC-06": 1,
+        "AC-07": 1,
+        "AC-08": 1,
+        "AC-09": 1,
+        "AC-10": 1,
+        "AC-11": 1,
+        "AC-12": 1,
+        "AC-13": 1,
+        "AC-14": 1,
+        "AC-15": 1,
+        "AC-16": 1,
+        "AC-17": 1,
+        "AC-18": 1,
+        "AC-19": 1,
+        "AC-20": 1
+      },
+      "sections": [
+        {
+          "sourceHeading": "1. 背景与目标",
+          "target": "背景与目标",
+          "sha256": "199f99ae611e96b8600af563fd18fa5dae0ec6a6d90d965dfa1e0cf532f6faca"
+        },
+        {
+          "sourceHeading": "2. 范围与阶段",
+          "target": "范围与非目标",
+          "sha256": "0b34823d5d5b623070eb2ea4b6b3afdc41cc15992151ece45fbb320c9cad2e53"
+        },
+        {
+          "sourceHeading": "3. 页面与主流程",
+          "target": "用户流程",
+          "sha256": "972137ef733741f9f38b192e08b19bfad1e5ae3c08ebd921d65350a4abb2a381"
+        },
+        {
+          "sourceHeading": "4. 功能需求",
+          "target": "功能需求",
+          "sha256": "08e9a7a22da49393a29f71ad13a50433942161d328ce2156517feb3ef7b1e6a2"
+        },
+        {
+          "sourceHeading": "5. 数据与权限边界",
+          "target": "权限与异常恢复",
+          "sha256": "e1f41c9492f680f1dc33dc39fef30e26e1a2e389dbd68ade7c472d2722076833"
+        },
+        {
+          "sourceHeading": "6. 非功能要求",
+          "target": "非功能约束",
+          "sha256": "f0aaceffa0b5f26952946c0dc8bac8ba27468c2c3c792273a7a437e050cab2a6"
+        },
+        {
+          "sourceHeading": "7. 验收标准",
+          "target": "验收标准",
+          "sha256": "5eba5243761a08b747c3ec38ab91e2dc34e92948329279b65b04ffd2b9c0456e"
+        },
+        {
+          "sourceHeading": "8. 成功判断与发布条件",
+          "target": "来源、决策与待决项",
+          "sha256": "82e51ccc17f12619faa1ccffa36144b9d3812e32d73e9be7ba288184ea3ce020"
+        },
+        {
+          "sourceHeading": "9. 2026-10-19 实施批准与覆盖修订",
+          "target": "来源、决策与待决项",
+          "sha256": "c1eb1197d78f888aac78bb1b6af7ca39340b9327bf3d6e4be8cc6346624dc3b7"
+        },
+        {
+          "sourceHeading": "10. 实施细化",
+          "target": "来源、决策与待决项",
+          "sha256": "3957e78b9a5122b0518adaf41db72703893abb39c4241f397154e7efff43577f"
+        }
+      ],
+      "mobileHistorical": true
+    },
+    {
+      "path": "reading/features/unified-workspace/prd.md",
+      "featureId": "reading/unified-workspace",
+      "beforeSha256": "ce216d31a1edd4f0797c93f2f4ae1752dde0ab6572ddbfb1cfc7a5fe9c15fc84",
+      "afterSha256": "47bfe24c496050ad7681f08f1e2161fb131bf42aab98dcb9639fd2f18082d5ba",
+      "originalNonemptyLines": 18,
+      "preservedNonemptyLines": 18,
+      "requirementIds": {
+        "AC-01": 1,
+        "AC-02": 1,
+        "AC-03": 1,
+        "AC-04": 1,
+        "AC-05": 1,
+        "AC-06": 1,
+        "AC-07": 1,
+        "AC-08": 1,
+        "AC-09": 1,
+        "AC-10": 1
+      },
+      "sections": [
+        {
+          "sourceHeading": "正文开头",
+          "target": "按原段落归入背景、功能需求或验收标准",
+          "sha256": "cb8fb13930cf2d306b6ef26d118ea5215e55fe6fdcf844224bebf4d9701a9b51"
+        },
+        {
+          "sourceHeading": "验收要求",
+          "target": "验收标准",
+          "sha256": "e230305e6be5ca146cd914be190c4b1450fc14fc5f28bf2f6bbea14aeee60ae3"
+        },
+        {
+          "sourceHeading": "边界",
+          "target": "范围与非目标",
+          "sha256": "13a5407ae64e393b45fb13c357de443a30b3ae683ed7f3acf25b9e7a418990f6"
+        },
+        {
+          "sourceHeading": "验证",
+          "target": "来源、决策与待决项",
+          "sha256": "b5b56020dc986550c54c097edccecbe69482f4176fd7c87a45baefa0f62698d7"
+        },
+        {
+          "sourceHeading": "2026-10-28 作答与标注交互补充",
+          "target": "用户流程",
+          "sha256": "31f9e2b48a5f2a8f1fadd8985dd12d8d236e5e06be60d1bf650c7486aaf4f330"
+        }
+      ],
+      "mobileHistorical": false
+    },
+    {
+      "path": "notes/features/readable-notes/prd.md",
+      "featureId": "notes/readable-notes",
+      "beforeSha256": "3d8efe5ca857cf4de7976c3b082b2f10a2432e51ac772cdfb895183662eabb20",
+      "afterSha256": "bc4dfa16fa6e9cedc642403fa43bd9041f44fc0ee436639f77be7eba81d66d13",
+      "originalNonemptyLines": 8,
+      "preservedNonemptyLines": 8,
+      "requirementIds": {
+        "AC-01": 1,
+        "AC-02": 1,
+        "AC-03": 1,
+        "AC-04": 1,
+        "AC-05": 1
+      },
+      "sections": [
+        {
+          "sourceHeading": "正文开头",
+          "target": "按原段落归入背景、功能需求或验收标准",
+          "sha256": "70a39451dbad46f0b5dbfe34b100dd51fa1ba3f2a8dcbc055421176af7bb4ea3"
+        }
+      ],
+      "mobileHistorical": true
+    },
+    {
+      "path": "reading/features/personal-removal/prd.md",
+      "featureId": "reading/personal-removal",
+      "beforeSha256": "3677d8069d94952b0a8d9777442e207c201ce033ca798099a4995b2863ae1b2a",
+      "afterSha256": "229abe20ac1b1d686be244843da59564f13973fe358292ce6487efcf45b9a775",
+      "originalNonemptyLines": 8,
+      "preservedNonemptyLines": 8,
+      "requirementIds": {
+        "AC-01": 1,
+        "AC-02": 1,
+        "AC-03": 1,
+        "AC-04": 1,
+        "AC-05": 1,
+        "AC-06": 1
+      },
+      "sections": [
+        {
+          "sourceHeading": "正文开头",
+          "target": "按原段落归入背景、功能需求或验收标准",
+          "sha256": "922fdcc0416c1867ca22967b80b89efd9d0278dbe1b52e4e8adf4863f6520817"
+        }
+      ],
+      "mobileHistorical": true
+    },
+    {
+      "path": "reading/features/sentence-completion/prd.md",
+      "featureId": "reading/sentence-completion",
+      "beforeSha256": "3ba0b94acd1d55a4383b2de651e8e283135d570fa6b7b3371cba6c40023d4364",
+      "afterSha256": "993b34ac17b4dc83403e9f754c1ea38c0319846e0a8d70fa0b096513b26ffee9",
+      "originalNonemptyLines": 14,
+      "preservedNonemptyLines": 14,
+      "requirementIds": {
+        "AC-01": 1,
+        "AC-02": 1,
+        "AC-03": 1,
+        "AC-04": 1,
+        "AC-05": 1,
+        "AC-06": 1
+      },
+      "sections": [
+        {
+          "sourceHeading": "正文开头",
+          "target": "按原段落归入背景、功能需求或验收标准",
+          "sha256": "9d2f52e3ffcef76325fdc4d6fbc5a473f342094883abc25bad3cd1429067a624"
+        },
+        {
+          "sourceHeading": "用户目标",
+          "target": "背景与目标",
+          "sha256": "f4cce2065d33f8a55c745e0a3a5456dbbf58a50a40dee89fe7088b253e04216e"
+        },
+        {
+          "sourceHeading": "验收标准",
+          "target": "验收标准",
+          "sha256": "a34c72a05c81bc5902d1c43e369b2ee39821a06b2c1415f1ab0811d3032235de"
+        },
+        {
+          "sourceHeading": "边界与实施决定",
+          "target": "来源、决策与待决项",
+          "sha256": "fa0bd2c04f88205021d1114070d9c771964bc55e6352bf2b7cc3b54e29cb6b4b"
+        }
+      ],
+      "mobileHistorical": false
+    },
+    {
+      "path": "reading/features/ai-review-repair/prd.md",
+      "featureId": "reading/ai-review-repair",
+      "beforeSha256": "a7634b9281a0cd04f236fa014ba04ab80ed6c38b693676c45ae7168117bb286a",
+      "afterSha256": "cc0003bdbbd3790e55861e2bf2d95e602d47c4fba5db3a3585422da00cc8a02a",
+      "originalNonemptyLines": 14,
+      "preservedNonemptyLines": 14,
+      "requirementIds": {
+        "AC-01": 1,
+        "AC-02": 1,
+        "AC-03": 1,
+        "AC-04": 1,
+        "AC-05": 1,
+        "AC-06": 1,
+        "AC-07": 1,
+        "AC-08": 1
+      },
+      "sections": [
+        {
+          "sourceHeading": "正文开头",
+          "target": "按原段落归入背景、功能需求或验收标准",
+          "sha256": "b8d8a2953913953cfa27c497536079cb1af9bf09e7c7aadd61404d5f73b73d60"
+        },
+        {
+          "sourceHeading": "目标",
+          "target": "背景与目标",
+          "sha256": "f756ed2ffaf8d6235afa6599b264a64712857ed3d5420d1c0bac8adf8e245de4"
+        },
+        {
+          "sourceHeading": "验收标准",
+          "target": "验收标准",
+          "sha256": "f6d8b8678ff584e80a4dbacc87528351f323a1525850c64e0a09c1f6f421b6f7"
+        }
+      ],
+      "mobileHistorical": false
+    },
+    {
+      "path": "reading/features/received-ielts-workspace/prd.md",
+      "featureId": "reading/received-ielts-workspace",
+      "beforeSha256": "2a34b96ec9df4a698417abf689b42e799bb92ce90f73a29d1233b610c845db9e",
+      "afterSha256": "1cbb823cf563bac196184fd8ff13cb0b9e6d48c92a56dd0fa87085eb77b79967",
+      "originalNonemptyLines": 18,
+      "preservedNonemptyLines": 18,
+      "requirementIds": {
+        "AC-01": 1,
+        "AC-02": 1,
+        "AC-03": 1,
+        "AC-04": 1,
+        "AC-05": 1,
+        "AC-06": 1,
+        "AC-07": 1,
+        "AC-08": 1,
+        "AC-09": 1,
+        "AC-10": 1
+      },
+      "sections": [
+        {
+          "sourceHeading": "正文开头",
+          "target": "按原段落归入背景、功能需求或验收标准",
+          "sha256": "4fcecf043ad131152e9c9dbc975b560189a000712a0815e10c94c9cb2f3577d3"
+        },
+        {
+          "sourceHeading": "用户目标",
+          "target": "背景与目标",
+          "sha256": "079e60bdce696eb6dc31d2437ab56c618cbd19ce640903d3b9bd8a3a2c2d20a5"
+        },
+        {
+          "sourceHeading": "验收标准",
+          "target": "验收标准",
+          "sha256": "214b9e15ff3a475a16897018a8f987ba6bcb31816092fb97565456d85a7c8a9a"
+        },
+        {
+          "sourceHeading": "边界",
+          "target": "范围与非目标",
+          "sha256": "23e1dab8244c1235956db0c1c944da2c12e9e04d6e5f805f376fbb3e9957ab58"
+        },
+        {
+          "sourceHeading": "2026-10-22 普通文章排版补充",
+          "target": "来源、决策与待决项",
+          "sha256": "2ae4e788273c5681caea1dc808b1337a8507ede18f3c95189d3f840598dd5cc1"
+        }
+      ],
+      "mobileHistorical": false
+    },
+    {
+      "path": "reading/features/permanent-deletion/prd.md",
+      "featureId": "reading/permanent-deletion",
+      "beforeSha256": "d7493cad59d3028af0e707eb46c575d3e9e3616db40b46d98cd8f47f0e890ae3",
+      "afterSha256": "fe0d670b4738dc35833b2227e317424877344ef35f0dbf3e50794ac2aed334b5",
+      "originalNonemptyLines": 22,
+      "preservedNonemptyLines": 22,
+      "requirementIds": {
+        "FR-01": 1,
+        "FR-02": 2,
+        "FR-03": 1,
+        "FR-04": 1,
+        "FR-05": 1,
+        "FR-06": 1,
+        "FR-07": 1,
+        "AC-01": 1,
+        "AC-02": 1,
+        "AC-03": 1,
+        "AC-04": 1,
+        "AC-05": 1,
+        "AC-06": 1,
+        "FR-08": 1,
+        "FR-09": 1,
+        "AC-07": 1
+      },
+      "sections": [
+        {
+          "sourceHeading": "正文开头",
+          "target": "按原段落归入背景、功能需求或验收标准",
+          "sha256": "f34b120aaddcb37d0c616cb33168de1cd24150b9531c697fdbae29258fc5a56f"
+        },
+        {
+          "sourceHeading": "验收",
+          "target": "验收标准",
+          "sha256": "d646dfb6513f706f2789046b7a266de148d02dc5c40851a1702eaad05b46c5ef"
+        },
+        {
+          "sourceHeading": "2026-10-23 删除弹窗优化",
+          "target": "来源、决策与待决项",
+          "sha256": "3acf9d33d6fbc3eb221a57bc36c9a7b15d4d4ec49b8a0b754789e175a9b85da9"
+        }
+      ],
+      "mobileHistorical": true
+    },
+    {
+      "path": "reading/features/automatic-review/prd.md",
+      "featureId": "reading/automatic-review",
+      "beforeSha256": "5477a23c658aa2c008b7f93cf3d20d4cbb8efbabfd3d7461b529de1e6218a5c7",
+      "afterSha256": "9cdf84b50fd2abf0aaf15d5857264b3292b4ff518a2174c25b9d54af70c98de7",
+      "originalNonemptyLines": 28,
+      "preservedNonemptyLines": 28,
+      "requirementIds": {
+        "FR-01": 1,
+        "FR-02": 1,
+        "FR-03": 1,
+        "FR-04": 1,
+        "FR-05": 1,
+        "FR-06": 1,
+        "FR-07": 1,
+        "FR-08": 1,
+        "AC-01": 1,
+        "AC-02": 1,
+        "AC-03": 1,
+        "AC-04": 1,
+        "AC-05": 1,
+        "AC-06": 1,
+        "AC-07": 1,
+        "AC-08": 1
+      },
+      "sections": [
+        {
+          "sourceHeading": "正文开头",
+          "target": "按原段落归入背景、功能需求或验收标准",
+          "sha256": "4dd60a47ef4526d5175e1ef31f3bd5f825d6117f8d3e07b7f4aa6632b02f7d51"
+        },
+        {
+          "sourceHeading": "用户流程",
+          "target": "用户流程",
+          "sha256": "0ca15e57ac121513c36d3fc7508b1838e34187bb00818c8f375d9d4b6f5cba62"
+        },
+        {
+          "sourceHeading": "范围与修订",
+          "target": "来源、决策与待决项",
+          "sha256": "b86af781623daca786370df7f5c6f7c54872752763992c0c94e0a0ea4ae8af61"
+        },
+        {
+          "sourceHeading": "功能要求",
+          "target": "功能需求",
+          "sha256": "e29d57f8e2b8dac8bf479937ef13095516d8043f2e6d1038919cd387cb75a421"
+        },
+        {
+          "sourceHeading": "验收",
+          "target": "验收标准",
+          "sha256": "e4bf22d332eec9a61e03d656e3bb971b13cc80b8237e422f3dca4bcb811e506b"
+        },
+        {
+          "sourceHeading": "自审结论",
+          "target": "来源、决策与待决项",
+          "sha256": "5a89d8b3cebf4d728b479d60dee68c09c33625ca721e54b7deebd34611356ed8"
+        },
+        {
+          "sourceHeading": "Web新建页界面补充",
+          "target": "来源、决策与待决项",
+          "sha256": "56f4d426f21df4e52cb70730305e0a113bd64153b8f122a17d6e0ff0caf0d773"
+        }
+      ],
+      "mobileHistorical": true
+    },
+    {
+      "path": "reading/features/creation-ui/prd.md",
+      "featureId": "reading/creation-ui",
+      "beforeSha256": "65d74afeced73e3e9d7ae0bc84324d7cd5352d41c75dfa29bd928bbc16c99dc9",
+      "afterSha256": "f322ddbcb449c2adc9670c7e2d0a59c3f9d101df4ed45e54f5a548d5c6fdd016",
+      "originalNonemptyLines": 21,
+      "preservedNonemptyLines": 21,
+      "requirementIds": {
+        "FR-01": 1,
+        "FR-02": 1,
+        "FR-03": 1,
+        "FR-04": 1,
+        "FR-05": 2,
+        "FR-06": 1,
+        "AC-01": 1,
+        "AC-02": 1,
+        "AC-03": 1,
+        "AC-04": 1,
+        "FR-07": 1,
+        "FR-08": 1,
+        "FR-09": 1,
+        "AC-05": 1,
+        "AC-06": 1
+      },
+      "sections": [
+        {
+          "sourceHeading": "正文开头",
+          "target": "按原段落归入背景、功能需求或验收标准",
+          "sha256": "bde139376c155723bd87c4c5fef2754827254124d19213cf439b0d1f24d3ec42"
+        },
+        {
+          "sourceHeading": "验收",
+          "target": "验收标准",
+          "sha256": "c8a4a401149a7529b4a89c4eee9cb2c876dd14d1adbec2bf011954f4f9900cd0"
+        },
+        {
+          "sourceHeading": "2026-10-22 导入后处理状态面板（用户确认优化）",
+          "target": "来源、决策与待决项",
+          "sha256": "0a191d3b650bd51928c072a851b6475477e284ff528512c5496c60811b654894"
+        }
+      ],
+      "mobileHistorical": false
+    },
+    {
+      "path": "intensive-reading/prd.md",
+      "featureId": "intensive-reading/intensive-reading-core",
+      "beforeSha256": "6b0488ea34635fc298fb850f9b0c5f1711f97424bf24928c0bb3464cfa09c256",
+      "afterSha256": "51e233d4d17eb15b1db7657b4ed3026bcd91c66822107111e3eb655ea4d11fec",
+      "originalNonemptyLines": 60,
+      "preservedNonemptyLines": 60,
+      "requirementIds": {
+        "FR-01": 1,
+        "FR-02": 1,
+        "FR-03": 1,
+        "FR-04": 1,
+        "FR-05": 1,
+        "FR-06": 1,
+        "FR-07": 1,
+        "FR-08": 1,
+        "FR-09": 1,
+        "FR-10": 1,
+        "FR-11": 1,
+        "FR-12": 1,
+        "FR-13": 1,
+        "FR-14": 1,
+        "AC-05": 2,
+        "AC-01": 1,
+        "AC-02": 1,
+        "AC-03": 1,
+        "AC-04": 1,
+        "AC-06": 1,
+        "AC-07": 1,
+        "AC-08": 1,
+        "FR-15": 1,
+        "FR-16": 1,
+        "FR-17": 1,
+        "FR-18": 1,
+        "FR-19": 1,
+        "AC-09": 1,
+        "AC-10": 1,
+        "AC-11": 1,
+        "AC-12": 1
+      },
+      "sections": [
+        {
+          "sourceHeading": "正文开头",
+          "target": "按原段落归入背景、功能需求或验收标准",
+          "sha256": "c43aae88b530c87a4780d27f0592a7e320010265cb96c481b56e8af7ff6b571a"
+        },
+        {
+          "sourceHeading": "目的与范围",
+          "target": "范围与非目标",
+          "sha256": "9ba6544c50335b10e84e61a20b51493b337b614fd00651a9c59ae1b0d858fab2"
+        },
+        {
+          "sourceHeading": "用户流程与页面",
+          "target": "用户流程",
+          "sha256": "8a0ea1be6d176793265fb6090fe41340e1abb4ac0b7830a9aa1fe1dcdb43835c"
+        },
+        {
+          "sourceHeading": "功能要求",
+          "target": "功能需求",
+          "sha256": "2bdfc6316f21a398c0217e8bf6ea83ceb0b143d1e36544b69254ffe4bef1142f"
+        },
+        {
+          "sourceHeading": "验收标准",
+          "target": "验收标准",
+          "sha256": "263f25d5a686dc2bbf7dc0049a3d4c886ec4ddbfa10bca7493e2fb765fe7f6b6"
+        },
+        {
+          "sourceHeading": "状态和实施决定",
+          "target": "来源、决策与待决项",
+          "sha256": "2eec758a63fb331052f557219fa507bd8a19a0f2f1f4d68ae070c6dff8bf9772"
+        },
+        {
+          "sourceHeading": "2026-10-22 原文结构整理补充（用户确认）",
+          "target": "来源、决策与待决项",
+          "sha256": "fbb7a27f495bd83ef3773ad4e5c9fb4a0e9f12fef740bd603454a4f0da7d6aef"
+        }
+      ],
+      "mobileHistorical": true
+    },
+    {
+      "path": "settings/features/desktop-learning-nav/prd.md",
+      "featureId": "settings/desktop-learning-nav",
+      "beforeSha256": "d33fd84fd560ff2e0507581f3afc937a397941c10b83f64615c5d6fd84e65b6f",
+      "afterSha256": "35caa0a031ab1a289ba35b828042a18f280a1b0079bf4bd89eff6822cf3693bf",
+      "originalNonemptyLines": 19,
+      "preservedNonemptyLines": 19,
+      "requirementIds": {
+        "FR-01": 2,
+        "FR-02": 2,
+        "FR-04": 1,
+        "FR-03": 1,
+        "AC-01": 2,
+        "AC-02": 2,
+        "AC-03": 1,
+        "FR-05": 1,
+        "FR-06": 1,
+        "AC-04": 1,
+        "AC-05": 1,
+        "FR-07": 1,
+        "AC-06": 1
+      },
+      "sections": [
+        {
+          "sourceHeading": "正文开头",
+          "target": "按原段落归入背景、功能需求或验收标准",
+          "sha256": "d5bc1037ee32aa67a37fd9c09b42201c7204112c939ea63ce379318e2938a755"
+        },
+        {
+          "sourceHeading": "2026-10-23 取消独立单词复习",
+          "target": "来源、决策与待决项",
+          "sha256": "0fb2b6669e84935e733ac5f310b98b47903711f2e88b99018a755b1eaf9c09a3"
+        },
+        {
+          "sourceHeading": "2026-10-26 移除失效的复习设置",
+          "target": "来源、决策与待决项",
+          "sha256": "e5a86863684789f806c98f137e385657f86a331ebc60b650882661ece3216e33"
+        }
+      ],
+      "mobileHistorical": true
+    },
+    {
+      "path": "review/features/ai-listening/prd.md",
+      "featureId": "review/ai-listening",
+      "beforeSha256": "d61f12df834a249c2002e44ae0470fd4aeeb8078dadb8f89e65daa84498a452e",
+      "afterSha256": "1f639acecb21978e6e8bb4ddb07c0a3f72273b85d2d882c176d950c45d144f07",
+      "originalNonemptyLines": 73,
+      "preservedNonemptyLines": 73,
+      "requirementIds": {
+        "FR-01": 2,
+        "FR-02": 1,
+        "FR-03": 1,
+        "FR-04": 1,
+        "FR-05": 1,
+        "FR-06": 1,
+        "FR-07": 1,
+        "FR-08": 1,
+        "FR-09": 1,
+        "FR-10": 1,
+        "FR-11": 1,
+        "FR-12": 1,
+        "FR-13": 1,
+        "FR-14": 1,
+        "FR-15": 1,
+        "FR-16": 1,
+        "FR-17": 1,
+        "AC-01": 1,
+        "AC-02": 1,
+        "AC-03": 1,
+        "AC-04": 1,
+        "AC-05": 1,
+        "AC-06": 1,
+        "AC-07": 1,
+        "AC-08": 1,
+        "AC-09": 1,
+        "AC-10": 1,
+        "AC-11": 1,
+        "AC-12": 1,
+        "AC-13": 1,
+        "AC-14": 1,
+        "AC-15": 1,
+        "AC-16": 1,
+        "AC-17": 1,
+        "AC-18": 1
+      },
+      "sections": [
+        {
+          "sourceHeading": "目标与边界",
+          "target": "范围与非目标",
+          "sha256": "f153531ab71959dccf8723a9f124ccd78db726c85ac2d1ade1ec43805705f522"
+        },
+        {
+          "sourceHeading": "核心旅程与状态",
+          "target": "业务规则、字段与状态",
+          "sha256": "e162f197554dcd7f909e22585746ef8d19cd15a47a52d32ffb124cfb81c18a91"
+        },
+        {
+          "sourceHeading": "功能要求",
+          "target": "功能需求",
+          "sha256": "1deb6edba43f4bb4fd04806534eb0c81293892105facc442f8aac3ed9eec48b9"
+        },
+        {
+          "sourceHeading": "验收标准",
+          "target": "验收标准",
+          "sha256": "73c47b9971985988feb16ea26424be1c07e2b9189b7c9e9353e26326c78f76d7"
+        },
+        {
+          "sourceHeading": "非功能要求与发布门禁",
+          "target": "来源、决策与待决项",
+          "sha256": "43423575bb27334a06be860bb94589182f2f1b0eb8c35f9fd98fb78186752c43"
+        },
+        {
+          "sourceHeading": "决策与交付引用",
+          "target": "来源、决策与待决项",
+          "sha256": "29edb8b3e4251d4f97336320af7cd6a93ba369806ec2abefdec195960dc7a6b0"
+        }
+      ],
+      "mobileHistorical": true
+    },
+    {
+      "path": "vocabulary/features/mcp-access/prd.md",
+      "featureId": "vocabulary/mcp-access",
+      "beforeSha256": "34e07e915efefc1511d1a03c9b44848515d237f151e7259da7a407ee82bd6202",
+      "afterSha256": "f33c7fce27cba6969bf307525067f34819dbef78e5aebb253cd45dbe2c711181",
+      "originalNonemptyLines": 33,
+      "preservedNonemptyLines": 33,
+      "requirementIds": {
+        "FR-01": 1,
+        "FR-02": 1,
+        "FR-03": 1,
+        "FR-04": 1,
+        "FR-05": 1,
+        "FR-06": 1,
+        "FR-07": 2,
+        "FR-08": 1,
+        "FR-09": 1,
+        "FR-10": 1,
+        "AC-01": 1,
+        "AC-02": 1,
+        "AC-03": 1,
+        "AC-04": 1,
+        "AC-05": 1,
+        "AC-06": 1,
+        "AC-07": 1,
+        "AC-08": 1,
+        "AC-09": 1
+      },
+      "sections": [
+        {
+          "sourceHeading": "正文开头",
+          "target": "按原段落归入背景、功能需求或验收标准",
+          "sha256": "e74496678a48c989534eb2c3609d4a90b75e4f961b064a419f6d77723128b025"
+        },
+        {
+          "sourceHeading": "目标和范围",
+          "target": "范围与非目标",
+          "sha256": "4c4347b13aa5970cc1d7410409c976e4553db71d1200def3c68a078847514d8b"
+        },
+        {
+          "sourceHeading": "功能需求",
+          "target": "功能需求",
+          "sha256": "96b228d806ff1cc1b6d8a78b33ed3db8037e077ca66258e3924df39ba0cd92e6"
+        },
+        {
+          "sourceHeading": "验收标准",
+          "target": "验收标准",
+          "sha256": "866f3172ee73add8d37d3b328c530402b178b12461743b20785bf84f962f6471"
+        },
+        {
+          "sourceHeading": "非功能与发布",
+          "target": "来源、决策与待决项",
+          "sha256": "292295f9b4c677253456f85b6d5c331c14f7509f600ae808a24acb03e01216b8"
+        }
+      ],
+      "mobileHistorical": true
+    },
+    {
+      "path": "settings/features/technical-docs/prd.md",
+      "featureId": "settings/technical-docs",
+      "beforeSha256": "00b2161fb3c37dfe5cdc698678854ffaac22726b126d4b6ea42013e01a92d44e",
+      "afterSha256": "da65514d3b2e7b294b7f5c3202590589703f25a623b1efb56cce62e1a535a340",
+      "originalNonemptyLines": 25,
+      "preservedNonemptyLines": 25,
+      "requirementIds": {
+        "FR-01": 1,
+        "FR-02": 1,
+        "FR-03": 1,
+        "FR-04": 1,
+        "FR-05": 1,
+        "FR-06": 1,
+        "FR-07": 1,
+        "FR-08": 1,
+        "FR-09": 1,
+        "AC-01": 1,
+        "AC-02": 1,
+        "AC-03": 1,
+        "AC-04": 1,
+        "AC-05": 1
+      },
+      "sections": [
+        {
+          "sourceHeading": "正文开头",
+          "target": "按原段落归入背景、功能需求或验收标准",
+          "sha256": "10d1b975c8800745e0dcadf7d0b039c829f2a9503e2c96e390f36e4d14ade2f1"
+        },
+        {
+          "sourceHeading": "验收",
+          "target": "验收标准",
+          "sha256": "1251ccf6bbb91a5352451f841aa1495856a46439f0f3d2b423e15076b0b8dcef"
+        },
+        {
+          "sourceHeading": "2026-10-28 设置页更新入口",
+          "target": "来源、决策与待决项",
+          "sha256": "b8025a8610bddd3a2d8bace8706229fec032ed7d083973fe62d920d1434a1ca6"
+        }
+      ],
+      "mobileHistorical": true
+    },
+    {
+      "path": "settings/features/freewing-brand/prd.md",
+      "featureId": "settings/freewing-brand",
+      "beforeSha256": "41d7d685ec5c9995a24d68042bbe36e0fdf47a37889804087ec781c2ea05a99f",
+      "afterSha256": "af099b699454f0ada76eca2c4274f6bcca916b7c7926e958e3cd3cfe6caa559f",
+      "originalNonemptyLines": 19,
+      "preservedNonemptyLines": 19,
+      "requirementIds": {
+        "FR-01": 1,
+        "FR-02": 1,
+        "FR-03": 1,
+        "FR-04": 1,
+        "FR-05": 1,
+        "FR-06": 1,
+        "AC-01": 1,
+        "AC-02": 1,
+        "AC-03": 1,
+        "AC-04": 1
+      },
+      "sections": [
+        {
+          "sourceHeading": "正文开头",
+          "target": "按原段落归入背景、功能需求或验收标准",
+          "sha256": "a1f1f7ad88b3119a25d62adcd1d8e5dd657b891ac47984e24b7bdd1bfb448b29"
+        },
+        {
+          "sourceHeading": "验收",
+          "target": "验收标准",
+          "sha256": "b193a515508a77f716fd1d928e9716bdb55ab7d58fd45a8c67fd7c4d5553fc23"
+        }
+      ],
+      "mobileHistorical": true
+    },
+    {
+      "path": "settings/features/prd-browser/prd.md",
+      "featureId": "settings/prd-browser",
+      "beforeSha256": "027867f059fff8ffb339015249ccc392914dcaf2ff38f288500d64efcf4e345f",
+      "afterSha256": "5703e5ff1e9dec6ef577030a5e392d7a62fe788daaaa4f0e26f6b106d467723b",
+      "originalNonemptyLines": 19,
+      "preservedNonemptyLines": 19,
+      "requirementIds": {
+        "FR-01": 1,
+        "FR-02": 1,
+        "FR-03": 1,
+        "FR-04": 1,
+        "FR-05": 1,
+        "AC-01": 1,
+        "AC-02": 1,
+        "AC-03": 1,
+        "AC-04": 1,
+        "AC-05": 1
+      },
+      "sections": [
+        {
+          "sourceHeading": "正文开头",
+          "target": "按原段落归入背景、功能需求或验收标准",
+          "sha256": "19bfc8dbb335167ae5d14d6dc64f1de1a571e69a9ac035e509409b47fc31c527"
+        },
+        {
+          "sourceHeading": "验收",
+          "target": "验收标准",
+          "sha256": "d077ae177faf4e4a0b78f1de06bf2820d99b20ce0ab5bf8c9e0c1ed281d9adcc"
+        }
+      ],
+      "mobileHistorical": true
+    },
+    {
+      "path": "auth/features/account-access/prd.md",
+      "featureId": "auth/account-access",
+      "beforeSha256": "4ff5c41ea55e105bdc7e716e0b17d4a7d1e544066e256290b8c172c7794fa76f",
+      "afterSha256": "3d0c19bb90695370bb046d01019df82df9ffa812e3281464e3f39174be90fa07",
+      "originalNonemptyLines": 73,
+      "preservedNonemptyLines": 73,
+      "requirementIds": {
+        "FR-01": 1,
+        "FR-02": 1,
+        "FR-03": 1,
+        "FR-04": 1,
+        "FR-05": 1,
+        "FR-06": 1,
+        "FR-07": 1,
+        "FR-08": 1,
+        "FR-09": 1,
+        "FR-10": 1,
+        "FR-11": 1,
+        "FR-12": 1,
+        "FR-13": 1,
+        "FR-14": 1,
+        "AC-01": 1,
+        "AC-02": 1,
+        "AC-03": 1,
+        "AC-04": 1,
+        "AC-05": 1,
+        "AC-06": 1,
+        "AC-07": 1,
+        "AC-08": 1,
+        "AC-09": 1,
+        "AC-10": 1,
+        "AC-11": 1,
+        "AC-12": 1,
+        "AC-13": 1
+      },
+      "sections": [
+        {
+          "sourceHeading": "背景与目标",
+          "target": "背景与目标",
+          "sha256": "1e6b5440078de8327babf09d94a61f12630718a2f2035c205bff07d645ec9159"
+        },
+        {
+          "sourceHeading": "用户与范围",
+          "target": "范围与非目标",
+          "sha256": "c09127e52df71d4380a2943806572c5f1a90d8230165b0153ffd4651e785a2ce"
+        },
+        {
+          "sourceHeading": "主要流程",
+          "target": "用户流程",
+          "sha256": "6379d2d2f9a0140f7ec4d5d2601cc1c4745b75bbda6c7d9ab2939972e033a488"
+        },
+        {
+          "sourceHeading": "功能要求",
+          "target": "功能需求",
+          "sha256": "5724bd4a60d5b7dddc7c6cbb23b012edb2515b93a265709c3f9565582b5f9ab3"
+        },
+        {
+          "sourceHeading": "异常与边界",
+          "target": "权限与异常恢复",
+          "sha256": "e86a471bddc7318f9d8462d8aa0cee7a173279571658fcb303c59ddc77120e6d"
+        },
+        {
+          "sourceHeading": "验收标准",
+          "target": "验收标准",
+          "sha256": "098c7056589cffddee3f7790085186c5507f29d2f4d8d8ac545355e30de1eb2f"
+        },
+        {
+          "sourceHeading": "成功标准与确认范围",
+          "target": "来源、决策与待决项",
+          "sha256": "f290ed9d3c968a67996aae6a645fa0ba015f53aff7a9246bbbec921aec3397bf"
+        },
+        {
+          "sourceHeading": "依据",
+          "target": "来源、决策与待决项",
+          "sha256": "f6e5d92276febc6ff9ade4b8b1e455d40f9a555ee5f0a12cfa5ebbb860d80462"
+        },
+        {
+          "sourceHeading": "2026-10-27 实现前确认（覆盖上文待决项）",
+          "target": "来源、决策与待决项",
+          "sha256": "c2be6b717dd44480ee1b8a3404a5c7ff09c2c96fe500840208df9c5f3273e1e5"
+        }
+      ],
+      "mobileHistorical": true
+    },
+    {
+      "path": "vocabulary/features/dictionary-workspace/prd.md",
+      "featureId": "vocabulary/dictionary-workspace",
+      "beforeSha256": "32145aba7176af4d25bb10d48fe4f255bddf0aba9dbe81e3ce5de91328a211c1",
+      "afterSha256": "4639ea325b141dce811995ef7e4cdc2e085ad7d5f2fa598d5e7c6f63959a0c30",
+      "originalNonemptyLines": 28,
+      "preservedNonemptyLines": 28,
+      "requirementIds": {
+        "FR-01": 1,
+        "FR-02": 1,
+        "FR-03": 1,
+        "FR-04": 1,
+        "FR-05": 1,
+        "FR-06": 1,
+        "FR-07": 1,
+        "FR-08": 1,
+        "AC-01": 1,
+        "AC-02": 1,
+        "AC-03": 1,
+        "AC-04": 1,
+        "AC-05": 1,
+        "AC-06": 1
+      },
+      "sections": [
+        {
+          "sourceHeading": "正文开头",
+          "target": "按原段落归入背景、功能需求或验收标准",
+          "sha256": "3df77cfc9fffa4c2e34326e7a7be1bc164f1913664fcec593dc1020c00d13d22"
+        },
+        {
+          "sourceHeading": "目标与范围",
+          "target": "范围与非目标",
+          "sha256": "3385225eb470a6938edcd57cb86136273ffea21cc286a673beb053d619ddfaf2"
+        },
+        {
+          "sourceHeading": "需求",
+          "target": "功能需求",
+          "sha256": "708933a2f714dcec05dddb886a191f3d0a3fe9a4595709b65232cb469ca2a201"
+        },
+        {
+          "sourceHeading": "验收",
+          "target": "验收标准",
+          "sha256": "cbe93d8f1bff1be3159b2fa55f5f7641f6d40ca4f6f66fa81543790ebc01f21f"
+        },
+        {
+          "sourceHeading": "非目标和验证边界",
+          "target": "来源、决策与待决项",
+          "sha256": "ce51835b4745ff7259a55345dd7011e31073bab68f2d9e7c53460fa3426a037d"
+        }
+      ],
+      "mobileHistorical": true
+    }
+  ],
+  "supplements": [
+    {
+      "path": "README.md",
+      "beforeSha256": "2abdc38542c01c2f01ff8d7a6b5916c1065143d4d69c18ba22524899f1db5b71"
+    },
+    {
+      "path": "reading/prd.md",
+      "beforeSha256": "d91dce3a733a32fda91d2aee37f34c569d256f10c7058af7b6b19229238a426a"
+    },
+    {
+      "path": "settings/prd.md",
+      "beforeSha256": "12e23370463a3f5a8902bb283cd1acce00173ce02ce32462d7152f764433682c"
+    },
+    {
+      "path": "context/prd.md",
+      "beforeSha256": "d9085d8c02221a276f6f86038e64f61080f7477121f56742bf7880a4acc97919"
+    },
+    {
+      "path": "auth/prd.md",
+      "beforeSha256": "23129eeae8b6592ae4337904b62a767b9b79b808caea27ee2f131b1b0eb4125e"
+    },
+    {
+      "path": "notes/prd.md",
+      "beforeSha256": "bac01e106c25410112d87bef543faf6f3defa7aa0da4e3288dbd3552cab2ac06"
+    },
+    {
+      "path": "review/prd.md",
+      "beforeSha256": "d4bdc79c7b6fa5b586eb647d7def9964367eff4d348c9469222338e9d5984453"
+    },
+    {
+      "path": "word-books/prd.md",
+      "beforeSha256": "3e2baa695f5c00b16b4ef9bea303cd9e10f3af5b9e49c994345e335e083650a5"
+    },
+    {
+      "path": "notifications/prd.md",
+      "beforeSha256": "2ac9c59bde2141eb5f382881d6173518d7d7bfc9d4d0ee0a14364330b8e44342"
+    },
+    {
+      "path": "vocabulary/prd.md",
+      "beforeSha256": "8b4e0ed9e33826f43f00251a635a9cb5bde0aaed8d27faca220aa65f093b5412"
+    },
+    {
+      "path": "settings/features/prd-browser/spec-kit-preview.md",
+      "beforeSha256": "d6908231c2a3492aa4581588344919ee014a1d7d3074b43747208532d7f6e790"
+    },
+    {
+      "path": "settings/features/prd-browser/spec-kit-preview-implementation.md",
+      "beforeSha256": "eff9c148a1acda3d839f00d3cdd89d5624f14aef85e7d372b32cfcfd656a36a7"
+    },
+    {
+      "path": "auth/features/account-access/.decision-log.md",
+      "beforeSha256": "3df779600dcd5d45fae9f143a494ee1b4c3737c7c36b9ef0517de9196db1dc8e"
+    },
+    {
+      "path": "notes/features/knowledge-notes/.decision-log.md",
+      "beforeSha256": "2906fc3701332d31b3bef3da179128f529217bcc3b70a58a8961a9256a51bf94"
+    },
+    {
+      "path": "notes/features/knowledge-notes/interaction.md",
+      "beforeSha256": "df13e37da34bfae0712185dac3f6a8bed7453bf5f7cbef8273354fd4cdaecdde"
+    },
+    {
+      "path": "review/features/weak-word-repair/.decision-log.md",
+      "beforeSha256": "52816d778f362f271b3112501c2bb644c8f335139eedd6cf359f0c60a583ed8b"
+    },
+    {
+      "path": "review/features/weak-word-repair/addendum.md",
+      "beforeSha256": "c2e1544f1332d36ea2626002452a876bbd7b22e30afb12831338341c71e38d34"
+    },
+    {
+      "path": "review/features/weak-word-repair/review-rubric.md",
+      "beforeSha256": "1dfc40982be4c89cb9a9119b7e464d92f9181bad99e57429796db2c36c6ca72f"
+    },
+    {
+      "path": "review/features/word-journey/.decision-log.md",
+      "beforeSha256": "c65c18b286bb76ae2b41cb10a58a9e9be0b38a05caeb1199aba7939653bd92fd"
+    },
+    {
+      "path": "review/features/word-journey/addendum.md",
+      "beforeSha256": "fbb7749e8d067204c8354eafffcf613eefdff641b661639d07b6208b1d0ea99b"
+    },
+    {
+      "path": "review/features/word-journey/review-rubric.md",
+      "beforeSha256": "cfb48e985111e5c173dfb140002d12a13df3183f85ceec69423d0e475f46c25d"
+    },
+    {
+      "path": "review/features/ai-listening/review-quality.md",
+      "beforeSha256": "a3b9b9df4db3ce4280feffb7ecaebc88c5bfe5b597c5752b3512e0d54def1107"
+    },
+    {
+      "path": "review/features/ai-listening/.decision-log.md",
+      "beforeSha256": "0dc4a50fc280176a9ec3555764c0fd2ce86945f153997ddd58d19fc90c73ee47"
+    },
+    {
+      "path": "review/features/ai-listening/review-independent.md",
+      "beforeSha256": "a3a3bd3519ac7b12e168b560939b2b7fd22235fcc11dca2f8abdde7bd3393f53"
+    },
+    {
+      "path": "review/features/ai-listening/addendum.md",
+      "beforeSha256": "10675aa7f7240522548b479fc160709f44d7e07663545d8f7f06c0d485f19ef7"
+    },
+    {
+      "path": "vocabulary/features/mcp-access/.decision-log.md",
+      "beforeSha256": "865f652b02a352d78c564ea45aa43a4128feec9595e5b7d6ae4df00d9aef7fbc"
+    },
+    {
+      "path": "vocabulary/features/mcp-access/addendum.md",
+      "beforeSha256": "88c0b31c1c3df9cf40102e321f6f663b9a9734156bfb40be86fa1d744a9c0146"
+    },
+    {
+      "path": "vocabulary/features/dictionary-workspace/.decision-log.md",
+      "beforeSha256": "c905e8e248d47e562a77903de218fbadc1d53db65ccc6d6e9657e26a2df21bd0"
+    }
+  ]
+}

@@ -74,7 +74,7 @@ describe("Knowledge notes", () => {
       target: { value: "第一行\n第二行" },
     });
     fireEvent.click(screen.getByRole("button", { name: "保存" }));
-    await screen.findByRole("heading", { name: "形式宾语" });
+    await screen.findByRole("heading", { name: "形式宾语", level: 1 });
     const call = requestMock.mock.calls.find(([r]) => r.method === "POST")?.[0];
     expect(call.data).toMatchObject({
       title: "形式宾语",
@@ -87,6 +87,7 @@ describe("Knowledge notes", () => {
     let attempts = 0;
     requestMock.mockImplementation(async ({url, method}) => {
       if (url.endsWith('/folders')) return {list:[],total:0,unfiled:0};
+      if (method === 'GET' && url === '/knowledge-notes') return {list:[note],total:1,page:1,pageSize:20};
       if (method === 'POST' && attempts++ === 0) throw new Error('网络中断');
       return note;
     });
@@ -101,17 +102,17 @@ describe("Knowledge notes", () => {
     await screen.findByRole("alert");
     expect(screen.getByLabelText("正文")).toHaveValue("内容保留");
     fireEvent.click(screen.getByRole("button", { name: "保存" }));
-    await screen.findByRole("heading", { name: "形式宾语" });
+    await screen.findByRole("heading", { name: "形式宾语", level: 1 });
     const calls = requestMock.mock.calls.filter(([r]) => r.method === "POST");
     expect(calls[0][0].data.requestId).toBe(calls[1][0].data.requestId);
   });
   it("copies full saved word notes and source without mutating the word", async () => {
-    requestMock.mockResolvedValueOnce({
+    requestMock.mockImplementation(async ({url}) => url.includes("copy-source") ? {
       id: 9,
       englishWord: "find",
       englishNote: "长笔记\n第二行",
       englishReference: "课程",
-    });
+    } : url.endsWith("/folders") ? {list:[],total:0,unfiled:0} : {list:[note],total:1,page:1,pageSize:20});
     setup("/englishWorld/knowledge-notes/new?copyWord=9");
     await waitFor(() =>
       expect(screen.getByLabelText("正文")).toHaveValue("长笔记\n第二行"),
@@ -188,5 +189,34 @@ describe("Knowledge notes", () => {
     fireEvent.click(screen.getByRole("button", { name: "继续编辑" }));
     expect(screen.getByLabelText("正文")).toHaveValue("未保存");
     expect(router.state.location.pathname).toContain("/new");
+  });
+});
+
+describe("desktop document workspace", () => {
+  it("opens deep-linked notes at full width and can restore the list without losing filters", async () => {
+    setup("/englishWorld/knowledge-notes/7?q=第一行");
+    await screen.findByRole("heading", { name: "形式宾语", level: 1 });
+    expect(screen.queryByRole("complementary", { name: "笔记浏览" })).not.toBeInTheDocument();
+    expect(screen.getByRole("complementary", { name: "本页目录" })).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: "展开笔记列表" }));
+    expect(screen.getByRole("complementary", { name: "笔记浏览" })).toBeVisible();
+    expect(screen.getByLabelText("搜索知识笔记")).toHaveValue("第一行");
+    fireEvent.click(screen.getByRole("button", { name: "文件夹" }));
+    expect(screen.getByRole("button", { name: "收起文件夹" })).toHaveAttribute("aria-expanded", "true");
+    fireEvent.click(screen.getByRole("button", { name: "全宽阅读" }));
+    expect(screen.queryByRole("complementary", { name: "笔记浏览" })).not.toBeInTheDocument();
+  });
+  it("gives browsing the whole workspace and returns to it with the search preserved", async () => {
+    setup("/englishWorld/knowledge-notes?q=第一行");
+    const title = await screen.findByRole("heading", { name: "形式宾语", level: 2 });
+    expect(screen.queryByRole("main", { name: "笔记阅读区" })).not.toBeInTheDocument();
+    fireEvent.click(title);
+    await screen.findByRole("heading", { name: "形式宾语", level: 1 });
+    expect(screen.queryByRole("complementary", { name: "笔记浏览" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("link", { name: "返回列表" }));
+    await screen.findByRole("heading", { name: "形式宾语", level: 2 });
+    expect(screen.getByRole("complementary", { name: "笔记浏览" })).toBeVisible();
+    expect(screen.getByLabelText("搜索知识笔记")).toHaveValue("第一行");
+    expect(screen.queryByRole("main", { name: "笔记阅读区" })).not.toBeInTheDocument();
   });
 });

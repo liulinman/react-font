@@ -1,0 +1,260 @@
+:root {
+  font-family: Inter, "PingFang SC", "Microsoft YaHei", sans-serif;
+  color: #202c40;
+  background: #f4f6fa;
+  font-size: 14px;
+  line-height: 1.55;
+  --blue: #2457d6;
+  --muted: #52627a;
+  --border: #dbe2ed;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+}
+h1,
+h2,
+p {
+  margin: 0;
+}
+h1 {
+  font-size: 28px;
+  line-height: 1.25;
+}
+h2 {
+  font-size: 17px;
+}
+a {
+  color: var(--blue);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+.top {
+  height: 64px;
+  background: white;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 36px;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 750;
+  color: #202c40;
+  font-size: 17px;
+}
+.brand img {
+  height: 32px;
+  width: 32px;
+  object-fit: contain;
+}
+.brand span {
+  border-left: 1px solid var(--border);
+  padding-left: 12px;
+  color: var(--muted);
+  font-size: 13px;
+}
+main {
+  max-width: 1160px;
+  margin: auto;
+  padding: 28px 26px 64px;
+}
+.page-title,
+.section-title,
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.page-title {
+  margin-bottom: 22px;
+}
+.actions {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+}
+.section-title {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.back {
+  display: inline-block;
+  margin-bottom: 15px;
+}
+.panel {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.stack {
+  display: grid;
+  gap: 14px;
+}
+.pad {
+  padding: 20px;
+}
+.narrow {
+  max-width: 420px;
+  margin: 44px auto;
+}
+.muted {
+  color: var(--muted);
+}
+.error {
+  color: #a01f2d;
+}
+.tabs {
+  display: flex;
+  gap: 22px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid var(--border);
+}
+.tabs a {
+  padding: 0 2px 10px;
+  color: var(--muted);
+  border-bottom: 3px solid transparent;
+}
+.tabs a[aria-current] {
+  color: var(--blue);
+  border-color: var(--blue);
+  font-weight: 650;
+}
+button,
+.button {
+  font: inherit;
+  font-weight: 650;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 37px;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: white;
+  color: #26364d;
+  cursor: pointer;
+  white-space: nowrap;
+}
+button:hover,
+.button:hover {
+  background: #edf2fc;
+  text-decoration: none;
+}
+.primary {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: white;
+}
+.primary:hover {
+  background: #1947bd;
+}
+button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+:focus-visible {
+  outline: 3px solid #2457d6;
+  outline-offset: 3px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+th,
+td {
+  padding: 12px 19px;
+  border-bottom: 1px solid var(--border);
+}
+th {
+  background: #f8faff;
+  color: var(--muted);
+  font-size: 13px;
+}
+tbody tr:last-child td {
+  border-bottom: 0;
+}
+label {
+  display: grid;
+  gap: 5px;
+  font-weight: 600;
+}
+.check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+}
+input:not([type="checkbox"]),
+textarea,
+select {
+  width: 100%;
+  border: 1px solid #bcc9dd;
+  border-radius: 6px;
+  background: white;
+  padding: 8px 10px;
+  color: inherit;
+  font: inherit;
+}
+textarea {
+  resize: vertical;
+  min-height: 76px;
+}
+.captcha {
+  justify-self: start;
+}
+.captcha img {
+  width: 145px;
+  height: auto;
+}
+dialog {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: inherit;
+  width: min(530px, calc(100% - 40px));
+  padding: 0;
+}
+dialog::backdrop {
+  background: #1d294a62;
+}
+.paper-editor {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(290px, 2fr);
+  gap: 16px;
+  align-items: start;
+}
+.questions {
+  margin: 0;
+  padding-left: 20px;
+}
+.question-editor {
+  padding: 12px 0;
+  border-top: 1px solid var(--border);
+}
+.question-editor legend {
+  font-weight: 700;
+  padding: 0 4px;
+}
+.paper-text {
+  font:
+    17px/1.7 Georgia,
+    serif;
+  white-space: pre-wrap;
+}
+@media (max-width: 850px) {
+  .paper-editor {
+    grid-template-columns: 1fr;
+  }
+  .panel:has(table) {
+    overflow: auto;
+  }
+}

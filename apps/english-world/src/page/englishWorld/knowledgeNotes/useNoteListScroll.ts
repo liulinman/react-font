@@ -5,7 +5,7 @@ export function useNoteListScroll(key: string, loaded: boolean) {
   const root = useRef<HTMLDivElement>(null);
   const container = () =>
     root.current?.closest<HTMLElement>(
-      ".mobile-app-shell__content, .english-world-main",
+      ".knowledge-list-pane, .mobile-app-shell__content, .english-world-main",
     );
   useEffect(() => {
     if (!loaded) return;

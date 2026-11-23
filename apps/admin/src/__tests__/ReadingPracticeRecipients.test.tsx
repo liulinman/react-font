@@ -50,7 +50,7 @@ afterEach(() => {
 async function selectBob() {
   const user = userEvent.setup();
   await user.click(screen.getByRole("combobox"));
-  await user.click(await screen.findByText("Bob (#2)"));
+  await user.click(await screen.findByText("Bob", { selector: ".ant-select-item-option-content span" }));
   await user.keyboard("{Escape}");
   return user;
 }
@@ -66,7 +66,7 @@ it("shows actual recipients and prevents selecting existing users", async () => 
   expect(screen.getByRole("button", { name: "确认追加 0 人" })).toBeDisabled();
   const user = userEvent.setup();
   await user.click(screen.getByRole("combobox"));
-  const alice = await screen.findByText("Alice (#1) · 已接收");
+  const alice = await screen.findByText("已接收");
   expect(alice.closest(".ant-select-item-option")).toHaveClass(
     "ant-select-item-option-disabled",
   );
@@ -177,9 +177,9 @@ it("retains selected users across searches and reports concurrent skips", async 
   await screen.findByText("已提交");
   const user = await selectBob();
   await user.type(screen.getByRole("combobox"), "Carol");
-  await user.click(await screen.findByText("Carol (#3)"));
+  await user.click(await screen.findByText("Carol", { selector: ".ant-select-item-option-content span" }));
   await user.keyboard("{Escape}");
-  expect(screen.getAllByText("Bob (#2)").some(node => node.closest(".ant-select-selection-item"))).toBe(true);
+  expect(screen.getAllByText("Bob").some(node => node.closest(".ant-select-selection-item"))).toBe(true);
   await user.click(screen.getByRole("button", { name: "确认追加 2 人" }));
   await screen.findByText("已追加 1 人，跳过已接收 1 人。通知将由系统投递。");
   expect(payload.userIds).toEqual([2, 3]);

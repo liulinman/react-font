@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createMaterial, listMaterials, requestId } from "./api";
 import type { Material } from "./types";
@@ -22,23 +22,26 @@ export default function MaterialLibrary() {
     [title, setTitle] = useState(""),
     [text, setText] = useState(""),
     [busy, setBusy] = useState(false),
-    [error, setError] = useState("");
+    [error, setError] = useState(""),
+    [loading, setLoading] = useState(true),
+    [retry, setRetry] = useState(0);
+  const lastQuery = useRef(q);
   const [createId, setCreateId] = useState(requestId);
   useEffect(() => {
     let active = true;
+    const controller = new AbortController();
     setError("");
-    listMaterials(q, page)
-      .then((r) => {
-        if (active) {
-          setRows(r.list);
-          setTotal(r.total);
-        }
-      })
-      .catch((e) => active && setError(e.message || "材料加载失败"));
-    return () => {
-      active = false;
-    };
-  }, [q, page]);
+    setLoading(true);
+    const delay = lastQuery.current === q ? 0 : 250;
+    lastQuery.current = q;
+    const timer = setTimeout(() => {
+      listMaterials(q, page, controller.signal)
+        .then(result => { if (active) { setRows(result.list); setTotal(result.total); } })
+        .catch(error => { if (active && !controller.signal.aborted) setError(error.message || "材料加载失败"); })
+        .finally(() => { if (active) setLoading(false); });
+    }, delay);
+    return () => { active = false; clearTimeout(timer); controller.abort(); };
+  }, [q, page, retry]);
   async function create() {
     setBusy(true);
     setError("");
@@ -87,12 +90,15 @@ export default function MaterialLibrary() {
       {error && (
         <div role="alert" className="ir-error">
           {error}
+          {!open && <button onClick={() => setRetry(n => n + 1)}>重试加载</button>}
         </div>
       )}
-      <div className="ir-material-grid">
+      {loading && <p className="ir-muted" role="status">正在加载精读材料…</p>}
+      <div className="ir-material-grid" aria-busy={loading}>
         {rows.map((m) => (
           <button
             className="ir-material"
+            disabled={loading}
             key={m.id}
             onClick={() =>
               navigate(
@@ -107,18 +113,18 @@ export default function MaterialLibrary() {
           </button>
         ))}
       </div>
-      {!rows.length && (
-        <div className="ir-empty">还没有精读材料，导入一篇文章开始。</div>
+      {!loading && !error && !rows.length && (
+        <div className="ir-empty">{q.trim() ? "没有找到匹配的文章，试试其他标题。" : "还没有精读材料，导入一篇文章开始。"}</div>
       )}
       <div className="ir-actions">
-        <button disabled={page === 1} onClick={() => setPage((p) => p - 1)}>
+        <button disabled={loading || page === 1} onClick={() => setPage((p) => p - 1)}>
           上一页
         </button>
         <span>
           第 {page} 页 · 共 {total} 篇
         </span>
         <button
-          disabled={page * 20 >= total}
+          disabled={loading || page * 20 >= total}
           onClick={() => setPage((p) => p + 1)}
         >
           下一页
@@ -137,13 +143,15 @@ export default function MaterialLibrary() {
             <div className="ir-actions">
               <button
                 className={sourceType === "file" ? "ir-selected" : ""}
-                onClick={() => setType("file")}
+                disabled={busy}
+                onClick={() => { if (sourceType !== "file") { setType("file"); setCreateId(requestId()); } }}
               >
                 PDF / 照片
               </button>
               <button
                 className={sourceType === "text" ? "ir-selected" : ""}
-                onClick={() => setType("text")}
+                disabled={busy}
+                onClick={() => { if (sourceType !== "text") { setType("text"); setCreateId(requestId()); } }}
               >
                 粘贴文章
               </button>
@@ -151,6 +159,7 @@ export default function MaterialLibrary() {
             <label>
               文章标题
               <input
+                disabled={busy}
                 maxLength={200}
                 value={title}
                 onChange={(e) => {
@@ -164,6 +173,7 @@ export default function MaterialLibrary() {
               <label>
                 文章原文
                 <textarea
+                  disabled={busy}
                   maxLength={100000}
                   rows={10}
                   value={text}

@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "featureId": "settings/prd-browser",
+  "sourceHash": "a2348f033db988ffbf2a9d45fe328e8fd662f097157781585033d63761e1ee74",
+  "cases": [
+    {
+      "id": "settings/prd-browser/CASE-01",
+      "title": "PIPE-01 reads Spec and exact case expectations without write actions",
+      "status": "ready",
+      "requirementIds": [
+        "settings/prd-browser/FR-06",
+        "settings/prd-browser/FR-07",
+        "settings/prd-browser/AC-06"
+      ],
+      "preconditions": [
+        "仅合成资料、模拟登录/接口；不向Cloud上传内部PRD或真实截图。"
+      ],
+      "steps": [
+        "PIPE-01 reads Spec and exact case expectations without write actions"
+      ],
+      "expectedResults": [
+        "模块功能可选、Spec正文可读，Case步骤/预期与候选状态可见，无执行或生成按钮。"
+      ],
+      "cleanup": "Cypress隔离页面，不写业务数据。",
+      "bindings": [
+        {
+          "suite": "delivery-pipeline",
+          "title": "Read-only delivery pipeline > PIPE-01 reads Spec and exact case expectations without write actions"
+        }
+      ],
+      "reviewNote": "仅界面证据；真实权限由后端product-requirements.spec.ts验证，归档/版本/截图摘要由build.test.mjs验证。不能视为全量真实业务验收。"
+    },
+    {
+      "id": "settings/prd-browser/CASE-02",
+      "title": "PIPE-02 switches history, preserves first failure and labels stale and global analysis",
+      "status": "ready",
+      "requirementIds": [
+        "settings/prd-browser/FR-07",
+        "settings/prd-browser/FR-08",
+        "settings/prd-browser/AC-07",
+        "settings/prd-browser/AC-08"
+      ],
+      "preconditions": [
+        "仅合成资料、模拟登录/接口；不向Cloud上传内部PRD或真实截图。"
+      ],
+      "steps": [
+        "PIPE-02 switches history, preserves first failure and labels stale and global analysis"
+      ],
+      "expectedResults": [
+        "切换首次失败，保留错误原因和需求过期；显示整次运行分析和Cloud链接，切回最新未执行仍显示未执行。"
+      ],
+      "cleanup": "Cypress隔离页面，不写业务数据。",
+      "bindings": [
+        {
+          "suite": "delivery-pipeline",
+          "title": "Read-only delivery pipeline > PIPE-02 switches history, preserves first failure and labels stale and global analysis"
+        }
+      ],
+      "reviewNote": "仅界面证据；真实权限由后端product-requirements.spec.ts验证，归档/版本/截图摘要由build.test.mjs验证。不能视为全量真实业务验收。"
+    },
+    {
+      "id": "settings/prd-browser/CASE-03",
+      "title": "PIPE-03 distinguishes missing stages, search-empty and retry from expired login",
+      "status": "ready",
+      "requirementIds": [
+        "settings/prd-browser/FR-08",
+        "settings/prd-browser/AC-10"
+      ],
+      "preconditions": [
+        "仅合成资料、模拟登录/接口；不向Cloud上传内部PRD或真实截图。"
+      ],
+      "steps": [
+        "PIPE-03 distinguishes missing stages, search-empty and retry from expired login"
+      ],
+      "expectedResults": [
+        "缺Spec、缺用例、缺运行分别提示；搜索无结果；503可重试；401明确登录失效。"
+      ],
+      "cleanup": "Cypress隔离页面，不写业务数据。",
+      "bindings": [
+        {
+          "suite": "delivery-pipeline",
+          "title": "Read-only delivery pipeline > PIPE-03 distinguishes missing stages, search-empty and retry from expired login"
+        }
+      ],
+      "reviewNote": "仅界面证据；真实权限由后端product-requirements.spec.ts验证，归档/版本/截图摘要由build.test.mjs验证。不能视为全量真实业务验收。"
+    }
+  ]
+}

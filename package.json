@@ -25,7 +25,12 @@
     "docs:sync-code": "node scripts/sync-docs-code.mjs",
     "docs:check": "node scripts/check-docs.mjs",
     "brand:generate": "node scripts/generate-brand-assets.mjs",
-    "brand:verify": "node --test scripts/brand-assets.test.mjs"
+    "brand:verify": "node --test scripts/brand-assets.test.mjs",
+    "prd:sync": "node scripts/sync-prd-catalog.mjs",
+    "prd:check": "node scripts/sync-prd-catalog.mjs --check",
+    "pipeline:sync": "node scripts/delivery-pipeline/build.mjs",
+    "pipeline:check": "node scripts/delivery-pipeline/build.mjs --check",
+    "pipeline:test": "node --test scripts/delivery-pipeline/*.test.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

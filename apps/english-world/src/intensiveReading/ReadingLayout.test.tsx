@@ -14,7 +14,8 @@ describe('reading content layout',()=>{
   const appendix = document.querySelector<HTMLDetailsElement>('.ir-supplement')!;
   expect(appendix).not.toBeNull(); expect(appendix.open).toBe(false);
   expect(appendix.textContent).toContain('Complete the sentences below.');
-  expect(document.querySelector('.ir-dek')?.textContent).toContain('1 个段落');
+  expect(document.querySelector('.ir-dek')).toBeNull();
+  expect(document.querySelectorAll('.ir-article-body .ir-paragraph')).toHaveLength(1);
   expect(document.querySelector('#ir-a-note1')?.textContent).toBe('Birds');
  });
  it('opens supplementary content when locating an existing exercise note',()=>{

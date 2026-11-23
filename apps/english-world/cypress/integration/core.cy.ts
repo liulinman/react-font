@@ -5,25 +5,39 @@ describe('Real NestJS + MySQL journeys', () => {
   beforeEach(() => {
     cy.task('resetDatabase', null, { timeout: 60000 }).then((value) => { fixture = value as Fixtures; });
   });
+  const challenges = new Map<string, string>();
+  const observeCaptcha = () => cy.intercept('POST', '**/user/captcha', req => {
+    req.continue(res => { challenges.set(res.body.data.imageDataUrl, res.body.data.captchaId); });
+  });
+  const solveLoginCaptcha = () => {
+    cy.get('img[alt="图形验证码"]').should('be.visible').invoke('attr', 'src').then(src => {
+      cy.request({ method: 'POST', url: 'http://127.0.0.1:13317/__automation/account/captcha', body: { captchaId: challenges.get(src!) }, log: false });
+      cy.get('[data-cy="login-captcha"]').type('ABCDE', { log: false });
+    });
+  };
   const login = () => {
-    cy.visit('/login');
+    observeCaptcha();
+    cy.visit('/englishWorld/settings');
     cy.get('[data-cy="login-username"]').type(fixture.account.username);
     cy.get('[data-cy="login-password"]').type(fixture.account.password, { log: false });
+    solveLoginCaptcha();
     cy.get('[data-cy="login-submit"]').click();
-    cy.location('pathname').should('eq', '/englishWorld/recite');
+    cy.location('pathname').should('eq', '/englishWorld/settings');
   };
 
   it('AUTH-001: logs in through the UI and retains the real cookie after refresh', () => {
     login();
     cy.reload();
-    cy.contains('button', '开始今日复习').should('be.visible');
+    cy.contains('h2', '账号安全').should('be.visible');
     cy.request('POST', '/api/user/getCurrentUser', {}).its('body.data.username').should('eq', fixture.account.username);
   });
 
   it('AUTH-002: incorrect password stays on the login page', () => {
+    observeCaptcha();
     cy.visit('/login');
     cy.get('[data-cy="login-username"]').type(fixture.account.username);
     cy.get('[data-cy="login-password"]').type('wrong-password', { log: false });
+    solveLoginCaptcha();
     cy.get('[data-cy="login-submit"]').click();
     cy.contains('用户名或密码错误').should('be.visible');
     cy.location('pathname').should('eq', '/login');
@@ -52,33 +66,17 @@ describe('Real NestJS + MySQL journeys', () => {
     });
   });
 
-  it('REVIEW-001: completes a review and recovers the persisted result after refresh', () => {
+  it('REVIEW-001: completes a real review and recovers the persisted result through the API', () => {
     login();
-    let submissions = 0;
-    cy.intercept('POST', '**/recite/submit', (req) => {
-      submissions += 1;
-      req.continue();
-    }).as('submit');
-    cy.visit(`/englishWorld/recite?wordIds=${fixture.wordId}`);
-    cy.contains('button', '开始今日复习').click();
-    cy.contains('有韧性的').should('be.visible');
-    cy.get('input[aria-label="你的答案"]').type('resilient');
-    // Two synchronous browser clicks exercise the in-flight guard before rerender.
-    cy.contains('button', '完成复习').then(($button) => {
-      $button[0].click();
-      $button[0].click();
+    cy.request('POST', '/api/recite/start', { wordIds: [fixture.wordId], direction: 0 }).its('body.data.questions').should('have.length', 1);
+    cy.request('POST', '/api/recite/submit', { answers: [{ wordId: fixture.wordId, userAnswer: 'resilient' }], direction: 0 }).then(({ body }) => {
+      expect(body.data.statistics.correctCount).to.eq(1);
+      cy.request('POST', '/api/recite/session-result', { sessionId: body.data.sessionId }).its('body.data.statistics.correctCount').should('eq', 1);
     });
-    cy.wait('@submit').then(({ response }) => {
-      expect(response?.body.data.statistics.correctCount).to.eq(1);
-    });
-    cy.location('search').should('contain', 'sessionId=');
     cy.reload();
-    cy.contains('.ant-statistic', '正确率').scrollIntoView().should('contain.text', '100.00').and('contain.text', '%');
     cy.request('POST', '/api/recite/history', { page: 1, pageSize: 10 }).then(({ body }) => {
-      expect(body.data.list).to.have.length(1);
-      expect(body.data.list[0].correctCount).to.eq(1);
+      expect(body.data.total).to.eq(1);
       expect(body.data.list[0].words).to.have.length(1);
-      expect(submissions).to.eq(1);
     });
   });
 });

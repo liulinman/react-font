@@ -114,7 +114,7 @@ describe("EditAddModal AI completion", () => {
     fireEvent.click(screen.getByRole("button",{name:"返回表单"}));
     expect(screen.getByLabelText("中文")).toHaveValue("新释义");
     expect(screen.getByLabelText("笔记")).toHaveValue("修改后\n完整的长笔记");
-    fireEvent.click(screen.getByRole("button",{name:"确 认"}));
+    fireEvent.click(screen.getByRole("button",{name:"保存词条"}));
     await waitFor(()=>expect(onOk).toHaveBeenCalledWith(expect.objectContaining({englishChinese:"新释义",englishNote:"修改后\n完整的长笔记"}),"edit"));
   });
 
@@ -398,7 +398,7 @@ describe("EditAddModal AI completion", () => {
     await new Promise((resolve) => window.setTimeout(resolve, 700));
     expect(screen.getByText(/running → run/)).toBeVisible();
 
-    fireEvent.click(screen.getByRole("button", { name: /确\s*认/ }));
+    fireEvent.click(screen.getByRole("button", { name: "保存词条" }));
     await waitFor(() =>
       expect(onOk).toHaveBeenCalledWith(
         expect.objectContaining({ englishWord: "running" }),
@@ -427,7 +427,7 @@ describe("EditAddModal AI completion", () => {
     expect(await screen.findByText("AI 暂时不可用")).toBeVisible();
     expect(screen.queryByRole("button", { name: "使用建议" })).not.toBeInTheDocument();
     expect(screen.getByLabelText("单词名")).toHaveValue("running");
-    expect(screen.getByRole("button", { name: /确\s*认/ })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "保存词条" })).toBeEnabled();
   });
 
   it("does not query AI when the word changes in edit mode", async () => {
@@ -778,7 +778,7 @@ describe("EditAddModal AI completion", () => {
     await new Promise((resolve) => window.setTimeout(resolve, 700));
     expect(screen.getByText(/running → run/)).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: "使用建议" }));
-    fireEvent.click(screen.getByRole("button", { name: /确\s*认/ }));
+    fireEvent.click(screen.getByRole("button", { name: "保存词条" }));
 
     await waitFor(() =>
       expect(onOk).toHaveBeenCalledWith(
@@ -825,7 +825,7 @@ describe("EditAddModal AI completion", () => {
     fireEvent.mouseDown(screen.getByLabelText("类型"));
     fireEvent.click(await screen.findByText("句子"));
     fireEvent.click(screen.getByRole("button", { name: "使用建议" }));
-    fireEvent.click(screen.getByRole("button", { name: /确\s*认/ }));
+    fireEvent.click(screen.getByRole("button", { name: "保存词条" }));
 
     await waitFor(() =>
       expect(onOk).toHaveBeenCalledWith(

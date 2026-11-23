@@ -1,0 +1,4 @@
+interface:
+  display_name: "Freewing 需求设计到交付"
+  short_description: "串联 BMAD PRD、UI交互、Spec Kit、AI研发、Cloud验收与证据归档"
+  default_prompt: "使用 $english-world-delivery 按本次授权范围串联 BMAD PRD、UI交互设计与确认、Spec Kit规格计划、AI研发、自动化及视觉验收、Cypress Cloud和完整报告归档；提交、push与部署仅在获授权时执行。"

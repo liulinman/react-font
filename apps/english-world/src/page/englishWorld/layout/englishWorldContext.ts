@@ -1,6 +1,7 @@
 import { brand } from "@/brand";
 const PRIMARY_LABELS: Record<string, string> = {
   cockpit: "今天",
+  ieltsListening: "雅思听力",
   aiListening: "场景听力",
   intensiveReading: "文章精读",
   readingPractices: "阅读练习",

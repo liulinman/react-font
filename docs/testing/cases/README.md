@@ -11,6 +11,7 @@ JSON 是 Case 的维护来源。draft 是待 AI 细化的需求候选，ready �
 | reading / 已发布阅读练习追加接收人 | [add-recipients](reading/add-recipients.json) | 18 | 0 |
 | reading / 阅读练习完成情况与成绩分析 | [analytics](reading/analytics.json) | 33 | 0 |
 | word-books / 单词与知识速读复习册 | [word-book](word-books/word-book.json) | 64 | 0 |
+| vocabulary / Chrome 阅读查词与网页引用 | [browser-reading-extension](vocabulary/browser-reading-extension.json) | 4 | 0 |
 
 每次运行的 HTML 报告包含 Case 步骤与需求对应关系；未登记脚本的候选明确标为未覆盖。
 执行 `node scripts/prd-testing/prepare-cases.mjs` 可刷新本索引，不覆盖已有 Case。

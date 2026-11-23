@@ -1,10 +1,11 @@
+import { loginTestAccount } from "./login-test-account";
 // PRD: docs/prd/notes/features/knowledge-notes/prd.md
 // Real NestJS + disposable MySQL; no knowledge-note API response stubs.
 describe('PRD knowledge notes', () => {
   beforeEach(() => {
     cy.task('resetDatabase', null, { timeout: 60000 }).then((value) => {
       const fixture = value as { account: { username: string; password: string } };
-      cy.request('POST', '/api/user/login', fixture.account);
+      loginTestAccount(fixture.account);
     });
   });
   it('NOTES-AC03 creates a standalone note without selecting a word and persists after refresh', () => {

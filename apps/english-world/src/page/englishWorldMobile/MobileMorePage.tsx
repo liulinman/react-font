@@ -104,7 +104,7 @@ const featureGroups: Array<{ title: string; items: FeatureItem[] }> = [
       { title: "文档中心", description: "技术知识与项目实践", icon: <FileOutline />, documentPath: "/docs/", tone: "blue" },
       {
         title: "系统设置",
-        description: "配置默写、听写数量与范围",
+        description: "账号安全、应用更新与 MCP 授权",
         icon: <SetOutline />,
         path: "/englishWorld/settings?source=mobile",
         tone: "slate",

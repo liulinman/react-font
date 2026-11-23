@@ -7,6 +7,7 @@ export type WordList = {
   englishNote?: string;
   englishLevel?: number;
   englishReference?: string;
+  sourceUrl?: string | null;
   englishOverwriteCount?: number;
   englishCreateTime?: string;
   englishUpdateTime?: string;

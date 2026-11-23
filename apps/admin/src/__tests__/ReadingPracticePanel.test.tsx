@@ -257,3 +257,42 @@ it("replaces stale findings with repaired content and requires teacher confirmat
   expect(screen.queryByRole("checkbox", { name: "我已核对这道题的答案和解析" })).not.toBeInTheDocument();
   expect(screen.getByRole("button", { name: "确认并发布" })).toBeEnabled();
 });
+
+it('shows a dedicated original-source verification path and refreshes the publication block', async () => {
+  const user = userEvent.setup();
+  paper.workflow.qualityRevision = 1;
+  paper.workflow.sources = [{ id: 'source-1', name: '原稿42页.jpg', mime: 'image/jpeg', url: '/admin/reading-practices/sources/source-1', size: 100, pages: 1 }];
+  paper.workflow.issues = [{ id: 'ocr-1', type: 'source_text', questionId: 'q1', blocking: true, message: 'OCR拼写疑问，请核对 Alassk' }];
+  const original = send.getMockImplementation()!;
+  send.mockImplementation(async r => {
+    if (r.url.endsWith('/verify-source-issue')) {
+      writes.push({ url: r.url, data: r.data });
+      paper.workflow.issues[0].resolved = true;
+      return structuredClone(paper);
+    }
+    return original(r);
+  });
+  render(<ReadingPracticePanel />);
+  await user.click(await screen.findByRole('button', { name: '审核练习' }));
+  expect(screen.getByRole('button', { name: '确认并发布' })).toBeDisabled();
+  await user.click(screen.getByText('核对原稿文字'));
+  await user.type(screen.getByLabelText('核对说明'), '原稿印刷与当前文字一致');
+  await user.type(screen.getByLabelText('原稿依据'), '42页右栏 Alassk');
+  await user.click(screen.getByRole('checkbox', { name: '我已查看所选原稿，确认当前文字与原稿一致' }));
+  await user.click(screen.getByRole('button', { name: '确认与原稿一致' }));
+  await waitFor(() => expect(writes.find(x => x.url.endsWith('/verify-source-issue'))?.data).toEqual({ revision: 1, issueId: 'ocr-1', sourceId: 'source-1', reason: '原稿印刷与当前文字一致', evidence: '42页右栏 Alassk' }));
+  await waitFor(() => expect(screen.getByRole('button', { name: '确认并发布' })).toBeEnabled());
+  expect(writes.some(x => x.url.endsWith('/publish'))).toBe(false);
+});
+
+it('routes actual missing-source blocks to materials and shows the blocking reason in the footer', async () => {
+  const user = userEvent.setup();
+  paper.workflow.qualityRevision = 1;
+  paper.workflow.issues = [{ id: 'missing-1', type: 'source', questionId: 'q1', blocking: true, message: '缺少第2页原稿' }];
+  render(<ReadingPracticePanel />);
+  await user.click(await screen.findByRole('button', { name: '审核练习' }));
+  expect(screen.queryByText('核对原稿文字')).not.toBeInTheDocument();
+  expect(screen.getByText('发布前需处理：缺少第2页原稿')).toBeVisible();
+  await user.click(screen.getByRole('button', { name: '前往处理' }));
+  expect(screen.getByRole('tab', { name: '原稿与历史' })).toHaveAttribute('aria-selected', 'true');
+});

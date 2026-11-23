@@ -1,0 +1,1302 @@
+{
+  "schemaVersion": 1,
+  "source": "docs/prd/review/features/ielts-listening/prd.md",
+  "sourceHash": "72221b8f470632cf76e7290a8d1a1c223d1c5588190ad20bafe2a9eb2d8135fb",
+  "cases": [
+    {
+      "id": "review/ielts-listening/AC-01/CASE-01",
+      "title": "按题型、来源、部分、主题和就绪状态筛选材料",
+      "status": "draft",
+      "requirementIds": [
+        "review/ielts-listening/AC-01"
+      ],
+      "preconditions": [
+        "仅127.0.0.1:13316/english_world_automation_test，一次性合成账号；测试前受保护resetDatabase。",
+        "角色：学生automation_learner（另注明管理员/第二学生时使用独立会话）",
+        "发布Part1 Original UI acceptance tour；另建Part2 sentence草稿Harbour survey。"
+      ],
+      "steps": [
+        "先交tour空卷，再创建Harbour survey并刷新列表。",
+        "逐次选择map、AI原创模拟、Part2、搜索survey、ready/incomplete，每次清除前项。"
+      ],
+      "expectedResults": [
+        "map仅保留tour；AI原创/Part2/survey仅保留Harbour survey。",
+        "ready仅tour；incomplete仅草稿且无开始作答按钮。"
+      ],
+      "cleanup": "由隔离运行器停止服务并在下例前resetDatabase；不连接生产、不提交部署；保留本次Cloud/运行证据。",
+      "bindings": [
+        {
+          "suite": "ielts-listening-acceptance",
+          "title": "IELTS listening acceptance boundaries > AC01 filters actual materials by type source part topic readiness and the current student completion"
+        }
+      ],
+      "reviewNote": "已逐条核对正式PRD全文与当前源码；本轮新Cypress尚未执行，保持draft。 AI/语音供应商替身仅证明交互和持久化契约。"
+    },
+    {
+      "id": "review/ielts-listening/AC-01/CASE-02",
+      "title": "按本人完成状态筛选且不把草稿算完成",
+      "status": "draft",
+      "requirementIds": [
+        "review/ielts-listening/AC-01"
+      ],
+      "preconditions": [
+        "仅127.0.0.1:13316/english_world_automation_test，一次性合成账号；测试前受保护resetDatabase。",
+        "角色：学生automation_learner（另注明管理员/第二学生时使用独立会话）",
+        "tour已有submitted；Harbour survey未交卷。"
+      ],
+      "steps": [
+        "依次选择completed和uncompleted。"
+      ],
+      "expectedResults": [
+        "completed仅tour；uncompleted仅Harbour survey；接口completed与筛选一致。"
+      ],
+      "cleanup": "由隔离运行器停止服务并在下例前resetDatabase；不连接生产、不提交部署；保留本次Cloud/运行证据。",
+      "bindings": [
+        {
+          "suite": "ielts-listening-acceptance",
+          "title": "IELTS listening acceptance boundaries > AC01 filters actual materials by type source part topic readiness and the current student completion"
+        }
+      ],
+      "reviewNote": "已逐条核对正式PRD全文与当前源码；本轮新Cypress尚未执行，保持draft。 AI/语音供应商替身仅证明交互和持久化契约。"
+    },
+    {
+      "id": "review/ielts-listening/AC-01/CASE-03",
+      "title": "缺音频、缺答案、错配图示拒绝发布及计分并显示原因",
+      "status": "draft",
+      "requirementIds": [
+        "review/ielts-listening/AC-01"
+      ],
+      "preconditions": [
+        "仅127.0.0.1:13316/english_world_automation_test，一次性合成账号；测试前受保护resetDatabase。",
+        "角色：管理员及学生",
+        "管理员导入10题：分别answers=[]、map options含不存在node、有效但未prepare草稿。"
+      ],
+      "steps": [
+        "分别导入无答案/错图材料；对有效草稿publish并尝试学生开卷。"
+      ],
+      "expectedResults": [
+        "无答案和错图返回400及明确结构原因；未prepare发布409尚未准备好；草稿无法开卷。"
+      ],
+      "cleanup": "由隔离运行器停止服务并在下例前resetDatabase；不连接生产、不提交部署；保留本次Cloud/运行证据。",
+      "bindings": [
+        {
+          "suite": "ielts-listening-acceptance",
+          "title": "IELTS listening acceptance boundaries > AC01 AC11 AC12 reject invalid imports drafts student admin writes and other-user private resources through real HTTP"
+        }
+      ],
+      "reviewNote": "已核对当前新增精确测试标题及断言，尚未执行，本例保持draft；HTTP边界不冒充真实音质验收。"
+    },
+    {
+      "id": "review/ielts-listening/AC-02/CASE-01",
+      "title": "同音频笔记、表格、句子导航保持原始多词数字单位与标记",
+      "status": "draft",
+      "requirementIds": [
+        "review/ielts-listening/AC-02"
+      ],
+      "preconditions": [
+        "仅127.0.0.1:13316/english_world_automation_test，一次性合成账号；测试前受保护resetDatabase。",
+        "角色：学生automation_learner（另注明管理员/第二学生时使用独立会话）",
+        "Original structured context十题：Q1=12 years/Q4=20 pounds/Q7=research centre；限两词或一个数字。"
+      ],
+      "steps": [
+        "输入Q1两个前后空格的12 YEARS，标记Q1；跳Q4填20 pounds、Q7填research centre，跳回Q1。"
+      ],
+      "expectedResults": [
+        "note/table/sentence上下文和英文限词可见；Q1原始空格大小写未改。",
+        "题号标已标记已答；音频currentSrc保持一致。"
+      ],
+      "cleanup": "由隔离运行器停止服务并在下例前resetDatabase；不连接生产、不提交部署；保留本次Cloud/运行证据。",
+      "bindings": [
+        {
+          "suite": "ielts-listening-acceptance",
+          "title": "IELTS listening acceptance boundaries > AC02 keeps note table and sentence answers with raw numbers units and flags on the same audio across refresh"
+        }
+      ],
+      "reviewNote": "已逐条核对正式PRD全文与当前源码；本轮新Cypress尚未执行，保持draft。 AI/语音供应商替身仅证明交互和持久化契约。"
+    },
+    {
+      "id": "review/ielts-listening/AC-02/CASE-02",
+      "title": "刷新恢复跨题组输入及标记并按实际答案交卷",
+      "status": "draft",
+      "requirementIds": [
+        "review/ielts-listening/AC-02"
+      ],
+      "preconditions": [
+        "仅127.0.0.1:13316/english_world_automation_test，一次性合成账号；测试前受保护resetDatabase。",
+        "角色：学生automation_learner（另注明管理员/第二学生时使用独立会话）",
+        "沿用structured context，等已保存后刷新。"
+      ],
+      "steps": [
+        "刷新读取Q1/Q4/Q7及标记；GET attempt确认；交卷。"
+      ],
+      "expectedResults": [
+        "原始三项与flags[1]保存一致；结果3/10。"
+      ],
+      "cleanup": "由隔离运行器停止服务并在下例前resetDatabase；不连接生产、不提交部署；保留本次Cloud/运行证据。",
+      "bindings": [
+        {
+          "suite": "ielts-listening-acceptance",
+          "title": "IELTS listening acceptance boundaries > AC02 keeps note table and sentence answers with raw numbers units and flags on the same audio across refresh"
+        }
+      ],
+      "reviewNote": "已逐条核对正式PRD全文与当前源码；本轮新Cypress尚未执行，保持draft。 AI/语音供应商替身仅证明交互和持久化契约。"
+    },
+    {
+      "id": "review/ielts-listening/AC-03/CASE-01",
+      "title": "地图字母标注缩放复位及窗口变化保持坐标且可清除",
+      "status": "draft",
+      "requirementIds": [
+        "review/ielts-listening/AC-03"
+      ],
+      "preconditions": [
+        "仅127.0.0.1:13316/english_world_automation_test，一次性合成账号；测试前受保护resetDatabase。",
+        "角色：学生automation_learner（另注明管理员/第二学生时使用独立会话）",
+        "替身Riverside Park字母地图，1440×900。"
+      ],
+      "steps": [
+        "记录首circle cx/cy；放大、改1280×800、复位1440×900。",
+        "首题选择A后清空；各题选A交卷。"
+      ],
+      "expectedResults": [
+        "各阶段cx/cy不变；清空后select为空；结果已记录。"
+      ],
+      "cleanup": "由隔离运行器停止服务并在下例前resetDatabase；不连接生产、不提交部署；保留本次Cloud/运行证据。",
+      "bindings": [
+        {
+          "suite": "ielts-listening",
+          "title": "IELTS listening closed loop > renders a usable map with keyboard-selectable letter answers and records results"
+        }
+      ],
+      "reviewNote": "已逐条核对正式PRD全文与当前源码；本轮新Cypress尚未执行，保持draft。 AI/语音供应商替身仅证明交互和持久化契约。"
+    },
+    {
+      "id": "review/ielts-listening/AC-03/CASE-02",
+      "title": "地图文字标注可修改并与缩放题位保持对应",
+      "status": "draft",
+      "requirementIds": [
+        "review/ielts-listening/AC-03"
+      ],
+      "preconditions": [
+        "仅127.0.0.1:13316/english_world_automation_test，一次性合成账号；测试前受保护resetDatabase。",
+        "角色：学生automation_learner（另注明管理员/第二学生时使用独立会话）",
+        "替身Campus text map：1 library，2 cafe。"
+      ],
+      "steps": [
+        "输入library/cafe；放大并改窗口；Q1改sports hall、清空再填library；复位。"
+      ],
+      "expectedResults": [
+        "所有缩放阶段坐标不变；文字未截断且修改清空有效；全卷正确10/10。"
+      ],
+      "cleanup": "由隔离运行器停止服务并在下例前resetDatabase；不连接生产、不提交部署；保留本次Cloud/运行证据。",
+      "bindings": [
+        {
+          "suite": "ielts-listening-acceptance",
+          "title": "IELTS listening acceptance boundaries > AC03 and AC04 preserve text-map positions and support clearing, selection counts and keyboard matching"
+        }
+      ],
+      "reviewNote": "已逐条核对正式PRD全文与当前源码；本轮新Cypress尚未执行，保持draft。 AI/语音供应商替身仅证明交互和持久化契约。"
+    },
+    {
+      "id": "review/ielts-listening/AC-03/CASE-03",
+      "title": "真实可播放材料同时验证地图文字标注与字母标注",
+      "status": "draft",
+      "requirementIds": [
+        "review/ielts-listening/AC-03"
+      ],
+      "preconditions": [
+        "仅127.0.0.1:13316/english_world_automation_test，一次性合成账号；测试前受保护resetDatabase。",
+        "角色：学生automation_learner；新主卷Part2字母标注；独立textMapId源自旧纯Part2真实音频并派生题号文字输入视图。",
+        "真实主卷Part2为字母标注；textMapId为独立旧P2真实音频十题文字标注视图。"
+      ],
+      "steps": [
+        "在真实主卷模拟完成Part2字母题；在独立真实textMap训练逐题键入11–20地点名。",
+        "分别核对自然播放与结果；文字地图放大、复位、1280×800/1440×900保持坐标。"
+      ],
+      "expectedResults": [
+        "主卷40/40包含字母地图正确；文字地图10个INPUT及答案完整，10/10。",
+        "两段真实文字地图音频自然结束且play/ended顺序一致，缩放后坐标不变。"
+      ],
+      "cleanup": "由隔离运行器停止服务并在下例前resetDatabase；不连接生产、不提交部署；保留本次Cloud/运行证据。",
+      "bindings": [
+        {
+          "suite": "ielts-listening-real-paper",
+          "title": "IELTS listening real golden paper playback > AC03 completes a real spoken text-map paper with ten keyboard-entered labels and stable positions"
+        },
+        {
+          "suite": "ielts-listening-real-paper",
+          "title": "IELTS listening real golden paper playback > plays every real segment once, checks for two real minutes and preserves the first /40 result"
+        }
+      ],
+      "reviewNote": "当前真实主卷使用2026-10-29T02-28-49-346Z新生成四部分，回放不重复收费；派生文字地图另有旧纯Part2来源。当前Cypress尚未执行，保持draft。 更改/清除由CASE01/02单独覆盖；音轨实际支持答案还须合并ASR/内容证据。"
+    },
+    {
+      "id": "review/ielts-listening/AC-04/CASE-01",
+      "title": "单选可替换清除并用键盘完成",
+      "status": "draft",
+      "requirementIds": [
+        "review/ielts-listening/AC-04"
+      ],
+      "preconditions": [
+        "仅127.0.0.1:13316/english_world_automation_test，一次性合成账号；测试前受保护resetDatabase。",
+        "角色：学生automation_learner（另注明管理员/第二学生时使用独立会话）",
+        "tour Q3单选A Monday/B Tuesday。"
+      ],
+      "steps": [
+        "A切B、清空；focus后真实DOWN和TAB。"
+      ],
+      "expectedResults": [
+        "替换为B、清空为空；键盘最终A。"
+      ],
+      "cleanup": "由隔离运行器停止服务并在下例前resetDatabase；不连接生产、不提交部署；保留本次Cloud/运行证据。",
+      "bindings": [
+        {
+          "suite": "ielts-listening-acceptance",
+          "title": "IELTS listening acceptance boundaries > AC03 and AC04 preserve text-map positions and support clearing, selection counts and keyboard matching"
+        }
+      ],
+      "reviewNote": "已逐条核对正式PRD全文与当前源码；本轮新Cypress尚未执行，保持draft。 AI/语音供应商替身仅证明交互和持久化契约。"
+    },
+    {
+      "id": "review/ielts-listening/AC-04/CASE-02",
+      "title": "多选固定两位并对重复选择给出提示",
+      "status": "draft",
+      "requirementIds": [
+        "review/ielts-listening/AC-04"
+      ],
+      "preconditions": [
+        "仅127.0.0.1:13316/english_world_automation_test，一次性合成账号；测试前受保护resetDatabase。",
+        "角色：学生automation_learner（另注明管理员/第二学生时使用独立会话）",
+        "tour Q4/Q5共享A Pencil/B Notebook/C Camera，需选2。"
+      ],
+      "steps": [
+        "检查提示及恰好2个select；两位均A后第二位改B。"
+      ],
+      "expectedResults": [
+        "显示需选2且仅两答题位不能超选；重复时role=status提示；修正后全卷10/10。"
+      ],
+      "cleanup": "由隔离运行器停止服务并在下例前resetDatabase；不连接生产、不提交部署；保留本次Cloud/运行证据。",
+      "bindings": [
+        {
+          "suite": "ielts-listening-acceptance",
+          "title": "IELTS listening acceptance boundaries > AC03 and AC04 preserve text-map positions and support clearing, selection counts and keyboard matching"
+        }
+      ],
+      "reviewNote": "已逐条核对正式PRD全文与当前源码；本轮新Cypress尚未执行，保持draft。 AI/语音供应商替身仅证明交互和持久化契约。"
+    },
+    {
+      "id": "review/ielts-listening/AC-04/CASE-03",
+      "title": "可重复及不可重复配对都有鼠标和键盘替代",
+      "status": "draft",
+      "requirementIds": [
+        "review/ielts-listening/AC-04"
+      ],
+      "preconditions": [
+        "仅127.0.0.1:13316/english_world_automation_test，一次性合成账号；测试前受保护resetDatabase。",
+        "角色：学生automation_learner（另注明管理员/第二学生时使用独立会话）",
+        "tour Q6/7不可重复，Q8/9允许重复。"
+      ],
+      "steps": [
+        "Q6/7均A触发提示，键盘将Q7改B；Q8选A、Q9键盘选A。"
+      ],
+      "expectedResults": [
+        "不可重复提示明确；允许重复组说明可见且A/A被正确评分；无需拖拽。"
+      ],
+      "cleanup": "由隔离运行器停止服务并在下例前resetDatabase；不连接生产、不提交部署；保留本次Cloud/运行证据。",
+      "bindings": [
+        {
+          "suite": "ielts-listening-acceptance",
+          "title": "IELTS listening acceptance boundaries > AC03 and AC04 preserve text-map positions and support clearing, selection counts and keyboard matching"
+        }
+      ],
+      "reviewNote": "已逐条核对正式PRD全文与当前源码；本轮新Cypress尚未执行，保持draft。 AI/语音供应商替身仅证明交互和持久化契约。"
+    },
+    {
+      "id": "review/ielts-listening/AC-05/CASE-01",
+      "title": "真实四部分40题七音轨逐段一次播放且不能用户暂停跳播倍速",
+      "status": "draft",
+      "requirementIds": [
+        "review/ielts-listening/AC-05"
+      ],
+      "preconditions": [
+        "仅127.0.0.1:13316/english_world_automation_test，一次性合成账号；测试前受保护resetDatabase。",
+        "角色：学生automation_learner（另注明管理员/第二学生时使用独立会话）",
+        "黄金四部分40题，新run 2026-10-29T02-28-49-346Z同套8段385.344秒真实DeepSeek/豆包音频，装载不重复调用供应商。"
+      ],
+      "steps": [
+        "模拟开始前观察audio无controls；开始后按40题导航作答；监听play/ended/seeking/ratechange/error及HTTP音频。"
+      ],
+      "expectedResults": [
+        "无暂停慢速重播倒带按钮；rate=1，0 seeking/error。",
+        "8段各1 play/ended、顺序一致，下一段在前段结束后开始；真实播放经过>=总时长-3秒。"
+      ],
+      "cleanup": "由隔离运行器停止服务并在下例前resetDatabase；不连接生产、不提交部署；保留本次Cloud/运行证据。",
+      "bindings": [
+        {
+          "suite": "ielts-listening-real-paper",
+          "title": "IELTS listening real golden paper playback > plays every real segment once, checks for two real minutes and preserves the first /40 result"
+        }
+      ],
+      "reviewNote": "当前真实主卷使用2026-10-29T02-28-49-346Z新生成四部分，回放不重复收费；派生文字地图另有旧纯Part2来源。当前Cypress尚未执行，保持draft。"
+    },
+    {
+      "id": "review/ielts-listening/AC-05/CASE-02",
+      "title": "真实音轨结束后仅120秒检查且到时自动交卷",
+      "status": "draft",
+      "requirementIds": [
+        "review/ielts-listening/AC-05"
+      ],
+      "preconditions": [
+        "仅127.0.0.1:13316/english_world_automation_test，一次性合成账号；测试前受保护resetDatabase。",
+        "角色：学生automation_learner（另注明管理员/第二学生时使用独立会话）",
+        "黄金40题均填运行器expectedAnswers，真实时钟不用cy.tick。"
+      ],
+      "steps": [
+        "等待自然播放结束检查倒计时；等两分钟自动交卷。"
+      ],
+      "expectedResults": [
+        "进入检查倒计时115~120秒；实际检查至少115秒；输入截止先冻结，自动结果40/40，无纸考10分钟。"
+      ],
+      "cleanup": "由隔离运行器停止服务并在下例前resetDatabase；不连接生产、不提交部署；保留本次Cloud/运行证据。",
+      "bindings": [
+        {
+          "suite": "ielts-listening-real-paper",
+          "title": "IELTS listening real golden paper playback > plays every real segment once, checks for two real minutes and preserves the first /40 result"
+        }
+      ],
+      "reviewNote": "当前真实主卷使用2026-10-29T02-28-49-346Z新生成四部分，回放不重复收费；派生文字地图另有旧纯Part2来源。当前Cypress尚未执行，保持draft。"
+    },
+    {
+      "id": "review/ielts-listening/AC-06/CASE-01",
+      "title": "模拟刷新找回已保存答案并记录中断",
+      "status": "draft",
+      "requirementIds": [
+        "review/ielts-listening/AC-06"
+      ],
+      "preconditions": [
+        "仅127.0.0.1:13316/english_world_automation_test，一次性合成账号；测试前受保护resetDatabase。",
+        "角色：学生automation_learner（另注明管理员/第二学生时使用独立会话）",
+        "simulation真实播放中保存Q1=paper.expectedAnswers[1]。"
+      ],
+      "steps": [
+        "刷新/重新进入；恢复播放；交卷查看模式标签及GET状态。"
+      ],
+      "expectedResults": [
+        "Q1原答恢复；interrupted=true；重听后不能显示严格一次听完成。"
+      ],
+      "cleanup": "由隔离运行器停止服务并在下例前resetDatabase；不连接生产、不提交部署；保留本次Cloud/运行证据。",
+      "bindings": [
+        {
+          "suite": "ielts-listening-real-paper",
+          "title": "IELTS listening real golden paper playback > AC06 restores saved simulation answers after a real media error and refresh while keeping the result non-strict"
+        }
+      ],
+      "reviewNote": "当前真实主卷使用2026-10-29T02-28-49-346Z新生成四部分，回放不重复收费；派生文字地图另有旧纯Part2来源。当前Cypress尚未执行，保持draft。 标记恢复另由AC02/CASE02具体flag1断言覆盖。"
+    },
+    {
+      "id": "review/ielts-listening/AC-06/CASE-02",
+      "title": "真实音频错误恢复后重听及刷新仍显示中断",
+      "status": "draft",
+      "requirementIds": [
+        "review/ielts-listening/AC-06"
+      ],
+      "preconditions": [
+        "仅127.0.0.1:13316/english_world_automation_test，一次性合成账号；测试前受保护resetDatabase。",
+        "角色：学生automation_learner（另注明管理员/第二学生时使用独立会话）",
+        "simulation已开始并保存输入。"
+      ],
+      "steps": [
+        "真实播放并保存Q1，将audio.src指向缺失文件触发真实media error，点击恢复。",
+        "刷新后恢复播放并交卷，GET状态核实。"
+      ],
+      "expectedResults": [
+        "原Q1恢复，error/play事件存在，音频恢复原src。",
+        "interrupted=true且结果明确已中断模拟，不计严格一次听成绩。"
+      ],
+      "cleanup": "由隔离运行器停止服务并在下例前resetDatabase；不连接生产、不提交部署；保留本次Cloud/运行证据。",
+      "bindings": [
+        {
+          "suite": "ielts-listening-real-paper",
+          "title": "IELTS listening real golden paper playback > AC06 restores saved simulation answers after a real media error and refresh while keeping the result non-strict"
+        }
+      ],
+      "reviewNote": "当前真实主卷使用2026-10-29T02-28-49-346Z新生成四部分，回放不重复收费；派生文字地图另有旧纯Part2来源。当前Cypress尚未执行，保持draft。"
+    },
+    {
+      "id": "review/ielts-listening/AC-06/CASE-03",
+      "title": "离开模拟页面后返回保留答案与中断身份",
+      "status": "draft",
+      "requirementIds": [
+        "review/ielts-listening/AC-06"
+      ],
+      "preconditions": [
+        "仅127.0.0.1:13316/english_world_automation_test，一次性合成账号；测试前受保护resetDatabase。",
+        "角色：学生automation_learner（另注明管理员/第二学生时使用独立会话）",
+        "simulation已开始并保存输入。"
+      ],
+      "steps": [
+        "保存后离开页面，重新进入原attempt继续播放并交卷。"
+      ],
+      "expectedResults": [
+        "已保存输入保留；中断身份不会恢复为严格一次听。"
+      ],
+      "cleanup": "由隔离运行器停止服务并在下例前resetDatabase；不连接生产、不提交部署；保留本次Cloud/运行证据。",
+      "bindings": [],
+      "reviewNote": "仍缺专门离开页面分支断言；media error和刷新通过不能替代，本例保持draft。"
+    },
+    {
+      "id": "review/ielts-listening/AC-07/CASE-01",
+      "title": "真实训练暂停、继续、0.8速和重听记录辅助行为",
+      "status": "draft",
+      "requirementIds": [
+        "review/ielts-listening/AC-07"
+      ],
+      "preconditions": [
+        "仅127.0.0.1:13316/english_world_automation_test，一次性合成账号；测试前受保护resetDatabase。",
+        "角色：学生automation_learner（另注明管理员/第二学生时使用独立会话）",
+        "黄金训练第一音轨。"
+      ],
+      "steps": [
+        "播放>0.3秒暂停，等500ms；调0.8速继续，>2秒后暂停并重听。"
+      ],
+      "expectedResults": [
+        "暂停currentTime不变；继续currentTime增长且rate=.8；重听同src从<1秒开始；服务端slow=true/replays>=1。"
+      ],
+      "cleanup": "由隔离运行器停止服务并在下例前resetDatabase；不连接生产、不提交部署；保留本次Cloud/运行证据。",
+      "bindings": [
+        {
+          "suite": "ielts-listening-real-paper",
+          "title": "IELTS listening real golden paper playback > trains with real pause resume slow replay and stops the old audio when changing material"
+        }
+      ],
+      "reviewNote": "当前真实主卷使用2026-10-29T02-28-49-346Z新生成四部分，回放不重复收费；派生文字地图另有旧纯Part2来源。当前Cypress尚未执行，保持draft。"
+    },
+    {
+      "id": "review/ielts-listening/AC-07/CASE-02",
+      "title": "换材料停止旧音频且新材料不自动播放不叠播",
+      "status": "draft",
+      "requirementIds": [
+        "review/ielts-listening/AC-07"
+      ],
+      "preconditions": [
+        "仅127.0.0.1:13316/english_world_automation_test，一次性合成账号；测试前受保护resetDatabase。",
+        "角色：学生automation_learner（另注明管理员/第二学生时使用独立会话）",
+        "黄金id和alternateId为不同材料，复用既有MP3。"
+      ],
+      "steps": [
+        "训练播放后返回列表；开alternate；主动开始。"
+      ],
+      "expectedResults": [
+        "返回旧audio paused；新加载仍paused；主动开始src不同，仅一个active audio；旧src不再play。"
+      ],
+      "cleanup": "由隔离运行器停止服务并在下例前resetDatabase；不连接生产、不提交部署；保留本次Cloud/运行证据。",
+      "bindings": [
+        {
+          "suite": "ielts-listening-real-paper",
+          "title": "IELTS listening real golden paper playback > trains with real pause resume slow replay and stops the old audio when changing material"
+        }
+      ],
+      "reviewNote": "当前真实主卷使用2026-10-29T02-28-49-346Z新生成四部分，回放不重复收费；派生文字地图另有旧纯Part2来源。当前Cypress尚未执行，保持draft。"
+    },
+    {
+      "id": "review/ielts-listening/AC-07/CASE-03",
+      "title": "无逐题时间定位明确提供整段回听而不伪造秒数",
+      "status": "draft",
+      "requirementIds": [
+        "review/ielts-listening/AC-07"
+      ],
+      "preconditions": [
+        "仅127.0.0.1:13316/english_world_automation_test，一次性合成账号；测试前受保护resetDatabase。",
+        "角色：学生automation_learner（另注明管理员/第二学生时使用独立会话）",
+        "导入无时间字段的已交卷材料。"
+      ],
+      "steps": [
+        "交卷后查看整段回听提示。"
+      ],
+      "expectedResults": [
+        "显示当前提供整段回听；尚无经核实的逐题时间定位。"
+      ],
+      "cleanup": "由隔离运行器停止服务并在下例前resetDatabase；不连接生产、不提交部署；保留本次Cloud/运行证据。",
+      "bindings": [
+        {
+          "suite": "ielts-listening-real-paper",
+          "title": "IELTS listening real golden paper playback > AC06 restores saved simulation answers after a real media error and refresh while keeping the result non-strict"
+        }
+      ],
+      "reviewNote": "当前真实主卷使用2026-10-29T02-28-49-346Z新生成四部分，回放不重复收费；派生文字地图另有旧纯Part2来源。当前Cypress尚未执行，保持draft。"
+    },
+    {
+      "id": "review/ielts-listening/AC-07/CASE-04",
+      "title": "复盘整段回听实际播放正确部分音频",
+      "status": "draft",
+      "requirementIds": [
+        "review/ielts-listening/AC-07"
+      ],
+      "preconditions": [
+        "仅127.0.0.1:13316/english_world_automation_test，一次性合成账号；测试前受保护resetDatabase。",
+        "角色：学生automation_learner（另注明管理员/第二学生时使用独立会话）",
+        "导入无时间字段的已交卷材料。"
+      ],
+      "steps": [
+        "交卷后点击某部分整段回听并观察实际音轨起点与src。"
+      ],
+      "expectedResults": [
+        "播放该部分完整真实音频，不伪造逐题精确定位。"
+      ],
+      "cleanup": "由隔离运行器停止服务并在下例前resetDatabase；不连接生产、不提交部署；保留本次Cloud/运行证据。",
+      "bindings": [],
+      "reviewNote": "提示有断言，复盘点击回听的音频行为仍缺专门断言；保持draft。"
+    },
+    {
+      "id": "review/ielts-listening/AC-08/CASE-01",
+      "title": "未答提示允许返回再交卷且空题零分",
+      "status": "draft",
+      "requirementIds": [
+        "review/ielts-listening/AC-08"
+      ],
+      "preconditions": [
+        "仅127.0.0.1:13316/english_world_automation_test，一次性合成账号；测试前受保护resetDatabase。",
+        "角色：学生automation_learner（另注明管理员/第二学生时使用独立会话）",
+        "tour仅Q1 library/Q10 observatory，其余8空。"
+      ],
+      "steps": [
+        "检查交卷看到8未答，返回；再次确认交卷。"
+      ],
+      "expectedResults": [
+        "返回后输入仍可改；交卷2/10，8空计0。"
+      ],
+      "cleanup": "由隔离运行器停止服务并在下例前resetDatabase；不连接生产、不提交部署；保留本次Cloud/运行证据。",
+      "bindings": [
+        {
+          "suite": "ielts-listening-acceptance",
+          "title": "IELTS listening acceptance boundaries > AC09 freezes a failed submission and retries the same persisted snapshot"
+        }
+      ],
+      "reviewNote": "已逐条核对正式PRD全文与当前源码；本轮新Cypress尚未执行，保持draft。 AI/语音供应商替身仅证明交互和持久化契约。"
+    },
+    {
+      "id": "review/ielts-listening/AC-08/CASE-02",
+      "title": "大小写及首尾空格不影响标准答案",
+      "status": "draft",
+      "requirementIds": [
+        "review/ielts-listening/AC-08"
+      ],
+      "preconditions": [
+        "仅127.0.0.1:13316/english_world_automation_test，一次性合成账号；测试前受保护resetDatabase。",
+        "角色：学生automation_learner（另注明管理员/第二学生时使用独立会话）",
+        "structured context Q1原答  12 YEARS  、Q4 20 pounds、Q7 research centre。"
+      ],
+      "steps": [
+        "保存后刷新确保原串不变，交卷。"
+      ],
+      "expectedResults": [
+        "原答完整保留，三题均对，结果3/10。"
+      ],
+      "cleanup": "由隔离运行器停止服务并在下例前resetDatabase；不连接生产、不提交部署；保留本次Cloud/运行证据。",
+      "bindings": [
+        {
+          "suite": "ielts-listening-acceptance",
+          "title": "IELTS listening acceptance boundaries > AC02 keeps note table and sentence answers with raw numbers units and flags on the same audio across refresh"
+        }
+      ],
+      "reviewNote": "已逐条核对正式PRD全文与当前源码；本轮新Cypress尚未执行，保持draft。 AI/语音供应商替身仅证明交互和持久化契约。"
+    },
+    {
+      "id": "review/ielts-listening/AC-08/CASE-03",
+      "title": "超词数、缺必要单位、错误词尾及允许变体按键评分",
+      "status": "draft",
+      "requirementIds": [
+        "review/ielts-listening/AC-08"
+      ],
+      "preconditions": [
+        "仅127.0.0.1:13316/english_world_automation_test，一次性合成账号；测试前受保护resetDatabase。",
+        "角色：学生automation_learner（另注明管理员/第二学生时使用独立会话）",
+        "管理员10题标准键Monday/12 years/cat/blue bird/centre或center；maxWords2 allowNumber。"
+      ],
+      "steps": [
+        "提交 monday /12/cats/a blue bird/CENTER，其余空。"
+      ],
+      "expectedResults": [
+        "分数2/10；缺years及cats错；a blue bird超限；CENTER正确；空题未作答。"
+      ],
+      "cleanup": "由隔离运行器停止服务并在下例前resetDatabase；不连接生产、不提交部署；保留本次Cloud/运行证据。",
+      "bindings": [
+        {
+          "suite": "ielts-listening-acceptance",
+          "title": "IELTS listening acceptance boundaries > AC08 grades raw casing blanks word limits necessary units suffixes and explicit variants through persisted submit"
+        }
+      ],
+      "reviewNote": "已核对当前新增精确测试标题及断言，尚未执行，本例保持draft；HTTP边界不冒充真实音质验收。"
+    },
+    {
+      "id": "review/ielts-listening/AC-09/CASE-01",
+      "title": "交卷失败冻结本地快照刷新后重试原样入库",
+      "status": "draft",
+      "requirementIds": [
+        "review/ielts-listening/AC-09"
+      ],
+      "preconditions": [
+        "仅127.0.0.1:13316/english_world_automation_test，一次性合成账号；测试前受保护resetDatabase。",
+        "角色：学生automation_learner（另注明管理员/第二学生时使用独立会话）",
+        "tour Q1 library Q10 observatory；仅首次submit拦截503。"
+      ],
+      "steps": [
+        "手动交卷失败后检查disabled并刷新；重试交卷；GET回读并再提交changed。"
+      ],
+      "expectedResults": [
+        "输入冻结不被改；刷新原值仍在；恢复结果2/10；回读一致，重复提交不改result。"
+      ],
+      "cleanup": "由隔离运行器停止服务并在下例前resetDatabase；不连接生产、不提交部署；保留本次Cloud/运行证据。",
+      "bindings": [
+        {
+          "suite": "ielts-listening-acceptance",
+          "title": "IELTS listening acceptance boundaries > AC09 freezes a failed submission and retries the same persisted snapshot"
+        }
+      ],
+      "reviewNote": "已逐条核对正式PRD全文与当前源码；本轮新Cypress尚未执行，保持draft。 AI/语音供应商替身仅证明交互和持久化契约。"
+    },
+    {
+      "id": "review/ielts-listening/AC-09/CASE-02",
+      "title": "真实到时冻结并仅保存一个首次成绩",
+      "status": "draft",
+      "requirementIds": [
+        "review/ielts-listening/AC-09"
+      ],
+      "preconditions": [
+        "仅127.0.0.1:13316/english_world_automation_test，一次性合成账号；测试前受保护resetDatabase。",
+        "角色：学生automation_learner（另注明管理员/第二学生时使用独立会话）",
+        "黄金真实模拟40题都正确。"
+      ],
+      "steps": [
+        "自然播放及120秒后自动交卷；同题再练；回读旧attempt。"
+      ],
+      "expectedResults": [
+        "deadline前后观察到disabled；40/40首次结果固定；再练新attemptId且旧result不变。"
+      ],
+      "cleanup": "由隔离运行器停止服务并在下例前resetDatabase；不连接生产、不提交部署；保留本次Cloud/运行证据。",
+      "bindings": [
+        {
+          "suite": "ielts-listening-real-paper",
+          "title": "IELTS listening real golden paper playback > plays every real segment once, checks for two real minutes and preserves the first /40 result"
+        }
+      ],
+      "reviewNote": "当前真实主卷使用2026-10-29T02-28-49-346Z新生成四部分，回放不重复收费；派生文字地图另有旧纯Part2来源。当前Cypress尚未执行，保持draft。"
+    },
+    {
+      "id": "review/ielts-listening/AC-09/CASE-03",
+      "title": "双击并发及旧revision超时重试只产生首次结果",
+      "status": "draft",
+      "requirementIds": [
+        "review/ielts-listening/AC-09"
+      ],
+      "preconditions": [
+        "仅127.0.0.1:13316/english_world_automation_test，一次性合成账号；测试前受保护resetDatabase。",
+        "角色：学生automation_learner（另注明管理员/第二学生时使用独立会话）",
+        "同一attempt start后同revision分别Monday/Tuesday并发submit。"
+      ],
+      "steps": [
+        "并发发送两个HTTP；再用旧revision提交Changed；查询attempt列表。"
+      ],
+      "expectedResults": [
+        "两响应相同result/revision；重试仍相同；仅一个attempt。"
+      ],
+      "cleanup": "由隔离运行器停止服务并在下例前resetDatabase；不连接生产、不提交部署；保留本次Cloud/运行证据。",
+      "bindings": [],
+      "reviewNote": "已逐条核对正式PRD全文与当前源码；本轮新Cypress尚未执行，保持draft。 待补Cypress：后端Jest AC09覆盖行锁；Cypress未双击并发。"
+    },
+    {
+      "id": "review/ielts-listening/AC-09/CASE-04",
+      "title": "最后保存失败后截止离线冻结恢复和无法核实快照异常",
+      "status": "draft",
+      "requirementIds": [
+        "review/ielts-listening/AC-09"
+      ],
+      "preconditions": [
+        "仅127.0.0.1:13316/english_world_automation_test，一次性合成账号；测试前受保护resetDatabase。",
+        "角色：学生automation_learner（另注明管理员/第二学生时使用独立会话）",
+        "模拟检查临截止，最后输入尚未save；分别冻结快照可恢复和快照丢失。"
+      ],
+      "steps": [
+        "拦截save失败和submit网络失败；自然截止；尝试输入后刷新，恢复网络交卷。"
+      ],
+      "expectedResults": [
+        "截止原输入冻结、待提交可见；恢复后服务端与冻结快照相同；无法核实则异常模拟且不虚假成功。"
+      ],
+      "cleanup": "由隔离运行器停止服务并在下例前resetDatabase；不连接生产、不提交部署；保留本次Cloud/运行证据。",
+      "bindings": [
+        {
+          "suite": "ielts-listening-acceptance",
+          "title": "IELTS listening acceptance boundaries > AC09 freezes the last unsaved deadline input across a real submit outage and marks an unverifiable late snapshot abnormal"
+        }
+      ],
+      "reviewNote": "已核对当前新增精确测试标题及断言，尚未执行，本例保持draft；HTTP边界不冒充真实音质验收。"
+    },
+    {
+      "id": "review/ielts-listening/AC-10/CASE-01",
+      "title": "单部分结果按10分并有中文解释",
+      "status": "draft",
+      "requirementIds": [
+        "review/ielts-listening/AC-10"
+      ],
+      "preconditions": [
+        "仅127.0.0.1:13316/english_world_automation_test，一次性合成账号；测试前受保护resetDatabase。",
+        "角色：学生automation_learner（另注明管理员/第二学生时使用独立会话）",
+        "tour空卷。"
+      ],
+      "steps": [
+        "交卷查看10个逐题行及中文解释。"
+      ],
+      "expectedResults": [
+        "0/10；每行中文解释可用而非暂不可用。"
+      ],
+      "cleanup": "由隔离运行器停止服务并在下例前resetDatabase；不连接生产、不提交部署；保留本次Cloud/运行证据。",
+      "bindings": [
+        {
+          "suite": "ielts-listening-acceptance",
+          "title": "IELTS listening acceptance boundaries > AC10 saves self-selected review causes with Chinese explanations without changing the first score"
+        }
+      ],
+      "reviewNote": "已逐条核对正式PRD全文与当前源码；本轮新Cypress尚未执行，保持draft。 AI/语音供应商替身仅证明交互和持久化契约。"
+    },
+    {
+      "id": "review/ielts-listening/AC-10/CASE-02",
+      "title": "完整材料显示40分且不伪称官方Band",
+      "status": "draft",
+      "requirementIds": [
+        "review/ielts-listening/AC-10"
+      ],
+      "preconditions": [
+        "仅127.0.0.1:13316/english_world_automation_test，一次性合成账号；测试前受保护resetDatabase。",
+        "角色：学生automation_learner（另注明管理员/第二学生时使用独立会话）",
+        "黄金模拟40题全部正确。"
+      ],
+      "steps": [
+        "自然截止后查看结果、逐题和原文。"
+      ],
+      "expectedResults": [
+        "40/40、40逐题结果、4份原文；明确原创练习不是官方Band。"
+      ],
+      "cleanup": "由隔离运行器停止服务并在下例前resetDatabase；不连接生产、不提交部署；保留本次Cloud/运行证据。",
+      "bindings": [
+        {
+          "suite": "ielts-listening-real-paper",
+          "title": "IELTS listening real golden paper playback > plays every real segment once, checks for two real minutes and preserves the first /40 result"
+        }
+      ],
+      "reviewNote": "当前真实主卷使用2026-10-29T02-28-49-346Z新生成四部分，回放不重复收费；派生文字地图另有旧纯Part2来源。当前Cypress尚未执行，保持draft。"
+    },
+    {
+      "id": "review/ielts-listening/AC-10/CASE-03",
+      "title": "自选错因失败可重试并持久化且不改首次分数",
+      "status": "draft",
+      "requirementIds": [
+        "review/ielts-listening/AC-10"
+      ],
+      "preconditions": [
+        "仅127.0.0.1:13316/english_world_automation_test，一次性合成账号；测试前受保护resetDatabase。",
+        "角色：学生automation_learner（另注明管理员/第二学生时使用独立会话）",
+        "tour空卷；首次reflect拦截503。"
+      ],
+      "steps": [
+        "Q1选词不认识，失败后重选，刷新再清除；GET回读。"
+      ],
+      "expectedResults": [
+        "失败说明未保存并回退空值；成功提示已保存，刷新保持；清除成功；result深等首次结果。"
+      ],
+      "cleanup": "由隔离运行器停止服务并在下例前resetDatabase；不连接生产、不提交部署；保留本次Cloud/运行证据。",
+      "bindings": [
+        {
+          "suite": "ielts-listening-acceptance",
+          "title": "IELTS listening acceptance boundaries > AC10 saves self-selected review causes with Chinese explanations without changing the first score"
+        }
+      ],
+      "reviewNote": "已逐条核对正式PRD全文与当前源码；本轮新Cypress尚未执行，保持draft。 AI/语音供应商替身仅证明交互和持久化契约。"
+    },
+    {
+      "id": "review/ielts-listening/AC-11/CASE-01",
+      "title": "首交前网络题干投影不泄露原文答案证据解释",
+      "status": "draft",
+      "requirementIds": [
+        "review/ielts-listening/AC-11"
+      ],
+      "preconditions": [
+        "仅127.0.0.1:13316/english_world_automation_test，一次性合成账号；测试前受保护resetDatabase。",
+        "角色：学生automation_learner（另注明管理员/第二学生时使用独立会话）",
+        "黄金真实模拟；拦截观察所有GET并继续真实响应。"
+      ],
+      "steps": [
+        "遍历materials和attempt投影；答题与播放期间持续观察。"
+      ],
+      "expectedResults": [
+        "未交前result=null；所有section无transcript；question无answers/evidence/explanation。"
+      ],
+      "cleanup": "由隔离运行器停止服务并在下例前resetDatabase；不连接生产、不提交部署；保留本次Cloud/运行证据。",
+      "bindings": [
+        {
+          "suite": "ielts-listening-real-paper",
+          "title": "IELTS listening real golden paper playback > plays every real segment once, checks for two real minutes and preserves the first /40 result"
+        }
+      ],
+      "reviewNote": "当前真实主卷使用2026-10-29T02-28-49-346Z新生成四部分，回放不重复收费；派生文字地图另有旧纯Part2来源。当前Cypress尚未执行，保持draft。"
+    },
+    {
+      "id": "review/ielts-listening/AC-11/CASE-02",
+      "title": "第二学生无法读取他人attempt或音频",
+      "status": "draft",
+      "requirementIds": [
+        "review/ielts-listening/AC-11"
+      ],
+      "preconditions": [
+        "仅127.0.0.1:13316/english_world_automation_test，一次性合成账号；测试前受保护resetDatabase。",
+        "角色：学生automation_learner（另注明管理员/第二学生时使用独立会话）",
+        "A创建私有训练attempt；B automation_other登录。"
+      ],
+      "steps": [
+        "B GET attempt和audio/0；清admin_token GET后台列表。"
+      ],
+      "expectedResults": [
+        "两个私有请求404；后台401。"
+      ],
+      "cleanup": "由隔离运行器停止服务并在下例前resetDatabase；不连接生产、不提交部署；保留本次Cloud/运行证据。",
+      "bindings": [
+        {
+          "suite": "ielts-listening",
+          "title": "IELTS listening closed loop > keeps private attempts inaccessible to a second student and guards admin operations"
+        }
+      ],
+      "reviewNote": "已逐条核对正式PRD全文与当前源码；本轮新Cypress尚未执行，保持draft。 AI/语音供应商替身仅证明交互和持久化契约。"
+    },
+    {
+      "id": "review/ielts-listening/AC-11/CASE-03",
+      "title": "材料修订发布不改变旧卷材料和固定结果",
+      "status": "draft",
+      "requirementIds": [
+        "review/ielts-listening/AC-11"
+      ],
+      "preconditions": [
+        "仅127.0.0.1:13316/english_world_automation_test，一次性合成账号；测试前受保护resetDatabase。",
+        "角色：学生automation_learner（另注明管理员/第二学生时使用独立会话）",
+        "tour Q10 observatory已交得1/10；管理员改Q10键为library。"
+      ],
+      "steps": [
+        "创建修订、配音准备并发布；GET旧卷并创建新版attempt。"
+      ],
+      "expectedResults": [
+        "新版不同id/title；旧材料id/title/1分及Q10 accepted observatory保持；新attempt用新材料。"
+      ],
+      "cleanup": "由隔离运行器停止服务并在下例前resetDatabase；不连接生产、不提交部署；保留本次Cloud/运行证据。",
+      "bindings": [
+        {
+          "suite": "ielts-listening-acceptance",
+          "title": "IELTS listening acceptance boundaries > AC11 and AC12 create, prepare and publish a revision while the old paper result stays frozen"
+        }
+      ],
+      "reviewNote": "已逐条核对正式PRD全文与当前源码；本轮新Cypress尚未执行，保持draft。 AI/语音供应商替身仅证明交互和持久化契约。"
+    },
+    {
+      "id": "review/ielts-listening/AC-11/CASE-04",
+      "title": "私有材料、prepare和他人记录写入均越权拒绝",
+      "status": "draft",
+      "requirementIds": [
+        "review/ielts-listening/AC-11"
+      ],
+      "preconditions": [
+        "仅127.0.0.1:13316/english_world_automation_test，一次性合成账号；测试前受保护resetDatabase。",
+        "角色：学生automation_learner（另注明管理员/第二学生时使用独立会话）",
+        "A私有材料和attempt；B独立会话。"
+      ],
+      "steps": [
+        "B GET私有材料、POST prepare、POST他人attempt submit。"
+      ],
+      "expectedResults": [
+        "全部404；记录与音频GET越权另由CASE02覆盖。"
+      ],
+      "cleanup": "由隔离运行器停止服务并在下例前resetDatabase；不连接生产、不提交部署；保留本次Cloud/运行证据。",
+      "bindings": [
+        {
+          "suite": "ielts-listening-acceptance",
+          "title": "IELTS listening acceptance boundaries > AC01 AC11 AC12 reject invalid imports drafts student admin writes and other-user private resources through real HTTP"
+        }
+      ],
+      "reviewNote": "已核对当前新增精确测试标题及断言，尚未执行，本例保持draft；HTTP边界不冒充真实音质验收。 reflect越权另有后端Jest契约，不将该Cypress冒充reflect断言。"
+    },
+    {
+      "id": "review/ielts-listening/AC-12/CASE-01",
+      "title": "管理员创建修订、校验准备、发布和停用",
+      "status": "draft",
+      "requirementIds": [
+        "review/ielts-listening/AC-12"
+      ],
+      "preconditions": [
+        "仅127.0.0.1:13316/english_world_automation_test，一次性合成账号；测试前受保护resetDatabase。",
+        "角色：管理员automation_admin与学生",
+        "管理员已发布tour。"
+      ],
+      "steps": [
+        "创建修订后取消确认表单清空；重新修订题干/答案证据，校验创建、准备并发布后停用。"
+      ],
+      "expectedResults": [
+        "取消不创建；新版本草稿不覆盖原卷；准备后可发布；状态已发布，停用后待发布。"
+      ],
+      "cleanup": "由隔离运行器停止服务并在下例前resetDatabase；不连接生产、不提交部署；保留本次Cloud/运行证据。",
+      "bindings": [
+        {
+          "suite": "ielts-listening-acceptance",
+          "title": "IELTS listening acceptance boundaries > AC11 and AC12 create, prepare and publish a revision while the old paper result stays frozen"
+        }
+      ],
+      "reviewNote": "已逐条核对正式PRD全文与当前源码；本轮新Cypress尚未执行，保持draft。 AI/语音供应商替身仅证明交互和持久化契约。"
+    },
+    {
+      "id": "review/ielts-listening/AC-12/CASE-02",
+      "title": "学生所有后台写入口拒绝且草稿不公共可做",
+      "status": "draft",
+      "requirementIds": [
+        "review/ielts-listening/AC-12"
+      ],
+      "preconditions": [
+        "仅127.0.0.1:13316/english_world_automation_test，一次性合成账号；测试前受保护resetDatabase。",
+        "角色：管理员及无管理员cookie学生",
+        "无admin_token学生；管理员未prepare草稿。"
+      ],
+      "steps": [
+        "学生直接create/prepare/publish/edit/revisions；学生列表查草稿并尝试开卷。"
+      ],
+      "expectedResults": [
+        "后台均401；草稿不在公共可做列表且开卷404；发布草稿409。"
+      ],
+      "cleanup": "由隔离运行器停止服务并在下例前resetDatabase；不连接生产、不提交部署；保留本次Cloud/运行证据。",
+      "bindings": [
+        {
+          "suite": "ielts-listening-acceptance",
+          "title": "IELTS listening acceptance boundaries > AC01 AC11 AC12 reject invalid imports drafts student admin writes and other-user private resources through real HTTP"
+        }
+      ],
+      "reviewNote": "已核对当前新增精确测试标题及断言，尚未执行，本例保持draft；HTTP边界不冒充真实音质验收。"
+    },
+    {
+      "id": "review/ielts-listening/AC-13/CASE-01",
+      "title": "从结果主动收集词保留来源且取消不写入",
+      "status": "draft",
+      "requirementIds": [
+        "review/ielts-listening/AC-13"
+      ],
+      "preconditions": [
+        "仅127.0.0.1:13316/english_world_automation_test，一次性合成账号；测试前受保护resetDatabase。",
+        "角色：学生automation_learner（另注明管理员/第二学生时使用独立会话）",
+        "tour空卷Q10 observatory，原词库无该词。"
+      ],
+      "steps": [
+        "点击在词库查找收集；打开预填新增表单检查来源；直接取消。"
+      ],
+      "expectedResults": [
+        "跳词库不自动写；预填observatory及原attempt链接；取消后total不变。"
+      ],
+      "cleanup": "由隔离运行器停止服务并在下例前resetDatabase；不连接生产、不提交部署；保留本次Cloud/运行证据。",
+      "bindings": [
+        {
+          "suite": "ielts-listening-acceptance",
+          "title": "IELTS listening acceptance boundaries > AC13 collects a selected result word with source and cancels duplicates without writes"
+        }
+      ],
+      "reviewNote": "已逐条核对正式PRD全文与当前源码；本轮新Cypress尚未执行，保持draft。 AI/语音供应商替身仅证明交互和持久化契约。"
+    },
+    {
+      "id": "review/ielts-listening/AC-13/CASE-02",
+      "title": "主动保存单词且重复提示后取消不覆盖",
+      "status": "draft",
+      "requirementIds": [
+        "review/ielts-listening/AC-13"
+      ],
+      "preconditions": [
+        "仅127.0.0.1:13316/english_world_automation_test，一次性合成账号；测试前受保护resetDatabase。",
+        "角色：学生automation_learner（另注明管理员/第二学生时使用独立会话）",
+        "同词库无observatory；填等级不会、类型单词、中文天文台。"
+      ],
+      "steps": [
+        "保存新增后记录完整条目；再次保存同词遇重复提示，取消并放弃脏表单。"
+      ],
+      "expectedResults": [
+        "仅新增1条、来源正确；重复不新增；取消后total和完整条目深等保存前。"
+      ],
+      "cleanup": "由隔离运行器停止服务并在下例前resetDatabase；不连接生产、不提交部署；保留本次Cloud/运行证据。",
+      "bindings": [
+        {
+          "suite": "ielts-listening-acceptance",
+          "title": "IELTS listening acceptance boundaries > AC13 collects a selected result word with source and cancels duplicates without writes"
+        }
+      ],
+      "reviewNote": "已逐条核对正式PRD全文与当前源码；本轮新Cypress尚未执行，保持draft。 AI/语音供应商替身仅证明交互和持久化契约。"
+    },
+    {
+      "id": "review/ielts-listening/AC-14/CASE-01",
+      "title": "同套当前新生成真实音频四部分完整播放有来源与时序证据",
+      "status": "draft",
+      "requirementIds": [
+        "review/ielts-listening/AC-14"
+      ],
+      "preconditions": [
+        "仅127.0.0.1:13316/english_world_automation_test，一次性合成账号；测试前受保护resetDatabase。",
+        "角色：学生automation_learner（另注明管理员/第二学生时使用独立会话）",
+        "当前新run 2026-10-29T02-28-49-346Z full-mixed-material.json，4部分40题8段385.344秒，七种实现kind覆盖六官方题型族；mainProvenance可核对。"
+      ],
+      "steps": [
+        "读取golden-full-paper provenance哈希；执行真实全段及两分钟脚本，保存playback报告。"
+      ],
+      "expectedResults": [
+        "4部分40题、8段真实音频自然结束，主manifest指向同一当前新生成run；播放Cloud证据须独立于生成成功证据审核。"
+      ],
+      "cleanup": "由隔离运行器停止服务并在下例前resetDatabase；不连接生产、不提交部署；保留本次Cloud/运行证据。",
+      "bindings": [
+        {
+          "suite": "ielts-listening-real-paper",
+          "title": "IELTS listening real golden paper playback > plays every real segment once, checks for two real minutes and preserves the first /40 result"
+        }
+      ],
+      "reviewNote": "当前真实主卷使用2026-10-29T02-28-49-346Z新生成四部分，回放不重复收费；派生文字地图另有旧纯Part2来源。当前Cypress尚未执行，保持draft。"
+    },
+    {
+      "id": "review/ielts-listening/AC-14/CASE-02",
+      "title": "六题型与新生成完整四部分真实供应商验收",
+      "status": "draft",
+      "requirementIds": [
+        "review/ielts-listening/AC-14"
+      ],
+      "preconditions": [
+        "仅127.0.0.1:13316/english_world_automation_test，一次性合成账号；测试前受保护resetDatabase。",
+        "角色：学生automation_learner（另注明管理员/第二学生时使用独立会话）",
+        "充值后当前新run四部分生成、真实配音及服务评分40/40已成功；Cloud播放仍待本轮执行。"
+      ],
+      "steps": [
+        "核对当前新run七种实现kind/六官方题型族、真实MP3与原文/答案/地图一致性；关联生成报告及全长ASR，完成浏览器流程。"
+      ],
+      "expectedResults": [
+        "六型与四部分都有真实可听证据；缺题源、mock、未执行不得通过；新全套失败须保留原因不能用黄金装配替代。"
+      ],
+      "cleanup": "由隔离运行器停止服务并在下例前resetDatabase；不连接生产、不提交部署；保留本次Cloud/运行证据。",
+      "bindings": [],
+      "reviewNote": "当前主任务新全套供应商成功，不沿用之前P4拒绝为当前结论；Cypress播放不单独证明内容听辨与自然度，仍需主任务合并真实生成、ASR与播放证据审核。"
+    },
+    {
+      "id": "review/ielts-listening/AC-14/CASE-03",
+      "title": "腾讯双人台词与原文完全一致",
+      "status": "draft",
+      "requirementIds": [
+        "review/ielts-listening/AC-14"
+      ],
+      "preconditions": [
+        "仅使用隔离数据库和测试账号；真实供应商额外记录额度和费用。"
+      ],
+      "steps": [
+        "在隔离环境启用已测试腾讯语音，生成 Part 1 和 Part 3，检查说话人交替、原文、评分证据与顺序播放。"
+      ],
+      "expectedResults": [
+        "行为符合腾讯双人语音修订，失败及未覆盖项保留证据。"
+      ],
+      "cleanup": "停止隔离服务，保留报告；不删除生产数据。",
+      "bindings": [],
+      "reviewNote": "新增修订待补充浏览器绑定；单元和真实供应商证据不冒充完整浏览器验收。"
+    },
+    {
+      "id": "review/ielts-listening/AC-14/CASE-04",
+      "title": "腾讯音色权限和用量限制",
+      "status": "draft",
+      "requirementIds": [
+        "review/ielts-listening/AC-14"
+      ],
+      "preconditions": [
+        "仅使用隔离数据库和测试账号；真实供应商额外记录额度和费用。"
+      ],
+      "steps": [
+        "独立设置腾讯与豆包的次数和频率上限，模拟超时和重试，检查独立计数、不泄露密钥。"
+      ],
+      "expectedResults": [
+        "行为符合腾讯双人语音修订，失败及未覆盖项保留证据。"
+      ],
+      "cleanup": "停止隔离服务，保留报告；不删除生产数据。",
+      "bindings": [],
+      "reviewNote": "新增修订待补充浏览器绑定；单元和真实供应商证据不冒充完整浏览器验收。"
+    },
+    {
+      "id": "review/ielts-listening/AC-14/CASE-05",
+      "title": "旧材料及导入兼容",
+      "status": "draft",
+      "requirementIds": [
+        "review/ielts-listening/AC-14"
+      ],
+      "preconditions": [
+        "仅使用隔离数据库和测试账号；真实供应商额外记录额度和费用。"
+      ],
+      "steps": [
+        "检查旧材料和缺双人台词的管理员导入，原音频和成绩保持可访问。"
+      ],
+      "expectedResults": [
+        "行为符合腾讯双人语音修订，失败及未覆盖项保留证据。"
+      ],
+      "cleanup": "停止隔离服务，保留报告；不删除生产数据。",
+      "bindings": [],
+      "reviewNote": "新增修订待补充浏览器绑定；单元和真实供应商证据不冒充完整浏览器验收。"
+    },
+    {
+      "id": "review/ielts-listening/AC-15/CASE-01",
+      "title": "分类表格与分阶段流程可输入、保存和刷新恢复",
+      "status": "ready",
+      "requirementIds": [
+        "review/ielts-listening/AC-15"
+      ],
+      "preconditions": [
+        "仅隔离HTTP/MySQL与合成账号；Docker及Cypress Cloud接入。",
+        "外部AI/语音为供应商替身，仅验证软件契约，不认证真实材料质量。"
+      ],
+      "steps": [
+        "管理员导入6题分类表格+4题流程，准备并公开；学生开始训练。",
+        "在1280×800及1440×900检查真实table/有序阶段，填写第1及7题并刷新。"
+      ],
+      "expectedResults": [
+        "真实分类、阶段与10个输入均呈现；输入保存刷新恢复，原有题号与操作可用。"
+      ],
+      "cleanup": "使用既有受保护resetDatabase；运行器清理一次性数据库；不访问生产。",
+      "bindings": [
+        {
+          "suite": "ielts-listening-diversity",
+          "title": "IELTS original material diversity > AC15 renders classified tables and ordered stages with persistent usable answer fields"
+        }
+      ],
+      "reviewNote": "只覆盖本Case所列子条款。每Part候选/20份历史/并发/地图篡改有Jest或MySQL补充证据；真实生成及试听未认证。"
+    },
+    {
+      "id": "review/ielts-listening/AC-17/CASE-01",
+      "title": "连续新地图采用八种不同连通结构且内部方案不泄露",
+      "status": "ready",
+      "requirementIds": [
+        "review/ielts-listening/AC-17"
+      ],
+      "preconditions": [
+        "仅隔离HTTP/MySQL与合成账号；Docker及Cypress Cloud接入。",
+        "外部AI/语音为供应商替身，仅验证软件契约，不认证真实材料质量。"
+      ],
+      "steps": [
+        "学生连续创建并准备8份Part2地图材料，记录实际图面道路。",
+        "幂等找回每份材料，进入答题在两种桌面视口检查缩放及选择。"
+      ],
+      "expectedResults": [
+        "8张地图道路结构不同，各10题12备选点。",
+        "提交前无sectionPlans/planningOrder/原文/答案；重复requestId返回原ready材料。"
+      ],
+      "cleanup": "使用既有受保护resetDatabase；运行器清理一次性数据库；不访问生产。",
+      "bindings": [
+        {
+          "suite": "ielts-listening-diversity",
+          "title": "IELTS original material diversity > AC17/18 creates eight distinct real map geometries and keeps idempotent materials private"
+        }
+      ],
+      "reviewNote": "只覆盖本Case所列子条款。每Part候选/20份历史/并发/地图篡改有Jest或MySQL补充证据；真实生成及试听未认证。"
+    },
+    {
+      "id": "review/ielts-listening/AC-18/CASE-01",
+      "title": "新材料幂等找回不重新准备已完成内容",
+      "status": "ready",
+      "requirementIds": [
+        "review/ielts-listening/AC-18"
+      ],
+      "preconditions": [
+        "仅隔离HTTP/MySQL与合成账号；Docker及Cypress Cloud接入。",
+        "外部AI/语音为供应商替身，仅验证软件契约，不认证真实材料质量。"
+      ],
+      "steps": [
+        "已准备材料使用相同requestId和不同主题重新请求。"
+      ],
+      "expectedResults": [
+        "返回原id且ready，未替换内容；地图选择缩放后保留。"
+      ],
+      "cleanup": "使用既有受保护resetDatabase；运行器清理一次性数据库；不访问生产。",
+      "bindings": [
+        {
+          "suite": "ielts-listening-diversity",
+          "title": "IELTS original material diversity > AC17/18 creates eight distinct real map geometries and keeps idempotent materials private"
+        }
+      ],
+      "reviewNote": "只覆盖本Case所列子条款。每Part候选/20份历史/并发/地图篡改有Jest或MySQL补充证据；真实生成及试听未认证。"
+    },
+    {
+      "id": "review/ielts-listening/AC-16/CASE-01",
+      "title": "全地图结构/表达、篡改拒绝与真实语音质量",
+      "status": "draft",
+      "requirementIds": [
+        "review/ielts-listening/AC-16"
+      ],
+      "preconditions": [
+        "八种布局、三种表达策略和四Part。"
+      ],
+      "steps": [
+        "规则测试遍历空间事实并注入入口/题位/方向/答案错误。",
+        "用真实AI/语音生成并试听，核对地图与音频、自然程度。"
+      ],
+      "expectedResults": [
+        "所有空间规则正确、篡改拒绝；真实语言/音频质量需独立证据。"
+      ],
+      "cleanup": "真实服务沿用已有预算，禁止生产seed；记录实际调用与待验项。",
+      "bindings": [],
+      "reviewNote": "规则部分有Jest补充；真实供应商/试听未执行，保持draft，不冒充完整AC通过。"
+    },
+    {
+      "id": "review/ielts-listening/AC-15/CASE-02",
+      "title": "每Part混合方案、专项保持与信息顺序完整覆盖",
+      "status": "draft",
+      "requirementIds": [
+        "review/ielts-listening/AC-15"
+      ],
+      "preconditions": [
+        "使用一次性合成账号和隔离数据库；规则/API/真实供应商证据分别记录。"
+      ],
+      "steps": [
+        "遍历各Part全部候选并验证10位、题号、多选与填空表现；使用真实内容核对题序。"
+      ],
+      "expectedResults": [
+        "每Part至少3种组合且答案信息按编号顺序出现；规则测试已有，完整真实内容验收仍待补。"
+      ],
+      "cleanup": "清理隔离测试数据，不连接生产；真实付费沿用既有配置和限额。",
+      "bindings": [],
+      "reviewNote": "防止一个局部浏览器Case冒充复合AC全覆盖。已有Jest/MySQL证据记入本轮sidecar；待完成对应真实材料及端到端映射。"
+    },
+    {
+      "id": "review/ielts-listening/AC-17/CASE-02",
+      "title": "20份相关历史与实质内容避重完整覆盖",
+      "status": "draft",
+      "requirementIds": [
+        "review/ielts-listening/AC-17"
+      ],
+      "preconditions": [
+        "使用一次性合成账号和隔离数据库；规则/API/真实供应商证据分别记录。"
+      ],
+      "steps": [
+        "创建相关与其他Part混合历史，核对窗口、穷尽轮换、重复/仅换名/同主题不同任务；校准查重。"
+      ],
+      "expectedResults": [
+        "查询20份相关材料不被无关Part挤掉；重复无配音，语义误放/误拒需真实样本进一步测量。"
+      ],
+      "cleanup": "清理隔离测试数据，不连接生产；真实付费沿用既有配置和限额。",
+      "bindings": [],
+      "reviewNote": "防止一个局部浏览器Case冒充复合AC全覆盖。已有Jest/MySQL证据记入本轮sidecar；待完成对应真实材料及端到端映射。"
+    },
+    {
+      "id": "review/ielts-listening/AC-18/CASE-02",
+      "title": "并发、历史草稿、已有音频恢复与额度完整覆盖",
+      "status": "draft",
+      "requirementIds": [
+        "review/ielts-listening/AC-18"
+      ],
+      "preconditions": [
+        "使用一次性合成账号和隔离数据库；规则/API/真实供应商证据分别记录。"
+      ],
+      "steps": [
+        "通过真实MySQL验证并发幂等和旧草稿兼容；验证结构/语义/查重失败后重试预算与pending语音恢复。"
+      ],
+      "expectedResults": [
+        "冻结选择与历史结果不变，不超预算，不泄漏方案；已有规则/API补充证据，尚未全绑定Cypress。"
+      ],
+      "cleanup": "清理隔离测试数据，不连接生产；真实付费沿用既有配置和限额。",
+      "bindings": [],
+      "reviewNote": "防止一个局部浏览器Case冒充复合AC全覆盖。已有Jest/MySQL证据记入本轮sidecar；待完成对应真实材料及端到端映射。"
+    }
+  ]
+}

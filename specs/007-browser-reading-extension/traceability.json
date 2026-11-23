@@ -1,0 +1,11 @@
+{
+  "featureId": "vocabulary/browser-reading-extension",
+  "prd": "docs/prd/vocabulary/features/browser-reading-extension/prd.md",
+  "design": "docs/design/vocabulary/browser-reading-extension/design.md",
+  "scenarios": [
+    { "scenario": "S1", "requirements": ["FR-01", "AC-01"], "checks": ["browserContent.test.ts", "reading-word-lookup.service.spec.ts", "manual Chrome with live AI"] },
+    { "scenario": "S2", "requirements": ["FR-02", "AC-02"], "checks": ["browser-reading-sources.cy.ts", "database concurrency"] },
+    { "scenario": "S3", "requirements": ["FR-03", "AC-03"], "checks": ["BrowserWordSources.test.tsx", "browser-reading-source.spec.ts", "browser-reading-sources.cy.ts"] },
+    { "scenario": "S4", "requirements": ["FR-04", "FR-05", "AC-04"], "checks": ["browser-reading-auth.spec.ts", "browserContent.test.ts", "browser-reading-sources.cy.ts", "manual Chrome authorization"] }
+  ]
+}

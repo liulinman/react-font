@@ -1,0 +1,163 @@
+{
+  "featureId": "intensive-reading/word-card",
+  "mapping": [
+    {
+      "scenario": "S1",
+      "requirements": [
+        "FR-01",
+        "FR-02",
+        "AC-01"
+      ],
+      "case": "intensive-reading/word-card/AC-01/WEB",
+      "suite": "reading-word-card",
+      "title": "Reading collected word card > shows collected data, preserves source and distinguishes missing words"
+    },
+    {
+      "scenario": "S2",
+      "requirements": [
+        "FR-03",
+        "AC-02"
+      ],
+      "case": "intensive-reading/word-card/AC-02/WEB",
+      "suite": "reading-word-card",
+      "title": "Reading collected word card > drags and keeps its position while switching and scrolling, supports keyboard and resize"
+    },
+    {
+      "scenario": "S3",
+      "requirements": [
+        "FR-05",
+        "AC-04"
+      ],
+      "case": "intensive-reading/word-card/AC-03/WEB",
+      "suite": "reading-word-card",
+      "title": "Reading collected word card > rejects partial matches and isolates users without updating vocabulary"
+    },
+    {
+      "scenario": "S4",
+      "requirements": [
+        "FR-04",
+        "AC-03"
+      ],
+      "case": "intensive-reading/word-card/AC-04/WEB",
+      "suite": "reading-word-card",
+      "title": "Reading collected word card > recovers errors and discards late results after switching or closing"
+    }
+  ],
+  "limitation": "侧车人工映射，执行器不自动计算Spec覆盖；注入503/延时只用于恢复验证。高亮及长笔记另由回归和浏览器核对。",
+  "sources": [
+    {
+      "path": "docs/prd/intensive-reading/features/word-card/prd.md",
+      "sha256": "ee60fbafd96536d3bef17f258cf2eb0ac2c9a36fb5f389bd08eb7e7cf637269b"
+    },
+    {
+      "path": "docs/design/intensive-reading/word-card/design.md",
+      "sha256": "76e7b9e0a8c6984b0edfecebeced178a8494bd4b070019f06e11d0684e292119"
+    }
+  ],
+  "supplementalEvidence": [
+    "docs/delivery/2026-11-03-reading-word-card/evidence/native-drag.json",
+    "apps/english-world/src/intensiveReading/WordLookupBoundary.test.tsx"
+  ],
+  "r02": {
+    "featureId": "intensive-reading/word-card",
+    "scenarios": {
+      "S5": {
+        "requirements": [
+          "FR-06",
+          "AC-05"
+        ],
+        "case": "intensive-reading/word-card/AC-05/AI",
+        "suite": "reading-word-card",
+        "title": "Reading collected word card > uses the AI lemma before reading a collected entry and preserves occurrence context"
+      },
+      "S6": {
+        "requirements": [
+          "FR-07",
+          "AC-06"
+        ],
+        "caseStatus": "draft",
+        "supplemental": [
+          "nestjs/src/interface/english/reading-word-lookup.service.spec.ts",
+          "nestjs/test/integration/intensive-reading.integration-spec.ts",
+          "production/remote-evidence/real-ai-check.json"
+        ]
+      },
+      "S7": {
+        "requirements": [
+          "FR-03",
+          "FR-04",
+          "AC-03"
+        ],
+        "supplemental": [
+          "CollectedWordCard.test.tsx",
+          "wordLookupContext.test.ts"
+        ]
+      }
+    }
+  },
+  "r04": {
+    "featureId": "intensive-reading/word-card",
+    "mappingType": "manual sidecar; not execution engine coverage",
+    "scenarios": {
+      "S9": {
+        "requirements": [
+          "FR-09",
+          "AC-08"
+        ],
+        "case": "intensive-reading/word-card/AC-08/COLLECT",
+        "caseStatus": "draft",
+        "suite": "reading-word-collect",
+        "designState": "missing → loading → meaning preview",
+        "supplemental": [
+          "nestjs/src/interface/english/reading-word-collect.service.spec.ts",
+          "production/remote-evidence/real-ai-check.json"
+        ]
+      },
+      "S10": {
+        "requirements": [
+          "FR-10",
+          "AC-09"
+        ],
+        "case": "intensive-reading/word-card/AC-09/COLLECT",
+        "suite": "reading-word-collect",
+        "title": "Reading missing word collection > previews contextual meaning without writing and explicitly saves the lemma with its context note",
+        "designState": "explicit confirm → saved own entry + speech",
+        "supplemental": [
+          "nestjs/test/integration/intensive-reading.integration-spec.ts"
+        ]
+      },
+      "S11": {
+        "requirements": [
+          "FR-11",
+          "AC-10"
+        ],
+        "case": "intensive-reading/word-card/AC-10/COLLECT",
+        "caseStatus": "draft",
+        "suite": "reading-word-collect",
+        "designState": "separate query/add errors; switch/close isolation",
+        "supplemental": [
+          "nestjs/src/interface/english/reading-word-collect.service.spec.ts",
+          "apps/english-world/src/intensiveReading/ReadingWordCollect.test.tsx"
+        ]
+      }
+    },
+    "sources": [
+      {
+        "path": "docs/prd/intensive-reading/features/word-card/prd.md",
+        "sha256": "d96a8c48a3a7fa31af3c2f06740626c059f00a9925d682639b834708c603a9b4"
+      },
+      {
+        "path": "docs/prd/intensive-reading/features/word-card/.decision-log.md",
+        "sha256": "d4976dd9c6e82cee5227f933a79acdc40ade37d506a46d21938b89cada53d415"
+      },
+      {
+        "path": "docs/design/intensive-reading/word-card/design.md",
+        "sha256": "4efef9821f8348d15480da9c2eb8be14bbe94be2303af0b16f6ed34a8afa684f"
+      },
+      {
+        "path": "specs/006-reading-word-card/spec.md",
+        "sha256": "e615c8c8e6173b8f43ca949450a2077fa031e05801c7226d128042695310f1fe"
+      }
+    ]
+  }
+}

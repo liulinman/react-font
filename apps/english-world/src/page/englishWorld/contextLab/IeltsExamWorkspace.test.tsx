@@ -45,6 +45,7 @@ const result: ContextLabSubmitResult = {
   ],
 };
 const submit = vi.fn();
+const originalScrollIntoView = HTMLElement.prototype.scrollIntoView;
 function mount(userId = 1) {
   return render(
     <IeltsExamWorkspace
@@ -63,11 +64,62 @@ beforeEach(() => {
   submit.mockReset().mockResolvedValue(result);
 });
 afterEach(() => {
+  HTMLElement.prototype.scrollIntoView = originalScrollIntoView;
   cleanup();
   vi.useRealTimers();
 });
 
 describe("IELTS exam workspace", () => {
+  it("blocks browser find shortcuts only while the exam workspace is open", () => {
+    const view = mount();
+    for (const modifiers of [{ ctrlKey: true }, { metaKey: true }]) {
+      const event = new KeyboardEvent("keydown", { key: "f", ...modifiers, bubbles: true, cancelable: true });
+      window.dispatchEvent(event);
+      expect(event.defaultPrevented).toBe(true);
+    }
+    const typing = new KeyboardEvent("keydown", { key: "f", cancelable: true });
+    window.dispatchEvent(typing);
+    expect(typing.defaultPrevented).toBe(false);
+    view.unmount();
+    const outside = new KeyboardEvent("keydown", { key: "f", ctrlKey: true, cancelable: true });
+    window.dispatchEvent(outside);
+    expect(outside.defaultPrevented).toBe(false);
+  });
+  it("does not scroll when focusing an answer in the questions pane", () => {
+    const scroll = vi.fn();
+    HTMLElement.prototype.scrollIntoView = scroll;
+    mount(); start();
+    fireEvent.click(screen.getByText("作答题目", { selector: "button" }));
+    scroll.mockClear();
+    fireEvent.focus(screen.getByRole("radio", { name: "A. Communities" }));
+    expect(scroll).not.toHaveBeenCalled();
+  });
+  it("highlights option text and restores it without changing the answer", () => {
+    const view = mount(); start();
+    const option = screen.getByTestId("exam-text-q1:option:0");
+    const range = document.createRange(); range.selectNodeContents(option);
+    window.getSelection()!.removeAllRanges(); window.getSelection()!.addRange(range);
+    fireEvent.contextMenu(option, { clientX: 100, clientY: 180 });
+    fireEvent.click(screen.getByRole("menuitem", { name: "Highlight" }));
+    expect(option.querySelector("mark")).toHaveTextContent("A. Fresh food");
+    expect(screen.getByRole("radio", { name: "A. Fresh food" })).not.toBeChecked();
+    view.unmount(); mount();
+    expect(screen.getByTestId("exam-text-q1:option:0").querySelector("mark")).toHaveTextContent("A. Fresh food");
+  });
+  it("highlights sentence text after its blank and restores the source offsets", () => {
+    const sentenceTask = { ...task, questions: [{ id: "s1", kind: "sentence_completion", stem: "Gardens provide ____ for communities.", options: [] }] };
+    const show = () => render(<IeltsExamWorkspace task={sentenceTask} userId={1} onSubmit={submit} onExit={() => {}} />);
+    const view = show(); start();
+    const suffix = screen.getAllByTestId("exam-text-s1")[1];
+    const range = document.createRange(); range.selectNodeContents(suffix);
+    window.getSelection()!.removeAllRanges(); window.getSelection()!.addRange(range);
+    fireEvent.contextMenu(suffix, { clientX: 100, clientY: 180 });
+    fireEvent.click(screen.getByRole("menuitem", { name: "Highlight" }));
+    expect(suffix.querySelector("mark")).toHaveTextContent("for communities.");
+    expect(screen.getByRole("textbox", { name: "第 1 题答案" })).toHaveValue("");
+    view.unmount(); show();
+    expect(screen.getAllByTestId("exam-text-s1")[1].querySelector("mark")).toHaveTextContent("for communities.");
+  });
   it("restores answers and review flags for the same user but isolates other users", () => {
     const view = mount();
     start();

@@ -17,7 +17,8 @@ export async function execute(root, dir, plan, onProgress) {
     const env = { ...process.env, E2E_BACKEND_DIR: backend, ADMIN_USERNAME: 'automation_admin', ADMIN_PASSWORD: 'AutomationAdmin123!' };
     if (extra.backend && !plan.all) {
       const specs = ['core'];
-      if (plan.modules.some(m => m.id === 'review')) specs.push('ai-listening');
+      if (plan.modules.some(m => m.id === 'auth')) specs.push('account-access');
+      if (plan.modules.some(m => m.id === 'review')) specs.push('ai-listening','ielts-listening','ielts-listening-acceptance');
       if (plan.modules.some(m => m.id === 'intensive-reading')) specs.push('intensive-reading');
       if (plan.modules.some(m => m.id === 'reading' || m.id === 'notifications')) specs.push('reading-practice', 'reading-review', 'reading-recipients', 'reading-analytics');
       env.E2E_BACKEND_TEST_SPECS = specs.map(s => `test/integration/${s}.integration-spec.ts`).join(',');

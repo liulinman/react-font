@@ -44,6 +44,7 @@ export interface AdminUserActionParams {
 export interface AdminUserItem {
   id: number;
   username: string;
+  displayName?: string | null;
   avatar?: string | null;
   status: "active" | "banned";
   bannedAt?: string | null;

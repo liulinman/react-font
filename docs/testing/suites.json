@@ -3,6 +3,13 @@
   "note": "所有用例在隔离环境执行；real 表示业务接口真实，外部 AI 为本地替身。此目录不代表 PRD 全覆盖。",
   "suites": [
     {
+      "id": "browser-reading-sources",
+      "modules": ["vocabulary"],
+      "spec": "cypress/integration/browser-reading-sources.cy.ts",
+      "evidence": "real",
+      "externalAI": "local-provider-double"
+    },
+    {
       "id": "admin-console",
       "modules": [
         "notifications",
@@ -359,6 +366,107 @@
       "spec": "cypress/integration/mcp-access.cy.ts",
       "evidence": "real",
       "externalAI": "none"
+    },
+    {
+      "id": "account-access",
+      "modules": [
+        "auth"
+      ],
+      "spec": "cypress/integration/account-access.cy.ts",
+      "evidence": "real",
+      "externalAI": "none"
+    },
+    {
+      "id": "dictionary-notebook",
+      "modules": [
+        "vocabulary",
+        "notes"
+      ],
+      "spec": "cypress/integration/dictionary-notebook.cy.ts",
+      "evidence": "real",
+      "externalAI": "none"
+    },
+    {
+      "id": "mcp-notes",
+      "modules": [
+        "notes",
+        "settings"
+      ],
+      "spec": "cypress/integration/mcp-notes.cy.ts",
+      "evidence": "real",
+      "externalAI": "not-used"
+    },
+    {
+      "id": "delivery-pipeline",
+      "modules": [
+        "settings"
+      ],
+      "spec": "cypress/e2e/delivery-pipeline.cy.ts",
+      "evidence": "mock",
+      "externalAI": "none"
+    },
+    {
+      "id": "ielts-listening",
+      "modules": [
+        "review"
+      ],
+      "spec": "cypress/integration/ielts-listening.cy.ts",
+      "evidence": "real",
+      "externalAI": "local-provider-double"
+    },
+    {
+      "id": "ielts-listening-acceptance",
+      "modules": [
+        "review"
+      ],
+      "spec": "cypress/integration/ielts-listening.acceptance.cy.ts",
+      "evidence": "real",
+      "externalAI": "local-provider-double"
+    },
+    {
+      "id": "ielts-listening-real-paper",
+      "modules": [
+        "review"
+      ],
+      "spec": "cypress/integration/ielts-listening.real-paper.cy.ts",
+      "evidence": "real",
+      "externalAI": "previously-generated-real-audio"
+    },
+    {
+      "id": "reading-word-card",
+      "modules": [
+        "intensive-reading"
+      ],
+      "spec": "cypress/e2e/reading-word-card.cy.ts",
+      "evidence": "real",
+      "externalAI": "local-provider-double"
+    },
+    {
+      "id": "reading-editing",
+      "modules": [
+        "intensive-reading"
+      ],
+      "spec": "cypress/e2e/reading-editing.cy.ts",
+      "evidence": "real",
+      "externalAI": "none"
+    },
+    {
+      "id": "reading-word-collect",
+      "modules": [
+        "intensive-reading"
+      ],
+      "spec": "cypress/e2e/reading-word-collect.cy.ts",
+      "evidence": "real",
+      "externalAI": "local-provider-double"
+    },
+    {
+      "id": "ielts-listening-diversity",
+      "modules": [
+        "review"
+      ],
+      "spec": "cypress/integration/ielts-listening.diversity.cy.ts",
+      "evidence": "real",
+      "externalAI": "local-provider-double"
     }
   ]
 }

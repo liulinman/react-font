@@ -46,7 +46,9 @@ export default defineConfig(({ mode }) => ({
           "assets/workbox-window*.js",
         ],
         navigateFallback: "/index.html",
-        navigateFallbackDenylist: [/^\/admin(?:\/|$)/, /^\/docs(?:\/|$)/],
+        // API navigation includes protected HTML such as the admin PRD reader.
+        // Let the server return its document or authentication error unchanged.
+        navigateFallbackDenylist: [/^\/teacher(?:\/|$)/, /^\/api(?:\/|$)/, /^\/admin(?:\/|$)/, /^\/docs(?:\/|$)/, /^\/downloads(?:\/|$)/],
         runtimeCaching: [],
       },
     }),

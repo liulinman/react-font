@@ -1,7 +1,7 @@
 import "@testing-library/jest-dom/vitest";
 import { act, cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter, useLocation } from "react-router-dom";
 import { PwaUpdateProvider, type PwaRegistrationCallbacks } from "../../englishWorldMobile/pwa/PwaUpdateContext";
 import { MobileActivityLockContext } from "../../englishWorldMobile/offline/MobileActivityLockContext";
@@ -35,6 +35,19 @@ function LocationProbe() {
     </div>
   );
 }
+
+beforeEach(() => {
+  vi.stubGlobal("matchMedia", (query: string) => ({
+    matches: false,
+    media: query,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+  }));
+});
+
+afterEach(() => vi.unstubAllGlobals());
 
 describe("EnglishWorldLayout sidebar state", () => {
   afterEach(() => {

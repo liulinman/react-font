@@ -1,17 +1,22 @@
 {
   "schemaVersion": 1,
-  "updated": "2026-10-26",
+  "updated": "2026-11-11",
   "purpose": "需求来源索引；不是已实现功能或自动化覆盖承诺",
   "modules": [
     {
       "id": "auth",
       "name": "登录与权限",
       "entry": "auth/prd.md",
-      "baselineStatus": "missing",
-      "primaryFeatures": [],
+      "baselineStatus": "partial",
+      "primaryFeatures": [
+        "account-access"
+      ],
       "relatedFeatures": [
         "unified-workspace",
-        "mcp-access"
+        "mcp-access",
+        "freewing-brand",
+        "mcp-notes",
+        "teacher-classroom"
       ],
       "designReferences": []
     },
@@ -21,7 +26,9 @@
       "entry": "vocabulary/prd.md",
       "baselineStatus": "partial",
       "primaryFeatures": [
-        "mcp-access"
+        "mcp-access",
+        "dictionary-workspace",
+        "browser-reading-extension"
       ],
       "relatedFeatures": [
         "weak-word-repair",
@@ -30,7 +37,8 @@
         "word-book",
         "unified-workspace",
         "readable-notes",
-        "ai-listening"
+        "ai-listening",
+        "ielts-listening"
       ],
       "designReferences": [
         "docs/superpowers/specs/2026-07-16-word-library-query-pagination-consistency-design.md",
@@ -45,10 +53,12 @@
       "primaryFeatures": [
         "weak-word-repair",
         "word-journey",
-        "ai-listening"
+        "ai-listening",
+        "ielts-listening"
       ],
       "relatedFeatures": [
-        "readable-notes"
+        "readable-notes",
+        "desktop-learning-nav"
       ],
       "designReferences": [
         "docs/superpowers/specs/2026-06-26-recite-short-review-loop-design.md"
@@ -64,6 +74,7 @@
         "weak-word-repair",
         "word-journey",
         "unified-workspace",
+        "received-ielts-workspace",
         "ai-listening"
       ],
       "designReferences": [
@@ -88,7 +99,9 @@
         "automatic-review",
         "creation-ui"
       ],
-      "relatedFeatures": [],
+      "relatedFeatures": [
+        "teacher-classroom"
+      ],
       "designReferences": [
         "docs/superpowers/specs/2026-10-12-shared-ai-reading-practice-design.md"
       ]
@@ -101,10 +114,13 @@
       "primaryFeatures": [
         "knowledge-notes",
         "folders",
-        "readable-notes"
+        "readable-notes",
+        "mcp-notes"
       ],
       "relatedFeatures": [
-        "word-book"
+        "word-book",
+        "dictionary-workspace",
+        "ielts-listening"
       ],
       "designReferences": []
     },
@@ -117,7 +133,8 @@
         "word-book"
       ],
       "relatedFeatures": [
-        "readable-notes"
+        "readable-notes",
+        "desktop-learning-nav"
       ],
       "designReferences": []
     },
@@ -136,16 +153,20 @@
       "id": "settings",
       "name": "设置与站点",
       "entry": "settings/prd.md",
-      "baselineStatus": "missing",
+      "baselineStatus": "partial",
       "primaryFeatures": [
         "desktop-learning-nav",
         "technical-docs",
-        "freewing-brand"
+        "freewing-brand",
+        "prd-browser"
       ],
       "relatedFeatures": [
         "unified-workspace",
         "ai-listening",
-        "mcp-access"
+        "mcp-access",
+        "account-access",
+        "mcp-notes",
+        "ielts-listening"
       ],
       "designReferences": [
         "docs/superpowers/specs/2026-08-17-english-world-mobile-pwa-full-redesign-design.md"
@@ -157,12 +178,26 @@
       "entry": "intensive-reading/prd.md",
       "baselineStatus": "complete",
       "primaryFeatures": [
-        "intensive-reading-core"
+        "intensive-reading-core",
+        "word-card"
       ],
-      "relatedFeatures": [],
+      "relatedFeatures": [
+        "desktop-learning-nav"
+      ],
       "designReferences": [
         "docs/superpowers/specs/2026-10-22-intensive-reading-design.md"
       ]
+    },
+    {
+      "id": "classroom",
+      "name": "教师端与课堂",
+      "entry": "classroom/prd.md",
+      "baselineStatus": "partial",
+      "primaryFeatures": [
+        "teacher-classroom"
+      ],
+      "relatedFeatures": [],
+      "designReferences": []
     }
   ],
   "features": [
@@ -363,6 +398,80 @@
         "auth"
       ],
       "prd": "settings/features/freewing-brand/prd.md"
+    },
+    {
+      "id": "prd-browser",
+      "title": "管理端产品需求模块",
+      "primaryModule": "settings",
+      "relatedModules": [],
+      "prd": "settings/features/prd-browser/prd.md"
+    },
+    {
+      "id": "account-access",
+      "title": "桌面注册登录与账号安全重构",
+      "primaryModule": "auth",
+      "relatedModules": [
+        "settings"
+      ],
+      "prd": "auth/features/account-access/prd.md",
+      "status": "approved"
+    },
+    {
+      "id": "browser-reading-extension",
+      "title": "Chrome 阅读查词与网页引用",
+      "primaryModule": "vocabulary",
+      "relatedModules": [],
+      "prd": "vocabulary/features/browser-reading-extension/prd.md"
+    },
+    {
+      "id": "dictionary-workspace",
+      "title": "桌面词典式词库与文档式知识笔记",
+      "primaryModule": "vocabulary",
+      "relatedModules": [
+        "notes"
+      ],
+      "prd": "vocabulary/features/dictionary-workspace/prd.md"
+    },
+    {
+      "id": "mcp-notes",
+      "title": "知识笔记 MCP 与确认归档",
+      "primaryModule": "notes",
+      "relatedModules": [
+        "auth",
+        "settings"
+      ],
+      "prd": "notes/features/mcp-notes/prd.md",
+      "status": "approved"
+    },
+    {
+      "id": "ielts-listening",
+      "title": "雅思听力题型与模拟练习",
+      "primaryModule": "review",
+      "relatedModules": [
+        "settings",
+        "vocabulary",
+        "notes"
+      ],
+      "prd": "review/features/ielts-listening/prd.md"
+    },
+    {
+      "id": "word-card",
+      "title": "精读词库浮动卡片",
+      "primaryModule": "intensive-reading",
+      "relatedModules": [
+        "vocabulary"
+      ],
+      "prd": "intensive-reading/features/word-card/prd.md"
+    },
+    {
+      "id": "teacher-classroom",
+      "title": "教师端课堂与阅读作业",
+      "primaryModule": "classroom",
+      "relatedModules": [
+        "reading",
+        "auth"
+      ],
+      "prd": "classroom/features/teacher-classroom/prd.md"
     }
   ]
 }

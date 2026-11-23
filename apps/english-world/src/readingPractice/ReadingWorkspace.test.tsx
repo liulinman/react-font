@@ -3,6 +3,7 @@ import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, useLocation } from "react-router-dom";
 import { afterEach, expect, it, vi } from "vitest";
+import { EnglishHeader } from "@/page/englishWorld/component/EnglishHeader";
 import { ReadingWorkspace, LegacyReadingEntry } from "./ReadingWorkspace";
 vi.mock("./ReadingPracticeList", () => ({ ReadingPracticeList: () => <p>收到的练习列表</p> }));
 vi.mock("@/page/englishWorld/contextLab/ContextLabPage", () => ({
@@ -10,22 +11,33 @@ vi.mock("@/page/englishWorld/contextLab/ContextLabPage", () => ({
 }));
 afterEach(cleanup);
 function Location() { const location = useLocation(); return <output>{location.search}</output>; }
-it("keeps exam and self practice in a single URL-backed workspace", async () => {
+function DesktopReading() {
+  return <><EnglishHeader activeKey="readingPractices" /><ReadingWorkspace basePath="/englishWorld/reading-practices" /><Location /></>;
+}
+it("switches between the three parallel sidebar entries", async () => {
   const user = userEvent.setup();
-  render(<MemoryRouter initialEntries={["/englishWorld/reading-practices?mode=exam"]}><ReadingWorkspace basePath="/englishWorld/reading-practices" /><Location /></MemoryRouter>);
-  expect(screen.getByRole("tab", { name: "雅思考试" })).toHaveAttribute("aria-selected", "true");
-  expect(await screen.findByText("工作区模式：exam")).toBeInTheDocument();
-  expect(screen.getByText(/单篇限时/)).toBeInTheDocument();
-  await user.click(screen.getByRole("tab", { name: "自主练习" }));
+  render(<MemoryRouter initialEntries={["/englishWorld/reading-practices"]}><DesktopReading /></MemoryRouter>);
+  const assigned = screen.getByRole("menuitem", { name: "老师发的题" });
+  const personal = screen.getByRole("menuitem", { name: "自己出的题" });
+  const exam = screen.getByRole("menuitem", { name: "雅思考试" });
+  expect(assigned.parentElement).toBe(personal.parentElement);
+  expect(exam.parentElement).toBe(personal.parentElement);
+  expect(assigned).toHaveClass("ant-menu-item-selected");
   expect(screen.getByText("收到的练习列表")).toBeInTheDocument();
-  expect(screen.getByRole("status")).toHaveTextContent("mode=practice");
-  await user.click(screen.getByRole("tab", { name: "自己出题" }));
+  expect(screen.queryByRole("tab", { name: "自主练习" })).not.toBeInTheDocument();
+  await user.click(personal);
   expect(await screen.findByText("工作区模式：practice")).toBeInTheDocument();
+  expect(personal).toHaveClass("ant-menu-item-selected");
   expect(screen.getByRole("status")).toHaveTextContent("source=personal");
+  await user.click(exam);
+  expect(await screen.findByText("工作区模式：exam")).toBeInTheDocument();
+  expect(exam).toHaveClass("ant-menu-item-selected");
+  await user.click(assigned);
+  expect(screen.getByText("收到的练习列表")).toBeInTheDocument();
 });
-it("restores personal practice from its URL", async () => {
-  render(<MemoryRouter initialEntries={["/englishWorld/reading-practices?mode=practice&source=personal"]}><ReadingWorkspace basePath="/englishWorld/reading-practices" /></MemoryRouter>);
-  expect(screen.getByRole("tab", { name: "自己出题" })).toHaveAttribute("aria-selected", "true");
+it("restores personal practice and its selected sidebar item from an existing source link", async () => {
+  render(<MemoryRouter initialEntries={["/englishWorld/reading-practices?mode=practice&source=word-library&taskId=12"]}><DesktopReading /></MemoryRouter>);
+  expect(screen.getByRole("menuitem", { name: "自己出的题" })).toHaveClass("ant-menu-item-selected");
   expect(await screen.findByText("工作区模式：practice")).toBeInTheDocument();
 });
 

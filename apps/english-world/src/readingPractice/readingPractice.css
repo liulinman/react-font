@@ -553,3 +553,6 @@
 .rp-list-help { color: var(--ew-text-secondary, #64748b); font-size: 14px; line-height: 1.7; }
 .rp-list-toolbar button:disabled, .rp-card-actions button:disabled { opacity: .6; cursor: wait; }
 @media (max-width: 600px) { .rp-list-toolbar button, .rp-card-actions button { min-height: 44px; } }
+
+.rp-classroom-label { display: block; font: 500 12px/1.5 system-ui, sans-serif; color: var(--ew-text-secondary, #52627a); margin-top: 4px; }
+.rp-classroom-link { margin: 12px 0; }

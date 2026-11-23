@@ -3,14 +3,14 @@ import type { Material, Source } from "./types";
 const root = "/intensive-reading/materials";
 export const readMaterial = (id: string) =>
   request<Material>({ url: `${root}/${id}`, method: "GET" });
-export const listMaterials = (q = "", page = 1) =>
+export const listMaterials = (q = "", page = 1, signal?: AbortSignal) =>
   request<{
     list: Pick<
       Material,
       "id" | "title" | "status" | "sourceType" | "updatedAt"
     >[];
     total: number;
-  }>({ url: root, method: "GET", data: { q, page } });
+  }>({ url: root, method: "GET", data: { q, page }, config: { signal, suppressErrorMessage: true } });
 export const createMaterial = (data: unknown) =>
   request<Material>({ url: root, method: "POST", data });
 export const changeMaterial = (

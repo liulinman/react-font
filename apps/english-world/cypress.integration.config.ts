@@ -10,8 +10,13 @@ export function resetTestDatabase() {
     { cwd: backend, encoding: 'utf8', timeout: 60000, env: { ...process.env, NODE_OPTIONS: '' } });
   return JSON.parse(output.trim().split('\n').at(-1)!);
 }
+export function seedIeltsRealPaper() {
+  const backend = process.env.E2E_BACKEND_DIR || fileURLToPath(new URL('../../../nestjs/', import.meta.url));
+  const output = execFileSync('pnpm', ['exec','ts-node','-r','tsconfig-paths/register','test/integration/seed-ielts-real-paper.ts'], {cwd:backend,encoding:'utf8',timeout:120000,env:{...process.env,NODE_OPTIONS:''}});
+  return JSON.parse(output.trim().split('\n').at(-1)!);
+}
 export function registerDatabaseTasks(on: Cypress.PluginEvents) {
-  on('task', { resetDatabase: resetTestDatabase });
+  on('task', { resetDatabase: resetTestDatabase, seedIeltsRealPaper });
 }
 
 export default defineConfig({

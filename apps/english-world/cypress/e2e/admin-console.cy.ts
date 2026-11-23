@@ -63,10 +63,14 @@ describe('Admin console workflows', () => {
     cy.contains('button', '预览并发送').click();
     cy.contains('请至少选择一位接收用户').should('be.visible');
     cy.get('#targetUserIds').click();
-    cy.get('.ant-select-dropdown:visible').contains('alice (#7)').click();
+    cy.get('.ant-select-dropdown:visible').contains('.ant-select-item-option', 'alice')
+      .should('not.contain', '#7')
+      .within(() => cy.get('.ant-avatar').should('have.text', 'A'))
+      .click();
     cy.get('#title').click();
     select('targetType', '全部用户'); select('targetType', '指定用户');
-    cy.get('#targetUserIds').closest('.ant-select').should('contain', 'alice (#7)');
+    cy.get('#targetUserIds').closest('.ant-select')
+      .find('.ant-select-selection-item-content').should('have.text', 'alice');
     cy.contains('button', '预览并发送').click();
     cy.get('.ant-modal').should('contain', '指定 1 位用户');
     cy.then(() => expect(published).to.have.length(0));

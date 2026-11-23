@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "source": "docs/prd/intensive-reading/prd.md",
-  "sourceHash": "7fd5bff36fc07b79c22e81afbe2a1de60f36047415ade79d5a8cf9dddea68166",
+  "sourceHash": "58f40b8827ea997b7b4afecc2c9fb94d066ac7d1136c92e303c8b2598e449f18",
   "cases": [
     {
       "id": "intensive-reading/intensive-reading-core/FR-01/WEB",
@@ -647,6 +647,207 @@
         }
       ],
       "reviewNote": "具体脚本断言已复核，状态仅代表可执行，结果以当前运行为准。"
+    },
+    {
+      "id": "intensive-reading/intensive-reading-core/AC-13/EDITING",
+      "title": "底部笔记原位编辑并保持筛选/阅读上下文",
+      "status": "ready",
+      "requirementIds": [
+        "intensive-reading/intensive-reading-core/FR-20",
+        "intensive-reading/intensive-reading-core/AC-13"
+      ],
+      "preconditions": [
+        "隔离MySQL与真实Nest HTTP/React，12条标注含长引用，电脑端三个视口"
+      ],
+      "steps": [
+        "底部笔记原位编辑并保持筛选/阅读上下文"
+      ],
+      "expectedResults": [
+        "底部笔记原位编辑并保持筛选/阅读上下文",
+        "具体断言含原节点/焦点/光标/最终服务端内容或视口坐标；失败与重试保留新输入，正文内容不改写"
+      ],
+      "cleanup": "reset隔离库，不连接生产",
+      "bindings": [
+        {
+          "suite": "reading-editing",
+          "title": "Intensive reading editing > edits a lower note in place and starts directly with original text at 1280x800"
+        },
+        {
+          "suite": "reading-editing",
+          "title": "Intensive reading editing > edits a lower note in place and starts directly with original text at 1440x900"
+        },
+        {
+          "suite": "reading-editing",
+          "title": "Intensive reading editing > edits a lower note in place and starts directly with original text at 1920x1080"
+        },
+        {
+          "suite": "reading-editing",
+          "title": "Intensive reading editing > keeps focus and newer typing through a delayed autosave, composition and local retry"
+        }
+      ]
+    },
+    {
+      "id": "intensive-reading/intensive-reading-core/AC-14/EDITING",
+      "title": "自动保存保持光标并连续保存较新草稿",
+      "status": "ready",
+      "requirementIds": [
+        "intensive-reading/intensive-reading-core/FR-21",
+        "intensive-reading/intensive-reading-core/AC-14"
+      ],
+      "preconditions": [
+        "隔离MySQL与真实Nest HTTP/React，12条标注含长引用，电脑端三个视口"
+      ],
+      "steps": [
+        "自动保存保持光标并连续保存较新草稿"
+      ],
+      "expectedResults": [
+        "自动保存保持光标并连续保存较新草稿",
+        "具体断言含原节点/焦点/光标/最终服务端内容或视口坐标；失败与重试保留新输入，正文内容不改写"
+      ],
+      "cleanup": "reset隔离库，不连接生产",
+      "bindings": [
+        {
+          "suite": "reading-editing",
+          "title": "Intensive reading editing > keeps focus and newer typing through a delayed autosave, composition and local retry"
+        }
+      ]
+    },
+    {
+      "id": "intensive-reading/intensive-reading-core/AC-15/EDITING",
+      "title": "原文直接开始并可在顶部调整字号",
+      "status": "ready",
+      "requirementIds": [
+        "intensive-reading/intensive-reading-core/FR-22",
+        "intensive-reading/intensive-reading-core/AC-15"
+      ],
+      "preconditions": [
+        "隔离MySQL与真实Nest HTTP/React，12条标注含长引用，电脑端三个视口"
+      ],
+      "steps": [
+        "原文直接开始并可在顶部调整字号"
+      ],
+      "expectedResults": [
+        "原文直接开始并可在顶部调整字号",
+        "具体断言含原节点/焦点/光标/最终服务端内容或视口坐标；失败与重试保留新输入，正文内容不改写"
+      ],
+      "cleanup": "reset隔离库，不连接生产",
+      "bindings": [
+        {
+          "suite": "reading-editing",
+          "title": "Intensive reading editing > edits a lower note in place and starts directly with original text at 1280x800"
+        },
+        {
+          "suite": "reading-editing",
+          "title": "Intensive reading editing > edits a lower note in place and starts directly with original text at 1440x900"
+        },
+        {
+          "suite": "reading-editing",
+          "title": "Intensive reading editing > edits a lower note in place and starts directly with original text at 1920x1080"
+        }
+      ]
+    },
+    {
+      "id": "intensive-reading/intensive-reading-core/AC-16/UX",
+      "title": "中间笔记保持原序；正文分词由单元渲染断言补充",
+      "status": "draft",
+      "requirementIds": [
+        "intensive-reading/intensive-reading-core/FR-23",
+        "intensive-reading/intensive-reading-core/AC-16"
+      ],
+      "preconditions": [
+        "隔离真实SQL HTTP，12条笔记与长引用，慢网响应；外部供应商替身不证明真实AI质量"
+      ],
+      "steps": [
+        "中间笔记保持原序；正文分词由单元渲染断言补充"
+      ],
+      "expectedResults": [
+        "中间笔记保持原序；正文分词由单元渲染断言补充"
+      ],
+      "cleanup": "重置隔离库，不连接生产",
+      "bindings": [
+        {
+          "suite": "reading-editing",
+          "title": "Intensive reading editing > keeps a middle note stable through real autosave and later saves a position queued while busy"
+        }
+      ],
+      "reviewNote": "复合条款包含单测/性能补充，不宣称完整浏览器覆盖"
+    },
+    {
+      "id": "intensive-reading/intensive-reading-core/AC-17/UX",
+      "title": "忙时保留阅读位置，空闲后落库",
+      "status": "ready",
+      "requirementIds": [
+        "intensive-reading/intensive-reading-core/FR-24",
+        "intensive-reading/intensive-reading-core/AC-17"
+      ],
+      "preconditions": [
+        "隔离真实SQL HTTP，12条笔记与长引用，慢网响应；外部供应商替身不证明真实AI质量"
+      ],
+      "steps": [
+        "忙时保留阅读位置，空闲后落库"
+      ],
+      "expectedResults": [
+        "忙时保留阅读位置，空闲后落库"
+      ],
+      "cleanup": "重置隔离库，不连接生产",
+      "bindings": [
+        {
+          "suite": "reading-editing",
+          "title": "Intensive reading editing > keeps a middle note stable through real autosave and later saves a position queued while busy"
+        }
+      ],
+      "reviewNote": "浏览器精确绑定及真实持久化断言已复核"
+    },
+    {
+      "id": "intensive-reading/intensive-reading-core/AC-18/UX",
+      "title": "加载/搜索/导入恢复并保护提交内容",
+      "status": "ready",
+      "requirementIds": [
+        "intensive-reading/intensive-reading-core/FR-25",
+        "intensive-reading/intensive-reading-core/AC-18"
+      ],
+      "preconditions": [
+        "隔离真实SQL HTTP，12条笔记与长引用，慢网响应；外部供应商替身不证明真实AI质量"
+      ],
+      "steps": [
+        "加载/搜索/导入恢复并保护提交内容"
+      ],
+      "expectedResults": [
+        "加载/搜索/导入恢复并保护提交内容"
+      ],
+      "cleanup": "重置隔离库，不连接生产",
+      "bindings": [
+        {
+          "suite": "reading-editing",
+          "title": "Intensive reading editing > recovers material loading and coalesces search with accurate empty and error states"
+        },
+        {
+          "suite": "reading-editing",
+          "title": "Intensive reading editing > protects the submitted import text while creation is in flight"
+        }
+      ],
+      "reviewNote": "浏览器精确绑定及真实持久化断言已复核"
+    },
+    {
+      "id": "intensive-reading/intensive-reading-core/AC-19/UX",
+      "title": "错误恢复和性能采样；AI先行沿用词卡契约",
+      "status": "draft",
+      "requirementIds": [
+        "intensive-reading/intensive-reading-core/FR-26",
+        "intensive-reading/intensive-reading-core/AC-19"
+      ],
+      "preconditions": [
+        "隔离真实SQL HTTP，12条笔记与长引用，慢网响应；外部供应商替身不证明真实AI质量"
+      ],
+      "steps": [
+        "错误恢复和性能采样；AI先行沿用词卡契约"
+      ],
+      "expectedResults": [
+        "错误恢复和性能采样；AI先行沿用词卡契约"
+      ],
+      "cleanup": "重置隔离库，不连接生产",
+      "bindings": [],
+      "reviewNote": "复合条款包含单测/性能补充，不宣称完整浏览器覆盖"
     }
   ]
 }

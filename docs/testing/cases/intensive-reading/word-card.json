@@ -1,0 +1,297 @@
+{
+  "schemaVersion": 1,
+  "source": "docs/prd/intensive-reading/features/word-card/prd.md",
+  "sourceHash": "2db6c2eea9161c7888f78c556332cd0ab3a290ec1222f307a3fac443bd9dc49b",
+  "cases": [
+    {
+      "id": "intensive-reading/word-card/AC-01/WEB",
+      "title": "shows collected data, preserves source and distinguishes missing words",
+      "status": "ready",
+      "requirementIds": [
+        "intensive-reading/word-card/FR-01",
+        "intensive-reading/word-card/FR-02",
+        "intensive-reading/word-card/AC-01"
+      ],
+      "preconditions": [
+        "本人词库Urban、释义与笔记；正文含Urban及未收集gardens"
+      ],
+      "steps": [
+        "点击Urban并关闭，再点击gardens"
+      ],
+      "expectedResults": [
+        "显示实际保存字段；正文textContent不变；关闭恢复焦点；未收集不显示旧资料",
+        "单词先识别原型后查询；短语/句子仍完整匹配；释义仅来自已保存词条"
+      ],
+      "cleanup": "每例在隔离测试库resetDatabase，不连接生产",
+      "bindings": [
+        {
+          "suite": "reading-word-card",
+          "title": "Reading collected word card > shows collected data, preserves source and distinguishes missing words"
+        }
+      ]
+    },
+    {
+      "id": "intensive-reading/word-card/AC-02/WEB",
+      "title": "drags and keeps its position while switching and scrolling, supports keyboard and resize",
+      "status": "ready",
+      "requirementIds": [
+        "intensive-reading/word-card/FR-03",
+        "intensive-reading/word-card/AC-02"
+      ],
+      "preconditions": [
+        "打开词卡"
+      ],
+      "steps": [
+        "拖动标题，换词并滚动，调整四种桌面视口，方向键及Escape"
+      ],
+      "expectedResults": [
+        "切换词位置保持；卡片在视口范围；Escape关闭"
+      ],
+      "cleanup": "每例在隔离测试库resetDatabase，不连接生产",
+      "bindings": [
+        {
+          "suite": "reading-word-card",
+          "title": "Reading collected word card > drags and keeps its position while switching and scrolling, supports keyboard and resize"
+        }
+      ]
+    },
+    {
+      "id": "intensive-reading/word-card/AC-03/WEB",
+      "title": "rejects partial matches and isolates users without updating vocabulary",
+      "status": "ready",
+      "requirementIds": [
+        "intensive-reading/word-card/FR-05",
+        "intensive-reading/word-card/AC-04"
+      ],
+      "preconditions": [
+        "两个合成账号词条内容不同"
+      ],
+      "steps": [
+        "大小写、子串、通配符查询；切换账号后查询"
+      ],
+      "expectedResults": [
+        "完整拼写大小写匹配；子串和通配符不匹配；不同用户得到各自内容"
+      ],
+      "cleanup": "每例在隔离测试库resetDatabase，不连接生产",
+      "bindings": [
+        {
+          "suite": "reading-word-card",
+          "title": "Reading collected word card > rejects partial matches and isolates users without updating vocabulary"
+        }
+      ]
+    },
+    {
+      "id": "intensive-reading/word-card/AC-04/WEB",
+      "title": "recovers errors and discards late results after switching or closing",
+      "status": "ready",
+      "requirementIds": [
+        "intensive-reading/word-card/FR-04",
+        "intensive-reading/word-card/AC-03"
+      ],
+      "preconditions": [
+        "真实接口；仅注入一次503及响应延时"
+      ],
+      "steps": [
+        "查询失败重试，快速切换词及关闭"
+      ],
+      "expectedResults": [
+        "失败明确提示；重试实际词条；旧响应不覆盖新词；关闭不重开"
+      ],
+      "cleanup": "每例在隔离测试库resetDatabase，不连接生产",
+      "bindings": [
+        {
+          "suite": "reading-word-card",
+          "title": "Reading collected word card > recovers errors and discards late results after switching or closing"
+        }
+      ]
+    },
+    {
+      "id": "intensive-reading/word-card/AC-01/COEXIST",
+      "title": "高亮编辑、长笔记及选区焦点",
+      "status": "ready",
+      "requirementIds": [
+        "intensive-reading/word-card/FR-01",
+        "intensive-reading/word-card/FR-03",
+        "intensive-reading/word-card/AC-01",
+        "intensive-reading/word-card/AC-02",
+        "intensive-reading/word-card/AC-03"
+      ],
+      "preconditions": [
+        "本人词条含长笔记，原文Urban有已有精读笔记"
+      ],
+      "steps": [
+        "键盘打开高亮，检查两种笔记；选择整句查词，再关闭"
+      ],
+      "expectedResults": [
+        "高亮编辑保留原精读笔记；词卡长内容内部滚动；选区关闭焦点返回原段落"
+      ],
+      "cleanup": "隔离数据库resetDatabase",
+      "bindings": [
+        {
+          "suite": "reading-word-card",
+          "title": "Reading collected word card > keeps highlighted editing and long notes usable and returns selection focus"
+        }
+      ]
+    },
+    {
+      "id": "intensive-reading/word-card/AC-05/AI",
+      "title": "AI识别原型后查询已收集词条",
+      "status": "ready",
+      "requirementIds": [
+        "intensive-reading/word-card/FR-06",
+        "intensive-reading/word-card/AC-05"
+      ],
+      "preconditions": [
+        "隔离SQL/HTTP及外部供应商替身，词库仅有sprawl，正文sprawls"
+      ],
+      "steps": [
+        "点击sprawls，核对请求的精确目标标记和响应lemma，再查看词卡"
+      ],
+      "expectedResults": [
+        "请求携带<target>sprawls</target>及原句；返回sprawl；卡片显示原词到原型映射和本人已有词条笔记"
+      ],
+      "cleanup": "隔离fixture重置；不写生产",
+      "bindings": [
+        {
+          "suite": "reading-word-card",
+          "title": "Reading collected word card > uses the AI lemma before reading a collected entry and preserves occurrence context"
+        }
+      ]
+    },
+    {
+      "id": "intensive-reading/word-card/AC-06/AI",
+      "title": "AI失败与不确定不是未收集",
+      "status": "draft",
+      "requirementIds": [
+        "intensive-reading/word-card/FR-07",
+        "intensive-reading/word-card/AC-06"
+      ],
+      "preconditions": [
+        "供应商不确定/错误/格式异常"
+      ],
+      "steps": [
+        "分别查询，重试并切换相同拼写的语境"
+      ],
+      "expectedResults": [
+        "不确定不显示未收集；错误可重试；迟到响应不覆盖新语境；不跨用户复用词条"
+      ],
+      "cleanup": "隔离fixture清理；单元/SQL补充证据尚未绑定完整浏览器断言",
+      "bindings": []
+    },
+    {
+      "id": "intensive-reading/word-card/AC-07/SPEECH",
+      "title": "词卡播放已匹配原型词的发音",
+      "status": "ready",
+      "requirementIds": [
+        "intensive-reading/word-card/FR-08",
+        "intensive-reading/word-card/AC-07"
+      ],
+      "preconditions": [
+        "隔离SQL，词库仅有sprawl，正文sprawls；DeepSeek/语音供应商替身"
+      ],
+      "steps": [
+        "点击sprawls后再点sprawl发音按钮，核对请求与音频响应"
+      ],
+      "expectedResults": [
+        "请求仅传已匹配sprawl词条ID；现有speech接口返回audio；词卡保持打开"
+      ],
+      "cleanup": "隔离fixture重置，不连接生产",
+      "bindings": [
+        {
+          "suite": "reading-word-card",
+          "title": "Reading collected word card > uses the AI lemma before reading a collected entry and preserves occurrence context"
+        }
+      ]
+    },
+    {
+      "id": "intensive-reading/word-card/AC-08/COLLECT",
+      "title": "AI本句含义预览只读，真实语义抽样另验",
+      "status": "draft",
+      "requirementIds": [
+        "intensive-reading/word-card/FR-09",
+        "intensive-reading/word-card/AC-08"
+      ],
+      "preconditions": [
+        "隔离SQL与真实HTTP/React、合成词sprawls，外部AI/语音供应商替身"
+      ],
+      "steps": [
+        "AI本句含义预览只读，真实语义抽样另验"
+      ],
+      "expectedResults": [
+        "AI本句含义预览只读，真实语义抽样另验"
+      ],
+      "cleanup": "隔离fixture reset，不连接生产",
+      "bindings": [
+        {
+          "suite": "reading-word-collect",
+          "title": "Reading missing word collection > previews contextual meaning without writing and explicitly saves the lemma with its context note"
+        }
+      ],
+      "reviewNote": "复合条款含真实AI/权限/过期等补充，保持draft"
+    },
+    {
+      "id": "intensive-reading/word-card/AC-09/COLLECT",
+      "title": "确认收原型与语境，不覆盖旧词，重复/响应丢失安全",
+      "status": "ready",
+      "requirementIds": [
+        "intensive-reading/word-card/FR-10",
+        "intensive-reading/word-card/AC-09"
+      ],
+      "preconditions": [
+        "隔离SQL与真实HTTP/React、合成词sprawls，外部AI/语音供应商替身"
+      ],
+      "steps": [
+        "确认收原型与语境，不覆盖旧词，重复/响应丢失安全"
+      ],
+      "expectedResults": [
+        "确认收原型与语境，不覆盖旧词，重复/响应丢失安全"
+      ],
+      "cleanup": "隔离fixture reset，不连接生产",
+      "bindings": [
+        {
+          "suite": "reading-word-collect",
+          "title": "Reading missing word collection > previews contextual meaning without writing and explicitly saves the lemma with its context note"
+        },
+        {
+          "suite": "reading-word-collect",
+          "title": "Reading missing word collection > recovers generation failure and safely retries an add whose committed response was lost"
+        },
+        {
+          "suite": "reading-word-collect",
+          "title": "Reading missing word collection > keeps an existing entry and its notes when another window collects before confirmation"
+        }
+      ],
+      "reviewNote": "明确业务断言已复核"
+    },
+    {
+      "id": "intensive-reading/word-card/AC-10/COLLECT",
+      "title": "生成/添加恢复与迟到保护；权限/过期由SQL与单测补充",
+      "status": "draft",
+      "requirementIds": [
+        "intensive-reading/word-card/FR-11",
+        "intensive-reading/word-card/AC-10"
+      ],
+      "preconditions": [
+        "隔离SQL与真实HTTP/React、合成词sprawls，外部AI/语音供应商替身"
+      ],
+      "steps": [
+        "生成/添加恢复与迟到保护；权限/过期由SQL与单测补充"
+      ],
+      "expectedResults": [
+        "生成/添加恢复与迟到保护；权限/过期由SQL与单测补充"
+      ],
+      "cleanup": "隔离fixture reset，不连接生产",
+      "bindings": [
+        {
+          "suite": "reading-word-collect",
+          "title": "Reading missing word collection > recovers generation failure and safely retries an add whose committed response was lost"
+        },
+        {
+          "suite": "reading-word-collect",
+          "title": "Reading missing word collection > ignores late meaning and add responses after switching words or closing"
+        }
+      ],
+      "reviewNote": "复合条款含真实AI/权限/过期等补充，保持draft"
+    }
+  ]
+}

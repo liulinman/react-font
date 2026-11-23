@@ -118,3 +118,15 @@ it("saves DeepSeek limits independently and preserves Doubao configuration", asy
   const payload=vi.mocked(aiFetch).mock.calls.find(([path])=>path==='/limits/deepseek')?.[2];
   expect(payload).not.toHaveProperty('maxAudioAttempts');expect(payload).not.toHaveProperty('globalConcurrency');
 });
+it('saves both Tencent credentials without displaying saved secret values', async () => {
+  vi.mocked(aiFetch).mockResolvedValue(data);
+  render(<AiServicesPanel />);
+  const id=await screen.findByLabelText('腾讯 SecretId');
+  const key=screen.getByLabelText('腾讯 SecretKey');
+  await userEvent.type(id,'example-id');
+  await userEvent.type(key,'example-key');
+  await userEvent.click(screen.getByRole('button',{name:'保存腾讯密钥'}));
+  await waitFor(() => expect(aiFetch).toHaveBeenCalledWith('/tencent','PUT',{enabled:false,apiKey:JSON.stringify({secretId:'example-id',secretKey:'example-key'})}));
+  await waitFor(() => expect((id as HTMLInputElement).value).toBe(''));
+  expect((key as HTMLInputElement).value).toBe('');
+});

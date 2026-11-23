@@ -1,0 +1,15 @@
+{
+  "tool": "github/spec-kit",
+  "distribution": "specify-cli",
+  "version": "1.2.3",
+  "integration": "codex",
+  "installScope": "temporary dedicated Python venv; project templates and skills committed only when later authorized",
+  "commandsActuallyRun": [
+    "specify init /tmp/english-account-spec-kit --integration codex --non-interactive --ignore-agent-tools",
+    "bash .specify/scripts/bash/create-new-feature.sh --json --number 1 --short-name account-access ...",
+    "bash .specify/scripts/bash/setup-plan.sh --json",
+    "bash .specify/scripts/bash/check-prerequisites.sh --json --require-tasks --include-tasks"
+  ],
+  "noExtensions": true,
+  "gitBranchChanged": false
+}

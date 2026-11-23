@@ -1,3 +1,5 @@
+import { IeltsListeningPanel } from "./IeltsListeningPanel";
+import { ProductRequirementsPanel } from "./ProductRequirementsPanel";
 import { brand } from "./brand";
 import { AiServicesPanel } from './AiServicesPanel';
 import { ReadingPracticePanel, practiceLabels } from './ReadingPracticePanel';
@@ -18,8 +20,10 @@ import { AnnouncementComposer } from "./AnnouncementComposer";
 import { ScheduleEditor } from "./ScheduleEditor";
 import { categoryLabels, formatDate, formatSchedule, priorityLabels } from "./adminPresentation";
 
-type Section = "ai-services" | "practices" | "users" | "announcements" | "schedules" | "history";
+type Section = "ielts-listening" | "product-requirements" | "ai-services" | "practices" | "users" | "announcements" | "schedules" | "history";
 const sections = [
+  { key: "product-requirements" as const, label: "产品需求", icon: <HistoryOutlined />, description: "按功能追溯 PRD、Spec、测试用例与历史验收证据。" },
+  { key: "ielts-listening" as const, label: "雅思听力材料", icon: <ScheduleOutlined />, description: "校验、准备和发布原创听力材料。" },
   { key: "ai-services" as const, label: "AI 服务管理", icon: <ScheduleOutlined />, description: "配置 DeepSeek 与豆包，管理音色、连接和用量。" },
   { key: "practices" as const, label: "阅读练习", icon: <ScheduleOutlined />, description: "创建和发布练习，跟进学生完成情况。" },
   { key: "users" as const, label: "用户管理", icon: <TeamOutlined />, description: "查找用户，查看账号状态并管理访问权限。" },
@@ -153,6 +157,23 @@ export function AdminApp() {
     finally { actionLock.current = false; setActionBusy(false); }
   };
   const ask = (action: PendingAction) => { setActionError(""); setPendingAction({ ...action, requestUid: newRequestId() }); };
+  const grantTeacher = (user: AdminUserItem) => {
+    Modal.confirm({
+      title: "开通教师端",
+      content: `为 ${user.username} 开通教师资格？`,
+      okText: "确认开通",
+      cancelText: "取消",
+      onOk: async () => {
+        try {
+          await request({ url: `/admin/classrooms/teachers/${user.id}`, method: "POST", data: {} });
+          message.success("教师资格已开通");
+        } catch (error) {
+          message.error("开通失败，请重试");
+          throw error;
+        }
+      },
+    });
+  };
   const userColumns: ColumnsType<AdminUserItem> = [
     { title: "用户", dataIndex: "username", render: (value, row) => <div className="admin-user-cell"><span className="admin-avatar">{value.slice(0, 1).toUpperCase()}</span><span><strong>{value}</strong><small>用户 #{row.id}</small></span></div> },
     { title: "状态", dataIndex: "status", width: 100, render: status => <Tag color={status === "banned" ? "red" : "green"}>{status === "banned" ? "已封禁" : "正常"}</Tag> },
@@ -160,7 +181,7 @@ export function AdminApp() {
     { title: "注册时间", dataIndex: "createTime", width: 165, render: formatDate },
     { title: "操作", width: 190, render: (_, row) => <Space size={4}>
       <Button type="link" aria-label={`${row.status === "banned" ? "解封" : "封禁"} ${row.username}`} onClick={() => setPendingUserAction({ action: row.status === "banned" ? "unban" : "ban", user: row })}>{row.status === "banned" ? "解封" : "封禁"}</Button>
-      <Dropdown trigger={["click"]} menu={{ items: [{ key: "delete", label: "永久删除", danger: true, onClick: () => setPendingUserAction({ action: "delete", user: row }) }] }}><Button type="text" icon={<MoreOutlined />} aria-label={`更多操作：${row.username}`}>更多</Button></Dropdown>
+      <Dropdown trigger={["click"]} menu={{ items: [{ key: "teacher", label: "开通教师端", disabled: row.status === "banned", onClick: () => grantTeacher(row) }, { key: "delete", label: "永久删除", danger: true, onClick: () => setPendingUserAction({ action: "delete", user: row }) }] }}><Button type="text" icon={<MoreOutlined />} aria-label={`更多操作：${row.username}`}>更多</Button></Dropdown>
     </Space> },
   ];
   const scheduleColumns: ColumnsType<NotificationScheduleItem> = [
@@ -200,9 +221,11 @@ export function AdminApp() {
       <nav aria-label="后台导航" className="admin-nav">{sections.map(item => <button key={item.key} aria-current={active === item.key ? "page" : undefined} onClick={() => setActive(item.key)}>{item.icon}<span>{item.label}</span></button>)}</nav>
       <a className="admin-site-link" href="/englishWorld/knowledge-notes" target="_blank" rel="noreferrer">打开学习网站 ↗</a>
     </aside>
-    <section className="admin-workspace"><header className="admin-toolbar"><div><span className="admin-eyebrow">ENGLISH WORLD / 管理控制台</span><h1>{section.label}</h1><p>{section.description}</p></div><Space>{!["practices", "announcements", "ai-services"].includes(active) && <Button icon={<ReloadOutlined />} loading={loading} onClick={() => void refresh()}>刷新</Button>}<Button type="text" icon={<LogoutOutlined />} loading={authBusy} onClick={() => void handleLogout()}>退出</Button></Space></header>
+    <section className="admin-workspace"><header className="admin-toolbar"><div><span className="admin-eyebrow">ENGLISH WORLD / 管理控制台</span><h1>{section.label}</h1><p>{section.description}</p></div><Space>{!["practices", "announcements", "ai-services", "product-requirements"].includes(active) && <Button icon={<ReloadOutlined />} loading={loading} onClick={() => void refresh()}>刷新</Button>}<Button type="text" icon={<LogoutOutlined />} loading={authBusy} onClick={() => void handleLogout()}>退出</Button></Space></header>
       {error && <Alert className="admin-load-error" type="error" message={error} showIcon action={<Button onClick={() => void refresh()}>重试</Button>} />}
+      {active === "product-requirements" && <ProductRequirementsPanel />}
       {active === "ai-services" && <AiServicesPanel />}
+      {active === "ielts-listening" && <IeltsListeningPanel />}
       {active === "practices" && <ReadingPracticePanel initialId={practiceId} />}
       {active === "users" && <div>
         <section className="admin-panel"><div className="admin-list-toolbar"><div><h2>账号列表 <span className="admin-count">{userTotal}</span></h2></div><div className="admin-filters">

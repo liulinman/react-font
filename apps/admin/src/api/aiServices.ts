@@ -1,4 +1,4 @@
-export type Provider = "deepseek" | "doubao";
+export type Provider = "deepseek" | "doubao" | "tencent";
 export interface AiConfig {
   provider: Provider;
   enabled: boolean;

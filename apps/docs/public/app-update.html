@@ -1,0 +1,12 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>更新 Freewing</title><style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#f0f6fa;color:#233d50;font:16px/1.7 system-ui,sans-serif}main{max-width:440px;margin:24px;padding:32px;background:white;border:1px solid #dce6ee;border-radius:12px}h1{font-size:26px;margin-top:0}button{background:#286b94;color:white;border:0;border-radius:7px;padding:12px 22px;font:inherit;cursor:pointer}button:disabled{opacity:.6}a{color:#286b94}#status{min-height:3em;font-size:14px}</style></head><body><main><h1>更新 Freewing</h1><p>如果登录页仍显示旧版本，请更新应用文件。学习记录和离线资料不会被清除。</p><button id="update">更新并打开登录页</button><p id="status" role="status" aria-live="polite"></p><a href="/login">返回登录</a></main><script>
+const button=document.getElementById('update'),status=document.getElementById('status');
+button.addEventListener('click',async()=>{button.disabled=true;status.textContent='正在检查应用版本…';try{
+if(!('serviceWorker' in navigator)){location.replace('/login');return;}
+const registration=await navigator.serviceWorker.getRegistration('/');
+if(!registration){location.replace('/login');return;}
+await registration.update();
+if(registration.installing)await new Promise((resolve,reject)=>{const worker=registration.installing;const timeout=setTimeout(()=>reject(new Error('timeout')),20000);worker.addEventListener('statechange',()=>{if(worker.state==='installed'||worker.state==='redundant'){clearTimeout(timeout);resolve();}});});
+if(registration.waiting){status.textContent='新版本已准备好，正在打开登录页…';const timer=setTimeout(()=>{status.textContent='更新已发送，请关闭旧的 Freewing 页面后重新打开登录页。';button.disabled=false;},15000);navigator.serviceWorker.addEventListener('controllerchange',()=>{clearTimeout(timer);location.replace('/login');},{once:true});registration.waiting.postMessage({type:'SKIP_WAITING'});}
+else{location.replace('/login');}
+}catch{status.textContent='暂时无法完成更新，请检查网络后重试。';button.disabled=false;}});
+</script></body></html>

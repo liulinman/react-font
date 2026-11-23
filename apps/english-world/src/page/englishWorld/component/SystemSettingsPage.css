@@ -1,0 +1,100 @@
+.system-settings-page {
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+}
+
+.system-settings-page .settings-cards {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+}
+
+.settings-card {
+  color: var(--ew-text, #24354b);
+  background: var(--ew-surface, #fff);
+  border: 1px solid var(--ew-border, #e3eaf3);
+  border-radius: 16px;
+  padding: 24px;
+}
+
+.settings-card h2 {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0 0 6px;
+  font-size: 18px;
+  font-weight: 650;
+}
+
+.settings-card p,
+.settings-description {
+  margin: 0;
+  color: var(--ew-text-secondary, #586b83);
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.settings-description {
+  margin-top: 8px;
+}
+
+.settings-card-row,
+.account-avatar-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.account-avatar-controls {
+  margin-top: 16px;
+}
+
+.account-avatar-controls .ant-avatar {
+  flex: 0 0 auto;
+  color: var(--ew-accent, #285fc0);
+  background: var(--ew-accent-soft, #eaf2ff);
+}
+
+.settings-profile-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.settings-profile-name strong {
+  display: block;
+  margin-bottom: 3px;
+  font-size: 17px;
+}
+
+.settings-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.settings-password-row {
+  border-top: 1px solid var(--ew-border, #e3eaf3);
+  padding-top: 18px;
+  margin-top: 20px;
+}
+
+.settings-cards > .mcp-access-card {
+  margin: 0;
+}
+
+.account-security [role="status"] {
+  margin-top: 8px;
+}
+
+@media (max-width: 700px) {
+  .settings-card {
+    padding: 18px;
+  }
+
+  .settings-card-row,
+  .account-avatar-controls {
+    flex-wrap: wrap;
+  }
+}

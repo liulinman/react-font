@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { Alert, Select, Spin } from "antd";
+import { Alert, Avatar, Select, Space, Spin } from "antd";
 import request from "@font/api";
 import { adminListUsers } from "./api/notification";
 
-type Option = { value: number; label: string };
+type Option = { value: number; label: string; avatar?: string | null };
 export function RecipientSelect({
   value,
   onChange,
@@ -39,7 +39,8 @@ export function RecipientSelect({
           setOptions(
             result.list.map((user) => ({
               value: user.id,
-              label: `${user.username} (#${user.id})`,
+              label: user.displayName || user.username,
+              avatar: user.avatar,
             })),
           );
       } catch {
@@ -73,10 +74,16 @@ export function RecipientSelect({
         options={merged.map((option) => ({
           ...option,
           disabled: disabledIds.includes(option.value),
-          label:
-            option.label +
-            (disabledIds.includes(option.value) ? " · 已接收" : ""),
         }))}
+        optionRender={({ data }) => (
+          <Space size={8}>
+            <Avatar src={data.avatar} size={24} aria-hidden="true">
+              {Array.from(data.label)[0]?.toUpperCase()}
+            </Avatar>
+            <span>{data.label}</span>
+            {data.disabled && <span>已接收</span>}
+          </Space>
+        )}
         filterOption={false}
         onSearch={setSearch}
         placeholder={placeholder}
