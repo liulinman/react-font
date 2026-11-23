@@ -72,7 +72,7 @@ pnpm build
 
 先运行包含阅读扩展授权页和 API 的前后端。在新开发库先执行 `nestjs/migrations/create-browser-reading-source.sql`，再执行 `nestjs/migrations/browser-reading-020.sql`。从 0.1.0 升级时执行后一个迁移即可，历史出处保留。配置 `REDIS_URL` 和现有 DeepSeek 服务。扩展使用 Redis 保存短时授权和查词预览，因此这条路径需要 Redis 可用。
 
-Chrome 中打开 `chrome://extensions` 并开启开发者模式，加载 `react-font/apps/browser-reading-extension`。点击扩展图标，输入运行中的学习站点地址（例如 `http://localhost:5173`），登录并授权。授权后，在普通网页选词，右键选择「English World · 查本句含义」。收藏结果在词条详情的「原文出处」里查看。断开连接可以撤销当前扩展授权。
+Chrome 中打开 `chrome://extensions` 并开启开发者模式，加载 `react-font/apps/browser-reading-extension`。点击扩展图标，在「连接学习账号」页填写「学习站点地址」（本地示例为 `http://localhost:5173`），点击「连接账号」并完成登录授权。看到「已连接」后，在普通网页选词，右键选择「English World · 查本句含义」。收藏结果在词条详情的「原文出处」里查看。如需切换站点，先点「断开连接」撤销当前授权，再填写新地址。
 
 扩展管理页和工具栏使用 Freewing 书翼图标。在 `react-font/` 运行 `pnpm brand:generate --app browser-reading-extension`，可以从 `branding/freewing/symbol-source.png` 重新生成图标。已加载本地源码的扩展可在 `chrome://extensions` 点击重新加载查看效果。
 

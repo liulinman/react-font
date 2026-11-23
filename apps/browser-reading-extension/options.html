@@ -3,23 +3,54 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>连接 English World</title>
+  <title>连接学习账号 · Freewing 阅读查词</title>
+  <link rel="icon" type="image/png" href="icons/freewing-32.png">
   <link rel="stylesheet" href="options.css">
   <script type="module" src="options.js"></script>
 </head>
 <body>
-  <main>
-    <h1>连接 English World</h1>
-    <p>选词查找时，扩展会把所选单词、原句及网页来源发送给你的 English World 服务。点击保存后，原句和链接才会加入个人词库。</p>
-    <form>
-      <label for="origin">English World 网站地址</label>
-      <input id="origin" type="url" placeholder="https://example.com" required>
-      <div class="actions">
-        <button type="submit">连接账号</button>
-        <button id="disconnect" type="button" hidden>断开连接</button>
+  <main class="settings">
+    <section class="guide" aria-labelledby="guide-title">
+      <div class="brand">
+        <img src="icons/freewing-128.png" width="48" height="48" alt="">
+        <div>
+          <strong>Freewing</strong>
+          <span>阅读查词扩展</span>
+        </div>
       </div>
-    </form>
-    <p id="status" role="status"></p>
+      <div class="guide-body">
+        <h2 id="guide-title">在网页里查词</h2>
+        <p>选中一个英文单词，右键选择<span class="menu-label">「English World · 查本句含义」。</span></p>
+        <blockquote class="reading-example" lang="en">We walked along the river <mark>bank</mark>.</blockquote>
+      </div>
+    </section>
+
+    <section class="connection" aria-labelledby="connection-title">
+      <h1 id="connection-title">连接学习账号</h1>
+      <div class="connection-status" id="status" data-state="loading" role="status" aria-atomic="true">
+        <span class="status-icon" aria-hidden="true"></span>
+        <div>
+          <strong id="status-title">正在检查连接</strong>
+          <p id="status-detail"></p>
+        </div>
+      </div>
+
+      <form>
+        <label for="origin">学习站点地址</label>
+        <input id="origin" name="origin" type="url" placeholder="https://example.com" spellcheck="false" autocapitalize="none" aria-describedby="origin-hint" required disabled>
+        <p class="field-hint" id="origin-hint">填写 English World 的网页地址。</p>
+        <div class="actions">
+          <button type="submit" disabled>连接账号</button>
+          <button id="disconnect" type="button" hidden>断开连接</button>
+        </div>
+      </form>
+      <p id="feedback" role="status" aria-atomic="true"></p>
+
+      <aside class="privacy" aria-labelledby="privacy-title">
+        <h2 id="privacy-title">查询与保存</h2>
+        <p>主动查词时，所选单词、原句和网页来源会发送到你连接的站点。点击保存后，原句和链接才会加入个人词库。</p>
+      </aside>
+    </section>
   </main>
 </body>
 </html>
