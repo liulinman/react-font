@@ -14,8 +14,8 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-function openCard(html: string) {
-  const paragraph = document.createElement('p');
+function openCard(html: string, selected = 'bank', tag = 'p') {
+  const paragraph = document.createElement(tag);
   paragraph.innerHTML = html;
   document.body.append(paragraph);
   const range = document.createRange();
@@ -36,7 +36,7 @@ function openCard(html: string) {
   sendMessage.mockImplementationOnce(() => new Promise((accept) => { resolveQuery = accept; }));
   boot({ runtime: { sendMessage, onMessage: { addListener: (callback: typeof show) => { show = callback; } } } },
     class { replaceSync() {} }, class { observe() {} disconnect() {} });
-  show({ kind: 'read-selection', selected: 'bank' }, null, () => {});
+  show({ kind: 'read-selection', selected }, null, () => {});
   return { root, sendMessage, resolveQuery };
 }
 
@@ -59,4 +59,30 @@ it('separates words across a line break and ignores a query that completes after
   await Promise.resolve();
   expect(root.host.isConnected).toBe(false);
   expect(root.textContent).not.toContain('河岸');
+});
+
+it('marks a heading as a fragment and presents common meanings without a sentence translation', async () => {
+  const { root, sendMessage, resolveQuery } = openCard('Key <b>Considerations</b>.', 'Considerations', 'h2');
+  expect(sendMessage).toHaveBeenCalledWith(expect.objectContaining({
+    payload: expect.objectContaining({ context: 'Key <target>Considerations</target>.', contextKind: 'fragment' }),
+  }));
+  resolveQuery({ data: { mode: 'dictionary', lemma: 'consideration', meaning: '考虑；注意事项',
+    sentence: 'Key Considerations.', source: { url: 'https://example.test' }, wordExists: true, saved: false,
+  } });
+  await vi.waitFor(() => expect(root.textContent).toContain('常见释义'));
+  expect(root.textContent).toContain('原文片段');
+  expect(root.textContent).toContain('考虑；注意事项');
+  expect(root.textContent).not.toContain('整句译文');
+});
+
+it('shows a Chinese retry message for an internal server error and lets the reader retry', async () => {
+  const { root, sendMessage, resolveQuery } = openCard('We rested by the river <b>bank</b>.');
+  resolveQuery({ error: 'Internal server error', status: 503 });
+  await vi.waitFor(() => expect(root.textContent).toContain('暂时查不到这个词'));
+  expect(root.textContent).not.toContain('Internal server error');
+  const retry = [...root.querySelectorAll('button')].find(button => button.textContent === '重试查询');
+  expect(retry).toBeDefined();
+  sendMessage.mockResolvedValueOnce({ error: '测试查询失败' });
+  retry!.click();
+  expect(sendMessage).toHaveBeenCalledTimes(2);
 });

@@ -43,6 +43,7 @@ chrome.runtime.onMessage.addListener((message, sender, reply) => {
     const data = await api(origin, message.kind, message.payload, accessToken);
     return { data };
   })().then(reply, (error) => reply({
+    status: error.status,
     disconnected: error.status === 401,
     expired: error.status === 404 && message.kind === 'save',
     error: error.message || '暂时无法连接，请重试',

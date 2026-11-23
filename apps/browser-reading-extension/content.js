@@ -72,6 +72,7 @@
     let block = range.commonAncestorContainer;
     if (block.nodeType !== Node.ELEMENT_NODE) block = block.parentElement;
     if (!block || block.closest('input, textarea, [contenteditable]:not([contenteditable="false"]), [role="textbox"]')) return null;
+    const heading = block.closest('h1, h2, h3, h4, h5, h6, [role="heading"]');
     while (block.parentElement && getComputedStyle(block).display.startsWith('inline')) block = block.parentElement;
     const visible = visibleSelectionText(block, range);
     const { text } = visible;
@@ -87,13 +88,24 @@
         const context = (text.slice(sentenceStart, start) + '<target>' + word + '</target>' + text.slice(start + word.length, end)).trim();
         if (context.length > 1000) return null;
         return {
-          payload: { englishWord: word, context, url: location.href, title: document.title.slice(0, 500) },
+          payload: {
+            englishWord: word, context, ...(heading && { contextKind: 'fragment' }),
+            url: location.href, title: document.title.slice(0, 500),
+          },
           rect: range.getBoundingClientRect(),
         };
       }
       sentenceStart = part.index + part.segment.length;
     }
     return null;
+  }
+
+  function queryFailure(result) {
+    if (result?.status === 429) return '查词太频繁，请稍等片刻后重试。';
+    if (!(result?.status >= 500) && typeof result?.error === 'string' && /\p{Script=Han}/u.test(result.error)) {
+      return result.error;
+    }
+    return '暂时查不到这个词，请稍后重试。';
   }
 
   function show(selected) {
@@ -155,17 +167,19 @@
       element('p', message, body);
       if (action) element('button', action, footer).onclick = handler;
     };
-    const disconnected = () => state('连接账号后即可查询本句。', '连接 English World',
+    const disconnected = () => state('连接账号后即可查词。', '连接 English World',
       () => void chrome.runtime.sendMessage({ kind: 'open-settings' }));
 
     async function query() {
-      state('正在查本句含义…');
+      state('正在查词…');
       const result = await chrome.runtime.sendMessage({ kind: 'explain', payload: selection.payload })
         .catch(() => ({ error: '查询失败，请重试。' }));
       if (!active()) return;
       if (result?.disconnected) return disconnected();
-      if (!result?.data) return state(result?.error || '查询失败，请重试。', '重试查询', query);
+      if (!result?.data) return state(queryFailure(result), '重试查询', query);
       const draft = result.data;
+      const dictionary = draft.mode === 'dictionary';
+      const savedMessage = dictionary ? '片段已保存' : '本句已保存';
       title.textContent = draft.lemma === selection.payload.englishWord ? draft.lemma : `${selection.payload.englishWord} → ${draft.lemma}`;
       body.replaceChildren();
       footer.replaceChildren();
@@ -215,12 +229,14 @@
           if (active()) sound.disabled = false;
         }
       };
-      element('span', '本句词义', body).className = 'label';
+      element('span', dictionary ? '常见释义' : '本句词义', body).className = 'label';
       element('p', draft.meaning, body);
-      element('span', '原句', body).className = 'label';
+      element('span', dictionary ? '原文片段' : '原句', body).className = 'label';
       element('blockquote', draft.sentence, body);
-      element('span', '整句译文', body).className = 'label';
-      element('p', draft.sentenceTranslation || '当前服务尚未提供整句译文，请更新后重试。', body);
+      if (!dictionary) {
+        element('span', '整句译文', body).className = 'label';
+        element('p', draft.sentenceTranslation || '当前服务尚未提供整句译文，请更新后重试。', body);
+      }
       element('span', '原文来源', body).className = 'label';
       const source = new URL(draft.source.url);
       if (['https:', 'http:'].includes(source.protocol)) {
@@ -231,7 +247,7 @@
         element('span', source.href, link).className = 'source-url';
       }
       if (draft.saved) {
-        element('span', '本句已保存', footer);
+        element('span', savedMessage, footer);
         return;
       }
       const noteLabel = element('label', '单词笔记', body);
@@ -246,7 +262,7 @@
       note.placeholder = draft.wordExists ? '补充本次笔记，原有内容会保留…' : '记录用法或自己的理解…';
       const feedback = element('p', '', footer);
       feedback.setAttribute('role', 'status');
-      const save = element('button', draft.wordExists ? '保存本句' : '加入词库', footer);
+      const save = element('button', draft.wordExists ? (dictionary ? '保存片段' : '保存本句') : '加入词库', footer);
       save.onclick = async () => {
         save.disabled = true;
         note.disabled = true;
@@ -263,7 +279,7 @@
           return;
         }
         if (result?.data) {
-          feedback.textContent = '本句已保存';
+          feedback.textContent = savedMessage;
           save.remove();
           return;
         }
@@ -275,7 +291,7 @@
     }
 
     if (selection) void query();
-    else state('请在正文中选中一个完整的英文单词。');
+    else state('请在网页中选中一个完整的英文单词。');
     place();
   }
 

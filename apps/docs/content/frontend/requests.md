@@ -38,14 +38,16 @@ listeningFetch 的调用者得到 data 内对象。若 HTTP 200 但 code=500，�
 
 ## 阅读扩展的查询与保存
 
-`apps/browser-reading-extension` 的网页脚本读取用户主动选中的一个词和所在句，扩展后台请求已授权站点的 `/api/browser-reading/explain`。服务端按实际选区解释语境，已收藏词仍可返回这次的中文含义。网页 URL 和标题只在业务层用于绑定来源，AI 接收的是单词及其语境。
+`apps/browser-reading-extension` 的网页脚本读取用户主动选中的词和所在句或原文片段，扩展后台请求已授权站点的 `/api/browser-reading/explain`。网页 URL 和页面标题由服务端用于绑定来源。语境查询将选词和语境交给 AI，常见释义查询只发送所选单词。
 
 点击收藏后，扩展调用 `/api/browser-reading/save`，提交服务端返回的预览标识。词条和首次引用在同一数据库事务中保存；已有词条只追加引用。词库通过 `GET /api/browser-reading/words/:wordId/sources` 读取当前账号的出处。扩展授权依靠一次性授权码和 PKCE，扩展后台持有仅用于查词和收词的凭据，关闭浏览器会清除本地的会话凭据。
 
 
 ### 浏览器阅读扩展 0.2.0 的资料与保存
 
-`/api/browser-reading/explain` 在本人扩展授权下返回 `phonetic`、`meaning`、`sentence`、`sentenceTranslation`、`explanation` 和安全校验后的 `source`。整句译文与词义分开，来自同一次语境生成；只翻译目标句，不把整个段落作为卡片原句。缺失可靠译文时返回错误，不能把词义当成整句译文。
+`/api/browser-reading/explain` 在本人扩展授权下返回 `mode`、`phonetic`、`meaning`、`sentence`、`explanation` 和安全校验后的 `source`。`mode` 为 `context` 时，`meaning` 是本句词义，`sentenceTranslation` 是整句译文。两者来自同一次语境生成，译文缺失时查询失败。
+
+标题选区携带可选的 `contextKind: 'fragment'`。服务端也会识别孤立单词和缺少句末标点的片段。这类请求返回 `mode: 'dictionary'`，`meaning` 是常见释义，`sentence` 保留所选片段，`sentenceTranslation` 省略。扩展在请求失败时显示中文重试提示。
 
 保存请求仍使用短时 `previewToken`，可选 `note` 最多4000字符。旧0.1.0未发送笔记的请求仍兼容。服务在事务内锁定本人词条，确认引用尚未存在，才追加笔记并插入包含 `sentence_translation` 的引用；重试或同一引用并发不能重复追加，旧笔记和学习字段保持。接口本身不信任客户端提供的来源或AI字段。历史引用新增字段为空，显示时不编造译文。
 
